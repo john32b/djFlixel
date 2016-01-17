@@ -1,0 +1,15 @@
+{
+  "name": "djFlixel",
+  "url" : "",
+  "license": "",
+  "tags": ["flixel"],
+  "description": "JohnDimi Flixel tools",
+  "version": "0.1.0",
+  "classPath": "source/",
+  "releasenote": "Initial release",
+  "contributors": ["JohnDimi"],
+  "dependencies":
+  {
+    "flixel": ""
+  }
+}
