@@ -4,36 +4,43 @@
  * --------------------------------------------------------
  * @Description
  * -------
- * General purpose Sequencer, ( HAXE library based)
+ * General purpose Sequencer, ( Flixel library based)
  * 
  * @Notes
  * ------
  * 02-2015. rewritten
  * 
  *********************************************************/
-package djFlixel;
-import haxe.Timer;
+package djFlixel.tool;
 
-// TODO:
-// Make the sequencer use the FlxTimer
-class SequencerHaxe
+import flixel.util.FlxTimer;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
+
+/**
+ * Simple Sequencer
+ * ----------------
+ * Using the FlxTimer,
+ * @note use Seconds for time
+ */
+class Sequencer implements IFlxDestroyable
 {
-	public var callback:Int->Void = null;	
-	private var timer:Timer = null;	
-	private var currentStep:Int = 0;
+	// The callback to call when the timer triggers
+	public var callback:Int->Void = null;
+	
+	var timer:FlxTimer = null;	
+	var currentStep:Int = 0;
 	//----------------------------------------------------;
 	public function new(?callback_:Int->Void) 
 	{
 		callback = callback_;
 		currentStep = 0;
+		timer = new FlxTimer();
 	}//---------------------------------------------------;
 	public function stop()
 	{
-		if (timer != null)
-		{
-			timer.stop();
-			timer = null;
-		}
+		timer.finished = true;
+		timer.active = false;
+		// faster than calling cancel();
 	}//---------------------------------------------------;
 	public function doXTimes()
 	{
@@ -43,38 +50,54 @@ class SequencerHaxe
 	// Call this when you want to quickly call a waiting seq.next(XXXX) timer
 	// e.g. A timer on a menu that is set to 5 seconds, but a keystroke 
 	//      calls this function to skip waiting.
-	public function resolveNextAndWait()
+	public function resolveNextAndWait(?t:FlxTimer)
 	{
 		stop(); 
 		callback(currentStep);
 	}//---------------------------------------------------;
+	// --
 	public function reset()
 	{
 		stop();
 		currentStep = 0;
 	}//---------------------------------------------------;
-	public function next(?delay:Int)
+	// --
+	public function next(?delay:Float)
 	{
 		currentStep++;
-		// Somehow the timer is running, kill it.
-		stop(); 
-		if (delay > 0)
-		{
-			timer = new Timer(delay);
-			timer.run = resolveNextAndWait;
+		
+		// If somehow the timer is running, kill it.
+		stop();
+		
+		if (delay > 0) {
+			timer.start(delay, resolveNextAndWait, 1);
 		}
-		else
-		{
+		else {
 			callback(currentStep);
 		}
 	}//---------------------------------------------------;
-	
-
+	// --
 	public function forceTo(step:Int)
 	{
 		reset();
 		currentStep = step;
 		callback(currentStep);
+	}//---------------------------------------------------;
+	// --
+	public function nextF()
+	{
+		next();
+	}//---------------------------------------------------;
+	
+	// --
+	public function destroy():Void 
+	{
+		if (timer != null)
+		{
+			timer.cancel();
+			timer.destroy();
+			timer = null;
+		}
 	}//---------------------------------------------------;
 	
 }//-- end --//

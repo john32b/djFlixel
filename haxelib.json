@@ -4,9 +4,9 @@
   "license": "",
   "tags": ["flixel"],
   "description": "JohnDimi Flixel tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "classPath": "source/",
-  "releasenote": "Initial release",
+  "releasenote": "v0.2 second release",
   "contributors": ["JohnDimi"],
   "dependencies":
   {

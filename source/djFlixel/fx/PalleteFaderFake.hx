@@ -1,6 +1,6 @@
 package djFlixel.fx;
 
-import djFlixel.StepTimer;
+import djFlixel.tool.StepTimer;
 import flixel.util.FlxColor;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -77,8 +77,13 @@ class PalleteFaderFake extends FlxSprite
 		}
 	}//---------------------------------------------------;
 	
-	// --
-	// Fade into a dark overlay
+	/**
+	 * Fade into a colored overlay
+	 * @param	col The color to fade to, default BLACK
+	 * @param	callback Call this when fade is complete
+	 * @param	blendMode Blendmode
+	 * @param	speedRatio Tweak the speed
+	 */
 	public function fadeColor(col:FlxColor = 0xFF000000, ?callback:Void->Void, ?blendMode:BlendMode, speedRatio:Float = 1)
 	{		
 		active = true;
@@ -148,10 +153,10 @@ class PalleteFaderFake extends FlxSprite
 	// --
 	override public function destroy():Void 
 	{
-		super.destroy();
 		stime.clear();
 		stime = null;
 		callback_complete = null;
+		super.destroy();
 	}//---------------------------------------------------;
 
 }// -- end -- //

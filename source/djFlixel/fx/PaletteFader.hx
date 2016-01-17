@@ -6,13 +6,24 @@ import flixel.util.FlxTimer;
 import openfl.display.BitmapData;
 
 /**
- * Palette fader
+ * Palette fader.
+ * =---------------=
+ * Reads screen colors and offsets them based on a Color Array,
+ * creating a fading effect.
+ * It is a per pixel operation based thing, and you must use
+ * predefined colors for everything for this to work.
+ * 
+ * I did this for a GameBoy themed game, where everything was 4 colors, 
+ * and this fader simply pushed the indexes of all the colors to either side 
+ * of the color array.
  * 
  * HOW TO USE:
  * -----------
  * 
  * !!! Don't forget to call draw() at every state draw call !!!
+ * 
  */
+
 class PaletteFader
 {
 	// -

@@ -2,15 +2,26 @@
  * Very simple starfield
  * =======================
  * 
- * Example
- * -----------
+ * Use example
+ * -------------
+ * 
  * var stars = new StarfieldSimple(200,200);
  * 	stars.flag_widepixel = true;
  * 	stars.setColors([...]);
- * 	stars.initialize();
  * 	add(stars);
+ * 
+ * + Other possible calls ::
+ * 
+ * 	stars.setSpeed(FlxG.random.float(0.3, 1.5));
+ *	stars.setDirection(FlxG.random.int(0, 360));
+ *	stars.numberOfStars = FlxG.random.int(150, 900);
+ *	stars.color_bg = Palette_DB32.getRandomColor();
+ *	stars.color_1 = Palette_DB32.getRandomColor();
+ *	stars.color_2 = Palette_DB32.getRandomColor();
+ *	stars.color_3 = Palette_DB32.getRandomColor();
+ * 
  * -----------------
- * + That's it, the stars will automatically scroll now.
+ * 
  * + If you want to stop scrolling, use 
  * 		stars.active = false;
  * 
@@ -31,6 +42,8 @@ class StarfieldSimple extends FlxSprite
 	static inline var DEF_COLOR_BG:Int = 0xFF000000; 	// Black BG by default
 	static inline var DEF_STARS_MAX:Int = 200;
 	static inline var DEF_TRAVEL_ANGLE:Int = -180;
+	static inline var DEF_TRAVEL_SPEED:Float = 0.5;
+	
 	// ----
 	static inline var LAYER_1_SPEED:Float = 0.4;		// Speed modifiers from the base speed
 	static inline var LAYER_2_SPEED:Float = 1;	
@@ -50,12 +63,15 @@ class StarfieldSimple extends FlxSprite
 	// Apply a bit of a random speed variation to the fg layer stars
 	var ar_fg_speedVariation:Array<Float>;
 	
+	// --------------------
+	// # Currently unused #
 	// Update the star layer every X time, to save some CPU
-	var updateFrequency:Float = 0.3; // Currently unused
-	var timeCur:Float = 0;
+	// var updateFrequency:Float = 0.3; 
+	// var timeCur:Float = 0;
+	// ---------------------
 	
 	// Dynamic render function for each star
-	var renderStarFN:Int->Int->Int->Void;	// This MUST be set later
+	var renderStarFN:Int->Int->Int->Void = null;
 	
 	// The angle which the stars are traveling in degrees
 	var currentAngle:Float;
@@ -68,55 +84,51 @@ class StarfieldSimple extends FlxSprite
 	// == USER SET ===========================
 	// --
 	// Whether or not to render with widepixels (2x1 normal pixels)
-	public var flag_widepixel:Bool = false;
+	public var flag_widepixel(default, set):Bool;
+	// This will re-initialize the arrays, so avoid calling multiple times
+	public var numberOfStars(default, set):Int;
 	
-	public var stars_max:Int;
 	// The actual colors of the stars
 	// You can also call setColors(...);
-	public var color_1:Int;
+	public var color_1:Int; // You can change colors1-3 in realtime
 	public var color_2:Int;
 	public var color_3:Int;
-	public var color_bg:Int;
+	public var color_bg(default, set):Int;
 	//---------------------------------------------------;
 
-	public function new(_width:Int,_height:Int)
+	public function new(Width:Int = 0, Height:Int = 0)
 	{	
 		super();
 		
-		width = _width;
-		height = _height;
-		
-		// Create the arrays to store the stars
-		ar_stars_bg = [];
-		ar_stars_fg = [];
-		ar_start_extra = [];
-		ar_fg_speedVariation = [];
+		width = Width != 0 ? Width: FlxG.width;
+		height = Height != 0 ? Height: FlxG.height;
+		solid = false;
 		
 		// Set the default paramers
-		stars_max = DEF_STARS_MAX;
 		color_1 = DEF_COLOR_1;
 		color_2 = DEF_COLOR_2;
 		color_3 = DEF_COLOR_3;
-		color_bg = DEF_COLOR_BG;
-		
 		
 		setDirection(DEF_TRAVEL_ANGLE);
-		setSpeed(0.5);
+		setSpeed(DEF_TRAVEL_SPEED);
 		
+		// These also call the setter functions:
+		flag_widepixel = false;
+		numberOfStars = DEF_STARS_MAX;
+		color_bg = DEF_COLOR_BG;	// This will create the graphic
 	}//---------------------------------------------------;
 
 	/**
 	 * Set the starfield colors in an array, 
 	 * @param cols an Array with 4 colors, from DARKEST to BRIGHTEST
 	 */
-	public function setColors(cols:Array<Int>, reverse:Bool)
+	public function setColors(cols:Array<Int>, reverse:Bool = false)
 	{
 		if (reverse) cols.reverse();
 		color_bg = cols[0];
 		color_1 = cols[1];
 		color_2 = cols[2];
 		color_3 = cols[3];
-		
 	}//---------------------------------------------------;
 	
 	/**
@@ -134,34 +146,60 @@ class StarfieldSimple extends FlxSprite
 		dirY = Math.sin(currentAngle * toRads);
 	
 	}//---------------------------------------------------;
-	
-	// --
+
+	/**
+	 * Set the speed ratio of all star layers.
+	 * @param	spd A value from 0 to 64. ( 64 is too fast!, 1-3 is OK)
+	 */
 	public function setSpeed(spd:Float)
 	{
-		if (spd > 64) spd = 64;
-		if (spd < 0) spd = 0;
-		
 		currentSpeed = spd;
+	}//---------------------------------------------------;
+
+	// --
+	function set_color_bg(Value:Int):Int
+	{
+		// I am skipping same color check, because I might want to
+		// clear the screen.
+		// if (color_bg == Value) return Value;
+		
+		trace('Setting BG color to ($Value)');
+		
+		color_bg = Value;
+		makeGraphic(cast width, cast height, color_bg);
+		
+		return Value;
 	}//---------------------------------------------------;
 	
 	// --
 	// Call this after creating the object, and after
 	// setting the custom parameters
-	public function initialize()
+	function set_numberOfStars(Value:Int):Int
 	{
+		if (numberOfStars == Value) return Value;
+		
+		trace('Setting number of stars to [$Value]');
+		numberOfStars = Value;
+		
+		// Helpers, don't calculate ints every time
 		var intWidth:Int = Std.int(width);
 		var intHeight:Int = Std.int(height);
 		
-		if (graphic != null) graphic.destroy();
+		// Create the arrays to store the stars
+		ar_stars_bg = [];
+		ar_stars_fg = [];
+		ar_start_extra = [];
+		ar_fg_speedVariation = [];
 		
-		makeGraphic(intWidth, intHeight, color_bg);
+		// Turns out, the graphics don't need to be clears, it's done automatically
+		// if (graphic != null) graphic.destroy();
+		// if (pixels != null) pixels.dispose();
 		
-		var numOfFgStars = Math.floor(stars_max * 0.65);
+		var numOfFgStars = Math.floor(numberOfStars * 0.65);
 		var r:SimpleVector;
 		
 		// -- Push the stars in the arrays
-		
-		for (i in 0...stars_max)
+		for (i in 0...numberOfStars)
 		{
 			r = new SimpleVector(FlxG.random.int(0, intWidth), FlxG.random.int(0, intHeight));
 			
@@ -175,15 +213,22 @@ class StarfieldSimple extends FlxSprite
 			}
 		}
 		
-		// Create some unique extra bright stars?
-		var numberOfExtraStars:Int = Std.int(stars_max * 0.05);
+		// Create some unique extra bright stars
+		var numberOfExtraStars:Int = Std.int(numberOfStars * 0.05);
 		for (i in 0...numberOfExtraStars)
 		{
 			r = new SimpleVector(FlxG.random.int(0, intWidth), FlxG.random.int(8, intHeight - 8));
 			ar_start_extra.push(r);
 		}
 		
-		// -- 
+		return Value;
+	}//---------------------------------------------------;
+	
+	
+	// --
+	function set_flag_widepixel(val:Bool):Bool
+	{
+		flag_widepixel = val;
 		
 		if (flag_widepixel)
 		{
@@ -193,26 +238,23 @@ class StarfieldSimple extends FlxSprite
 			renderStarFN = renderStar_normal;
 		}
 		
+		return val;
 	}//---------------------------------------------------;
+	
 	
 	// --
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
-	
-		//timeCur -= FlxG.elapsed;
-		//if (timeCur < 0) {
-			pixels.lock();
 			
-			updateStarArray(ar_stars_bg, LAYER_1_SPEED * currentSpeed, color_1);
-			updateStarArrayFG(ar_stars_fg, LAYER_2_SPEED * currentSpeed, color_2);
-			updateStarArray(ar_start_extra, LAYER_3_SPEED * currentSpeed, color_3);
-			
-			
-			pixels.unlock();
-			dirty = true;
-		//timeCur = updateFrequency;
-		//}
+		pixels.lock();
+		
+		updateStarArray(ar_stars_bg, LAYER_1_SPEED * currentSpeed, color_1);
+		updateStarArrayFG(ar_stars_fg, LAYER_2_SPEED * currentSpeed, color_2);
+		updateStarArray(ar_start_extra, LAYER_3_SPEED * currentSpeed, color_3);
+		
+		pixels.unlock();
+		dirty = true;
 			
 	}//---------------------------------------------------;
 	
@@ -232,7 +274,7 @@ class StarfieldSimple extends FlxSprite
 	}//---------------------------------------------------;	
 	
 	// --
-	// Hacky way to add variation to the stars
+	// It's a bit faster to have a separate function for rendering with speed variation
 	inline function updateStarArrayFG(ar:Array<SimpleVector>, speedMult:Float, color:Int)
 	{
 		for (c in 0...ar.length)
@@ -245,7 +287,6 @@ class StarfieldSimple extends FlxSprite
 			renderStarFN(Math.round(ar[c].x), Math.round(ar[c].y) , color);
 		}
 	}//---------------------------------------------------;
-	
 	
 	inline function checkbounds(star:SimpleVector)
 	{
@@ -282,6 +323,7 @@ class StarfieldSimple extends FlxSprite
 		ar_stars_bg = null;
 		ar_stars_fg = null;
 		ar_start_extra = null;
+		ar_fg_speedVariation = null;
 	}//---------------------------------------------------;
 	
 	

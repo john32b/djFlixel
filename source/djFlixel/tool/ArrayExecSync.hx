@@ -1,4 +1,4 @@
-package djFlixel;
+package djFlixel.tool;
 
 /**
  * Executes a function for each element in the array
@@ -31,7 +31,7 @@ class ArrayExecSync<T>
 		queue.push(el);
 	}//---------------------------------------------------;
 	
-	public function start(fn_action:T->Void, fn_complete:Void->Void):Void {
+	public function start(?fn_action:T->Void, ?fn_complete:Void->Void):Void {
 		if (queue.length == 0) return; //throw "Queue is empty";
 		counter = -1;
 		queue_action   = fn_action;
@@ -43,12 +43,19 @@ class ArrayExecSync<T>
 		if (++counter < queue.length) {
 			queue_action(queue[counter]);
 		} else {
-			queue_complete();
+			if (queue_complete != null) {
+				queue_complete();
+			}
 		}
 	}//---------------------------------------------------;
 	
 	public function kill() {
-		queue = null;	
+		queue = null;
+	}//---------------------------------------------------;
+	
+	public function reset() {
+		queue = [];
+		counter = -1;
 	}//---------------------------------------------------;
 	
 }//--//

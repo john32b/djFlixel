@@ -1,26 +1,45 @@
-package djFlixel;
+package djFlixel.net;
 
-import flash.display.Loader;
-import flash.events.IEventDispatcher;
-import flash.net.URLLoader;
+import openfl.display.Loader;
+import openfl.events.IEventDispatcher;
+import openfl.net.URLLoader;
 
-import flash.events.Event;
-import flash.events.IOErrorEvent;
-import flash.events.ProgressEvent;
+import openfl.events.Event;
+import openfl.events.IOErrorEvent;
+import openfl.events.ProgressEvent;
+
+
 /**
- * DATA only, 
- * helper for multiLoader class
- * ...
+ * HELPER class for URLLoaders or Loaders
+ * Does not actually load anything, but provides
+ * a quick set of functions for events.
+ *
+ * @usage:
+ * 			
+ *		loader = new URlLoader();
+ * 		loaderData = new LoaderData(loader);
+ * 		loaderData.onLoad = function(_){ .. }
+ * 		loaderData.onError = function(_) { .. }
+ * 		loader.load( new URLRequest(sourceURL) );
+ * 
+ * @callbacks
+ * 
+ * 		onLoad();
+ * 		onError(ID:int);
+ * 		onProgress(percent:Int);
+ * 
  */
 class LoaderData
 {
 	// -- User Set Callbacks
+	
 	// onLoad Returns the event object target.
 	public var onLoad:Void->Void = null;
 	public var onError:Int->Void = null;
 	public var onProgress:Int->Void = null;
 	
 	public var isLoaded(default, null):Bool;
+	
 	// Is it currently downloading
 	//public var isWorking(default, null):Bool; //it's always working???????
 	
@@ -39,21 +58,24 @@ class LoaderData
 	public var isAttachedToGetManager:Bool = false;
 
 	// Point to the object that will be listened to.
-	private var eventObj:IEventDispatcher;
+	var eventObj:IEventDispatcher;
 	//---------------------------------------------------;
 	
 	public function new(par:Dynamic) 
 	{
+		// Loader is for SWF and Images
 		if (Std.is(par, Loader))
 		{
 			eventObj = cast(par, Loader).contentLoaderInfo;
 			attachEvents();
 		}else
+		// URLLoader is for text
 		if (Std.is(par, URLLoader))
 		{
 			eventObj = cast(par, URLLoader);
 			attachEvents();
 		}
+		
 		isLoaded = false;
 	
 		percent = 0;
@@ -61,7 +83,7 @@ class LoaderData
 		bytesTotal = 0;
 	}//---------------------------------------------------;
 
-	private function kill_listeners():Void
+	function kill_listeners():Void
 	{
 		// trace("Events killed", 0);
 		eventObj.removeEventListener(Event.COMPLETE, _listen_complete);
@@ -77,7 +99,7 @@ class LoaderData
 		eventObj.addEventListener(IOErrorEvent.IO_ERROR, _listen_ioError);
 	}//---------------------------------------------------;
 	
-	private function _listen_complete(e:Event):Void
+	function _listen_complete(e:Event):Void
 	{
 		//trace('LoaderData (ID=$ID) load complete.', 0);
 		isLoaded = true;
@@ -86,7 +108,7 @@ class LoaderData
 		kill_listeners();
 		if (onLoad != null) onLoad();
 	}//---------------------------------------------------;
-	private function _listen_progress(e:ProgressEvent):Void
+	function _listen_progress(e:ProgressEvent):Void
 	{
 		bytesLoaded = Std.int(e.bytesLoaded);
 		bytesTotal = Std.int(e.bytesTotal);
@@ -94,7 +116,7 @@ class LoaderData
 		//trace("Percent Loaded = " + percent, 0); //Don't spam the logger
 		if (onProgress != null) onProgress(percent);
 	}//---------------------------------------------------;
-	private function _listen_ioError(e:IOErrorEvent):Void
+	function _listen_ioError(e:IOErrorEvent):Void
 	{
 		// trace("Loader " + e.text, 3);
 		kill_listeners();

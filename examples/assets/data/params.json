@@ -1,0 +1,20 @@
+{
+	"dialog" : [
+		"dialog box demo..",
+		"!np",
+ 		"(s3) Press (K) to progress",
+		"(s3) Press (J) to main menu",
+		"+ Uses simple markup",
+		"+ Supports 4 speeds", 
+		"(s1).slowest",
+		"(s2).slower ..",
+		"(s3).faster ...",
+		"(s4).fastest .........",
+		"+ Multiple sameline speeds",
+		"Variable speed(s1).......(s4).....",
+		"(s3)Variable speed(s2)...(s3)....(s1)..",
+		"",
+		"(s4)Line overflow test Line overflow test Line overflow test Line overflow test",
+		"release soon.." 
+		]
+}

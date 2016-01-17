@@ -1,4 +1,4 @@
-package djFlixel.menu;
+package djFlixel.gui;
 
 import flixel.FlxBasic;
 import flixel.FlxG;
@@ -12,8 +12,8 @@ import openfl.display.BitmapData;
 
 
 // Graphic for the arrows
-@:bitmap("assets/hud_icons.png")
-private class GfxHudIcons extends BitmapData { }
+// @:bitmap("assets/hud_icons.png")
+// private class GfxHudIcons extends BitmapData { }
 
 
 /**
@@ -70,13 +70,13 @@ class FlxMenuPages extends FlxGroup
 		
 		// -- Add the cursors
 		cursor_left = new FlxSprite(0, 0);
-		cursor_left.loadGraphic("assets/hud_icons.png", true, 24, 24);
-		cursor_left.animation.frameIndex = 0;
+		cursor_left.loadGraphic("assets/hud_icons.png", true, 16, 16);
+		cursor_left.animation.frameIndex = 4;
 		cursor_left.setSize(4, 4);
 		cursor_left.centerOffsets();
 		cursor_right = new FlxSprite(0, 0);
 		cursor_right.loadGraphicFromSprite(cursor_left);
-		cursor_right.animation.frameIndex = 1;
+		cursor_right.animation.frameIndex = 5;
 		cursor_right.setSize(4, 4);
 		cursor_right.centerOffsets();
 		
@@ -224,7 +224,6 @@ class FlxMenuPages extends FlxGroup
 			page = null;
 		}
 		pages = null;
-		
 		
 	}//---------------------------------------------------;
 	

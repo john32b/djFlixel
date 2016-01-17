@@ -1,4 +1,5 @@
-package djFlixel;
+package djFlixel.tool;
+
 import flixel.FlxG;
 
 
@@ -29,8 +30,8 @@ class StepTimer
 	var callback_complete:Void->Void;
 	
 	//====================================================;
-	// 
 	//====================================================;
+	
 	public function new() 
 	{
 		clear();

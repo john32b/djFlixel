@@ -82,9 +82,9 @@ class Controls
 	public static function init()
 	{
 		if (isInited) return;
-		isInited = true;
-
-		trace("Info: Controller Initialization....");
+			isInited = true;
+			
+		trace("Info: Initializing Controls.");
 
 		// Init some vars
 		cursor_last_dir = 0;
@@ -151,7 +151,7 @@ class Controls
 	{
 		if (gamepad == null) 
 		{
-			trace("Warning: Controller not found");
+			trace("Info: Controller not found");
 			
 			pressed = function(id:Int) {
 				return _PressedKey(id);
@@ -168,8 +168,7 @@ class Controls
 		}
 		else 
 		{
-			trace("Warning: Controller found");
-			trace(gamepad.model);
+			trace('Info: Controller found, [${gamepad.model}]');
 			gamepad.deadZone = DEADZONE;
 			
 			pressed = function(id:Int) {
@@ -207,6 +206,7 @@ class Controls
 	
 
 	// -- NOTE: Call once per update cycle
+	// 			get with a switch(CURSOR_DIR()).
 	// Return the current cursor direction.
 	// but only once, works for analog sticks
 	public static function CURSOR_DIR():Int
