@@ -2,7 +2,7 @@
 <project>
 	<!------------------------------APPLICATION SETTINGS---------------------------->
 	
-	<app title="djFlixel Examples" file="djFlixel" main="Main" version="0.1.0" company="JohnDimi" />
+	<app title="djFlixel Examples" file="djFlixel" main="Main" version="0.2.0" company="" />
 	
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 	<!--or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"!-->
@@ -27,7 +27,7 @@
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="g:/djFlixelBuild/" /> <!-- compile to RAM -->
+	<set name="BUILD_DIR" value="g:/djFlixelBuild/" /> <!-- compile to RAM, Change this!!! -->
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
@@ -42,13 +42,22 @@
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 	<haxedef name="openfl_next"/>
 	
-	<!-- <haxedef name="advanced-telemetry" if="flash" /> -->
-		
+	<!-- EXTERNAL_LOAD:
+	<!-- If set, then some files will be loaded in real time 
+	<!-- Useful to modifing things without re-compiling every time 
 	<!--
+	<haxedef name="EXTERNAL_LOAD"/> 
+	<!-- -->
+	
+	<!-- Newgrounds API:
+	<!-- Uncomment these lines to enable newgrounds api integration
+	<!-- 
 	<haxedef name="NEWGROUNDS"/>
 	<haxeflag name="-swf-lib" value="assets/newgrounds/NewgroundsAPI.swc"/>
 	<haxedef name="as3_native" if="flash"/>
-	-->
+	<!-- -->
+	
+	<!-- <haxedef name="advanced-telemetry" if="flash" /> -->
 	
 	<!--Enable the Flixel core recording system-->
 	<!--haxedef name="FLX_RECORD" /-->
@@ -80,7 +89,5 @@
 	<!--<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />-->
 	
 	<!--------------------------------CUSTOM---------------------------------------->
-	
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
-	
 </project>

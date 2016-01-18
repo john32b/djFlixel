@@ -7,6 +7,9 @@ djFlixel Tools
 
 Various helpers and tools library for haxeflixel.
 
+####  [!! CLICK HERE FOR A WORKING DEMO !!](http://goo.gl/FMQJWi)
+![!DEMO](http://i.imgur.com/7kvDufP.png)
+
 ----------
 
 ### Features
@@ -18,8 +21,41 @@ Various helpers and tools library for haxeflixel.
  - Starfield FX
  - Rainbow loaderFX 
  
-### How to install
+#### How to install
 
 ```haxelib git djFlixel https://github.com/johndimi/djFlixel.git```
+
+--------
+
+### Menu System
+
+![FlxMenu screenshot](http://i.imgur.com/QpJExaG.png)
+
+Provides easy menu system creation with branching submenus.
+- Scrollable
+- Customizable, _(Fonts, Colors_Animation variables)_
+- Supports Menu Option Types:
+	- Link Options _(Call a function or goto another menu)_
+	- Togglable _(Can be toggled on or off)_
+	- Select one of _(Inline selection of one of many choices)_
+	- Number Rage _(Select a number using a slider)
+- Menu options can be unselectable or disabled
+- Offers simple callbacks 
+- Can handle infinite elements with small footprint
+
+
+### Starfield
+Provides an easy to setup and use __starfield layer__
+Customizable speed, colors, direction, widepixel.
+
+![Starfield in action](http://i.imgur.com/YXD2mUk.gif)
+
+### Rainbow Loader
+Emulates a loading screen from the 8bit computers (Amstrad, Commodore64)
+Customizable speed and rectangle height, also provides some pre-defined modes.
+
+![Rainbow border in action](http://i.imgur.com/YTjwLWL.gif)
+
+--------
 
 #### More documentation and examples soon !

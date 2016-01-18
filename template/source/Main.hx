@@ -8,26 +8,33 @@ import flash.Lib;
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
+import haxe.Json;
+import openfl.Assets;
+
+#if EXTERNAL_LOAD
+	import djFlixel.tool.MacroHelp;
+	import djFlixel.net.DataGet;
+#end
 
 
 /**
  * IMPORTANT NOTE:
  * ---------------
- * If you ever want to upload a debug version to the web, DISABLE the flag_ext_load
- * 
+ * Remember to remove the EXTERNAL_LOAD flag on release
  * ----------------------------------------------------*/
 
 class Main extends Sprite 
 {
-	var gameWidth:Int = 320; // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
-	var gameHeight:Int = 240; // Height of the game in pixels (might be less / more in actual pixels depending on your zoom).
-	var initialState:Class<FlxState> = State_Main; // The FlxState the game starts with.
-	var zoom:Float = 2; // If -1, zoom is automatically calculated to fit the window dimensions.
-	var framerate:Int = 50; // How many frames per second the game should run at.
-	var skipSplash:Bool = false; // Whether to skip the flixel splash screen that appears in release mode.
-	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
+	var gameWidth:Int = 320;
+	var gameHeight:Int = 240;
+	var initialState:Class<FlxState> = State_Main;
+	var zoom:Float = 2;
+	// 50 is ok and fast. If it feels choppy, set to 60
+	var framerate:Int = 50;
+	var skipSplash:Bool = true; 
+	var startFullscreen:Bool = false; 
 	
-	// You can pretty much ignore everything from here on - your code should go in your states.
+	//====================================================;
 	
 	public static function main():Void
 	{	
@@ -38,38 +45,60 @@ class Main extends Sprite
 	{
 		super();
 		
-		if (stage != null) 
-		{
+		if (stage != null) {
 			init();
-		}
-		else 
-		{
+		} else {
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
 	}//---------------------------------------------------;
 	
 	private function init(?E:Event):Void 
 	{
-		if (hasEventListener(Event.ADDED_TO_STAGE))
-		{
+		if (hasEventListener(Event.ADDED_TO_STAGE)) {
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 		}
 		
-		// -- Game Starts here
-		#if debug
-			trace("Warning: Flag set to load assets dynamically");
-			Reg.flag_ext_load = true;
-		#else // release
-			trace("Warning: Flag set to load assets statically");
-			Reg.flag_ext_load = false;
-		#end
-
-		// - new
-		Reg.preloadApp(setupGame);
-		
+		// Load external files and continue with game
+		loadExternal(setupGame);
 	}//---------------------------------------------------;
 	
-	private function setupGame():Void
+	// -- NEW --
+	// 
+	function loadExternal(onLoadComplete:Void->Void)
+	{
+		
+		var PARAMS_FILE_PATH = "assets/data/" + Reg.PARAMS_FILE;
+		
+		// Quick function called when can't read parameters file
+		var _paramsLoadError = function() {
+			trace('Error: JSON, Could not read ${PARAMS_FILE_PATH}, skipping.');
+			Reg.JSON = null;
+			onLoadComplete();
+		};
+		
+		
+		#if EXTERNAL_LOAD
+			// Load the parameters at runtime
+			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + PARAMS_FILE_PATH, 
+				function(loadedData:Dynamic) { // On load
+					Reg.JSON = loadedData;
+					onLoadComplete();
+				},function(err:Int) { // On error
+					_paramsLoadError();
+				}
+			);
+		#else
+			// Load the embedded parameters file
+			try {
+				Reg.JSON = Json.parse(Assets.getText(PARAMS_FILE_PATH));
+				onLoadComplete();
+			}catch (e:Dynamic) {
+				_paramsLoadError();
+			}
+		#end	
+	}//---------------------------------------------------;
+	
+	function setupGame():Void
 	{
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
@@ -83,7 +112,7 @@ class Main extends Sprite
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
 
-		// - new
+		// - Do this only once in the game lifetime
 		FlxG.signals.stateSwitched.addOnce(function() {
 				Reg.initOnce();
 		});

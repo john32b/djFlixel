@@ -14,7 +14,6 @@ class State_Main extends FlxState
 	{
 		super.create();
 		
-		
 		add(new FlxText(10, 10, 0, "DjFlixel Tools"));
 		
 	}//---------------------------------------------------;
