@@ -5,10 +5,15 @@ djFlixel Tools
 **Language:** Haxe 3.x
 **Requires:** haxeflixel 4.x (dev)
 
-Various helpers and tools library for haxeflixel.
+Various helpers and tools library for haxeflixel. This is a library that I created during the development of my other game projects. Feel free to use it, study it, fork it, or whatever :-)
 
-####  [!! CLICK HERE FOR A WORKING DEMO !!](http://goo.gl/FMQJWi)
 ![!DEMO](http://i.imgur.com/7kvDufP.png)
+#####  [!! CLICK HERE FOR A WORKING DEMO !!](http://bit.ly/djflx)
+
+```
+-- In development -- 
+-- More documentation, examples and features on the way --
+```
 
 ----------
 
