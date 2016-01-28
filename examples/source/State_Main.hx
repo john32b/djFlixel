@@ -24,7 +24,7 @@ import flixel.util.FlxTimer;
 
 // djFlixel Tools Demo
 // --
-// A few use examples.
+// A few use examples
 // ------------------------------;
 class State_Main extends FlxState
 {
@@ -53,19 +53,7 @@ class State_Main extends FlxState
 	// * Pointer to the current active background
 	var BgObjCurrent:FlxSprite = null;
 	
-	var toastDemo:Array<String> = [ 
-		"Press it again",
-		"#Style# one",
-		"$Style$ two",
-		"#BOTH# $STYLES$",
-		"The width is fixed",
-		"Long string that will fit just fine.",
-		"Short str",
-		"The height is \t \t \t \t \t \t \t \t \t \t \t \t \t auto-adjusted.",
-		"Game saved!",
-		"Formatting c:\\",
-		"JK"
-	];
+	var toastDemoText:Array<String>;
 	
 	var toastCurrent:Int = 0;
 	
@@ -135,7 +123,7 @@ class State_Main extends FlxState
 		// adds it to the menu and returns the object.
 		p = menu.newPage("main");
 		// Optional parameter, This is the page's title header text.
-		p.header = "djFlixel tools demo. V 0.2.0";
+		p.header = '${Reg.NAME} - ${Reg.VERSION}';
 		p.link("Rainbow Border", "@rainbow", "Rainbow Demo");
 		p.link("Starfield", "@starfield", "Starfield Demo");
 		p.link("Menu Demo", "@menudemo", "FlxMenu Demo");
@@ -248,6 +236,7 @@ class State_Main extends FlxState
 		create_footer_box();
 		
 		// - Creates a notification toast, for displaying quick info
+		toastDemoText = Reg.JSON.toastdemo;
 		toast = new Toast(100, "top", "right");
 		add(toast);
 				
@@ -328,9 +317,9 @@ class State_Main extends FlxState
 		}else
 		if (status == "optFire" && opt.data.link == "toast")
 		{
-			toast.fire(toastDemo[toastCurrent]);
+			toast.fire(toastDemoText[toastCurrent]);
 			toastCurrent++;
-			if (toastCurrent >= toastDemo.length) {
+			if (toastCurrent >= toastDemoText.length) {
 				toastCurrent = 0;
 			}	
 		}else

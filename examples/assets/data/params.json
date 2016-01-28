@@ -1,4 +1,15 @@
 {
+	"reg" : {
+		"NAME" : "DJFLIXEL tools",
+		"VERSION" : "0.2.1",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	"sounds" : {
+		
+	},
+	
 	"dialog" : [
 		"dialog box demo..",
 		"!np",
@@ -16,5 +27,19 @@
 		"",
 		"(s4)Line overflow test Line overflow test Line overflow test Line overflow test",
 		"release soon.." 
-		]
+	],
+	
+	"toastdemo" : [
+		"Press it again",
+		"#Style# one",
+		"$Style$ two",
+		"#BOTH# $STYLES$",
+		"The width is fixed",
+		"Long string that will fit just fine.",
+		"Short str",
+		"The height is \t \t \t \t \t \t \t \t \t \t \t \t \t auto-adjusted.",
+		"Game saved!",
+		"Formatting c:\\",
+		"JK"
+	]
 }

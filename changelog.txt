@@ -1,0 +1,12 @@
+
+DJFLIXEL GIT COMMITS CHANGE LOG
+================================
+
+
+# Added DEV branch with latest features
+  + MainTemplate. Quicker way to start a new project
+  + FileParams.hx will load JSON parameters file from either file or embedded
+  + Example, REG.hx now loads parameters from json.
+  
+# Version 0.2.0
+# Version 0.1.0

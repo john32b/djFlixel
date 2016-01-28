@@ -2,7 +2,6 @@ package djFlixel;
 
 import djFlixel.tool.FileParams;
 import openfl.display.Sprite;
-
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;

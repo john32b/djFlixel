@@ -2,8 +2,8 @@ package djFlixel.tool;
 
 import djFlixel.net.DataGet;
 import djFlixel.tool.MacroHelp;
-import haxe.Json;
 import openfl.Assets;
+import haxe.Json;
 
 class FileParams
 {
@@ -13,14 +13,12 @@ class FileParams
 	 * 
 	 * @param file Path in relation to the project. e.g 'assets/data/one.json'
 	 * @param onLoadComplete Gets called when the loading is complete
+	 * @NOTE: inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
 	 */
-	public static function loadSettings(file:String,onLoadComplete:Void->Void):Void
+	public static inline function loadSettings(file:String,onLoadComplete:Void->Void):Void
 	{
 		var PARAMS_FILE_PATH = "assets/data/" + file;
-		
 		JSON = null;
-		
-		trace("Loading parameters from " + PARAMS_FILE_PATH);
 		
 		// Quick function called when can't read parameters file
 		var _paramsLoadError = function() {
@@ -29,8 +27,7 @@ class FileParams
 			onLoadComplete();
 		};
 		
-		
-		#if EXTERNAL_LOAD
+		#if (EXTERNAL_LOAD)
 			// Load the parameters at runtime
 			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + PARAMS_FILE_PATH, 
 				function(loadedData:Dynamic) { // On load

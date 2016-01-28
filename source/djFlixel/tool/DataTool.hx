@@ -10,6 +10,7 @@ class DataTool
 {
 	/**
 	 * Creates and returns an empty 2D array
+	 * NOTE: Access the array like ar[y][x]
 	 * @param	width The width of the Array
 	 * @param	height The height of the Array
 	 */

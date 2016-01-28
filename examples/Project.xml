@@ -45,7 +45,7 @@
 	<!-- EXTERNAL_LOAD:
 	<!-- If set, then some files will be loaded in real time 
 	<!-- Useful to modifing things without re-compiling every time 
-	<!--
+	<!-- -->
 	<haxedef name="EXTERNAL_LOAD"/> 
 	<!-- -->
 	

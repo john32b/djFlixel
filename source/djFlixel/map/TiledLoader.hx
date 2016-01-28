@@ -41,6 +41,14 @@ typedef MapEntity = {
  * -----
  * Assumes ONE image per Layer, else it WILL break.
  * 
+ * USAGE:
+ * -------
+ * 
+ * 	mapLoader = new TiledLoader();
+ *	mapLoader.load("assets/maps/level_01.tmx");
+ *	var mapData:Array<Int> = mapLoader.layerTiles.get("tiles");
+ *  
+ * 
  * @author JohnDimi, @jondmt
  */
 class TiledLoader implements IFlxDestroyable
@@ -49,7 +57,7 @@ class TiledLoader implements IFlxDestroyable
 	public var layerTiles:Map<String,Array<Array<Int>>>;	// LayerName=> Array
 	public var layerEntities:Map<String,Array<MapEntity>>; 	// LayerName=> Entities
 
-	public var bgColor(default, null):Int = 0xFF000000;
+	public var bgColor(default, null):Int = 0xFF000000; // TODO: Load this from the file
 	
 	public var tileWidth(default, null):Int;
 	public var tileHeight(default, null):Int;
@@ -72,12 +80,12 @@ class TiledLoader implements IFlxDestroyable
 		layerEntities = null;
 	}//---------------------------------------------------;
 	
-	// --
-	// Load a .tmx map file.
-	// IT MUST EXIST IN THE ASSETS!
-	// -
-	// ignoreOffset, In some cases some layers use the same image with other layers
-	public function load(file:String, ?sameOffset:Array<String>)
+	/**
+	 * Load a .TMX map file. ( IT MUST EXIST IN THE ASSETS! )
+	 * @param	file The file to load
+	 * @param	sameImagesLayer If any layer shares an image with another layer, put the name of the layer here. #offset correction hack
+	 */
+	public function load(file:String, ?sameImagesLayer:Array<String>)
 	{
 		trace('Loading map file ($file)');
 	
@@ -86,7 +94,7 @@ class TiledLoader implements IFlxDestroyable
 		layerTiles = new Map();
 		layerEntities = new Map();
 		
-		if (sameOffset == null) sameOffset = [];
+		if (sameImagesLayer == null) sameImagesLayer = [];
 		
 		// ---
 		var root:Fast;
@@ -121,7 +129,7 @@ class TiledLoader implements IFlxDestroyable
 		{
 			 layerName = tnode.att.resolve("name");
 			
-			if (sameOffset.indexOf(layerName) >= 0){
+			if (sameImagesLayer.indexOf(layerName) >= 0){
 				offset = -tileOffsets[0];
 			}else {	
 				offset = -tileOffsets.shift();
@@ -138,7 +146,7 @@ class TiledLoader implements IFlxDestroyable
 		{
 			layerName = tnode.att.resolve("name");
 			
-			if (sameOffset.indexOf(layerName) >= 0){
+			if (sameImagesLayer.indexOf(layerName) >= 0){
 				offset = -tileOffsets[0];
 			}else {	
 				offset = -tileOffsets.shift();
