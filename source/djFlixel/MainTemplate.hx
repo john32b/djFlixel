@@ -7,6 +7,7 @@ import flixel.FlxGame;
 import flixel.FlxState;
 import flash.events.Event;
 import flash.Lib;
+import haxe.Json;
 
 
 class MainTemplate extends Sprite
@@ -37,7 +38,7 @@ class MainTemplate extends Sprite
 		if (hasEventListener(Event.ADDED_TO_STAGE)) {
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 		}
-		
+	
 		//Load external files and continue with game
 		FileParams.loadSettings(Reg.PARAMS_FILE, setupGame);
 	}//---------------------------------------------------;

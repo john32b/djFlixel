@@ -85,7 +85,7 @@ class DataGet
 		{
 			try {
 				//- Json File
-				data = Json.parse(loader.data);
+				data = haxe.Json.parse(loader.data);
 				type = "json";
 			}catch (e:Dynamic)
 			{
