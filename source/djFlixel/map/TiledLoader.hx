@@ -29,7 +29,7 @@ typedef MapEntity = {
 	y:Int,
 	id:Int,
 	?type:String,
-	?custom:Dynamic
+	?uid:Int
 };
 
 
