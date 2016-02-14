@@ -40,7 +40,7 @@ class MainTemplate extends Sprite
 		}
 	
 		//Load external files and continue with game
-		FileParams.loadSettings(Reg.PARAMS_FILE, setupGame);
+		FileParams.loadFiles(setupGame);
 	}//---------------------------------------------------;
 	
 	// --

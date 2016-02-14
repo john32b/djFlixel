@@ -18,7 +18,7 @@ EXAMPLE:
 class ArrayExecSync<T>
 {
 	public var queue:Array<T>;
-	public var counter:Int;
+	public var counter(default, null):Int;
 	public var queue_complete:Void->Void;
 	public var queue_action:T->Void;
 	
@@ -32,10 +32,10 @@ class ArrayExecSync<T>
 	}//---------------------------------------------------;
 	
 	public function start(?fn_action:T->Void, ?fn_complete:Void->Void):Void {
-		if (queue.length == 0) return; //throw "Queue is empty";
+		if (queue.length == 0) return; // throw "Queue is empty";
 		counter = -1;
-		queue_action   = fn_action;
-		queue_complete = fn_complete;
+		if (fn_action != null) queue_action   = fn_action;
+		if (fn_complete != null) queue_complete = fn_complete;
 		next();
 	}//---------------------------------------------------;
 	
@@ -43,19 +43,12 @@ class ArrayExecSync<T>
 		if (++counter < queue.length) {
 			queue_action(queue[counter]);
 		} else {
-			if (queue_complete != null) {
-				queue_complete();
-			}
+			queue_complete();
 		}
 	}//---------------------------------------------------;
 	
 	public function kill() {
-		queue = null;
-	}//---------------------------------------------------;
-	
-	public function reset() {
-		queue = [];
-		counter = -1;
+		queue = null;	
 	}//---------------------------------------------------;
 	
 }//--//

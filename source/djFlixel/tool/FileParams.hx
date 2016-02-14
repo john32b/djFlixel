@@ -33,44 +33,52 @@ class FileParams
 	}//---------------------------------------------------;
 	
 	
-	// --
-	// Reload everything from the start
-	public static function loadFilesExternally(onLoadComplete:Void->Void)
+	/**
+	 * Reload all the queue files
+	 * ---- 
+	 * @NOTE: inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
+	 */
+	
+	inline public static function loadFiles(onLoadComplete:Void->Void)
 	{
+		files = new Map();
+		json = new Map();
+		
 		if (filesToLoad == null) {
 			trace("Warning: No files to load");
+			onLoadComplete();
 			return;
 		}
 		
-		files = new Map();
-		json = new Map();
+		trace("LOADING EXT FILES");
+		trace(filesToLoad);
 		
 		var ar:ArrayExecSync<String> = new ArrayExecSync(filesToLoad);
 		
 		ar.queue_complete = onLoadComplete;
 		
 		ar.queue_action = function(f:String) {
-			
+		
 			#if (EXTERNAL_LOAD) // ------------------------
 				
 			trace("+ Files from external sources");
 			
 			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + DATA_PATH + f, 
-			function(loadedData:Dynamic) { // On load
-				trace('Loaded file $f..');
-				if (Std.is(loadedData, String) {
-					trace('.. as string.');
-					files.set(f, loadedData);	
-				}else
-				{
-					trace('.. as JSON.');
-					json.set(f, loadedData);
+				function(loadedData:Dynamic) { // On load
+					trace('Loaded file $f..');
+					if (Std.is(loadedData, String)) {
+						trace('.. as string.');
+						files.set(f, loadedData);	
+					}else {
+						trace('.. as JSON.');
+						json.set(f, loadedData);
+					}
+					ar.next();
+				},function(err:Int) { // On error
+					trace('Error: Could not read ${f}, skipping.');
+					ar.next();
 				}
-				ar.next();
-			},function(err:Int) { // On error
-				trace('Error: Could not read ${f}, skipping.');
-				ar.next();
-			}
+			);
 			
 			#else // Just load the JSON files from the assets
 			
@@ -98,11 +106,6 @@ class FileParams
 	}//---------------------------------------------------;
 	
 	
-	/**
-	 * 
-	 * @param file Path in relation to the project. e.g 'assets/data/one.json'
-	 * @param onLoadComplete Gets called when the loading is complete
-	 * @NOTE: inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
-	*/
+	
 	
 }// --
