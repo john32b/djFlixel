@@ -10,11 +10,14 @@ import entity.EntityTopDown;
 
 
 /**
- * Provides basic TILED map functionality
- * --
- * Extend this class for more control.
- * 
- * NOTE : Be sure to have some basic info in the PARAMS.JSON file
+ * MAPTEMPLATE
+ * ----------
+ * + Provides basic TILED map functionality
+ * + Extend this class for more control.
+ * ---------
+ * NOTES : 
+ * . Be sure to have some basic info in the PARAMS.JSON file
+ * . Call updateCameraAndFeedData() from the game at intervals
  * 
  */
 class MapTemplate implements IFlxDestroyable
@@ -135,6 +138,7 @@ class MapTemplate implements IFlxDestroyable
 	function reset()
 	{
 		UIDGEN = 0;
+		 
 		// -- Clear the streaming layer
 		if (streamingLayer != null) {
 			for (i in streamingLayer) {
@@ -216,9 +220,14 @@ class MapTemplate implements IFlxDestroyable
 	{	
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
 		cameraPos.y = Std.int(camera.scroll.y / TILEHEIGHT);
+		
+		// There are cases where this could be <0
+		if (cameraPos.x < 0) cameraPos.x = 0;
+		if (cameraPos.y < 0) cameraPos.y = 0;
+		
 		cameraPosOld.copyFrom(cameraPos);
 		
-		trace("= feedRoomData()");
+		trace("= feedRoomData() checking entities from and to");
 		trace('x0', cameraPos.x - 1);
 		trace('x1', cameraPos.x + cameraWidth);
 		trace('y0', cameraPos.y - 1);
@@ -333,13 +342,12 @@ class MapTemplate implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	
-	// # USER CODE #
+
 	// -- OVERRIDE THIS --
 	// The object layer is always scanned for data
 	// Manage specific entities here, like the player spawn point, etc
 	function manageEntityAt(x:Int, y:Int, id:Int)
 	{
-		
 	}//---------------------------------------------------;
 	
 	 /**

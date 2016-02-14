@@ -4,49 +4,105 @@ import djFlixel.net.DataGet;
 import djFlixel.tool.MacroHelp;
 import openfl.Assets;
 
-class FileParams
+// Raname to something else, like External File Loader, etc.
+class FileParams 
 {
-	public static var JSON:Dynamic;
+
+	static var DATA_PATH = "assets/data/";
+	
+	// Map a fileID with fileContents
+	// Useful for dynamically reloading maps, etc.
+	public static var files:Map<String,String>;
+	// Hold the json files
+	public static var json:Map<String,Dynamic>;
+	
+	// Holds all the dynamically loaded map files
+	static var filesToLoad:Array<String>;
+	// The json file to load
+	
+	
+	//====================================================;
+	// FUNCTIONS 
+	//====================================================;
+	
+	// Add files to the queue
+	public static function addFile(file:String)
+	{
+		if (filesToLoad == null) filesToLoad = [];
+		filesToLoad.push(file);
+	}//---------------------------------------------------;
+	
+	
+	// --
+	// Reload everything from the start
+	public static function loadFilesExternally(onLoadComplete:Void->Void)
+	{
+		if (filesToLoad == null) {
+			trace("Warning: No files to load");
+			return;
+		}
+		
+		files = new Map();
+		json = new Map();
+		
+		var ar:ArrayExecSync<String> = new ArrayExecSync(filesToLoad);
+		
+		ar.queue_complete = onLoadComplete;
+		
+		ar.queue_action = function(f:String) {
+			
+			#if (EXTERNAL_LOAD) // ------------------------
+				
+			trace("+ Files from external sources");
+			
+			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + DATA_PATH + f, 
+			function(loadedData:Dynamic) { // On load
+				trace('Loaded file $f..');
+				if (Std.is(loadedData, String) {
+					trace('.. as string.');
+					files.set(f, loadedData);	
+				}else
+				{
+					trace('.. as JSON.');
+					json.set(f, loadedData);
+				}
+				ar.next();
+			},function(err:Int) { // On error
+				trace('Error: Could not read ${f}, skipping.');
+				ar.next();
+			}
+			
+			#else // Just load the JSON files from the assets
+			
+			trace("+ Files from embedded assets");
+			
+			if (f.substr( -4).toLowerCase() == "json")
+			{
+				trace('---------- LOADING JSON FILE---------------'); // test
+				try{
+					json.set(f, haxe.Json.parse(Assets.getText(DATA_PATH + f)));
+				}catch (e:Dynamic) {
+					trace('Error: Could not read ${f}, skipping.');
+					ar.next();
+				}
+			}
+			
+			ar.next();
+
+			#end
+			
+		};
+		
+		ar.start();
+		
+	}//---------------------------------------------------;
+	
 	
 	/**
 	 * 
 	 * @param file Path in relation to the project. e.g 'assets/data/one.json'
 	 * @param onLoadComplete Gets called when the loading is complete
 	 * @NOTE: inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
-	 */
-	inline public static function loadSettings(file:String,onLoadComplete:Void->Void):Void
-	{
-		var PARAMS_FILE_PATH = "assets/data/" + file;
-		JSON = null;
-		
-		// Quick function called when can't read parameters file
-		var _paramsLoadError = function() {
-			trace('Error: JSON, Could not read ${PARAMS_FILE_PATH}, skipping.');
-			JSON = null;
-			onLoadComplete();
-		};
-		
-		#if (EXTERNAL_LOAD)
-			// Load the parameters at runtime
-			trace("Json Parameters, External Load");
-			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + PARAMS_FILE_PATH, 
-				function(loadedData:Dynamic) { // On load
-					JSON = loadedData;
-					onLoadComplete();
-				},function(err:Int) { // On error
-					_paramsLoadError();
-				}
-			);
-		#else
-			// Load the embedded parameters file
-			trace("Json Parameters, Embedded");
-			try {
-				JSON = haxe.Json.parse(Assets.getText(PARAMS_FILE_PATH));
-				onLoadComplete();
-			}catch (e:Dynamic) {
-				_paramsLoadError();
-			}
-		#end	
-	}//---------------------------------------------------;
+	*/
 	
 }// --
