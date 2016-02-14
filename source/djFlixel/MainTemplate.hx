@@ -1,6 +1,5 @@
 package djFlixel;
 
-import djFlixel.tool.FileParams;
 import openfl.display.Sprite;
 import flixel.FlxG;
 import flixel.FlxGame;
@@ -8,6 +7,7 @@ import flixel.FlxState;
 import flash.events.Event;
 import flash.Lib;
 import haxe.Json;
+import djFlixel.tool.DynAssets;
 
 
 class MainTemplate extends Sprite
@@ -40,7 +40,7 @@ class MainTemplate extends Sprite
 		}
 	
 		//Load external files and continue with game
-		FileParams.loadFiles(setupGame);
+		DynAssets.loadFiles(setupGame);
 	}//---------------------------------------------------;
 	
 	// --

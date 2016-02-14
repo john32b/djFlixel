@@ -18,7 +18,7 @@
 
 package djFlixel.map;
 
-import djFlixel.tool.FileParams;
+import djFlixel.tool.DynAssets;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import haxe.xml.Fast;
 import openfl.Assets;
@@ -105,9 +105,9 @@ class TiledLoader implements IFlxDestroyable
 		try {
 			
 		#if (EXTERNAL_LOAD)
-			if (FileParams.files.exists(file)) {
+			if (DynAssets.files.exists(file)) {
 				trace("++ Loading map dynamically");
-				root = new Fast(Xml.parse(FileParams.files.get(file))).node.resolve("map");
+				root = new Fast(Xml.parse(DynAssets.files.get(file))).node.resolve("map");
 			}else {	
 				trace('Error: Can\'t load "$file" dynamically. Push it to the dynamic file list. !!');
 		#end

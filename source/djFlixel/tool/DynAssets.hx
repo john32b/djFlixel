@@ -4,10 +4,8 @@ import djFlixel.net.DataGet;
 import djFlixel.tool.MacroHelp;
 import openfl.Assets;
 
-// Raname to something else, like External File Loader, etc.
-class FileParams 
+class DynAssets
 {
-
 	static var ASSETS_PATH = "assets/";
 	
 	// Map a fileID with fileContents
@@ -17,8 +15,8 @@ class FileParams
 	public static var json:Map<String,Dynamic>;
 	
 	// Holds all the dynamically loaded map files
+	// #Set this directly
 	public static var filesToLoad:Array<String>;
-	// The json file to load
 	
 	//====================================================;
 	// FUNCTIONS 
@@ -50,8 +48,6 @@ class FileParams
 		
 			#if (EXTERNAL_LOAD) // ------------------------
 				
-			trace("+ Files from external sources");
-			
 			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + ASSETS_PATH + f, 
 				function(loadedData:Dynamic) { // On load
 					trace('Loaded file $f..');
@@ -70,8 +66,6 @@ class FileParams
 			);
 			
 			#else // Just load the JSON files from the assets
-			
-			trace("+ Files from embedded assets");
 			
 			if (f.substr( -4).toLowerCase() == "json")
 			{
