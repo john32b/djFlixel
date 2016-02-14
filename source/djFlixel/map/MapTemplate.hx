@@ -23,7 +23,7 @@ import entity.EntityTopDown;
 class MapTemplate implements IFlxDestroyable
 {
 	// Default paths for the maps:
-	public var MAP_DIRECTORY:String = "assets/maps/";
+	public var MAP_DIRECTORY:String = "maps/";
 	public var MAP_EXTENSION:String = ".tmx";
 	
 	// Hold the active map tilesizes

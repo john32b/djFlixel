@@ -18,6 +18,7 @@
 
 package djFlixel.map;
 
+import djFlixel.tool.FileParams;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import haxe.xml.Fast;
 import openfl.Assets;
@@ -53,6 +54,8 @@ typedef MapEntity = {
  */
 class TiledLoader implements IFlxDestroyable
 {
+	
+	static var ASSETS_PATH:String = "assets/";
 	
 	public var layerTiles:Map<String,Array<Array<Int>>>;	// LayerName=> Array
 	public var layerEntities:Map<String,Array<MapEntity>>; 	// LayerName=> Entities
@@ -98,10 +101,26 @@ class TiledLoader implements IFlxDestroyable
 		
 		// ---
 		var root:Fast;
-		try{
-		root = new Fast(Xml.parse(Assets.getText(file))).node.resolve("map");
+		
+		try {
+			
+		#if (EXTERNAL_LOAD)
+			if (FileParams.files.exists(file)) {
+				trace("++ Loading map dynamically");
+				root = new Fast(Xml.parse(FileParams.files.get(file))).node.resolve("map");
+			}else {	
+				trace('Error: Can\'t load "$file" dynamically. Push it to the dynamic file list. !!');
+		#end
+			trace("++ Loading from embedded");
+			root = new Fast(Xml.parse(Assets.getText(ASSETS_PATH + file))).node.resolve("map");
+
+		#if (EXTERNAL_LOAD)
+			}
+		#end
+		
 		}catch (e:Dynamic){
 			trace('Fatal: Map file ($file) does not exist');
+			throw "Fatal: Map file ($file) does not exist";
 			return;
 		}
 		
@@ -146,7 +165,7 @@ class TiledLoader implements IFlxDestroyable
 		{
 			layerName = tnode.att.resolve("name");
 			
-			if (sameImagesLayer.indexOf(layerName) >= 0){
+			if (sameImagesLayer.indexOf(layerName) >= 0) {
 				offset = -tileOffsets[0];
 			}else {	
 				offset = -tileOffsets.shift();
@@ -190,7 +209,6 @@ class TiledLoader implements IFlxDestroyable
 			} catch (error:String) {
 				r2 = null;
 			}
-		
 
 			ar.push ({ 	x:Std.parseInt(node.att.x),
 						y:Std.parseInt(node.att.y) - Std.parseInt(node.att.height), // FIX A BUG from the Tiled Editor

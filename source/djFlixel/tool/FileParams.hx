@@ -8,7 +8,7 @@ import openfl.Assets;
 class FileParams 
 {
 
-	static var DATA_PATH = "assets/data/";
+	static var ASSETS_PATH = "assets/";
 	
 	// Map a fileID with fileContents
 	// Useful for dynamically reloading maps, etc.
@@ -17,21 +17,13 @@ class FileParams
 	public static var json:Map<String,Dynamic>;
 	
 	// Holds all the dynamically loaded map files
-	static var filesToLoad:Array<String>;
+	public static var filesToLoad:Array<String>;
 	// The json file to load
-	
 	
 	//====================================================;
 	// FUNCTIONS 
 	//====================================================;
-	
-	// Add files to the queue
-	public static function addFile(file:String)
-	{
-		if (filesToLoad == null) filesToLoad = [];
-		filesToLoad.push(file);
-	}//---------------------------------------------------;
-	
+
 	
 	/**
 	 * Reload all the queue files
@@ -50,9 +42,6 @@ class FileParams
 			return;
 		}
 		
-		trace("LOADING EXT FILES");
-		trace(filesToLoad);
-		
 		var ar:ArrayExecSync<String> = new ArrayExecSync(filesToLoad);
 		
 		ar.queue_complete = onLoadComplete;
@@ -63,7 +52,7 @@ class FileParams
 				
 			trace("+ Files from external sources");
 			
-			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + DATA_PATH + f, 
+			var get:DataGet = new DataGet(MacroHelp.getProjectPath() + ASSETS_PATH + f, 
 				function(loadedData:Dynamic) { // On load
 					trace('Loaded file $f..');
 					if (Std.is(loadedData, String)) {
@@ -88,7 +77,7 @@ class FileParams
 			{
 				trace('---------- LOADING JSON FILE---------------'); // test
 				try{
-					json.set(f, haxe.Json.parse(Assets.getText(DATA_PATH + f)));
+					json.set(f, haxe.Json.parse(Assets.getText(ASSETS_PATH + f)));
 				}catch (e:Dynamic) {
 					trace('Error: Could not read ${f}, skipping.');
 					ar.next();
