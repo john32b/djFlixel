@@ -45,7 +45,7 @@ class MenuOptionToggle extends MenuOptionBase
 	}//---------------------------------------------------;
 	
 	// --
-	override public function sendInput(inputName:String) 
+	override function handleInput(inputName:String) 
 	{
 		switch(inputName){
 			case "fire":
@@ -71,13 +71,16 @@ class MenuOptionToggle extends MenuOptionBase
 	override function state_default() 
 	{
 		super.state_default();
-		box.color = style.color_accent;
+		if (opt.disabled)
+			box.color = style.color_disabled;
+		else
+			box.color = style.color_accent;
 	}//---------------------------------------------------;
 	
 	override function state_focused() 
 	{
 		super.state_focused();
-		box.color = style.color_focused;
+		box.color = label.color;
 	}//---------------------------------------------------;
 	
 	override function state_disabled() 

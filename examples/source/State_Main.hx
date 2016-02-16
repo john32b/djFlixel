@@ -10,6 +10,7 @@ import djFlixel.gui.PageData;
 import djFlixel.gui.Styles;
 import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.Toast;
+import djFlixel.SND;
 import flixel.addons.display.FlxBackdrop;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -21,11 +22,12 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxTimer;
 
 
-
-// djFlixel Tools Demo
-// --
-// A few use examples
-// ------------------------------;
+/**
+ * djFlixel Tools examples
+ * -----------------------
+ * Main Menu
+ * 
+ */
 class State_Main extends FlxState
 {
 	// Animated backgrounds
@@ -38,16 +40,11 @@ class State_Main extends FlxState
 	// Change the name!
 	var toast:Toast;
 	
-	// Some background tiles.
-	var tileBG_Files:Array<String> = [
-		"assets/bg02.png",
-		"assets/bg01.png",
-		"assets/bg03.png"
-	];
-	
-	
+	// * Pointer to the list of background tiles, set on params.json
+	var tileBG_Files:Array<String>;
 	// Current index in tileBG_Files
 	var tileBG_Current:Int = 0;
+	
 	// Every menu page is associated to an object background
 	var mapToBG:Map<String,FlxSprite>;
 	// * Pointer to the current active background
@@ -57,8 +54,7 @@ class State_Main extends FlxState
 	
 	var toastCurrent:Int = 0;
 	
-	
-	// Keep track of this
+	// Know if this is the first time showing this state
 	// Whenever a state goes back to this, skip showing the instructions
 	static var firstTimeShowing:Bool = true;
 
@@ -66,11 +62,11 @@ class State_Main extends FlxState
 	// --
 	override public function create():Void
 	{
-		trace("-- Creating State_Main");
-		
+				
 		super.create();
 	
 		// - Create the animated backgrounds
+		tileBG_Files = Reg.JSON.tilesBG;
 		bg = new FlxBackdrop(tileBG_Files[tileBG_Current]);
 		bg.velocity.set(-8, 12.2);	// random speed
 		add(bg);
@@ -102,6 +98,7 @@ class State_Main extends FlxState
 		
 		// -- Create the main menu
 		menu = new FlxMenu(20, 40, 0, 5);
+		
 		// These parameters are going to be applied to all the pages
 		// unless overrided by a page.
 		menu.callbacks_menu = callbacks_menu;
@@ -116,8 +113,8 @@ class State_Main extends FlxState
 		// Temp pointer to the current page that is being edited;
 		var p:PageData;
 		
-		// ### Menu Main Page
-		// #---------------#
+		// == Menu Main Page
+		// ------------------------------------------
 		
 		// This creates a new page with SID="main", 
 		// adds it to the menu and returns the object.
@@ -128,29 +125,31 @@ class State_Main extends FlxState
 		p.link("Starfield", "@starfield", "Starfield Demo");
 		p.link("Menu Demo", "@menudemo", "FlxMenu Demo");
 		p.link("Notification Demo", "toast", "Fire a random toast notification");
-		p.link("Grid navigation Demo", "grid", "Grid like system that is fully customizable");
+		p.add("Grid navigation Demo (soon)", { type:"link", sid:"grid", disabled:true,
+						desc:"Fully Customizable grid system navigation for inventories"} );
 		p.link("Dialog box Demo", "dialog", "Dialog box that is fully customizable");
 		p.link("Settings", "@settings", "Settings menu");
-		
+		// --
 		p = menu.newPage("rainbow");
 		p.header = "Rainbow Example";
 		p.add("Predefined style", { sid:"rslider", type:"slider", pool:[0, 3], desc:"Cycle through the predefined styles" } );
-		p.back(); // Quick way to add a "back" button to the page.
-		
+		p.addBack(); // Quick way to add a "back" button to the page.
+		// --
 		p = menu.newPage("starfield");
 		p.header = "Starfield Example";
 		p.link("Randomize", "star_random", "Randomize colors and WidePixel");
-		p.back();
-		
+		p.addBack();
+		// --
 		p = menu.newPage("settings");
 		p.header = "Settings";
 		p.add("Antialiasing", { type:"toggle", current:Reg.ANTIALIASING, sid:"aa" } );
 		p.add("BG Texture", { sid:"bg", type:"slider", desc:"Change the background tile image",
 							  pool:[0, tileBG_Files.length - 1], current:tileBG_Current } );
-		p.back();
+		p.addBack();
 			
-		// ### Menu Demo Page
-		// #----------------#
+		
+		// == Menu Demo Page
+		// --------------------------------
 		
 		p = menu.newPage("menudemo");
 		// This page will be displayed using 10 slots, to avoid scrolling
@@ -163,18 +162,18 @@ class State_Main extends FlxState
 		// Labels are unselectable by default
 		p.add("Text Label", { type:"label" } );
 		// This option will start CHECKED, { current:true }
-		p.add("Another toggle", { type:"toggle", current:true, sid:"tog2" } );
+		p.add("A disabled element", { type:"toggle", current:true, sid:"tog2", disabled:true } );
 		p.add("OneOf Option", { type:"oneof", pool:["red", "green", "blue"], sid:"oneof1" } );
 		p.add("Number Ranger", { type:"slider", pool:[50, 60], current:55, sid:"slider1" } );
 		// the @ tells the menu to go to the page with SID=="menupage2"
 		p.link("MenuPage with custom style", "@menupage2");
 		p.add("Dynamically selectable", { type:"toggle", selectable:false, sid:"stog1" } );
 		p.add("Toggle selectable ^", { type:"toggle", sid:"stog", current:false } );
-		p.back();
+		p.addBack();
 			
 		
-		// ### Menu Style Demo Page
-		// #----------------#
+		// == Menu Style Demo Page
+		// --------------------------------------
 		
 		// - Create a new page with different styling
 		p = menu.newPage("menupage2");
@@ -208,13 +207,16 @@ class State_Main extends FlxState
 			bs.anim_end_y = 0;
 			bs.anim_time_between_elements = 0.12;
 			bs.anim_style = "parallel";
+			
 		// Then I assign the styles I created to the page.custom dynamic var
 		// You could create the styles directly to page.custom
 		// but you'd lose the autocompletion.
+		
 		p.custom.styleOption = os;
 		p.custom.styleList = ls;
 		p.custom.styleBase = bs;
 		p.custom.slots = 3;
+		
 		// Just add a few call buttons.
 		p.link("Link one", "fn1");
 		p.link("Link two", "fn2");
@@ -222,11 +224,9 @@ class State_Main extends FlxState
 		p.link("Link four", "fn4");
 		p.add("Toggle test", { type:"toggle" } );
 		p.add("Selection test", { type:"oneof", pool:["opt 1", "opt 2", "opt 3"] } );
-		p.back(); 
+		p.addBack(); 
 
-		// ### Done creating the menus, add this to the stage.
-		// # ----
-		
+		// - Done creating menus, add it to the stage.
 		add(menu);
 		
 		// - This will animate the menu in and focus it.
@@ -235,7 +235,8 @@ class State_Main extends FlxState
 		// - Extra display info
 		create_footer_box();
 		
-		// - Creates a notification toast, for displaying quick info
+		// == Creates a notification toast, for displaying quick info
+		// ------------------------------------
 		toastDemoText = Reg.JSON.toastdemo;
 		toast = new Toast(100, "top", "right");
 		add(toast);
@@ -246,7 +247,7 @@ class State_Main extends FlxState
 		}
 	}//---------------------------------------------------;
 	
-	var menuHelp:FlxAutoText;
+	var footerText:FlxAutoText;
 	// -- Add a footer box for displaying general info
 	// -- $param HEIGHT, The box is always going to be aligned 
 	//	  at bottom,using this HEIGHT
@@ -260,75 +261,96 @@ class State_Main extends FlxState
 		bgBox.alpha = 0.85;
 		add(bgBox);
 		
-		menuHelp = new FlxAutoText(textPadding, startY + textPadding, FlxG.width - (textPadding * 2));
-		menuHelp.setSpeed(0.03, 2);
-		menuHelp.color = Palette_DB32.COL_26;
-		add(menuHelp);
+		footerText = new FlxAutoText(textPadding, startY + textPadding, FlxG.width - (textPadding * 2));
+		footerText.setSpeed(0.03, 2);
+		footerText.color = Palette_DB32.COL_26;
+		add(footerText);
 	}//---------------------------------------------------;
 	
 	// --
+	// MainMenu general callbacks
 	function callbacks_menu(status:String, data:String)
 	{
 		switch(status) {
 			case "pageOn" : 
 				showBGWithID(data);
+				SND.play("c_sel");
+				
+			// Sound Effects :
 			case "tick" :
+				SND.play("c_tick");
+			case "tick_change" | "tick_fire":
+				SND.play("c_sel");
+			case "back":
+				SND.play("c_back");
+			case "tick_error":
+				SND.play("c_err");
 		}
 	}//---------------------------------------------------;
-
+	
+	// --
+	// MainMenu option elements callbacks
+	function callbacks_option(status:String, opt:OptionData)
+	{
+		switch(status)
+		{
+			// Fired everytime an option changed values
+			case "optChange":
+				switch(opt.SID) {
+				// Antialiasing toggle
+				case "aa":	 Reg.ANTIALIASING = !Reg.ANTIALIASING;
+				// Background selector
+				case "bg":	 bg.loadGraphic(tileBG_Files[cast opt.data.current]);
+				}
+				
+			// Fired everytime an option is focused
+			case "optFocus":
+				footerText.start(opt.description != null? opt.description : "");
+				
+			// Fired when an option is selected.
+			case "optFire":
+				switch(opt.SID) {
+				// Randomize stars
+				case "star_random":
+					starf.setSpeed(FlxG.random.float(0.3, 1.5));
+					starf.setDirection(FlxG.random.int(0, 360));
+					starf.numberOfStars = FlxG.random.int(150, 900);
+					starf.flag_widepixel = FlxG.random.bool();
+					starf.color_bg = Palette_DB32.getRandomColor();
+					starf.color_1 = Palette_DB32.getRandomColor();
+					starf.color_2 = Palette_DB32.getRandomColor();
+					starf.color_3 = Palette_DB32.getRandomColor();
+				// Change background image
+				case "rslider":
+					rainb.setPredefined(cast opt.data.current);
+				
+				// Fire a toast notification
+				case "toast":
+					toast.fire(toastDemoText[toastCurrent]);
+					toastCurrent++;
+					if (toastCurrent >= toastDemoText.length) {
+						toastCurrent = 0;
+					}	
+				
+				// Go to the dialog demo State
+				case "dialog":
+					FlxG.switchState(new State_Dialog());
+				}
+		}// end switch
+		
+	}//---------------------------------------------------;
+	
 	// --
 	// Custom callbacks for the menudemo pages.
 	function callbacks_menudemo(status:String, opt:OptionData)
 	{
-		trace("Custom callbacks for menudemo----", status, opt);
-		menuHelp.start(opt.data.current != null?("Data set to : " + opt.data.current) : "");
+		footerText.start(opt.data.current != null?("Data set to : " + opt.data.current) : "");
 		
 		if (opt.SID == "stog" && status == "optChange")
 		{
 			menu.option_setEnabled("stog1", opt.data.current);
 		}
 	}//---------------------------------------------------;
-	
-	// --
-	function callbacks_option(status:String, opt:OptionData)
-	{
-		if (status == "optFocus") {
-			menuHelp.start(opt.description != null? opt.description : "");
-		}else
-		if (opt.SID == "aa" && status == "optChange") {
-			Reg.ANTIALIASING = !Reg.ANTIALIASING;
-		}else
-		if (opt.SID == "bg" && status == "optChange") {
-			bg.loadGraphic(tileBG_Files[cast opt.data.current]);
-		}else
-		if (opt.SID == "star_random" && status == "optFire") {
-			// Randomize Stars
-			starf.setSpeed(FlxG.random.float(0.3, 1.5));
-			starf.setDirection(FlxG.random.int(0, 360));
-			starf.numberOfStars = FlxG.random.int(150, 900);
-			starf.flag_widepixel = FlxG.random.bool();
-			starf.color_bg = Palette_DB32.getRandomColor();
-			starf.color_1 = Palette_DB32.getRandomColor();
-			starf.color_2 = Palette_DB32.getRandomColor();
-			starf.color_3 = Palette_DB32.getRandomColor();
-		}else
-		if (status == "optChange" && opt.SID == "rslider") {
-			rainb.setPredefined(cast opt.data.current);
-		}else
-		if (status == "optFire" && opt.data.link == "toast")
-		{
-			toast.fire(toastDemoText[toastCurrent]);
-			toastCurrent++;
-			if (toastCurrent >= toastDemoText.length) {
-				toastCurrent = 0;
-			}	
-		}else
-		if (status == "optFire" && opt.data.link == "dialog")
-		{
-			FlxG.switchState(new State_Dialog());
-		}
-	}//---------------------------------------------------;
-
 	// --
 	// Show the background object associated with bgID,
 	// Auto hides the previous one.
@@ -351,17 +373,4 @@ class State_Main extends FlxState
 		}
 	}//---------------------------------------------------;
 	
-	// --
-	override public function destroy():Void
-	{
-		super.destroy();
-		mapToBG = null;
-	}//---------------------------------------------------;
-
-	// --
-	override public function update(elapsed:Float):Void 
-	{
-		super.update(elapsed);
-	}//---------------------------------------------------;
-
 }// --

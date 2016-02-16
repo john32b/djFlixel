@@ -105,7 +105,7 @@ class PageData
 	/**
 	 * Quick way to add a back button
 	 */
-	public inline function back(?text:String):PageData
+	public inline function addBack(?text:String):PageData
 	{
 		return add(text != null?text:"Back", { type:"link", sid:"@back", desc:"Go back" } );
 	}//---------------------------------------------------;

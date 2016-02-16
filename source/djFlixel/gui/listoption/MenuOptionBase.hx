@@ -40,7 +40,6 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// This is part 1, the label
 	var label:FlxText;
 
-
 	// How many pixels right of the label to pad the active element
 	var PADDING_FROM_LABEL:Int;
 	 
@@ -92,6 +91,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		// It is quicker to check for Integers, just be sure they are set.
 		return this.opt.UID == OPT.UID;
 	}//---------------------------------------------------;
+	
 	// -- 
 	// Gets called JUST AFTER getting data
 	// Updates the Elements with the new data
@@ -108,21 +108,37 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	}//---------------------------------------------------;
 	// --
 	// Accepting: [select, cancel, right, left];
-	// * override
 	public function sendInput(inputName:String) 
 	{
+		if (opt.disabled) {
+			parent.callback_option("optInvalid");
+		}else {
+			handleInput(inputName);
+		}
 	}//---------------------------------------------------;
+	
+	// -- OVERRIDE THIS --
+	function handleInput(inputName:String)
+	{	
+	}//---------------------------------------------------;
+	
 	// -- override
 	function state_focused()
 	{
-		label.color = style.color_focused;
+		if (opt.disabled)
+			label.color = style.color_disabled_f;
+		else
+			label.color = style.color_focused;
 	}//---------------------------------------------------;
 	// -- override
 	function state_default()
 	{
 		// It will never be focused because it should be disabled!
 		// Thus color it as default unselected
-		label.color = style.color_default;	
+		if (opt.disabled)
+			label.color = style.color_disabled;
+		else
+			label.color = style.color_default;	
 	}//---------------------------------------------------;
 	// -- override
 	function state_disabled()
@@ -132,7 +148,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// --
 	public function focus() 
 	{
-		if (!opt.selectable) return;
+		if (!opt.selectable) return; // DEV: I could skip this call
 		isFocused = true;
 		state_focused();
 	}//---------------------------------------------------;
@@ -141,7 +157,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// 		 auto-unfocused by parent
 	public function unfocus() 
 	{
-		if (!opt.selectable) return;
+		if (!opt.selectable) return; // DEV: I could skip this call
 		isFocused = false;
 		state_default();
 	}//---------------------------------------------------;

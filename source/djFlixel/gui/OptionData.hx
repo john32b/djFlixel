@@ -26,6 +26,9 @@ class OptionData
 	// Useful for label text
 	public var selectable:Bool = true;
 	
+	// A disabled element cant have interactions.
+	public var disabled:Bool = false;
+	
 	// All the available functionality types the menuOption Offers
 	public static var AVAILABLE_TYPES(default, never):Array<String> = [
 		"link", "slider", "oneof", "toggle", "label"
@@ -70,6 +73,8 @@ class OptionData
 				case "type": type = Reflect.field(params, f);
 				case "desc": description = Reflect.field(params, f);
 				case "selectable": selectable = Reflect.field(params, f);
+				case "disabled": disabled = Reflect.field(params, f);
+				
 				// Map all other fields to the data var
 				default: Reflect.setProperty(data, f, Reflect.field(params, f));
 			}

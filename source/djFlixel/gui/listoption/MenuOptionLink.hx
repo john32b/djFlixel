@@ -7,8 +7,10 @@ import flixel.text.FlxText;
 class MenuOptionLink extends MenuOptionBase
 {
 	
-	// -----
+	// Optional decorative symbol
+	// Animated dots . ..
 	var deco:FlxText;
+	// 
 	var hasDeco:Bool;
 	// -----
 	var dTimer:Float; // timer
@@ -25,7 +27,7 @@ class MenuOptionLink extends MenuOptionBase
 		Styles.styleOptionText(deco, style);
 		deco.color = style.color_default;
 		add(deco);
-
+		
 		hasDeco = false;
 	}//---------------------------------------------------;
 	
@@ -46,7 +48,7 @@ class MenuOptionLink extends MenuOptionBase
 	}//---------------------------------------------------;
 	
 	// --
-	override public function sendInput(inputName:String) 
+	override function handleInput(inputName:String) 
 	{
 		if (inputName == "fire")
 		{

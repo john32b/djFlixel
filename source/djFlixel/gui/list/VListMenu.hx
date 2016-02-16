@@ -218,7 +218,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		
 			// r_1 is now Delta, Amount to go up
 			r_1 = _indexData - r_1;
-		
+			
 			if (_indexSlot - r_1 >= _pointer_padding) { // No view scroll is needed
 				_indexSlot -= r_1;
 				_indexData -= r_1;
@@ -228,6 +228,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 				if (r_1 > 1) {
 					trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
 					setViewIndex(_indexData - r_1);
+					callback_menu("tick");
 					return;
 				}
 		
@@ -266,6 +267,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 			if (r_1 > 1) {
 				trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
 				setViewIndex(_indexData + r_1);
+				callback_menu("tick");
 				return;
 			}
 			
@@ -294,9 +296,8 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		// =============================== CONTROLS SELECT   =======;
 		if (Controls.CURSOR_START())
 		{
-			// Send the select to the option to filter it
-			// Then the option callsback callback_option
-			// if it is a valid object to send "select" signals
+			// The option itself is responsible 
+			// for translating this fire signal
 			option_pointer.sendInput("fire");
 		}else
 		// =============================== CONTROLS BACK     =======;
@@ -540,10 +541,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		unfocusPointerElement();
 		option_pointer = elementSlots[_indexSlot];
 		focusPointerElement();
-		
-		// Do not send the optiondata, as it's only used for sounds etc
-		callback_menu("tick"); 
-		
+		callback_menu("tick");
 	}//---------------------------------------------------;
 	
 
@@ -606,11 +604,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		_cursor_x_start = this.x - cursor.width;
 		_cursor_x_end = this.x + styleList.focus_nudge - (cursor.width * 0.66); // #BROKEN
 		_cursor_tween_time = styleBase.element_scroll_time * 1.25;
-		
-		//trace("CURSOR WIDTHS");
-		//trace(cursor.width);
-		//trace(cursor.frameWidth);
-		
+	
 		cursorIsAnimating = false;
 		
 		if (isFocused) {	
@@ -691,8 +685,6 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	//====================================================;
 	
 	// Menu related callback
-	// This kind of callback doesn't send option data
-	// And the handler knows to push this as a menu callback as well.
 	function callback_menu(status:String)
 	{
 		if (callbacks != null) {

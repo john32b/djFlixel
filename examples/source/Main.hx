@@ -1,12 +1,13 @@
 package;
 
-import djFlixel.MainTemplate;
+import djFlixel.tool.DynAssets;
 import flash.Lib;
 
-class Main extends MainTemplate
+class Main extends djFlixel.MainTemplate
 {
 	public function new()
 	{
+		DynAssets.filesToLoad = Reg.DYNAMIC_FILES;
 		super(State_Main);
 	}//---------------------------------------------------;
 	// --

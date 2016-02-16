@@ -89,14 +89,10 @@ import flixel.text.FlxText;
 		var color_default:Int;
 		var color_focused:Int;
 		var color_accent:Int;
-		var color_disabled:Int;	// Note: Labels will not be of this color, but a diff one
+		var color_disabled:Int;		// Note: Labels will not be of this color, but a diff one
+		var color_disabled_f:Int;	// Focused color for a disabled element
 		var useBorder:Bool;
-		var border_color:Int;
-		// Usually menu controls consist of 2 parts
-		// This is the placement in relation to the total width.
-		// 0.65% first part, 0.35% second part.
-		var dividerPercent:Float; // Unused
-		
+		var border_color:Int;	
 	}// :: -- ::
 	 
 	
@@ -136,9 +132,9 @@ class Styles
 		color_focused:Palette_DB32.COL_09,
 		color_accent:Palette_DB32.COL_06,
 		color_disabled:Palette_DB32.COL_26,
+		color_disabled_f:Palette_DB32.COL_24,
 		useBorder:true,
-		border_color:Palette_DB32.COL_02,
-		dividerPercent:0.70 // DEPRECATED
+		border_color:Palette_DB32.COL_02
 	}; // --
 	
 	

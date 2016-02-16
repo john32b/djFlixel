@@ -1,14 +1,23 @@
 {
 	"reg" : {
 		"NAME" : "DJFLIXEL tools",
-		"VERSION" : "0.2.1",
+		"VERSION" : "0.2.2",
 		"ANTIALIASING" : true,
 		"FULLSCREEN" : false,
 		"VOLUME" : 0.6
 	},
+	
 	"sounds" : {
-		
+		"c_tick" : "cursor_tick",
+		"c_sel" : "cursor_high",
+		"c_back" : "cursor_low",
+		"c_err" : "cursor_error"
 	},
+
+	"tilesBG" : [		
+		"assets/bg02.png",
+		"assets/bg01.png",
+		"assets/bg03.png" ],
 	
 	"dialog" : [
 		"dialog box demo..",

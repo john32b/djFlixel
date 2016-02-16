@@ -79,16 +79,7 @@ class FlxMenu extends FlxGroup
 	// optChange - When an option changed value, <sends option>
 	// optFire   - An option recieved an action command
 	public var callbacks_option:String->OptionData->Void;
-	inline function _ocallback(s:String, ?o:OptionData) {
-		
-		if (currentPage.custom.callbacks_option != null){
-			currentPage.custom.callbacks_option(s, o);
-			return;
-		}
-		
-		if (callbacks_option != null) callbacks_option(s, o);
-	}
-		
+	
 	// back  	- The menu went back a page
 	// rootback - When user wants to back out of the root menu
 	// open   	- The menu was just opened
@@ -97,9 +88,6 @@ class FlxMenu extends FlxGroup
 	// pageOn 	- The page with $param == SID just went on screen
 	// pageOff  - The page with $param == SID just went off screen
 	public var callbacks_menu:String->String->Void;
-	inline function _mcallback(msg:String, ?data:String) {
-		if (callbacks_menu != null) callbacks_menu(msg, data);
-	}
 	
 	//---------------------------------------------------;
 	
@@ -684,8 +672,9 @@ class FlxMenu extends FlxGroup
 		// helper, send this to functions that require a callback
 		// when you don't need a callback
 	}//---------------------------------------------------;
+	
 	//====================================================;
-	//  getters, setters
+	//  Helpers
 	//====================================================;
 	
 	function get_height():Int
@@ -697,4 +686,27 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
+	// --
+	function _ocallback(s:String, ?o:OptionData) 
+	{
+		// new: Call the menu callback as well to handle sounds
+		switch(s) {
+			case "optFire": _mcallback("tick_fire");
+			case "optChange": _mcallback("tick_change");
+			case "optInvalid": _mcallback("tick_error"); return;	// do not proceed
+		}
+		
+		if (currentPage.custom.callbacks_option != null){
+			currentPage.custom.callbacks_option(s, o);
+			return;
+		}
+		
+		if (callbacks_option != null) callbacks_option(s, o);
+	}//---------------------------------------------------;
+	
+	// --
+	inline function _mcallback(msg:String, ?data:String) 
+	{
+		if (callbacks_menu != null) callbacks_menu(msg, data);
+	}//---------------------------------------------------;
 }// -- end -- //

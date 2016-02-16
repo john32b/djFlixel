@@ -1,6 +1,6 @@
 djFlixel Tools
 ==============
-**Version:** 0.2
+**Version:** 0.2.2 (dev)
 **Author:** John Dimi, <johndimi@outlook.com>, twitter:[@jondmt](https://twitter.com/jondmt)  
 **Language:** Haxe 3.x
 **Requires:** haxeflixel 4.x (dev)
@@ -28,8 +28,10 @@ Various helpers and tools library for haxeflixel. This is a library that I creat
  
 #### How to install
 
-```haxelib git djFlixel https://github.com/johndimi/djFlixel.git```
 
+```haxelib git djFlixel https://github.com/johndimi/djFlixel.git``` dev
+
+	
 --------
 
 ### Menu System

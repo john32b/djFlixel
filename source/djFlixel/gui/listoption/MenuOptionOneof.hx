@@ -115,8 +115,9 @@ class MenuOptionOneof extends MenuOptionBase
 	}//---------------------------------------------------;
 	
 	// --
-	override public function sendInput(inputName:String) 
+	override function handleInput(inputName:String) 
 	{
+		
 		switch(inputName) {
 			
 			case "right":

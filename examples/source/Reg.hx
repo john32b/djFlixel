@@ -2,7 +2,7 @@ package;
 
 import flixel.FlxG;
 import flixel.util.FlxSave;
-import djFlixel.tool.FileParams;
+import djFlixel.tool.DynAssets;
 import djFlixel.gapi.ApiEmpty;
 import djFlixel.SAVE;
 import djFlixel.Controls;
@@ -21,7 +21,11 @@ class Reg
 	// -- Parameters file --
 	// -  It is useful to have various game parameters to an external file
 	// -  so that I don't have to compile everytime I want to change a value.
-	inline static public var PARAMS_FILE:String = "params.json";
+	inline static public var PARAMS_FILE:String = "data/params.json";
+	
+	// This is the list of files to load dynamically.
+	// Use EXTERNAL_LOAD compiler flag
+	public static var DYNAMIC_FILES:Array<String> = [PARAMS_FILE];
 	
 	// -  These vars are loaded externally from the JSON parameters file ::
 	//    If the parameter is not present on the ext file, then defaults will be used.
@@ -59,7 +63,14 @@ class Reg
 	{
 		trace("Info: Initializing REG --");		
 		// --
-		JSON = FileParams.JSON;	// *Pointer for quicker access
+		JSON = DynAssets.json.get(PARAMS_FILE);	// *Create a pointer for quicker access
+		#if debug
+		if (JSON == null) {
+			trace("Error: JSON Error, check $PARAMS_FILE");
+			throw "Error: JSON Error, check $PARAMS_FILE";
+		}
+		#end
+		
 		applyParamsInto("reg", Reg); // Works with static objects as well.
 		
 		// Add some triggers
@@ -105,6 +116,8 @@ class Reg
 		/*
 		 * Or auto-load sounds from the params file:
 		 */
+		if (JSON.sounds == null) return;
+		
 		for (field in Reflect.fields(JSON.sounds)) {
 			trace('- Loading Sound with ID-$field, FILE -' + Reflect.field(JSON.sounds, field));
 			SND.as(Reflect.field(JSON.sounds, field), field);
@@ -155,8 +168,8 @@ class Reg
 		if (FlxG.keys.justPressed.ENTER)
 		{
 			trace("Re-loading external parameters file ---");
-			FileParams.loadSettings(PARAMS_FILE, function() {
-					JSON = FileParams.JSON;
+			DynAssets.loadFiles(function() {
+					JSON = DynAssets.json.get(Reg.PARAMS_FILE);
 					FlxG.resetGame();
 			});
 		}

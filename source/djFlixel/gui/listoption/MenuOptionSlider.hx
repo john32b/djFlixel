@@ -9,7 +9,7 @@ class MenuOptionSlider extends MenuOptionOneof
 	 * dataPool[1] = rangeTo
 	 * dataCurrent = Actual Value
 	 */
-	override public function sendInput(inputName:String) 
+	override function handleInput(inputName:String) 
 	{
 		switch(inputName)
 		{
