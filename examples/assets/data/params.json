@@ -6,6 +6,49 @@
 		"FULLSCREEN" : false,
 		"VOLUME" : 0.6
 	},
+
+	"menustyle" : {
+		
+		"option": {
+			"fontSize" : 8,
+			"useBorder" : true,
+			"border_color" : "0xFF334499",
+			"color_default" : "0xFFcbdbfc",
+			"color_accent"  : "0xFFd95763",
+			"color_focused" : "0xFFfbf236",
+			"color_disabled" : "0xFF595652",
+			"color_disabled_f" : "0xFF663931"
+		},
+		"header" : { 
+			"fontSize": 16,
+			"color_default" : "0xFFFF6082",
+			"border_color" : "0xFF441122",
+			"useBorder" : true
+		}
+	},
+	
+	"menustyle2" : {
+		"option": {
+			"font" : "assets/pixelarial.ttf",
+			"fontSize" : 16,
+			"useBorder" : false,
+			"color_default" : "0xffd77bba",
+			"color_focused" : "0xff99e550"
+		},
+		"base" : {
+			"anim_start_x" : 60,
+			"anim_end_x" : 0,
+			"anim_start_y" : 0,
+			"anim_end_y" : 0,
+			"anim_time_between_elements" : 0.12,
+			"anim_style" : "parallel"
+		},
+		"list" : {
+			"cursorSymbol" : "+",
+			"scrollPad" : 1
+		}
+
+	},
 	
 	"sounds" : {
 		"c_tick" : "cursor_tick",

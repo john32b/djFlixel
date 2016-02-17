@@ -11,52 +11,54 @@ import djFlixel.gui.Styles;
 import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.Toast;
 import djFlixel.SND;
-import flixel.addons.display.FlxBackdrop;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.graphics.FlxGraphic;
-import flixel.group.FlxSpriteGroup;
-import flixel.text.FlxText;
-import flixel.tweens.FlxTween;
-import flixel.util.FlxTimer;
+import flixel.addons.display.FlxBackdrop;
 
 
 /**
  * djFlixel Tools examples
  * -----------------------
- * Main Menu
- * 
  */
+
 class State_Main extends FlxState
 {
-	// Animated backgrounds
-	var bg:FlxBackdrop;
-	var rainb:RainbowBorder;
-	var starf:StarfieldSimple;
+	// The main menu object.
+	var menu:FlxMenu;
 	
-	// -
-	var menu:FlxMenu;	
-	// Change the name!
-	var toast:Toast;
+	// == ANIMATED BACKGROUNDS ---------------
 	
+	// Rainbow bg object
+	var bg_rain:RainbowBorder;
+	// Stars object
+	var bg_stars:StarfieldSimple;
+	// Tiled bg image object
+	var bg_anim:FlxBackdrop;
 	// * Pointer to the list of background tiles, set on params.json
 	var tileBG_Files:Array<String>;
 	// Current index in tileBG_Files
 	var tileBG_Current:Int = 0;
-	
 	// Every menu page is associated to an object background
 	var mapToBG:Map<String,FlxSprite>;
 	// * Pointer to the current active background
 	var BgObjCurrent:FlxSprite = null;
 	
-	var toastDemoText:Array<String>;
+	// == TOAST NOTIFICATIONS --------------
 	
-	var toastCurrent:Int = 0;
+	// Notification toast banner object.
+	var toast:Toast;
+	// Hold a bunch of demo texts in an array
+	var toast_DB:Array<String>;
+	// Last text in the DB that was shown
+	var toast_current:Int = 0;
+
+	// == HELPERS ----------------------------
 	
 	// Know if this is the first time showing this state
 	// Whenever a state goes back to this, skip showing the instructions
 	static var firstTimeShowing:Bool = true;
+
 
 	//====================================================; 
 	// --
@@ -67,26 +69,26 @@ class State_Main extends FlxState
 	
 		// - Create the animated backgrounds
 		tileBG_Files = Reg.JSON.tilesBG;
-		bg = new FlxBackdrop(tileBG_Files[tileBG_Current]);
-		bg.velocity.set(-8, 12.2);	// random speed
-		add(bg);
+		bg_anim = new FlxBackdrop(tileBG_Files[tileBG_Current]);
+		bg_anim.velocity.set(-8, 12.2);	// random speed
+		add(bg_anim);
 
-		rainb = new RainbowBorder();
-		rainb.setPredefined(0);
-		add(rainb);
+		bg_rain = new RainbowBorder();
+		bg_rain.setPredefined(0);
+		add(bg_rain);
 		
-		starf = new StarfieldSimple();
-		starf.setDirection(45);
-		add(starf);
+		bg_stars = new StarfieldSimple();
+		bg_stars.setDirection(45);
+		add(bg_stars);
 		
 		// Map menuPageSID to background objects
 		// Every time the menu displays a page
 		// the associated object is displayed.
 		mapToBG = [
-			"main" => bg,
-			"rainbow" => rainb,
-			"starfield" => starf,
-			"settings" => bg
+			"main" => bg_anim,
+			"bg_rainow" => bg_rain,
+			"bg_starsield" => bg_stars,
+			"settings" => bg_anim
 		];
 		
 		// Initialize the objects
@@ -103,12 +105,8 @@ class State_Main extends FlxState
 		// unless overrided by a page.
 		menu.callbacks_menu = callbacks_menu;
 		menu.callbacks_option = callbacks_option;
-		menu.styleOption.fontSize = 8;
-		menu.styleOption.border_color = Palette_DB32.COL[3];
-		menu.styleOption.color_default = Palette_DB32.COL[21];
-		menu.styleOption.color_accent = Palette_DB32.COL[29];
-		menu.styleOption.color_disabled = Palette_DB32.COL[4];
-		menu.styleHeader.color_default = Palette_DB32.COL[18];
+		// Gets style from the "menustyle" node in the "params.json" file
+		menu.applyStyleFromJSON("menustyle");
 		
 		// Temp pointer to the current page that is being edited;
 		var p:PageData;
@@ -121,8 +119,8 @@ class State_Main extends FlxState
 		p = menu.newPage("main");
 		// Optional parameter, This is the page's title header text.
 		p.header = '${Reg.NAME} - ${Reg.VERSION}';
-		p.link("Rainbow Border", "@rainbow", "Rainbow Demo");
-		p.link("Starfield", "@starfield", "Starfield Demo");
+		p.link("Rainbow Border", "@bg_rainow", "RainbowBorder Demo");
+		p.link("Starfield", "@bg_starsield", "Starfield Demo");
 		p.link("Menu Demo", "@menudemo", "FlxMenu Demo");
 		p.link("Notification Demo", "toast", "Fire a random toast notification");
 		p.add("Grid navigation Demo (soon)", { type:"link", sid:"grid", disabled:true,
@@ -130,12 +128,12 @@ class State_Main extends FlxState
 		p.link("Dialog box Demo", "dialog", "Dialog box that is fully customizable");
 		p.link("Settings", "@settings", "Settings menu");
 		// --
-		p = menu.newPage("rainbow");
+		p = menu.newPage("bg_rainow");
 		p.header = "Rainbow Example";
 		p.add("Predefined style", { sid:"rslider", type:"slider", pool:[0, 3], desc:"Cycle through the predefined styles" } );
 		p.addBack(); // Quick way to add a "back" button to the page.
 		// --
-		p = menu.newPage("starfield");
+		p = menu.newPage("bg_starsield");
 		p.header = "Starfield Example";
 		p.link("Randomize", "star_random", "Randomize colors and WidePixel");
 		p.addBack();
@@ -177,6 +175,10 @@ class State_Main extends FlxState
 		
 		// - Create a new page with different styling
 		p = menu.newPage("menupage2");
+		// A page can have unique stylings
+		// Check the "menustyle2" node at the "params.json" file
+		menu.applyPageStyleFromJson("menustyle2", p);
+		p.custom.slots = 3;
 		p.header = "Custom Styling";
 		// Add a custom option callback function
 		p.custom.callbacks_option = function(s:String, o:OptionData) {
@@ -184,39 +186,6 @@ class State_Main extends FlxState
 				toast.fire(o.label);
 			}
 		};
-
-		// -- You can modify the style of a menu page
-		//    like the colors, fonts, and even some animation parameters.
-		//    Check Styles.hx for more info
-		
-		// I am creating the style objects so that I can
-		// get autocompletion on the objects.
-		var os:OptionStyle = Styles.newStyle_Option();
-			os.font = "assets/pixelarial.ttf";
-			os.fontSize = 16;
-			os.color_focused = Palette_DB32.COL_10;
-			os.color_default = Palette_DB32.COL_30;
-			os.useBorder = false;
-		var ls:VListStyle = Styles.newStyle_List();
-			ls.cursorSymbol = "+";
-			ls.scrollPad = 1;
-		var bs:VBaseStyle = Styles.newStyle_Base();
-			bs.anim_start_x = 60;
-			bs.anim_end_x = 0;
-			bs.anim_start_y = 0;
-			bs.anim_end_y = 0;
-			bs.anim_time_between_elements = 0.12;
-			bs.anim_style = "parallel";
-			
-		// Then I assign the styles I created to the page.custom dynamic var
-		// You could create the styles directly to page.custom
-		// but you'd lose the autocompletion.
-		
-		p.custom.styleOption = os;
-		p.custom.styleList = ls;
-		p.custom.styleBase = bs;
-		p.custom.slots = 3;
-		
 		// Just add a few call buttons.
 		p.link("Link one", "fn1");
 		p.link("Link two", "fn2");
@@ -237,7 +206,7 @@ class State_Main extends FlxState
 		
 		// == Creates a notification toast, for displaying quick info
 		// ------------------------------------
-		toastDemoText = Reg.JSON.toastdemo;
+		toast_DB = Reg.JSON.toastdemo;
 		toast = new Toast(100, "top", "right");
 		add(toast);
 				
@@ -300,7 +269,7 @@ class State_Main extends FlxState
 				// Antialiasing toggle
 				case "aa":	 Reg.ANTIALIASING = !Reg.ANTIALIASING;
 				// Background selector
-				case "bg":	 bg.loadGraphic(tileBG_Files[cast opt.data.current]);
+				case "bg":	 bg_anim.loadGraphic(tileBG_Files[cast opt.data.current]);
 				}
 				
 			// Fired everytime an option is focused
@@ -312,24 +281,24 @@ class State_Main extends FlxState
 				switch(opt.SID) {
 				// Randomize stars
 				case "star_random":
-					starf.setSpeed(FlxG.random.float(0.3, 1.5));
-					starf.setDirection(FlxG.random.int(0, 360));
-					starf.numberOfStars = FlxG.random.int(150, 900);
-					starf.flag_widepixel = FlxG.random.bool();
-					starf.color_bg = Palette_DB32.getRandomColor();
-					starf.color_1 = Palette_DB32.getRandomColor();
-					starf.color_2 = Palette_DB32.getRandomColor();
-					starf.color_3 = Palette_DB32.getRandomColor();
+					bg_stars.setSpeed(FlxG.random.float(0.3, 1.5));
+					bg_stars.setDirection(FlxG.random.int(0, 360));
+					bg_stars.numberOfStars = FlxG.random.int(150, 900);
+					bg_stars.flag_widepixel = FlxG.random.bool();
+					bg_stars.color_bg = Palette_DB32.getRandomColor();
+					bg_stars.color_1 = Palette_DB32.getRandomColor();
+					bg_stars.color_2 = Palette_DB32.getRandomColor();
+					bg_stars.color_3 = Palette_DB32.getRandomColor();
 				// Change background image
 				case "rslider":
-					rainb.setPredefined(cast opt.data.current);
+					bg_rain.setPredefined(cast opt.data.current);
 				
 				// Fire a toast notification
 				case "toast":
-					toast.fire(toastDemoText[toastCurrent]);
-					toastCurrent++;
-					if (toastCurrent >= toastDemoText.length) {
-						toastCurrent = 0;
+					toast.fire(toast_DB[toast_current]);
+					toast_current++;
+					if (toast_current >= toast_DB.length) {
+						toast_current = 0;
 					}	
 				
 				// Go to the dialog demo State
@@ -371,6 +340,13 @@ class State_Main extends FlxState
 			
 			BgObjCurrent = s;
 		}
+	}//---------------------------------------------------;
+	
+	
+	override public function update(elapsed:Float):Void 
+	{
+		super.update(elapsed);
+		Reg.OnKeyReloadParamsAndGame();	// F12 key reloads dynamic assets
 	}//---------------------------------------------------;
 	
 }// --

@@ -31,7 +31,7 @@ Various helpers and tools library for haxeflixel. This is a library that I creat
 
 ```haxelib git djFlixel https://github.com/johndimi/djFlixel.git``` dev
 
-	
+
 --------
 
 ### Menu System

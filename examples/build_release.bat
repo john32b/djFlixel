@@ -1,0 +1,1 @@
+haxelib run lime build "Project-release.xml" flash -Dfdb

@@ -161,16 +161,23 @@ class Reg
 		}
 	}//---------------------------------------------------;
 	
+	// Apply a dynamic's object fields into another field
+	public static function applyFieldsInto(node:Dynamic, into:Dynamic)
+	{
+		for (field in Reflect.fields(node)) {
+			Reflect.setField(into, field, Reflect.field(node, field));
+		}
+	}//---------------------------------------------------;
 	#if debug
 	// -- Call this on main update() to reload settings and reset the game
 	public static function OnKeyReloadParamsAndGame()
 	{
-		if (FlxG.keys.justPressed.ENTER)
+		if (FlxG.keys.justPressed.F12)
 		{
 			trace("Re-loading external parameters file ---");
 			DynAssets.loadFiles(function() {
 					JSON = DynAssets.json.get(Reg.PARAMS_FILE);
-					FlxG.resetGame();
+					FlxG.resetState();
 			});
 		}
 	}//---------------------------------------------------;

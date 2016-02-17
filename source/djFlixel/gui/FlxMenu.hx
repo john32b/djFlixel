@@ -120,8 +120,8 @@ class FlxMenu extends FlxGroup
 		pages = new Map();
 		
 		// Default styles, can be overriden later
-		styleList   = Styles.newStyle_List();
 		styleOption = Styles.newStyle_Option();
+		styleList   = Styles.newStyle_List();
 		styleBase   = Styles.newStyle_Base();
 		styleHeader = Styles.newStyle_Option();
 
@@ -159,6 +159,45 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
+	/**
+	 * Apply a style that is set on the main PARAMS.JSON file
+	 * @param styleID Name of the style, Check the examples for formatting.
+	 */
+	public function applyStyleFromJSON(styleID:String)
+	{
+		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
+		
+		Reg.applyFieldsInto(styleNode.option, styleOption);
+		Reg.applyFieldsInto(styleNode.list, styleList);
+		Reg.applyFieldsInto(styleNode.base, styleBase);
+		Reg.applyFieldsInto(styleNode.header, styleHeader);
+		
+	}//---------------------------------------------------;
+	
+	// Get a style node from the JSON file, and set it to a Page
+	// node.list, node.base, node option
+	public function applyPageStyleFromJson(styleID:String, page:PageData)
+	{
+		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
+
+		if (styleNode.option != null) {
+			page.custom.styleOption = Styles.newStyle_Option();
+			Reg.applyFieldsInto(styleNode.option, page.custom.styleOption);
+		}
+		
+		if (styleNode.list != null) {
+			page.custom.styleList = Styles.newStyle_List();
+			Reg.applyFieldsInto(styleNode.list, page.custom.styleList);
+		}
+		
+		if (styleNode.base != null) {
+			page.custom.styleBase = Styles.newStyle_Base();
+			Reg.applyFieldsInto(styleNode.base, page.custom.styleBase);
+		}
+	}//---------------------------------------------------;
+	
+	
+	// --
 	override public function destroy():Void 
 	{
 		super.destroy();
