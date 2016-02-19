@@ -106,7 +106,7 @@ class State_Main extends FlxState
 		menu.callbacks_menu = callbacks_menu;
 		menu.callbacks_option = callbacks_option;
 		// Gets style from the "menustyle" node in the "params.json" file
-		menu.applyStyleFromJSON("menustyle");
+		menu.applyMenuStyleFromJSON("menustyle");
 		
 		// Temp pointer to the current page that is being edited;
 		var p:PageData;
@@ -210,6 +210,7 @@ class State_Main extends FlxState
 		toast = new Toast(100, "top", "right");
 		add(toast);
 				
+		// -- Show the help toast only once during the app lifecycle
 		if (firstTimeShowing) {
 			toast.fire("#WASD# - move\n#K# - select\n#J# - cancel", 16, "bottom", "right");
 			firstTimeShowing = false;
@@ -341,7 +342,6 @@ class State_Main extends FlxState
 			BgObjCurrent = s;
 		}
 	}//---------------------------------------------------;
-	
 	
 	override public function update(elapsed:Float):Void 
 	{

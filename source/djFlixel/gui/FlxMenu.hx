@@ -163,7 +163,7 @@ class FlxMenu extends FlxGroup
 	 * Apply a style that is set on the main PARAMS.JSON file
 	 * @param styleID Name of the style, Check the examples for formatting.
 	 */
-	public function applyStyleFromJSON(styleID:String)
+	public function applyMenuStyleFromJSON(styleID:String)
 	{
 		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
 		

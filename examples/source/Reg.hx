@@ -25,6 +25,7 @@ class Reg
 	
 	// This is the list of files to load dynamically.
 	// Use EXTERNAL_LOAD compiler flag
+	// MAIN.hx reads this.
 	public static var DYNAMIC_FILES:Array<String> = [PARAMS_FILE];
 	
 	// -  These vars are loaded externally from the JSON parameters file ::

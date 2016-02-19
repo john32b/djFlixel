@@ -213,28 +213,35 @@ class MapTemplate implements IFlxDestroyable
 	// TILE DATA STREAMING
 	//====================================================;
 	
+	// Search for this much more at the top and bottom for entities
+	var vPadding:Int = 2;
+	var hPadding:Int = 2;
+	
 	// --
 	// Check the entire screen area, and callback for entities
 	// Feedback for entities on the screen.
 	public function feedRoomData()
 	{	
+		// Just in case.
+		Reg.map.camera.updateFollow(); 
+		
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
 		cameraPos.y = Std.int(camera.scroll.y / TILEHEIGHT);
 		
-		// There are cases where this could be <0
+		// There are cases where this could be <0  
 		if (cameraPos.x < 0) cameraPos.x = 0;
 		if (cameraPos.y < 0) cameraPos.y = 0;
 		
 		cameraPosOld.copyFrom(cameraPos);
 		
+		#if debug
 		trace("= feedRoomData() checking entities from and to");
-		trace('x0', cameraPos.x - 1);
-		trace('x1', cameraPos.x + cameraWidth);
-		trace('y0', cameraPos.y - 1);
-		trace('y1', cameraPos.y + cameraHeight);
-	
-		for (rx in (cameraPos.x)...(cameraPos.x + cameraWidth)) // x axis
-		for (ry in (cameraPos.y)...(cameraPos.y + cameraHeight)) // y axis
+		trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + cameraWidth +  hPadding} ]');
+		trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + cameraHeight + vPadding} ]');
+		#end
+		
+		for (rx in (cameraPos.x - hPadding)...(cameraPos.x + cameraWidth + hPadding + 1)) // x axis
+		for (ry in (cameraPos.y - vPadding)...(cameraPos.y + cameraHeight + vPadding + 1)) // y axis
 		{
 			try{
 				feedDataFromCoords(rx, ry);
