@@ -27,12 +27,12 @@
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel=3.3.12&#xA;openfl=3.6.0&#xA;lime=2.9.0&#xA;hscript=2.0.5&#xA;flixel-addons=1.1.1&#xA;openfl-next&#xA;tools=2.9.0&#xA;openfl_next&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;web&#xA;display" />
+    <option directives="flixel=3.3.12&#xA;openfl=3.6.0&#xA;lime=2.9.0&#xA;hscript=2.0.5&#xA;flixel-addons=1.1.1&#xA;openfl-next&#xA;tools=2.9.0&#xA;FLX_NO_DEBUG&#xA;openfl_next&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;web&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="--macro flixel.system.macros.FlxDefines.run()&#xA;-swf-version 11.8&#xA;-debug " />
+    <option additional="--macro flixel.system.macros.FlxDefines.run()&#xA;-swf-version 11.8" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

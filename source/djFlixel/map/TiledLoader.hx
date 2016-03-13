@@ -84,7 +84,7 @@ class TiledLoader implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	/**
-	 * Load a .TMX map file. ( IT MUST EXIST IN THE ASSETS! )
+	 * Load a .TMX map file. ( IT MUST EXIST IN THE EMBEDDED ASSETS! )
 	 * @param	file The file to load
 	 * @param	sameImagesLayer If any layer shares an image with another layer, put the name of the layer here. #offset correction hack
 	 */

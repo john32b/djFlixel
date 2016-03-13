@@ -17,7 +17,7 @@ import entity.EntityTopDown;
  * ---------
  * NOTES : 
  * . Be sure to have some basic info in the PARAMS.JSON file
- * . Call updateCameraAndFeedData() from the game at intervals
+ * . Call updateCameraAndFeedData() every time the player moves to get new entities
  * 
  */
 class MapTemplate implements IFlxDestroyable
@@ -72,13 +72,10 @@ class MapTemplate implements IFlxDestroyable
 	// Stores the entities to be streamed.
 	var streamingLayer:Array<Array<MapEntity>>;
 	
-	// -- HELPERS
-	// General purpose Ints
-	var rx:Int;
-	var ry:Int;
-	// Streaming entities cam temps
-	var camhf_:Int;
-	var camwf_:Int;
+	// Search for this much more at the top and bottom for entities
+	// A value of 0 will stream in entities just as they scroll into view.
+	var vPadding:Int = 0;
+	var hPadding:Int = 0;
 	
 	//---------------------------------------------------;
 	// Tiled map files data loader
@@ -87,6 +84,15 @@ class MapTemplate implements IFlxDestroyable
 	// Current level name
 	public var currentLevel(default,null):String;
 
+	// -- HELPERS
+	// General purpose Ints
+	var rx:Int;
+	var ry:Int;
+	
+	// Pre-calculated vars for streaming entities
+	var _camVF:Int;
+	var _camHF:Int;
+	
 	//====================================================;
 	// --
 	public function new() 
@@ -115,12 +121,16 @@ class MapTemplate implements IFlxDestroyable
 		cameraWidth = Math.ceil(camera.width / TILEWIDTH);
 		cameraHeight = Math.ceil(camera.height / TILEHEIGHT);
 		
-		camhf_ = cameraHeight - 1;	// Reduce a calculation later at the streaming 
-		camwf_ = cameraWidth - 1;
+		hPadding = Reg.JSON.map.STREAM_PAD_X;
+		vPadding = Reg.JSON.map.STREAM_PAD_Y;
+		
+		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
+		_camHF = cameraWidth + hPadding;
 		
 		cameraPos = new SimpleCoords();
 		cameraPosOld = new SimpleCoords();
 			
+		// Optional user function.
 		onCameraCoordsChange = function() { };
 		
 		trace("Camera Area Size", cameraWidth, cameraHeight);
@@ -212,10 +222,7 @@ class MapTemplate implements IFlxDestroyable
 	//====================================================;
 	// TILE DATA STREAMING
 	//====================================================;
-	
-	// Search for this much more at the top and bottom for entities
-	var vPadding:Int = 2;
-	var hPadding:Int = 2;
+
 	
 	// --
 	// Check the entire screen area, and callback for entities
@@ -236,16 +243,14 @@ class MapTemplate implements IFlxDestroyable
 		
 		#if debug
 		trace("= feedRoomData() checking entities from and to");
-		trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + cameraWidth +  hPadding} ]');
-		trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + cameraHeight + vPadding} ]');
+		trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + _camHF} ]');
+		trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + _camVF} ]');
 		#end
 		
-		for (rx in (cameraPos.x - hPadding)...(cameraPos.x + cameraWidth + hPadding + 1)) // x axis
-		for (ry in (cameraPos.y - vPadding)...(cameraPos.y + cameraHeight + vPadding + 1)) // y axis
+		for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) // x axis
+		for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) // y axis
 		{
-			try{
-				feedDataFromCoords(rx, ry);
-			}catch (e:Dynamic) { } // do nonthing.
+			feedDataFromCoords(rx, ry);
 		}
 			
 	}//---------------------------------------------------;
@@ -264,10 +269,8 @@ class MapTemplate implements IFlxDestroyable
 			onCameraCoordsChange(); // Check for offscreen entities elsewhere
 			
 			// Camera changed tile pos
-			try{
-				feedDataFromRow(cameraPos.y - cameraPosOld.y);
-				feedDataFromColumn(cameraPos.x - cameraPosOld.x);
-			}catch (e:Dynamic) { } // continue normally;
+			feedDataFromRow(cameraPos.y - cameraPosOld.y);
+			feedDataFromColumn(cameraPos.x - cameraPosOld.x);
 			
 			cameraPosOld.copyFrom(cameraPos);
 		}
@@ -283,17 +286,17 @@ class MapTemplate implements IFlxDestroyable
 		if (delta == 0) return;
 		
 		if (delta > 0) {
-			for (rx in (cameraPos.x + camwf_)...(cameraPos.x + camwf_ + delta)) {
+			for (rx in (cameraPos.x + _camHF)...(cameraPos.x + _camHF + delta)) {
 				trace("Checking column", rx);
-				for (ry in (cameraPos.y)...(cameraPos.y + cameraHeight)) 
+				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
 		} 
 		else {
-			for (rx in (cameraPos.x)...(cameraPos.x - delta)) {
+			for (rx in (cameraPos.x - hPadding)...(cameraPos.x - delta - hPadding)) {
 				trace("Checking column", rx);
-				for (ry in (cameraPos.y)...(cameraPos.y + cameraHeight))
-				feedDataFromCoords(rx, ry);
+				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1))
+					feedDataFromCoords(rx, ry);
 			}
 		}
 		
@@ -308,16 +311,16 @@ class MapTemplate implements IFlxDestroyable
 		if (delta == 0) return;
 		
 		if (delta > 0) {
-			for (ry in (cameraPos.y + camhf_)...(cameraPos.y + camhf_ + delta)) {
+			for (ry in (cameraPos.y + _camVF)...(cameraPos.y + _camVF + delta)) {
 				trace("Checking row", ry);
-				for (rx in (cameraPos.x)...(cameraPos.x + cameraWidth))
+				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1))
 					feedDataFromCoords(rx, ry);
 				}
 			}
 		else {
-			for (ry in (cameraPos.y)...(cameraPos.y - delta)) {
+			for (ry in (cameraPos.y - vPadding)...(cameraPos.y - delta - vPadding)) {
 				trace("Checking row", ry);
-				for (rx in (cameraPos.x)...(cameraPos.x + cameraWidth)) 
+				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
 		}
@@ -332,8 +335,11 @@ class MapTemplate implements IFlxDestroyable
 	 */
 	inline function feedDataFromCoords(x:Int, y:Int)
 	{
-		if (streamingLayer[y][x] != null) {
+		try{
 			onStreamEntity(streamingLayer[y][x]);
+		}catch (e:Dynamic)
+		{
+			// do nothing;
 		}
 	}//---------------------------------------------------;
 
@@ -342,10 +348,10 @@ class MapTemplate implements IFlxDestroyable
 	// Tile based
 	public function entityIsOffScreen(en:EntityTopDown)
 	{
-		return (en.coords.x < cameraPos.x ||
-				en.coords.y < cameraPos.y ||
-				en.coords.x > cameraPos.x + cameraWidth  - 1 ||
-				en.coords.y > cameraPos.y + cameraHeight - 1 );
+		return (en.coords.x < cameraPos.x - hPadding ||
+				en.coords.y < cameraPos.y - vPadding ||
+				en.coords.x > cameraPos.x + _camHF   ||
+				en.coords.y > cameraPos.y + _camVF );
 	}//---------------------------------------------------;
 	
 	

@@ -264,20 +264,23 @@ class State_Main extends FlxState
 	{
 		switch(status)
 		{
-			// Fired everytime an option changed values
+			// Fired everytime an option changed values -- OPTION CHANGES
 			case "optChange":
 				switch(opt.SID) {
 				// Antialiasing toggle
 				case "aa":	 Reg.ANTIALIASING = !Reg.ANTIALIASING;
 				// Background selector
 				case "bg":	 bg_anim.loadGraphic(tileBG_Files[cast opt.data.current]);
+				// Change background image
+				case "rslider":
+					bg_rain.setPredefined(cast opt.data.current);
 				}
 				
 			// Fired everytime an option is focused
 			case "optFocus":
 				footerText.start(opt.description != null? opt.description : "");
 				
-			// Fired when an option is selected.
+			// Fired when an option is selected. -- BUTTONS --
 			case "optFire":
 				switch(opt.SID) {
 				// Randomize stars
@@ -290,10 +293,8 @@ class State_Main extends FlxState
 					bg_stars.color_1 = Palette_DB32.getRandomColor();
 					bg_stars.color_2 = Palette_DB32.getRandomColor();
 					bg_stars.color_3 = Palette_DB32.getRandomColor();
-				// Change background image
-				case "rslider":
-					bg_rain.setPredefined(cast opt.data.current);
-				
+
+					
 				// Fire a toast notification
 				case "toast":
 					toast.fire(toast_DB[toast_current]);
@@ -346,7 +347,9 @@ class State_Main extends FlxState
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
+		#if debug
 		Reg.OnKeyReloadParamsAndGame();	// F12 key reloads dynamic assets
+		#end
 	}//---------------------------------------------------;
 	
 }// --
