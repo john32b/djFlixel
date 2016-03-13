@@ -29,7 +29,7 @@ Various helpers and tools library for haxeflixel. This is a library that I creat
 #### How to install
 
 
-```haxelib git djFlixel https://github.com/johndimi/djFlixel.git``` dev
+```haxelib git djFlixel https://github.com/johndimi/djFlixel.git dev```
 
 
 --------
@@ -62,6 +62,32 @@ Emulates a loading screen from the 8bit computers (Amstrad, Commodore64)
 Customizable speed and rectangle height, also provides some pre-defined modes.
 
 ![Rainbow border in action](http://i.imgur.com/YTjwLWL.gif)
+
+
+### Easy Controls
+
+Simple static class for handling controls from both keyboard and gamepads from a single base.
+
+example:
+```
+/*  
+This will get controls from WASD + Arrow Keys + Joystick
+ */
+if (Controls.pressed(Controls.UP)) {
+			move(FlxObject.UP);
+		}
+		else if (Controls.pressed(Controls.DOWN)) {
+			move(FlxObject.DOWN);
+		}
+		else if (Controls.pressed(Controls.LEFT)) {
+			move(FlxObject.LEFT);
+		}
+		else if (Controls.pressed(Controls.RIGHT)) {
+			move(FlxObject.RIGHT);
+		}else {
+			move(0);
+		}
+```
 
 --------
 
