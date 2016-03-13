@@ -35,7 +35,7 @@
 
 	<haxelib name="flixel"/>
 	<haxelib name="flixel-addons"/>
-	<include path="../source/" />
+	<include path="../../source/" />
 	
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
