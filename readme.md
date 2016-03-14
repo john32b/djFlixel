@@ -5,7 +5,7 @@ djFlixel Tools
 **Language:** Haxe 3.x
 **Requires:** haxeflixel 4.x (dev)
 
-__djFlixel__  is a library containing various helpers and tools library for haxeflixel. I created this during the development of my other game projects.  Feel free to use it, study it, fork it, or whatever :-)
+__djFlixel__  is a library containing various helpers and tools for haxeflixel. I created this during the development of my other game projects. Feel free to use it, study it, fork it, or whatever :-)
 
 ####  [!! CLICK HERE FOR A QUICK DEMO !!](http://bit.ly/djflx)
 
