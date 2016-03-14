@@ -64,15 +64,15 @@ class State_Main extends FlxState
 		
 		// TYPE:OneOf , options go into the field called "pool"
 		p.add("OneOf Option", { type:"oneof", pool:["one", "two", "three"] } );
-				
-		// TYPE:slider , Min and Max go to the pool field.
-		p.add("Numbers", { type: "slider", pool:[1, 20] } );
-	
-		// You can have options that are disabled, that can be selected but not triggered 
-		p.add("Link Disabled", { type:"link", disabled:true } );
 		
 		// Or unselectabled, can't even be selected
-		p.add("This is unselectable!", { type:"link", selectable:false } );
+		p.add("This is unselectable!", { type:"oneof", selectable:false, pool:["one", "two", "three"] } );
+		
+		// TYPE:slider , Min and Max go to the pool field.
+		p.add("Numbers", { type: "slider", pool:[1, 20] } );
+		
+		// You can have options that are disabled, that can be selected but not triggered 
+		p.add("Link Disabled", { type:"link", disabled:true } );
 		
 		// ------
 		// I have added some options to the page, now to set up the feedback.
