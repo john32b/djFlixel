@@ -12,7 +12,7 @@ import flixel.text.FlxText;
 
 // MenuOptionBase
 // --
-// Basic MenuOption, Other more specifig options will derive from this.
+// Basic MenuOption, Other more specific options will derive from this.
 // Don't forget this is only a representation of data.
 // Any changes should be written back to the $data object, as it acts as a pointer
 // --
@@ -35,7 +35,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	
 	// The option menu is separated into 2 parts, the label and the operational.
 	// part2length is how long the second part should be, in pixels.
-	var part2Length:Float;
+	// var part2Length:Float; // <--- Unused
 	
 	// This is part 1, the label
 	var label:FlxText;
@@ -122,7 +122,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	{	
 	}//---------------------------------------------------;
 	
-	// -- override
+	// -- Override to manage extra objects --
 	function state_focused()
 	{
 		if (opt.disabled)
@@ -130,7 +130,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		else
 			label.color = style.color_focused;
 	}//---------------------------------------------------;
-	// -- override
+	// -- Override to manage extra objects --
 	function state_default()
 	{
 		// It will never be focused because it should be disabled!
@@ -140,7 +140,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		else
 			label.color = style.color_default;	
 	}//---------------------------------------------------;
-	// -- override
+	// -- Override to manage extra objects --
 	function state_disabled()
 	{
 		label.color = style.color_disabled;
@@ -154,7 +154,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	}//---------------------------------------------------;
 	// --
 	// Note: All elements are added to a list are 
-	// 		 auto-unfocused by parent
+	//       auto-unfocused by parent
 	public function unfocus() 
 	{
 		if (!opt.selectable) return; // DEV: I could skip this call

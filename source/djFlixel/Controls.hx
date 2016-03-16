@@ -168,7 +168,8 @@ class Controls
 		}
 		else 
 		{
-			trace('Info: Controller found, [${gamepad.model}]');
+			trace('Info: Controller found, MODEL=${gamepad.model}, NAME=${gamepad.name}');
+			
 			gamepad.deadZone = DEADZONE;
 			
 			pressed = function(id:Int) {
@@ -321,13 +322,13 @@ class Controls
 			case RIGHT:
 				gamepad.pressed.DPAD_RIGHT ||
 				gamepad.analog.value.LEFT_STICK_X > 0;
-			case A: // jump
+			case A:
 				gamepad.pressed.A;
-			case X: // shoot
+			case X:
 				gamepad.pressed.X;
-			case Y: // inventory
+			case Y:
 				gamepad.pressed.Y;
-			case B: // use
+			case B:
 				gamepad.pressed.B;
 			case START:
 				gamepad.pressed.START;
@@ -357,13 +358,13 @@ class Controls
 			case RIGHT:
 				gamepad.justPressed.DPAD_RIGHT ||
 				gamepad.analog.value.LEFT_STICK_X > 0;
-			case A: // jump
+			case A:
 				gamepad.justPressed.A;
-			case X: // shoot
+			case X:
 				gamepad.justPressed.X;
-			case Y: // inventory
+			case Y:
 				gamepad.justPressed.Y;
-			case B: // use
+			case B:
 				gamepad.justPressed.B;
 			case START:
 				gamepad.justPressed.START;
@@ -391,13 +392,13 @@ class Controls
 			case RIGHT:
 				gamepad.justReleased.DPAD_RIGHT ||
 				gamepad.analog.value.LEFT_STICK_X > 0;
-			case A: // jump
+			case A:
 				gamepad.justReleased.A;
-			case X: // shoot
+			case X:
 				gamepad.justReleased.X;
-			case Y: // inventory
+			case Y:
 				gamepad.justReleased.Y;
-			case B: // use
+			case B:
 				gamepad.justReleased.B;
 			case START:
 				gamepad.justReleased.START;
@@ -418,10 +419,10 @@ class Controls
 			case DOWN: keys.anyPressed(mapping_down);
 			case LEFT: keys.anyPressed(mapping_left);
 			case RIGHT: keys.anyPressed(mapping_right);
-			case A: keys.pressed.K;	// jump
-			case X: keys.pressed.J; // shoot
-			case Y: keys.pressed.I; // inventory
-			case B: keys.pressed.U; // use
+			case A: keys.pressed.K;
+			case X: keys.pressed.J;
+			case Y: keys.pressed.I;
+			case B: keys.pressed.U;
 			case START: keys.pressed.ENTER;
 			case SELECT: keys.pressed.SPACE;
 			case LB: keys.pressed.SHIFT;
@@ -437,10 +438,10 @@ class Controls
 			case DOWN: keys.anyJustPressed(mapping_down);
 			case LEFT: keys.anyJustPressed(mapping_left);
 			case RIGHT: keys.anyJustPressed(mapping_right);
-			case A: keys.justPressed.K;	// jump
-			case X: keys.justPressed.J; // shoot
-			case Y: keys.justPressed.I; // inventory
-			case B: keys.justPressed.U; // use
+			case A: keys.justPressed.K; 
+			case X: keys.justPressed.J; 
+			case Y: keys.justPressed.I; 
+			case B: keys.justPressed.U;
 			case START: keys.justPressed.ENTER;
 			case SELECT: keys.justPressed.SPACE;
 			case LB: keys.justPressed.SHIFT;
@@ -456,10 +457,10 @@ class Controls
 			case DOWN: keys.anyJustReleased(mapping_down);
 			case LEFT: keys.anyJustReleased(mapping_left);
 			case RIGHT: keys.anyJustReleased(mapping_right);
-			case A: keys.justReleased.K;	// jump
-			case X: keys.justReleased.J; 	// shoot
-			case Y: keys.justReleased.I; 	// inventory
-			case B: keys.justReleased.U; 	// use
+			case A: keys.justReleased.K; 
+			case X: keys.justReleased.J; 
+			case Y: keys.justReleased.I; 
+			case B: keys.justReleased.U; 
 			case START: keys.justReleased.ENTER;
 			case SELECT: keys.justReleased.SPACE;
 			case LB: keys.justReleased.SHIFT;

@@ -84,9 +84,15 @@ class FlxMenu extends FlxGroup
 	// rootback - When user wants to back out of the root menu
 	// open   	- The menu was just opened
 	// close  	- The menu was just closed
-	// tick 	- Highlight selection changed
 	// pageOn 	- The page with $param == SID just went on screen
 	// pageOff  - The page with $param == SID just went off screen
+	
+	// The following types are mainly for sound effect handling from the user
+	// ------
+	// tick		   - An option was focused, The cursor moved.
+	// tick_change - An option value has changed.
+	// tick_fire   - An option was selected. ( button )
+	// tick_error  - An option that cant be selected or changed
 	public var callbacks_menu:String->String->Void;
 	
 	//---------------------------------------------------;

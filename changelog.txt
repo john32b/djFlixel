@@ -1,12 +1,26 @@
 
-DJFLIXEL GIT COMMITS CHANGE LOG
-================================
+DJFLIXEL CHANGE LOG
+====================
 
 
-# Added DEV branch with latest features
-  + MainTemplate. Quicker way to start a new project
-  + FileParams.hx will load JSON parameters file from either file or embedded
-  + Example, REG.hx now loads parameters from json.
+
+# 03-2016
+
+ + MapTemplate.hx
+    . Basic funcionality for quick setting up a map into the game
+	. Stream entities as they go in and out of view
+ + Some Examples
+	. FlxMenu01,ControlsDemo
+ . Better Dynamic Assets
+ . FlxMenu can load styles from the JSON parameters file
+
+# 02-2016
+
+ + MainTemplate. Quicker way to start a new project
+ . FileParams.hx will load JSON parameters file from either file or embedded
+ . Example, REG.hx now loads parameters from json.
   
 # Version 0.2.0
+...
 # Version 0.1.0
+...

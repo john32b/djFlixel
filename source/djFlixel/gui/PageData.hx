@@ -1,8 +1,11 @@
 package djFlixel.gui;
 
-
+// PageData
+// --------
+// Holds a single page data for use in flxMenu
+// Some parameters about the page like title, custom styles
+// and an array with all the menuoptions it contains.
 // --
-// Manages a collection of MenuOptionData
 class PageData
 {
 	// Unique String ID of the page
@@ -21,25 +24,31 @@ class PageData
 	// Store some page specific custom parameters
 	public var custom:Dynamic;	
 	
-	// Things that you can store in custom :
-	// -------------------------------------
+	// Things that you can store in custom:
+	// These vars are OPTIONAl and will override the flxMenu defaults for this page.
+	// ------------------------------------------------------------------------------
 	// width			 Int, Custom page width
 	// slots	 		 Int, How many slots this page should have for the screen representation
 	
 	// DEPRECATED: divider Int, The percent of the total Width that the divider will go to
 	
-	// styleXXX 		 Object, Used by the djFlixel menu system for storing menu styles
-	// 					 [styleOption, styleList, styleBase]
-	// lockNavigation    bool, If true the page cannot send a "back" request
+	// styleOption		Object, custom styleOption 
+	// styleList		Object, custom styleList
+	// styleBase		Object, custom styleBase
+	// -- note: Get styles from the "Styles.hx" static class --
+	
+	// lockNavigation    Bool, If true the page cannot send a "back" request ( by pressing the back button )
 	// cursorStart		 SID, the sid of the option to always highlight when going into this menu
 	
 	// callbacks_option   override the menu's callback function to this one.
 	
-	// ====
-	// = Fields starting with _ are used by the system =
+	// -----------------------------------------------
+	// - Fields starting with _ are used internally ::
+	// -----------------------------------------------
 	// 
 	// _cursorLastPos   Int, Store the latest cursor position if it's needed later
 	// _condIndexes	    Array<Int> store the indexes of the conditionals
+	
 	
 	//====================================================;
 	// FUNCTIONS
@@ -76,10 +85,11 @@ class PageData
 	 * @param	params { 
 	 * 		type: String, ["link", "slider", "oneof", "toggle", "label"]
 	 * 		sid:  String,   Give the optionData an ID
+	 * 		desc: String,	Description
 	 * 		pool: Dynamic, Data associated with the controller
 	 * 		current: Dynamic, Current value of the controller ! Warning: Unsanitized
-	 * 		condition: Bool->Void that if true will enable this option
-	 * 	confirmation: String, Question
+	 * 		conditional: Bool->Void that if true will enable this option
+	 * 		confirmation: String, Question to present if a confirmation check is required
 	 * 
 	 * @return The produced OptionData
 	 */

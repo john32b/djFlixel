@@ -1,0 +1,24 @@
+{
+	"reg" : {
+		"NAME" : "FlxMenu demo",
+		"VERSION" : "0.1",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"titleText" : [
+		" djFlixel Controls.hx example",
+		" . checks for [wasd],[arrows],[gamepad] with one call."
+	],
+	
+	"boxData" : {
+		"STARTPOS_X" : 70,
+		"STARTPOS_Y" : 70,
+		"ACCELSPEED" : 50,
+		"MAXACEL" : 1000,
+		"MAXVELOCITY" : 350,
+		"DRAGX": 600,
+		"DRAGY": 600
+		}
+}

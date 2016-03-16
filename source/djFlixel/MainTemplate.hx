@@ -15,7 +15,8 @@ class MainTemplate extends Sprite
 	var render_width:Int = 320;
 	var render_height:Int = 240;
 	var zoom:Float = 2;
-	var framerate:Int = 40;	// 40 is ok and fast. If it feels choppy, set to more (60)
+	// 40 is ok and fast. If it feels choppy, set to more (60)
+	public static var framerate:Int = 40;
 	var skipSplash:Bool = true;
 	var startFullscreen:Bool = true;
 	var initialState:Class<FlxState>;
@@ -60,7 +61,7 @@ class MainTemplate extends Sprite
 
 		// - Do this only once in the game lifetime
 		FlxG.signals.stateSwitched.addOnce(function() {
-				Reg.initOnce();
+			Reg.initOnce();
 		});
 			
 		addChild(new FlxGame(render_width, render_height, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));

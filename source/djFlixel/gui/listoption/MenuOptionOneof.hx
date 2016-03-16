@@ -147,7 +147,7 @@ class MenuOptionOneof extends MenuOptionBase
 		_updateArrow();
 	}//---------------------------------------------------;
 	
-	// Separate function so that the caller can be overrided
+	// --
 	function _updateArrow()
 	{
 		// Note: Arrow 2 X is calculated on update();

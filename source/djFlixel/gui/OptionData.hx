@@ -47,6 +47,7 @@ class OptionData
 	 * 
 	 * @param	label   The label of this option
 	 * @param	params [ multiple parameters dynamic obj ]
+	 * 
 	 * 					current: Depending on type
 	 * 					desc: Description
 	 * 					pool: Depending on type

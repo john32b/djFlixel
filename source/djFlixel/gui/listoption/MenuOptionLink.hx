@@ -87,6 +87,8 @@ class MenuOptionLink extends MenuOptionBase
 			hasDeco = false;
 		}else if(opt.data.fn == "page")
 		{
+			 // Show the decorative animated dots only when this 
+			 // is a link to another page.
 			deco.x = label.fieldWidth + PADDING_FROM_LABEL;
 			hasDeco = true;
 		}

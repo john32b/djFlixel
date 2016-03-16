@@ -1,0 +1,22 @@
+{
+	"reg" : {
+		"NAME" : "FlxMenu demo",
+		"VERSION" : "0.1",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"sounds" : {
+		"c_tick" : "cursor_tick",
+		"c_back" : "cursor_low",
+		"c_sel"  : "cursor_high",
+		"c_err"  : "cursor_error"
+	},
+	
+	"box" : {
+		"bg":"0x33FFFFFF",
+		"textColor":"0xFFAAAAAA"
+	}
+
+}
