@@ -264,7 +264,7 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (!cameraPos.isEqual(cameraPosOld))
 		{
-			trace("+ Camera coords", cameraPos);
+			// trace("+ Camera coords", cameraPos);
 			
 			onCameraCoordsChange(); // Check for offscreen entities elsewhere
 			
@@ -287,14 +287,14 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (delta > 0) {
 			for (rx in (cameraPos.x + _camHF)...(cameraPos.x + _camHF + delta)) {
-				trace("Checking column", rx);
+				// trace("Checking column", rx);
 				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
 		} 
 		else {
 			for (rx in (cameraPos.x - hPadding)...(cameraPos.x - delta - hPadding)) {
-				trace("Checking column", rx);
+				// trace("Checking column", rx);
 				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1))
 					feedDataFromCoords(rx, ry);
 			}
@@ -312,14 +312,14 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (delta > 0) {
 			for (ry in (cameraPos.y + _camVF)...(cameraPos.y + _camVF + delta)) {
-				trace("Checking row", ry);
+				// trace("Checking row", ry);
 				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1))
 					feedDataFromCoords(rx, ry);
 				}
 			}
 		else {
 			for (ry in (cameraPos.y - vPadding)...(cameraPos.y - delta - vPadding)) {
-				trace("Checking row", ry);
+				// trace("Checking row", ry);
 				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
@@ -336,10 +336,12 @@ class MapTemplate implements IFlxDestroyable
 	inline function feedDataFromCoords(x:Int, y:Int)
 	{
 		try{
-			onStreamEntity(streamingLayer[y][x]);
+			if (streamingLayer[y][x] != null)
+				onStreamEntity(streamingLayer[y][x]);
 		}catch (e:Dynamic)
 		{
 			// do nothing;
+			trace("Feed Data off bounds!", x, y);
 		}
 	}//---------------------------------------------------;
 

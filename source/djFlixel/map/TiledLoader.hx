@@ -102,6 +102,8 @@ class TiledLoader implements IFlxDestroyable
 		// ---
 		var root:Fast;
 		
+		// This objects supports Dynamic Files with the "DynAssets.hx' class
+		// If a dynamic load fails, it will try to load from embedded
 		try {
 			
 		#if (EXTERNAL_LOAD)
