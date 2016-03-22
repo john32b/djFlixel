@@ -1,5 +1,6 @@
 package djFlixel.net;
 
+import flixel.util.typeLimit.OneOfTwo;
 import openfl.display.Loader;
 import openfl.net.URLLoader;
 import openfl.net.URLLoaderDataFormat;
@@ -10,10 +11,17 @@ import haxe.Json;
  * Load a file into memory
  * can be either [ binary, text, Json ]
  * Can load the file from the NET or LOCALLY
+ * ----
+ * NEW:
+ * - Can load images as well.
+ * 
+ * WARNING:
+ * - .json files filename MUST end with "json"
  */
 class DataGet
 {
-	public var loader:URLLoader;
+	// --
+	public var loader:OneOfTwo<URLLoader,Loader>;
 	public var lData:LoaderData;
 
 	// The url to download from. Can be set later
@@ -23,15 +31,14 @@ class DataGet
 	// Called when error occured, # passthrough for the ldata.onError
 	public var onError:Int->Void = null;
 
-	// The data loaded
+	// The data loaded, This is the var to read when loader is loaded
 	public var data(default, null):Dynamic;
-	public var type(default, null):String = "text";	// binary,text,json
+	public var type(default, null):String = "text";	// binary,text,json,image
 	
 	// Whether this is loaded or not.
 	public var isLoaded(default, null):Bool;
 	
-	//-- Set to true to force loading file as binary, 
-	//   ( images, sounds, etc )
+	//-- Set to true to force loading a text file as binary
 	public var flag_force_binary:Bool = false;
 	
 	//====================================================;
@@ -52,23 +59,42 @@ class DataGet
 	// --
 	public function startLoading():Void
 	{
-		// trace('Info: Loading from $url');
+		// NEW:
+		// - Try guess the type
 		
-		loader = new URLLoader();
-		if (flag_force_binary) {
-			
-			//trace("Info: Loading as BINARY");
-			loader.dataFormat = URLLoaderDataFormat.BINARY;
+		var _ldatainit = function() {
+				lData = new LoaderData(loader);
+				lData.onLoad = onContentLoad;
+				lData.onError = onError;
+		};
+		
+		var ext = url.substr( -4).toLowerCase();
+		
+		if ([".png", ".jpg", ".gif"].indexOf(ext) > -1) {
+				loader = new Loader();
+				type = "image";
+				_ldatainit();
+				cast(loader, Loader).load(new URLRequest(url));
 		}
-		
-		/// Should I check for the other dataformats?
-		
-		lData = new LoaderData(loader);
-		lData.onLoad = onContentLoad;
-		lData.onError = onError;
-		
-		loader.load(new URLRequest(url));
-
+		else
+		{
+			// Proceed to load as text
+			loader = new URLLoader();
+			if (flag_force_binary) {
+				type = "binary";
+				cast(loader, URLLoader).dataFormat = URLLoaderDataFormat.BINARY;
+			}
+			else if(ext == "json") // JSON FILES MUST END IN JSON!
+			{
+				type = "json";
+			}else
+			{
+				type = "text";
+			}
+			
+			_ldatainit();
+			cast(loader, URLLoader).load(new URLRequest(url));
+		}
 	}//---------------------------------------------------;
 	
 	// --
@@ -76,23 +102,20 @@ class DataGet
 	// else returns a string.
 	private function onContentLoad():Void
 	{
-		if (flag_force_binary)
+		
+		switch(type)
 		{
-			data = loader.data;
-			type = "binary";
-		}
-		else // If it's text type
-		{
-			try {
-				//- Json File
-				data = haxe.Json.parse(loader.data);
-				type = "json";
-			}catch (e:Dynamic)
-			{
-				//- Normal File
-				data = loader.data;
-				type = "text";
-			}
+			case "image":  data = cast(loader, Loader).content;
+			case "binary": data = cast(loader, URLLoader).data;
+			case "json":
+				try{
+					data = haxe.Json.parse(cast(loader, URLLoader).data);
+				}catch (e:Dynamic) {
+					trace("Error: Could not parse JSON");
+					data = [];
+				}
+			case "text": data = cast(loader, URLLoader).data;
+			default:
 		}
 		
 		isLoaded = true;

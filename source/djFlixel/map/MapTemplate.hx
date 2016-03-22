@@ -63,15 +63,24 @@ class MapTemplate implements IFlxDestroyable
 	public var onStreamEntity:MapEntity->Void;
 	
 	// # USER SET
-	// this to be the object layer for streaming entities.
+	// This is the main tile layer streaming entities.
 	// Set this before loading the level.
 	public var OBJECT_LAYER:String;
 	
-
+	// # USER SET
+	// This is the main dataobject layer
+	// These objects are useful to set custom data from the tiled editor
+	public var DATA_LAYER:String;
+	
+	
 	// Support one streaming data layer
 	// Stores the entities to be streamed.
 	var streamingLayer:Array<Array<MapEntity>>;
 	
+	// Store the map entities with a key of "$xtile,$ytile"
+	var dataLayer:Map<String,MapEntity>;
+	
+
 	// Search for this much more at the top and bottom for entities
 	// A value of 0 will stream in entities just as they scroll into view.
 	var vPadding:Int = 0;
@@ -142,6 +151,7 @@ class MapTemplate implements IFlxDestroyable
 		loader = FlxDestroyUtil.destroy(loader);
 		camera = FlxDestroyUtil.destroy(camera);
 		layerBG = FlxDestroyUtil.destroy(layerBG);
+		dataLayer = null;
 	}//---------------------------------------------------;
 	
 	// -- Reset and map elements before reloading a new map.
@@ -155,7 +165,10 @@ class MapTemplate implements IFlxDestroyable
 				i = null;
 			}
 		}
+		
 		streamingLayer = null;
+		dataLayer = null;
+		
 	}//---------------------------------------------------;
 
 	// --
@@ -198,12 +211,16 @@ class MapTemplate implements IFlxDestroyable
 		trace('mapWidth = $mapWidth');
 		trace('mapHeight = $mapHeight');
 		
+		// Create those objects 
+		// Because a data check could be called externally.
+		streamingLayer = new Array<Array<MapEntity>>();
+		dataLayer = new Map();
+		
 		// - Streaming entities --
 		// - Scan the ENTIRE objects layer to get data:
 		if (OBJECT_LAYER != null)
 		{			
 			UIDGEN = 0;
-			streamingLayer = new Array<Array<MapEntity>>();
 			for (yy in 0...mapHeight) streamingLayer[yy] = [];
 			scanTileLayer(OBJECT_LAYER, function(x:Int, y:Int, tile:Int) {
 				UIDGEN++;
@@ -212,9 +229,30 @@ class MapTemplate implements IFlxDestroyable
 				manageEntityAt(x, y, tile);
 			});
 			
-			// DEVNOTE: At this point I could free up some memory
-			//			by freeing the tileloader ?
-		}
+		}// --
+		
+		
+		// - Now scan any DATA layer
+		if (loader.layerEntities.exists(DATA_LAYER))
+		{
+			var tileSizeHalf:Int = Std.int(loader.tilesetWidths.get(DATA_LAYER) / 2);
+
+			var tileX:Int;
+			var tileY:Int;
+			
+			for (i in loader.layerEntities.get(DATA_LAYER))
+			{
+				tileX = Std.int((i.x + tileSizeHalf) / TILEWIDTH);
+				tileY = Std.int((i.y + tileSizeHalf) / TILEHEIGHT);
+				dataLayer.set('$tileX,$tileY', i);
+				// Optional handle this entity:
+				manageDataAt(tileX, tileY, i);
+			}
+		}// --
+		
+		
+		// DEVNOTE: At this point I could free up some memory
+		//			by freeing the tileloader ?
 		
 	}//---------------------------------------------------;
 
@@ -341,7 +379,7 @@ class MapTemplate implements IFlxDestroyable
 		}catch (e:Dynamic)
 		{
 			// do nothing;
-			trace("Feed Data off bounds!", x, y);
+			// trace("Feed Data off bounds!", x, y);
 		}
 	}//---------------------------------------------------;
 
@@ -357,7 +395,20 @@ class MapTemplate implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	
+	
+	//====================================================;
+	// MAP DATA RELATED: 
+	//====================================================;
+	
+	
+	// Returns the mapEntity on the DATA layer
+	// , If nothing is found, returns NULL
+	public function getDataObjectAt(x:Int, y:Int):MapEntity
+	{
+		return dataLayer.get('$x,$y');
+	}//---------------------------------------------------;
 
+	
 	// -- OVERRIDE THIS --
 	// The object layer is always scanned for data
 	// Manage specific entities here, like the player spawn point, etc
@@ -365,13 +416,26 @@ class MapTemplate implements IFlxDestroyable
 	{
 	}//---------------------------------------------------;
 	
+	
+	// -- OVERRIDE THIS --
+	// The entity layer is always scanned once for data
+	// You can check for things here
+	function manageDataAt(x:Int, y:Int, en:MapEntity)
+	{
+		//x,y is TileSize
+		//en.x en.y are world values
+	}//---------------------------------------------------;
+	
+	
+	
+	
 	 /**
 	  * Scan a layer and for each tile it finds process it.
 	  * Useful to get player spawn points, enemies, etc.
 	  * @param	layerName The name of the layer is it is in the TILED editor
 	  * @param	handler callback :: function(coordsX,coordsY,tileID);
 	  */
-	public function scanTileLayer(layerName:String, handler:Int->Int->Int->Void)
+	function scanTileLayer(layerName:String, handler:Int->Int->Int->Void)
 	{
 		var tiles:Array<Array<Int>> = loader.layerTiles.get(layerName);
 		var t:Int;	// temp tile

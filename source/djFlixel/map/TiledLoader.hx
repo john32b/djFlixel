@@ -59,7 +59,10 @@ class TiledLoader implements IFlxDestroyable
 	
 	public var layerTiles:Map<String,Array<Array<Int>>>;	// LayerName=> Array
 	public var layerEntities:Map<String,Array<MapEntity>>; 	// LayerName=> Entities
-
+	
+	// Store the sizes of all the layers, in case I need them later
+	public var tilesetWidths(default,null):Map<String,Int>;
+	
 	public var bgColor(default, null):Int = 0xFF000000; // TODO: Load this from the file
 	
 	public var tileWidth(default, null):Int;
@@ -72,7 +75,6 @@ class TiledLoader implements IFlxDestroyable
 	public var mapID(default, null):String;
 	
 	//---------------------------------------------------;
-	//---------------------------------------------------;
 	public function new() 
 	{	
 	}//---------------------------------------------------;
@@ -81,6 +83,7 @@ class TiledLoader implements IFlxDestroyable
 	{
 		layerTiles = null;
 		layerEntities = null;
+		tilesetWidths = null;
 	}//---------------------------------------------------;
 	
 	/**
@@ -96,6 +99,7 @@ class TiledLoader implements IFlxDestroyable
 		
 		layerTiles = new Map();
 		layerEntities = new Map();
+		tilesetWidths = new Map();
 		
 		if (sameImagesLayer == null) sameImagesLayer = [];
 		
@@ -143,6 +147,8 @@ class TiledLoader implements IFlxDestroyable
 		{
 			tileOffsets.push(Std.parseInt(tnode.att.resolve("firstgid")) - 1);
 			trace("Reading offset ", tileOffsets[tileOffsets.length - 1]);
+			// new: get tilesets
+			tilesetWidths.set(tnode.att.name, Std.parseInt(tnode.att.tilewidth));
 		}
 		
 		// 2: Read the layers
@@ -225,7 +231,7 @@ class TiledLoader implements IFlxDestroyable
 	// --
 	// Convert the CSV string read from the map to an array,
 	// with an optional applied offset.
-	private function CSVToArrayInt(csv:String, offset:Int = 0):Array<Array<Int>>
+	function CSVToArrayInt(csv:String, offset:Int = 0):Array<Array<Int>>
 	{
 		var ar_final = new Array<Array<Int>>();
 		var ar_csv = csv.split(',');
@@ -248,6 +254,11 @@ class TiledLoader implements IFlxDestroyable
 
 		return ar_final;
 	}//---------------------------------------------------;
+	
+	
+	
+	
+	
 	
 	
 }//-- end class --//

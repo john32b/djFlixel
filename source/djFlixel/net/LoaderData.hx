@@ -1,5 +1,6 @@
 package djFlixel.net;
 
+import flixel.util.typeLimit.OneOfTwo;
 import openfl.display.Loader;
 import openfl.events.IEventDispatcher;
 import openfl.net.URLLoader;
@@ -61,7 +62,8 @@ class LoaderData
 	var eventObj:IEventDispatcher;
 	//---------------------------------------------------;
 	
-	public function new(par:Dynamic) 
+	// --
+	public function new(par:OneOfTwo<URLLoader,Loader>) 
 	{
 		// Loader is for SWF and Images
 		if (Std.is(par, Loader))
@@ -69,7 +71,7 @@ class LoaderData
 			eventObj = cast(par, Loader).contentLoaderInfo;
 			attachEvents();
 		}else
-		// URLLoader is for text
+		// URLLoader is for text and binaryFiles
 		if (Std.is(par, URLLoader))
 		{
 			eventObj = cast(par, URLLoader);
@@ -85,7 +87,6 @@ class LoaderData
 
 	function kill_listeners():Void
 	{
-		// trace("Events killed", 0);
 		eventObj.removeEventListener(Event.COMPLETE, _listen_complete);
 		eventObj.removeEventListener(ProgressEvent.PROGRESS, _listen_progress);
 		eventObj.removeEventListener(IOErrorEvent.IO_ERROR, _listen_ioError);
@@ -93,7 +94,6 @@ class LoaderData
 	
 	public function attachEvents():Void
 	{
-		// trace("Events created", 0);
 		eventObj.addEventListener(Event.COMPLETE, _listen_complete);
 		eventObj.addEventListener(ProgressEvent.PROGRESS, _listen_progress);
 		eventObj.addEventListener(IOErrorEvent.IO_ERROR, _listen_ioError);
@@ -118,7 +118,6 @@ class LoaderData
 	}//---------------------------------------------------;
 	function _listen_ioError(e:IOErrorEvent):Void
 	{
-		// trace("Loader " + e.text, 3);
 		kill_listeners();
 		if (onError != null) onError(ID);
 	}//---------------------------------------------------;
