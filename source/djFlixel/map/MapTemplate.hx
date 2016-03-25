@@ -207,14 +207,16 @@ class MapTemplate implements IFlxDestroyable
 		camera.maxScrollY = height;
 		camera.scroll.set(0, 0);
 	
-		trace('Loaded level "$levelID"');
-		trace('mapWidth = $mapWidth');
-		trace('mapHeight = $mapHeight');
+		trace('** Loaded level "$levelID" | mapWidth = $mapWidth | mapHeight = $mapHeight');
 		
 		// Create those objects 
 		// Because a data check could be called externally.
 		streamingLayer = new Array<Array<MapEntity>>();
 		dataLayer = new Map();
+		
+		// Load those 2 from the JSON, #optional
+		OBJECT_LAYER = Reg.JSON.map.OBJECT_LAYER;
+		DATA_LAYER = Reg.JSON.map.DATA_LAYER;
 		
 		// - Streaming entities --
 		// - Scan the ENTIRE objects layer to get data:
@@ -250,7 +252,6 @@ class MapTemplate implements IFlxDestroyable
 			}
 		}// --
 		
-		
 		// DEVNOTE: At this point I could free up some memory
 		//			by freeing the tileloader ?
 		
@@ -268,7 +269,9 @@ class MapTemplate implements IFlxDestroyable
 	public function feedRoomData()
 	{	
 		// Just in case.
-		Reg.map.camera.updateFollow(); 
+		if (camera.target != null) {
+			camera.updateFollow();
+		}
 		
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
 		cameraPos.y = Std.int(camera.scroll.y / TILEHEIGHT);
@@ -279,11 +282,11 @@ class MapTemplate implements IFlxDestroyable
 		
 		cameraPosOld.copyFrom(cameraPos);
 		
-		#if debug
-		trace("= feedRoomData() checking entities from and to");
-		trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + _camHF} ]');
-		trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + _camVF} ]');
-		#end
+		//#if debug
+		//trace("= feedRoomData() checking entities from and to");
+		//trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + _camHF} ]');
+		//trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + _camVF} ]');
+		//#end
 		
 		for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) // x axis
 		for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) // y axis
@@ -386,12 +389,13 @@ class MapTemplate implements IFlxDestroyable
 	// --
 	// Quick way to figure out if an entity is offscreen
 	// Tile based
-	public function entityIsOffScreen(en:EntityTopDown)
+	// New: Apply some padding
+	public inline function entityIsOffScreen(en:EntityTopDown):Bool
 	{
-		return (en.coords.x < cameraPos.x - hPadding ||
-				en.coords.y < cameraPos.y - vPadding ||
-				en.coords.x > cameraPos.x + _camHF   ||
-				en.coords.y > cameraPos.y + _camVF );
+		return (en.coords.x + en.offscreen_kill_pad < cameraPos.x - hPadding ||
+				en.coords.y + en.offscreen_kill_pad < cameraPos.y - vPadding ||
+				en.coords.x - en.offscreen_kill_pad > cameraPos.x + _camHF   ||
+				en.coords.y - en.offscreen_kill_pad > cameraPos.y + _camVF );
 	}//---------------------------------------------------;
 	
 	
@@ -408,7 +412,8 @@ class MapTemplate implements IFlxDestroyable
 		return dataLayer.get('$x,$y');
 	}//---------------------------------------------------;
 
-	
+
+	/// This is automatically called on map load
 	// -- OVERRIDE THIS --
 	// The object layer is always scanned for data
 	// Manage specific entities here, like the player spawn point, etc
@@ -416,7 +421,7 @@ class MapTemplate implements IFlxDestroyable
 	{
 	}//---------------------------------------------------;
 	
-	
+	/// This is automatically called on map load
 	// -- OVERRIDE THIS --
 	// The entity layer is always scanned once for data
 	// You can check for things here

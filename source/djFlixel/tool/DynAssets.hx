@@ -61,18 +61,22 @@ class DynAssets
 			var get:DataGet = new DataGet();
 			get.url = MacroHelp.getProjectPath() + ASSETS_PATH + f;
 			get.onLoad = function(loadedData:Dynamic) {
-				trace('Loaded file $f..');
+				var nfo = 'Loaded file $f..';
 				switch(get.type) {
 				case "text":
-					trace('.. as text.');
+					trace('$nfo .. as text.');
 					files.set(f, loadedData);
 				case "json":
-					trace('.. as JSON.');
-					json.set(f, loadedData);
+					if (loadedData == null) {
+						trace('$nfo .. ERROR!! Could not Parse, Check for typos.');
+					}else {
+						trace('$nfo .. as JSON.');
+						json.set(f, loadedData);
+					}
 				case "image":
-					trace('.. as image.');
+					trace('$nfo .. as image.');
 					images.set(ASSETS_PATH + f, cast(loadedData, Bitmap).bitmapData);
-				default : trace('.. as text\n WARING: unhandled loader type!');
+				default : trace('$nfo .. \n WARING: unhandled loader type!');
 				}
 				ar.next();
 			};

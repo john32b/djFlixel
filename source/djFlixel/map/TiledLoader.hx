@@ -198,8 +198,13 @@ class TiledLoader implements IFlxDestroyable
 		//var r1 = dataNode.nodes.objectgroup.filter(function(_) { return (_.att.name == layerName); } ).first();
 		//if (r1 == null) return null; // Not found!
 		
-		// - Check to see if it's a geom layer
+		if (!dataNode.hasNode.object)
+		{
+			trace("Waning: Entity layer contains NO entities");
+			return null;
+		}
 		
+		// - Check to see if it's a geom layer
 		if (dataNode.node.object.hasNode.polyline)
 		{
 			trace("This is a polygon layer, skipping [X]");
@@ -224,7 +229,7 @@ class TiledLoader implements IFlxDestroyable
 						type:r2
 					});
 		}
-
+		
 		return ar;
 	}//---------------------------------------------------;
 	

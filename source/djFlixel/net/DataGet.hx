@@ -112,7 +112,7 @@ class DataGet
 					data = haxe.Json.parse(cast(loader, URLLoader).data);
 				}catch (e:Dynamic) {
 					trace("Error: Could not parse JSON");
-					data = [];
+					data = null;
 				}
 			case "text": data = cast(loader, URLLoader).data;
 			default:
