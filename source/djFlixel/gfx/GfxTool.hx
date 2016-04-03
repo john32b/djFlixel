@@ -1,6 +1,9 @@
 package djFlixel.gfx;
 
 import flixel.FlxSprite;
+import flixel.graphics.FlxGraphic;
+import flixel.system.FlxAssets.FlxGraphicAsset;
+import openfl.Assets;
 import openfl.geom.Rectangle;
 import openfl.display.BitmapData;
 import openfl.geom.Point;
@@ -52,6 +55,47 @@ class GfxTool
 		bit.unlock();
 		return bit;
 	}//---------------------------------------------------;
+	
+		
+	
+	public static function getBitmapPortion(source:FlxGraphicAsset, x:Int, y:Int, width:Int, height:Int):BitmapData
+	{
+		var r = new BitmapData(width, height);
+		var rect:Rectangle = new Rectangle(x, y, width, height);
+		var point:Point = new Point(0, 0);
+		var sourceData:BitmapData;
+		
+		if (Std.is(source, BitmapData))
+		{
+			sourceData = cast source;
+		}else if (Std.is(source, String))
+		{
+			sourceData = Assets.getBitmapData(cast source);
+		}else {
+			sourceData = cast(source, FlxGraphic).bitmap;
+		}
+		
+		r.copyPixels(sourceData, rect, point);
+
+		return r;
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Draws an entire bitmap onto another bitmap at coordinates
+	 * @param	bit The bitmap to be drawn
+	 * @param	dest The bitmap to be drawn to
+	 * @param	x
+	 * @param	y
+	 */
+	public static function drawBitmapOn(bit:BitmapData, dest:BitmapData, x:Int, y:Int)
+	{
+		var rect:Rectangle = new Rectangle(0, 0, bit.width, bit.height );
+		var point:Point = new Point(x, y);
+		dest.copyPixels(bit, rect, point);
+	}//---------------------------------------------------;
+	
+	
 		
 	/**
 	 * Return an animated flxSprite loaded with the "img" tilesheet

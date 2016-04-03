@@ -1,8 +1,12 @@
 package djFlixel.map;
 
 import djFlixel.map.TiledLoader;
+import entity.StreamableSprite;
+import flash.geom.Rectangle;
+import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
+import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
@@ -56,43 +60,44 @@ class MapTemplate implements IFlxDestroyable
 	// # USER SET
 	// Called whenever the camera tiled coords change
 	// . useful to set a function to check for offscreen entities
-	public var onCameraCoordsChange:Void->Void;
+	// NEW: Internally handled
+	// public var onCameraCoordsChange:Void->Void;
 	
-	// # USER SET - MUST BE SET !!
+	// # USER SET - ( MUST BE SET )
 	// This will be called with map entities that need to be added to the game
 	public var onStreamEntity:MapEntity->Void;
 	
-	// # USER SET
-	// This is the main tile layer streaming entities.
-	// Set this before loading the level.
-	public var OBJECT_LAYER:String;
-	
-	// # USER SET
-	// This is the main dataobject layer
-	// These objects are useful to set custom data from the tiled editor
-	public var DATA_LAYER:String;
-	
-	
-	// Support one streaming data layer
-	// Stores the entities to be streamed.
+	// # LAYER FOR STREAMING OBJECTS
+	// This layer holds data in tile format, not actual drawn tiles.
+	// Tiles in this layer will be streamed in and out
 	var streamingLayer:Array<Array<MapEntity>>;
 	
+	// # LAYER FOR DATA OBJECTS
+	// This layer holds data in entity format, meaning 
+	//	not tile restricted X,Y coords and custom metadata, json parameters
 	// Store the map entities with a key of "$xtile,$ytile"
 	var dataLayer:Map<String,MapEntity>;
 	
-
+	
 	// Search for this much more at the top and bottom for entities
 	// A value of 0 will stream in entities just as they scroll into view.
 	var vPadding:Int = 0;
 	var hPadding:Int = 0;
 	
-	//---------------------------------------------------;
 	// Tiled map files data loader
 	var loader:TiledLoader;
 	
-	// Current level name
+	// Current level name, it's the filename of the level loaded without /assetdir/ and extension
+	// e.g. "/assets/maps/" $currentlevel ".tmx"
 	public var currentLevel(default,null):String;
 
+	
+	// Hold all the onscreen streamable objects
+	// * User should push objects here *
+	// Objects here are auto-destroyed
+	public var streamedObjects:FlxTypedGroup<StreamableSprite>;
+	
+	
 	// -- HELPERS
 	// General purpose Ints
 	var rx:Int;
@@ -109,41 +114,64 @@ class MapTemplate implements IFlxDestroyable
 		loader = new TiledLoader();
 		layerBG = new FlxTilemap();
 		
-		// -- Init Camera ( TODO )
-		//camera = new FlxCamera( 0, 11, FlxG.width,  
-		//camera.bgColor = PALETTE_GB.COL_01;
-		//camera.antialiasing = Reg.ANTIALIASING;
-		//FlxG.cameras.add(camera);
-		//FlxG.cameras.reset(camera);
-		camera = FlxG.camera;
-		camera.bgColor = Reg.JSON.map.BG_COLOR;
-		layerBG.cameras = [camera];
-		
-		// -- 
-		// Now it's a good time to set the TILEWIDTH and TILEHEIGHT
-		// It's better to declare them before any map loads
-		// Because some objects may rely on these values
+		// -- Read parameters
 		TILEWIDTH = Reg.JSON.map.BG_TILEWIDTH;
 		TILEHEIGHT = Reg.JSON.map.BG_TILEHEIGHT;
+		
+		hPadding = Reg.JSON.map.STREAM_PAD_X;
+		vPadding = Reg.JSON.map.STREAM_PAD_Y;
+		
+		// Use the default camera, use setCustomViewport() later
+		camera = FlxG.camera;
+		camera.bgColor = Reg.JSON.map.BG_COLOR;
+		
+		// Hold the camera starting point in tile coords
+		cameraPos = new SimpleCoords();
+		cameraPosOld = new SimpleCoords();
+		
+		// Optional user function.
+		// onCameraCoordsChange = function() { };
 		
 		// Calculate the camera viewport in tiles
 		cameraWidth = Math.ceil(camera.width / TILEWIDTH);
 		cameraHeight = Math.ceil(camera.height / TILEHEIGHT);
 		
-		hPadding = Reg.JSON.map.STREAM_PAD_X;
-		vPadding = Reg.JSON.map.STREAM_PAD_Y;
+		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
+		_camHF = cameraWidth + hPadding;
+		
+		trace("Camera Area Size", cameraWidth, cameraHeight);
+		
+		// objects on screen
+		streamedObjects = new FlxTypedGroup();
+	}//---------------------------------------------------;
+	
+	
+	
+	/**
+	 * Create a new camera to display the map. Useful if you want a smaller rectangle rendering the game
+	 * NOTE: You should manually add the camera to the FLXG.cameras list later
+	 * @param	x Screen start
+	 * @param	y Screen start
+	 * @param	width 
+	 * @param	height
+	 */
+	public function setCustomViewport(x:Int, y:Int, width:Int, height:Int)
+	{
+		camera = new FlxCamera(x, y, width, height, 0);
+		camera.bgColor = Reg.JSON.map.BG_COLOR;
+		camera.antialiasing = Reg.ANTIALIASING; // apply the AA status to this cam
+		layerBG.cameras = [camera];
+		
+		// Don't forget to re-set the camera size
+		cameraWidth = Math.ceil(camera.width / TILEWIDTH);
+		cameraHeight = Math.ceil(camera.height / TILEHEIGHT);
 		
 		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
 		_camHF = cameraWidth + hPadding;
 		
-		cameraPos = new SimpleCoords();
-		cameraPosOld = new SimpleCoords();
-			
-		// Optional user function.
-		onCameraCoordsChange = function() { };
-		
 		trace("Camera Area Size", cameraWidth, cameraHeight);
 	}//---------------------------------------------------;
+		
 	
 	// --
 	public function destroy()
@@ -151,14 +179,14 @@ class MapTemplate implements IFlxDestroyable
 		loader = FlxDestroyUtil.destroy(loader);
 		camera = FlxDestroyUtil.destroy(camera);
 		layerBG = FlxDestroyUtil.destroy(layerBG);
+		streamedObjects = FlxDestroyUtil.destroy(streamedObjects);
 		dataLayer = null;
 	}//---------------------------------------------------;
+	
 	
 	// -- Reset and map elements before reloading a new map.
 	function reset()
 	{
-		UIDGEN = 0;
-		 
 		// -- Clear the streaming layer
 		if (streamingLayer != null) {
 			for (i in streamingLayer) {
@@ -168,10 +196,14 @@ class MapTemplate implements IFlxDestroyable
 		
 		streamingLayer = null;
 		dataLayer = null;
+		streamedObjects.clear();
 		
 	}//---------------------------------------------------;
 
-	// --
+	/**
+	 * Load a map file and init all layers
+	 * @param	levelID This must be at "assets/maps/" + levelID + "tmx"
+	 */
 	public function loadLevel(levelID:String)
 	{
 		reset();
@@ -215,8 +247,8 @@ class MapTemplate implements IFlxDestroyable
 		dataLayer = new Map();
 		
 		// Load those 2 from the JSON, #optional
-		OBJECT_LAYER = Reg.JSON.map.OBJECT_LAYER;
-		DATA_LAYER = Reg.JSON.map.DATA_LAYER;
+		var OBJECT_LAYER = Reg.JSON.map.OBJECT_LAYER;
+		var DATA_LAYER = Reg.JSON.map.DATA_LAYER;
 		
 		// - Streaming entities --
 		// - Scan the ENTIRE objects layer to get data:
@@ -224,11 +256,10 @@ class MapTemplate implements IFlxDestroyable
 		{			
 			UIDGEN = 0;
 			for (yy in 0...mapHeight) streamingLayer[yy] = [];
-			scanTileLayer(OBJECT_LAYER, function(x:Int, y:Int, tile:Int) {
-				UIDGEN++;
-				var en:MapEntity = { x:x, y:y, id:tile, uid:UIDGEN };
-				streamingLayer[y][x] = en;
-				manageEntityAt(x, y, tile);
+			applyOnTileLayer(OBJECT_LAYER, function(x:Int, y:Int, tile:Int) {
+				// Give each entity a unique ID
+				streamingLayer[y][x] = { x:x, y:y, id:tile, uid: ++UIDGEN };
+				manageTileData(x, y, tile);
 			});
 			
 		}// --
@@ -298,6 +329,7 @@ class MapTemplate implements IFlxDestroyable
 		
 	// --
 	// Check the camera edges and feed discovered entities to the feeder
+	// Call this on every update or less.
 	public function updateCameraAndFeedData()
 	{
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
@@ -305,9 +337,14 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (!cameraPos.isEqual(cameraPosOld))
 		{
-			// trace("+ Camera coords", cameraPos);
-			
-			onCameraCoordsChange(); // Check for offscreen entities elsewhere
+			// Check for offscreen entities here:
+			// --
+			for (i in streamedObjects) {
+				if (entityIsOffScreen(i)) {
+					i.kill();
+					// trace("KILLING ENTITY");
+				}
+			}
 			
 			// Camera changed tile pos
 			feedDataFromRow(cameraPos.y - cameraPosOld.y);
@@ -374,11 +411,22 @@ class MapTemplate implements IFlxDestroyable
 	 * @param	x tile coords
 	 * @param	y tile coords
 	 */
-	inline function feedDataFromCoords(x:Int, y:Int)
+	function feedDataFromCoords(x:Int, y:Int)
 	{
-		try{
-			if (streamingLayer[y][x] != null)
-				onStreamEntity(streamingLayer[y][x]);
+		try {
+			
+			if (streamingLayer[y][x] == null) return;
+			
+			for (i in streamedObjects) {
+				if (i.alive && i.exists && streamingLayer[y][x].uid == i.UID) {
+					// trace("Already exists", streamingLayer[y][x]);
+					return;
+				}
+			}
+			
+			// ok to add :
+			onStreamEntity(streamingLayer[y][x]);
+			
 		}catch (e:Dynamic)
 		{
 			// do nothing;
@@ -390,14 +438,13 @@ class MapTemplate implements IFlxDestroyable
 	// Quick way to figure out if an entity is offscreen
 	// Tile based
 	// New: Apply some padding
-	public inline function entityIsOffScreen(en:EntityTopDown):Bool
+	public inline function entityIsOffScreen(en:StreamableSprite):Bool
 	{
 		return (en.coords.x + en.offscreen_kill_pad < cameraPos.x - hPadding ||
 				en.coords.y + en.offscreen_kill_pad < cameraPos.y - vPadding ||
 				en.coords.x - en.offscreen_kill_pad > cameraPos.x + _camHF   ||
 				en.coords.y - en.offscreen_kill_pad > cameraPos.y + _camVF );
 	}//---------------------------------------------------;
-	
 	
 	
 	//====================================================;
@@ -411,13 +458,31 @@ class MapTemplate implements IFlxDestroyable
 	{
 		return dataLayer.get('$x,$y');
 	}//---------------------------------------------------;
+	
+	// --
+	// Read a tile from the streaming layer.
+	public function getStreamingTileAt(x:Int, y:Int):Int
+	{
+		if (streamingLayer[y][x] != null)
+			return streamingLayer[y][x].id;
+		else
+			return -1;
+	}//---------------------------------------------------;
 
+	// --
+	// Set a new tile at the streaming layer
+	public function setStreamingTileAt(x:Int, y:Int, tile:Int, ?type:String):MapEntity
+	{
+		streamingLayer[y][x] = { x:x, y:y, id:tile, uid: ++UIDGEN, type:type };
+		return streamingLayer[y][x];
+	}//---------------------------------------------------;
+	
 
 	/// This is automatically called on map load
 	// -- OVERRIDE THIS --
 	// The object layer is always scanned for data
 	// Manage specific entities here, like the player spawn point, etc
-	function manageEntityAt(x:Int, y:Int, id:Int)
+	function manageTileData(x:Int, y:Int, id:Int)
 	{
 	}//---------------------------------------------------;
 	
@@ -427,20 +492,18 @@ class MapTemplate implements IFlxDestroyable
 	// You can check for things here
 	function manageDataAt(x:Int, y:Int, en:MapEntity)
 	{
-		//x,y is TileSize
-		//en.x en.y are world values
+		// x, y is TileSize
+		// en.x en.y are world values
 	}//---------------------------------------------------;
 	
 	
-	
-	
 	 /**
-	  * Scan a layer and for each tile it finds process it.
+	  * Scan a layer and for each tile it finds, call a function 
 	  * Useful to get player spawn points, enemies, etc.
 	  * @param	layerName The name of the layer is it is in the TILED editor
 	  * @param	handler callback :: function(coordsX,coordsY,tileID);
 	  */
-	function scanTileLayer(layerName:String, handler:Int->Int->Int->Void)
+	function applyOnTileLayer(layerName:String, handler:Int->Int->Int->Void)
 	{
 		var tiles:Array<Array<Int>> = loader.layerTiles.get(layerName);
 		var t:Int;	// temp tile

@@ -1,7 +1,9 @@
 package djFlixel.fx.particles;
 
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.util.FlxTimer;
 
 
 // --
@@ -31,7 +33,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	// Keep this many particles in a pool for quick retrieval
 	var BUFFER_LEN:Int = 16;
 
-	// Must set this
+	// The node object describing the particles
 	var info:_ParticleJsonParams;
 	
 	//====================================================;
@@ -79,12 +81,40 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		return p;
 	}//---------------------------------------------------;
 	
+
+	
+	/**
+	 * 
+	 * @param	x World Coords
+	 * @param	y World Coords
+	 * @param	radius Maximum how far from the center to reach
+	 * @param	type Child particle type
+	 * @param	total Total number of particles to spawn
+	 * @param	freq Spawn a particle every X seconds
+	 * @param	soundID, if provided, will play this sound on each explosion
+	 */
+	public function createManyRandomAt(x:Float, y:Float, radius:Float, type:String, total:Int, 
+										freq:Float = 0.14, ?soundID:String, ?onComplete:Void->Void)
+	{
+		var timer:FlxTimer = new FlxTimer();
+		timer.start(freq, function(_) {
+			createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+			if (soundID != null) SND.play(soundID);
+			if (timer.loopsLeft == 0) {
+				if (onComplete != null) onComplete();
+			}
+		},total - 1);
+		// The first particle should start now
+		createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+	}//---------------------------------------------------;
+	
+	
 	
 	/**
 	 * 
 	 * @param	x World pos
 	 * @param	y World pos
-	 * @param	type 
+	 * @param	type Defined in the particleGeneric
 	 * @param	numberOfParticles
 	 * @param	speedMulti
 	 */

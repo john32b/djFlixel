@@ -146,7 +146,7 @@ class TiledLoader implements IFlxDestroyable
 		for (tnode in root.nodes.tileset)
 		{
 			tileOffsets.push(Std.parseInt(tnode.att.resolve("firstgid")) - 1);
-			trace("Reading offset ", tileOffsets[tileOffsets.length - 1]);
+			// trace("Reading offset ", tileOffsets[tileOffsets.length - 1]);
 			// new: get tilesets
 			tilesetWidths.set(tnode.att.name, Std.parseInt(tnode.att.tilewidth));
 		}
