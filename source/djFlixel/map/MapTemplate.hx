@@ -95,7 +95,8 @@ class MapTemplate implements IFlxDestroyable
 	// Hold all the onscreen streamable objects
 	// * User should push objects here *
 	// Objects here are auto-destroyed
-	public var streamedObjects:FlxTypedGroup<StreamableSprite>;
+	public var streamedObjects:Array<StreamableSprite>;
+	var deleteQueue:Array<StreamableSprite>;
 	
 	
 	// -- HELPERS
@@ -140,9 +141,6 @@ class MapTemplate implements IFlxDestroyable
 		_camHF = cameraWidth + hPadding;
 		
 		trace("Camera Area Size", cameraWidth, cameraHeight);
-		
-		// objects on screen
-		streamedObjects = new FlxTypedGroup();
 	}//---------------------------------------------------;
 	
 	
@@ -179,7 +177,8 @@ class MapTemplate implements IFlxDestroyable
 		loader = FlxDestroyUtil.destroy(loader);
 		camera = FlxDestroyUtil.destroy(camera);
 		layerBG = FlxDestroyUtil.destroy(layerBG);
-		streamedObjects = FlxDestroyUtil.destroy(streamedObjects);
+		streamedObjects = null;
+		deleteQueue = null;
 		dataLayer = null;
 	}//---------------------------------------------------;
 	
@@ -196,7 +195,8 @@ class MapTemplate implements IFlxDestroyable
 		
 		streamingLayer = null;
 		dataLayer = null;
-		streamedObjects.clear();
+		streamedObjects = [];
+		deleteQueue = [];
 		
 	}//---------------------------------------------------;
 
@@ -330,6 +330,8 @@ class MapTemplate implements IFlxDestroyable
 	// --
 	// Check the camera edges and feed discovered entities to the feeder
 	// Call this on every update or less.
+	
+		
 	public function updateCameraAndFeedData()
 	{
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
@@ -341,10 +343,15 @@ class MapTemplate implements IFlxDestroyable
 			// --
 			for (i in streamedObjects) {
 				if (entityIsOffScreen(i)) {
-					i.kill();
-					// trace("KILLING ENTITY");
+					deleteQueue.push(i);
+					i.kill(); 
 				}
 			}
+			for (i in deleteQueue) {
+				streamedObjects.remove(i);
+			}
+			
+			deleteQueue = [];
 			
 			// Camera changed tile pos
 			feedDataFromRow(cameraPos.y - cameraPosOld.y);
