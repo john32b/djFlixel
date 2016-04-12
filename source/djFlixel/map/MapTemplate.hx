@@ -6,6 +6,7 @@ import flash.geom.Rectangle;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxDestroyUtil;
@@ -96,6 +97,7 @@ class MapTemplate implements IFlxDestroyable
 	// * User should push objects here *
 	// Objects here are auto-destroyed
 	public var streamedObjects:Array<StreamableSprite>;
+	// Helper var for deletions when iterating streamobjects
 	var deleteQueue:Array<StreamableSprite>;
 	
 	
@@ -174,6 +176,7 @@ class MapTemplate implements IFlxDestroyable
 	// --
 	public function destroy()
 	{
+		reset();
 		loader = FlxDestroyUtil.destroy(loader);
 		camera = FlxDestroyUtil.destroy(camera);
 		layerBG = FlxDestroyUtil.destroy(layerBG);
@@ -183,7 +186,7 @@ class MapTemplate implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	
-	// -- Reset and map elements before reloading a new map.
+	// -- Reset and map elements before loading a new map.
 	function reset()
 	{
 		// -- Clear the streaming layer
@@ -339,7 +342,7 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (!cameraPos.isEqual(cameraPosOld))
 		{
-			// Check for offscreen entities here:
+			// Check for offscreen entities and kill them.
 			// --
 			for (i in streamedObjects) {
 				if (entityIsOffScreen(i)) {
@@ -453,6 +456,19 @@ class MapTemplate implements IFlxDestroyable
 				en.coords.y - en.offscreen_kill_pad > cameraPos.y + _camVF );
 	}//---------------------------------------------------;
 	
+	/**
+	 * Check if a sprite is off screen using REAL WOLRD coordinates
+	 * @param	sprite
+	 * @return
+	 */
+	public inline function spriteIsOffScreen(sprite:FlxSprite):Bool
+	{
+		return (	sprite.x < camera.scroll.x ||
+					sprite.x > camera.scroll.x + camera.width ||
+					sprite.y < camera.scroll.y ||
+					sprite.y > camera.scroll.y + camera.height );
+	}//---------------------------------------------------;
+	
 	
 	//====================================================;
 	// MAP DATA RELATED: 
@@ -484,7 +500,7 @@ class MapTemplate implements IFlxDestroyable
 		return streamingLayer[y][x];
 	}//---------------------------------------------------;
 	
-
+	
 	/// This is automatically called on map load
 	// -- OVERRIDE THIS --
 	// The object layer is always scanned for data
