@@ -48,7 +48,6 @@ typedef MapEntity = {
  * 	mapLoader = new TiledLoader();
  *	mapLoader.load("assets/maps/level_01.tmx");
  *	var mapData:Array<Int> = mapLoader.layerTiles.get("tiles");
- *  
  * 
  * @author JohnDimi, @jondmt
  */
@@ -61,7 +60,9 @@ class TiledLoader implements IFlxDestroyable
 	public var layerEntities:Map<String,Array<MapEntity>>; 	// LayerName=> Entities
 	
 	// Store the sizes of all the layers, in case I need them later
-	public var tilesetWidths(default,null):Map<String,Int>;
+	public var tilesetWidths(default, null):Map<String,Int>;
+	// Every tileset in the map has a starting GID index. Store for future reference
+	public var tilesetFirstGid(default, null):Map<String,Int>;
 	
 	public var bgColor(default, null):Int = 0xFF000000; // TODO: Load this from the file
 	
@@ -71,9 +72,6 @@ class TiledLoader implements IFlxDestroyable
 	public var mapWidth(default, null):Int; 	// in tiles
 	public var mapHeight(default, null):Int;	// in tiles
 
-	// The currently loaded map file.
-	public var mapID(default, null):String;
-	
 	//---------------------------------------------------;
 	public function new() 
 	{	
@@ -85,87 +83,90 @@ class TiledLoader implements IFlxDestroyable
 		layerEntities = null;
 		tilesetWidths = null;
 	}//---------------------------------------------------;
+
+
 	
 	/**
-	 * Load a .TMX map file. ( IT MUST EXIST IN THE EMBEDDED ASSETS! )
+	 * Load a . map file
 	 * @param	file The file to load
-	 * @param	sameImagesLayer If any layer shares an image with another layer, put the name of the layer here. #offset correction hack
+	 * @param	skipGIDIncrement If any layer shares an image with another layer, put the name of the layer here. #offset correction hack
 	 */
-	public function load(file:String, ?sameImagesLayer:Array<String>)
+	public function loadFile(file:String, ?skipGIDIncrement:Array<String>)
 	{
-		trace('Loading map file ($file)');
-	
-		mapID = file;
+		trace(' = Loading map from "$file"');
 		
 		layerTiles = new Map();
 		layerEntities = new Map();
 		tilesetWidths = new Map();
+		tilesetFirstGid = new Map();
+
+		if (skipGIDIncrement == null) skipGIDIncrement = [];
 		
-		if (sameImagesLayer == null) sameImagesLayer = [];
-		
-		// ---
 		var root:Fast;
 		
 		// This objects supports Dynamic Files with the "DynAssets.hx' class
 		// If a dynamic load fails, it will try to load from embedded
-		try {
-			
+		
 		#if (EXTERNAL_LOAD)
 			if (DynAssets.files.exists(file)) {
-				trace("++ Loading map dynamically");
+				trace(" .from dynamicAssets");
 				root = new Fast(Xml.parse(DynAssets.files.get(file))).node.resolve("map");
 			}else {	
 				trace('Error: Can\'t load "$file" dynamically. Push it to the dynamic file list. !!');
 		#end
-			trace("++ Loading from embedded");
+		
+		// #If not EXTERNAL_LOAD ::
+			trace(" .from embedded Assets");
 			root = new Fast(Xml.parse(Assets.getText(ASSETS_PATH + file))).node.resolve("map");
-
+			
 		#if (EXTERNAL_LOAD)
 			}
 		#end
+			
 		
-		}catch (e:Dynamic){
-			trace('Fatal: Map file ($file) does not exist');
-			throw "Fatal: Map file ($file) does not exist";
-			return;
+		if (root == null) {
+			throw 'Fatal: Can\'t load map file $file';
 		}
-		
+
 		mapWidth   = Std.parseInt(root.att.resolve("width"));
 		mapHeight  = Std.parseInt(root.att.resolve("height"));
 		tileWidth  = Std.parseInt(root.att.resolve("tilewidth"));
 		tileHeight = Std.parseInt(root.att.resolve("tileheight"));
 
-		// --
+		// Helper vars
 		var tnode:Fast;
-		var r1:Int = 0;
-		var offset:Int;
 		var layerName:String;
+		var layers_firstGID:Array<Int> = [];
+		var layers_tileCounts:Array<Int> = [];
+		var c:Int = -1;
 		
-		// 1: First thing is to read the tileoffsets for the layers
-		var tileOffsets:Array<Int> = [];
+		// 1: Read layer infos
 		for (tnode in root.nodes.tileset)
 		{
-			tileOffsets.push(Std.parseInt(tnode.att.resolve("firstgid")) - 1);
-			// trace("Reading offset ", tileOffsets[tileOffsets.length - 1]);
-			// new: get tilesets
+			layers_firstGID.push(Std.parseInt(tnode.att.resolve("firstgid")));
+			layers_tileCounts.push(Std.parseInt(tnode.att.resolve("tilecount")));
 			tilesetWidths.set(tnode.att.name, Std.parseInt(tnode.att.tilewidth));
+			tilesetFirstGid.set(tnode.att.name, layers_firstGID[layers_firstGID.length - 1]);
 		}
 		
 		// 2: Read the layers
+		// Note: The layers are read in order. From Bottom To top.
+		// 		 Make sure the tileset order matches the layer order
 		for (tnode in root.nodes.layer)
 		{
 			 layerName = tnode.att.resolve("name");
 			
-			if (sameImagesLayer.indexOf(layerName) >= 0){
-				offset = -tileOffsets[0];
+			if (skipGIDIncrement.indexOf(layerName) != -1) {	
+				if (c == -1) {
+					throw 'ERROR: Layer "$layerName" should not be the first layer if you want to skip GID offset';					
+				}
+				// do nothing. do not increment [c]
 			}else {	
-				offset = -tileOffsets.shift();
+				c++;
 			}
 			
-			layerTiles.set(layerName, CSVToArrayInt(tnode.node.data.innerData, offset));
-			
 			trace("Reading layer -- " + layerName);
-			// trace("Set with data --", layerTiles.get(layerName));
+			layerTiles.set(layerName, readCSVLayer(tnode.node.data.innerData, layers_firstGID[c], layers_tileCounts[c]));			
 		}
 		
 		// 3: Read the Entities
@@ -173,13 +174,7 @@ class TiledLoader implements IFlxDestroyable
 		{
 			layerName = tnode.att.resolve("name");
 			
-			if (sameImagesLayer.indexOf(layerName) >= 0) {
-				offset = -tileOffsets[0];
-			}else {	
-				offset = -tileOffsets.shift();
-			}
-			
-			var tempArray:Array<MapEntity> = readObjectLayer(tnode, offset);
+			var tempArray:Array<MapEntity> = readObjectLayer(tnode);
 			
 			if (tempArray != null)
 			{
@@ -192,12 +187,9 @@ class TiledLoader implements IFlxDestroyable
 	
 	// --
 	// Quickly read an object layer and return an array containing it's data
-	function readObjectLayer(dataNode:Fast, idOffset:Int = 0):Array<MapEntity>
+	// NEW: Do not apply any offsets. User should do this manually.
+	function readObjectLayer(dataNode:Fast):Array<MapEntity>
 	{
-		//-- Old code: Read a specific layer
-		//var r1 = dataNode.nodes.objectgroup.filter(function(_) { return (_.att.name == layerName); } ).first();
-		//if (r1 == null) return null; // Not found!
-		
 		if (!dataNode.hasNode.object)
 		{
 			trace("Waning: Entity layer contains NO entities");
@@ -213,30 +205,37 @@ class TiledLoader implements IFlxDestroyable
 		
 		var ar = new Array<MapEntity>();
 		var node:Fast;
-		var r2:String;
-
+		var read_type:String;
+		
 		for (node in dataNode.nodes.object)
 		{
 			try {
-				r2 = node.att.type;
+				read_type = node.att.type;
 			} catch (error:String) {
-				r2 = null;
+				read_type = null;
 			}
-
+			
 			ar.push ({ 	x:Std.parseInt(node.att.x),
-						y:Std.parseInt(node.att.y) - Std.parseInt(node.att.height), // FIX A BUG from the Tiled Editor
-						id:Std.parseInt(node.att.gid) + idOffset,
-						type:r2
+						y:Std.parseInt(node.att.y) - Std.parseInt(node.att.height), // Fix the pivot point to my liking.
+						id:Std.parseInt(node.att.gid),
+						type:read_type
 					});
 		}
 		
 		return ar;
 	}//---------------------------------------------------;
 	
-	// --
-	// Convert the CSV string read from the map to an array,
-	// with an optional applied offset.
-	function CSVToArrayInt(csv:String, offset:Int = 0):Array<Array<Int>>
+	
+	
+	
+	/**
+	 * Read the CSV string from the map and convert it to a 2D Array
+	 * @param	csv The Data
+	 * @param	firstGID The offset, will be auto-corrected
+	 * @param	tileCount Max tilecount for the layer. Debugging purposes. Will check if any tile is off bounds.
+	 * @return
+	 */
+	function readCSVLayer(csv:String, firstGID:Int, tileCount:Int):Array<Array<Int>>
 	{
 		var ar_final = new Array<Array<Int>>();
 		var ar_csv = csv.split(',');
@@ -244,15 +243,30 @@ class TiledLoader implements IFlxDestroyable
 		var r1:Int;
 		var seqRead:Int = 0;
 		
+		// This will be subtracted from the tileids. Save one calculation :-/
+		var negativeOffset:Int = firstGID - 1;
+		
 		for (yy in 0...mapHeight)
 		{
 			ar_final[yy] = [];
 			
 			for (xx in 0...mapWidth)
 			{
-				r1 = Std.parseInt(ar_csv[seqRead]);
-				if (r1 > 0) r1 += offset;
-				seqRead++;
+				r1 = Std.parseInt(ar_csv[seqRead++]);
+				
+				if (r1 > 0) {
+					r1 -= negativeOffset;
+				}
+				
+				// # Check for out of bounds
+				// # User errors on the map 
+				#if debug
+				if (r1 < 0 || r1 > tileCount) {
+					trace(' Error: Map Tile out of bounds, at (x:$xx,y:$yy)');
+					r1 = 0;
+				}
+				#end
+				
 				ar_final[yy][xx] = r1;
 			}
 		}
@@ -261,9 +275,7 @@ class TiledLoader implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	
-	
-	
-	
+
 	
 	
 }//-- end class --//
