@@ -10,6 +10,7 @@ import openfl.display.BitmapData;
 
 class DynAssets
 {
+
 	static var ASSETS_PATH = "assets/";
 	
 	// Map a fileID with fileContents
@@ -20,19 +21,19 @@ class DynAssets
 	// Hold images
 	public static var images:Map<String,BitmapData>;
 	
-	// Holds all the dynamically loaded map files
-	// #Set this directly
-	public static var filesToLoad:Array<String>;
+	// == USER SET ==
+	// Put here the list of files to be loaded every time the state resets
+	// Set this first thing in you MAIN class
+	public static var FILE_LOAD_LIST:Array<String>;
 	
 	//====================================================;
 	// FUNCTIONS 
 	//====================================================;
 
-	
 	/**
 	 * Reload all the queue files
 	 * ---- 
-	 * @NOTE: inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
+	 * @NOTE: Inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
 	 */
 	
 	inline public static function loadFiles(onLoadComplete:Void->Void)
@@ -44,19 +45,19 @@ class DynAssets
 			images = new Map();
 		#end
 		
-		if (filesToLoad == null) {
+		if (FILE_LOAD_LIST == null) {
 			trace("Warning: No files to load");
 			onLoadComplete();
 			return;
 		}
 		
-		var ar:ArrayExecSync<String> = new ArrayExecSync(filesToLoad);
+		var ar:ArrayExecSync<String> = new ArrayExecSync(FILE_LOAD_LIST);
 		
 		ar.queue_complete = onLoadComplete;
 		
 		ar.queue_action = function(f:String) {
 		
-			#if (EXTERNAL_LOAD) // ------------------------
+		#if (EXTERNAL_LOAD) // ------------------------
 				
 			var get:DataGet = new DataGet();
 			get.url = MacroHelp.getProjectPath() + ASSETS_PATH + f;
@@ -86,7 +87,7 @@ class DynAssets
 			};
 			get.startLoading();
 							
-			#else // Just load the JSON files from the assets
+		#else // Just load the JSON files from the assets
 			
 			if (f.substr( -4).toLowerCase() == "json")
 			{
@@ -101,12 +102,53 @@ class DynAssets
 			
 			ar.next();
 
-			#end
+		#end
 			
 		};
 		
 		ar.start();
 	
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Quick way to load an external file
+	 * 
+	 * @param	path Assumes it is inside the "ASSETS" e.g. "maps/level1.tmx"
+	 * @param	onComplete Called when the file is loaded. String param is the file contents
+	 * 
+	 */
+	public static function getFileAsText(path:String, onComplete:String->Void)
+	{
+		trace(' - Loading Dynamically "$path" as Text...');
+		
+		var get:DataGet = new DataGet();
+			get.url = MacroHelp.getProjectPath() + ASSETS_PATH + path;
+			get.onLoad = function(loadedData:Dynamic) {
+				onComplete(cast loadedData);
+			};
+			get.onError = function(err:Int) { 
+				trace('Error: Could not get path..');
+				onComplete(null);
+			};
+			get.startLoading();
+	}//---------------------------------------------------;
+			
+	
+	
+	// -- Put a file to the available file list then callback.
+	//  I am using this to load maps, as the code there reads the file list
+	public static function putTextFile(path:String, onComplete:Void->Void)
+	{
+		if (files.exists(path)) {
+			files.remove(path);
+		}
+		
+		getFileAsText(path, function(s:String) {
+			trace(' - File "$path" successfully put to dynamic list');
+			files.set(path, s);
+			onComplete();
+		});
 	}//---------------------------------------------------;
 	
 	

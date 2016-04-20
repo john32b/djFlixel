@@ -4,7 +4,36 @@ DJFLIXEL CHANGE LOG
 
 
 
-# 03-2016
+# 04-2016 (dev)
+============================================================
+
+ + Controls
+	. changed keyboard mapping of a key, now it's IJKL, like it's on the controller
+ 
+ + MapTemplate
+	. BUGFIX, feedDataFromRow and Columns would skip rows in some cases.
+
+ + TiledLoader.hx
+	. re-wrote part of it
+	. added safechecks for out of bounds tiles
+	. tilesetFirstGid(), useful for offseting object GIDs
+
+ + Generic Particles system
+	. Classes ParticleGeneric and ParticlesGroup
+	. Quick way to load a sprites file and display particles with some styles
+		like creating multiple particles around a point, or exploding at a circle
+	. Properties set in JSON file
+		
+ + BulletGroup
+	. Quick and easy way to handle projectiles. Currently supports one spritesheet
+	. Properties set in JSON file
+
+ + DynAssets.hx
+	. use FILE_LOAD_LIST static var to push files
+	. use putTextFile(file) to prepare a map file to be loaded later dynamically
+	
+# 03-2016 (dev)
+============================================================
 
  + MapTemplate.hx
     . Basic funcionality for quick setting up a map into the game
@@ -14,13 +43,19 @@ DJFLIXEL CHANGE LOG
  . Better Dynamic Assets
  . FlxMenu can load styles from the JSON parameters file
 
-# 02-2016
+ 
+# 02-2016 (dev)
+============================================================
 
  + MainTemplate. Quicker way to start a new project
  . FileParams.hx will load JSON parameters file from either file or embedded
  . Example, REG.hx now loads parameters from json.
-  
+ 
+ 
 # Version 0.2.0
+============================================================
 ...
+
 # Version 0.1.0
+============================================================
 ...

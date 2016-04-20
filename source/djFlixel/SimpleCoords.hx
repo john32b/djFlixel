@@ -68,4 +68,9 @@ class SimpleCoords
 		return (this.x == o.x && this.y == o.y);
 	}//---------------------------------------------------;
 	
+	public function isEqualWith(x:Int, y:Int):Bool
+	{
+		return(this.x == x && this.y == y);
+	}//---------------------------------------------------;
+	
 }// -- end -- //

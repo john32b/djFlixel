@@ -1,30 +1,54 @@
+/**
+ # MapTemplate.hx
+ # -----------------------------------------------------
+
+ FEATURES
+ ----------
+ 
+  + Provides a quick solution to load TILED maps
+  + Streamable Objects are FlxSprites that can are 
+    autocreated and autodestroyed as the camera pans
+  + Extend this class for more control
+  + Reads INFO from the main "params.json" file "map" node
+ 
+  USAGE
+  ----------
+  . Be sure to have some basic info in the PARAMS.JSON file
+  . Call updateCameraAndFeedData() every time the player moves to get new entities
+  
+  # :: Json Node Example ::
+ 
+	"map" : {
+		"STREAM_PAD_X" : 1,  "STREAM_PAD_Y" : 1,
+		"BG_TILEWIDTH" : 16, "BG_TILEHEIGHT" : 16,
+		"BG_STARTING_INDEX" : 1, "BG_DRAW_INDEX" : 1, "BG_COL_START" : 31,
+		"BG_LAYER" : "tiles", "OBJECT_LAYER" : "objects", "DATA_LAYER" : "data",
+		"BG_TILES" : "assets/layerBG.png",
+		"BG_COLOR" : "0xFF221122"
+	}
+	
+  :: STREAM_PAD_X,Y is the amount of tiles to read ahead on streaming objects ::
+  :: Streamable objects must extend the StreamableSprite class
+  ::
+  
+ ================================================== */
+
+ 
 package djFlixel.map;
 
 import djFlixel.map.TiledLoader;
-import entity.StreamableSprite;
+
 import flash.geom.Rectangle;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
-import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
-import entity.EntityTopDown;
 
+import djFlixel.map.StreamableSprite; // TODO, put this into djFlixel //
 
-/**
- * MAPTEMPLATE
- * ----------
- * + Provides basic TILED map functionality
- * + Extend this class for more control.
- * ---------
- * NOTES : 
- * . Be sure to have some basic info in the PARAMS.JSON file
- * . Call updateCameraAndFeedData() every time the player moves to get new entities
- * 
- */
 class MapTemplate implements IFlxDestroyable
 {
 	// Default paths for the maps:
@@ -35,14 +59,14 @@ class MapTemplate implements IFlxDestroyable
 	public var TILEWIDTH:Int;
 	public var TILEHEIGHT:Int;
 	
-	// Sizes
-	public var mapWidth:Int; 	// in tiles
-	public var mapHeight:Int; 	// in tiles
-	public var width:Int;		// in pixels
-	public var height:Int;		// in pixels
+	// Map size:
+	public var mapWidth(default, null):Int; 	// map size in tiles
+	public var mapHeight(default, null):Int; 	// --
+	public var width(default, null):Int;		// map size in pixels
+	public var height(default, null):Int;		// --
 	
-	public var cameraWidth:Int;		// How many tiles fit on the rendering view. Rounded UP
-	public var cameraHeight:Int;	// How many tiles fit on the rendering view. Rounded UP
+	public var cameraWidth(default, null):Int;	// How many tiles fit on the rendering view. Rounded UP
+	public var cameraHeight(default, null):Int;	// --
 	
 	var cameraPos:SimpleCoords; 	// Camera start tile coords
 	var cameraPosOld:SimpleCoords;  // Previous var
@@ -58,14 +82,9 @@ class MapTemplate implements IFlxDestroyable
 	
 	// -----------------------------------;
 	
-	// # USER SET
-	// Called whenever the camera tiled coords change
-	// . useful to set a function to check for offscreen entities
-	// NEW: Internally handled
-	// public var onCameraCoordsChange:Void->Void;
-	
 	// # USER SET - ( MUST BE SET )
 	// This will be called with map entities that need to be added to the game
+	// DON'T FORGET to push the create object to streamedObjects[]
 	public var onStreamEntity:MapEntity->Void;
 	
 	// # LAYER FOR STREAMING OBJECTS
@@ -79,7 +98,6 @@ class MapTemplate implements IFlxDestroyable
 	// Store the map entities with a key of "$xtile,$ytile"
 	var dataLayer:Map<String,MapEntity>;
 	
-	
 	// Search for this much more at the top and bottom for entities
 	// A value of 0 will stream in entities just as they scroll into view.
 	var vPadding:Int = 0;
@@ -90,16 +108,16 @@ class MapTemplate implements IFlxDestroyable
 	
 	// Current level name, it's the filename of the level loaded without /assetdir/ and extension
 	// e.g. "/assets/maps/" $currentlevel ".tmx"
-	public var currentLevel(default,null):String;
+	public var currentLevel(default, null):String;
 
 	
 	// Hold all the onscreen streamable objects
+	// Objects here are auto-destroyed when off screen
 	// * User should push objects here *
-	// Objects here are auto-destroyed
 	public var streamedObjects:Array<StreamableSprite>;
+	
 	// Helper var for deletions when iterating streamobjects
 	var deleteQueue:Array<StreamableSprite>;
-	
 	
 	// -- HELPERS
 	// General purpose Ints
@@ -132,9 +150,6 @@ class MapTemplate implements IFlxDestroyable
 		cameraPos = new SimpleCoords();
 		cameraPosOld = new SimpleCoords();
 		
-		// Optional user function.
-		// onCameraCoordsChange = function() { };
-		
 		// Calculate the camera viewport in tiles
 		cameraWidth = Math.ceil(camera.width / TILEWIDTH);
 		cameraHeight = Math.ceil(camera.height / TILEHEIGHT);
@@ -142,7 +157,7 @@ class MapTemplate implements IFlxDestroyable
 		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
 		_camHF = cameraWidth + hPadding;
 		
-		trace("Camera Area Size", cameraWidth, cameraHeight);
+		trace("Camera Area Size in Tiles", cameraWidth, cameraHeight);
 	}//---------------------------------------------------;
 	
 	
@@ -169,7 +184,7 @@ class MapTemplate implements IFlxDestroyable
 		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
 		_camHF = cameraWidth + hPadding;
 		
-		trace("Camera Area Size", cameraWidth, cameraHeight);
+		trace("Camera Area Size in Tiles", cameraWidth, cameraHeight);
 	}//---------------------------------------------------;
 		
 	
@@ -213,7 +228,7 @@ class MapTemplate implements IFlxDestroyable
 		
 		currentLevel = levelID;
 		
-		loader.load(MAP_DIRECTORY + currentLevel + MAP_EXTENSION);
+		loader.loadFile(MAP_DIRECTORY + currentLevel + MAP_EXTENSION);
 		
 		mapWidth = loader.mapWidth;
 		mapHeight = loader.mapHeight;
@@ -232,15 +247,8 @@ class MapTemplate implements IFlxDestroyable
 		// - Any more layers have to be loaded by an extended class
 		// ---> ()
 		
-		// - Cameras and world. Default is to fix scrolling to edges
-		FlxG.worldBounds.set(0, 0, width, height);
-		
-		// NOTE: camera.setScrollBounds is broken currently.
-		camera.minScrollX = 0;
-		camera.minScrollY = 0;
-		camera.maxScrollX = width;
-		camera.maxScrollY = height;
-		camera.scroll.set(0, 0);
+		// This sets the worldbounds and the camera bounds:
+		camera.setScrollBoundsRect(0,0,width,height,true);
 	
 		trace('** Loaded level "$levelID" | mapWidth = $mapWidth | mapHeight = $mapHeight');
 		
@@ -266,7 +274,6 @@ class MapTemplate implements IFlxDestroyable
 			});
 			
 		}// --
-		
 		
 		// - Now scan any DATA layer
 		if (loader.layerEntities.exists(DATA_LAYER))
@@ -304,23 +311,20 @@ class MapTemplate implements IFlxDestroyable
 	{	
 		// Just in case.
 		if (camera.target != null) {
-			camera.updateFollow();
+			camera.snapToTarget();
 		}
 		
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
 		cameraPos.y = Std.int(camera.scroll.y / TILEHEIGHT);
 		
-		// There are cases where this could be <0  
+		// There are cases where this could be < 0  
 		if (cameraPos.x < 0) cameraPos.x = 0;
 		if (cameraPos.y < 0) cameraPos.y = 0;
 		
 		cameraPosOld.copyFrom(cameraPos);
 		
-		//#if debug
-		//trace("= feedRoomData() checking entities from and to");
-		//trace(' x[ ${cameraPos.x - hPadding}, ${cameraPos.x + _camHF} ]');
-		//trace(' y[ ${cameraPos.y - vPadding}, ${cameraPos.y + _camVF} ]');
-		//#end
+		// Just in case
+		deleteOffScreen();
 		
 		for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) // x axis
 		for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) // y axis
@@ -333,8 +337,6 @@ class MapTemplate implements IFlxDestroyable
 	// --
 	// Check the camera edges and feed discovered entities to the feeder
 	// Call this on every update or less.
-	
-		
 	public function updateCameraAndFeedData()
 	{
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
@@ -342,19 +344,7 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (!cameraPos.isEqual(cameraPosOld))
 		{
-			// Check for offscreen entities and kill them.
-			// --
-			for (i in streamedObjects) {
-				if (entityIsOffScreen(i)) {
-					deleteQueue.push(i);
-					i.kill(); 
-				}
-			}
-			for (i in deleteQueue) {
-				streamedObjects.remove(i);
-			}
-			
-			deleteQueue = [];
+			deleteOffScreen();
 			
 			// Camera changed tile pos
 			feedDataFromRow(cameraPos.y - cameraPosOld.y);
@@ -374,15 +364,15 @@ class MapTemplate implements IFlxDestroyable
 		if (delta == 0) return;
 		
 		if (delta > 0) {
-			for (rx in (cameraPos.x + _camHF)...(cameraPos.x + _camHF + delta)) {
-				// trace("Checking column", rx);
+			for (rx in (cameraPos.x + _camHF - delta + 1)...(cameraPos.x + _camHF + 1)) {
+				//trace("Checking column", rx);
 				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
 		} 
 		else {
 			for (rx in (cameraPos.x - hPadding)...(cameraPos.x - delta - hPadding)) {
-				// trace("Checking column", rx);
+				//trace("Checking column", rx);
 				for (ry in (cameraPos.y - vPadding)...(cameraPos.y + _camVF + 1))
 					feedDataFromCoords(rx, ry);
 			}
@@ -399,32 +389,52 @@ class MapTemplate implements IFlxDestroyable
 		if (delta == 0) return;
 		
 		if (delta > 0) {
-			for (ry in (cameraPos.y + _camVF)...(cameraPos.y + _camVF + delta)) {
-				// trace("Checking row", ry);
+			for (ry in (cameraPos.y + _camVF - delta + 1)...(cameraPos.y + _camVF + 1)) {
+				//trace("Checking row", ry );
 				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1))
 					feedDataFromCoords(rx, ry);
 				}
 			}
 		else {
 			for (ry in (cameraPos.y - vPadding)...(cameraPos.y - delta - vPadding)) {
-				// trace("Checking row", ry);
+				//trace("Checking row", ry);
 				for (rx in (cameraPos.x - hPadding)...(cameraPos.x + _camHF + 1)) 
 					feedDataFromCoords(rx, ry);
 			}
 		}
 	}//---------------------------------------------------;
 	
+	// --	
+	// Check for offscreen entities and delete them.
+	inline function deleteOffScreen() 
+	{
+		// Check for offscreen entities and kill them.
+		// --
+		for (i in streamedObjects) {
+			if (entityIsOffScreen(i)) {
+				deleteQueue.push(i);
+				i.kill(); 
+				// trace("- KILLED OFF SCREEN");
+			}
+		}
+		for (i in deleteQueue) {
+			streamedObjects.remove(i);
+		}
+		
+		deleteQueue = [];	
+	}//---------------------------------------------------;
+	
 
 	/**
-	 * Scan all the layers and callback for any map entity found
-	 * @inline makes it a bit faster because this is called frequently
+	 * Scan all the layers and callback to user to handle map entities
+	 * 
 	 * @param	x tile coords
 	 * @param	y tile coords
 	 */
 	function feedDataFromCoords(x:Int, y:Int)
 	{
 		try {
-			
+		
 			if (streamingLayer[y][x] == null) return;
 			
 			for (i in streamedObjects) {
@@ -434,7 +444,7 @@ class MapTemplate implements IFlxDestroyable
 				}
 			}
 			
-			// ok to add :
+			// Call to user function to handle the entity
 			onStreamEntity(streamingLayer[y][x]);
 			
 		}catch (e:Dynamic)
@@ -490,6 +500,12 @@ class MapTemplate implements IFlxDestroyable
 			return streamingLayer[y][x].id;
 		else
 			return -1;
+	}//---------------------------------------------------;
+	
+	// --
+	public inline function getStreamingEntity(x:Int, y:Int):MapEntity
+	{
+		return streamingLayer[y][x];
 	}//---------------------------------------------------;
 
 	// --

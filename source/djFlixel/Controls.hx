@@ -422,7 +422,7 @@ class Controls
 			case A: keys.pressed.K;
 			case X: keys.pressed.J;
 			case Y: keys.pressed.I;
-			case B: keys.pressed.U;
+			case B: keys.pressed.L;
 			case START: keys.pressed.ENTER;
 			case SELECT: keys.pressed.SPACE;
 			case LB: keys.pressed.SHIFT;
@@ -441,7 +441,7 @@ class Controls
 			case A: keys.justPressed.K; 
 			case X: keys.justPressed.J; 
 			case Y: keys.justPressed.I; 
-			case B: keys.justPressed.U;
+			case B: keys.justPressed.L;
 			case START: keys.justPressed.ENTER;
 			case SELECT: keys.justPressed.SPACE;
 			case LB: keys.justPressed.SHIFT;
@@ -460,7 +460,7 @@ class Controls
 			case A: keys.justReleased.K; 
 			case X: keys.justReleased.J; 
 			case Y: keys.justReleased.I; 
-			case B: keys.justReleased.U; 
+			case B: keys.justReleased.L; 
 			case START: keys.justReleased.ENTER;
 			case SELECT: keys.justReleased.SPACE;
 			case LB: keys.justReleased.SHIFT;
