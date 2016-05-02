@@ -2,23 +2,11 @@ package djFlixel.fx.particles;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.effects.FlxFlicker;
 import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
 
 
-// --
-typedef _ParticleJsonPAnims = {
-	name:String,
-	frames:Array<Int>,
-	fps:Int
-}
-// --
-typedef _ParticleJsonParams = {
-	height:Int,
-	width:Int,
-	sheet:String,
-	anims:Array<_ParticleJsonPAnims>
-}
 
 /**
  * Particle Group for Generic particles
@@ -63,7 +51,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	}//---------------------------------------------------;
 	
 	// --
-	public function createOneAt(x:Float, y:Float, type:String, centerPivot:Bool = false):FlxSprite
+	public function createOneAt(x:Float, y:Float, ?type:String, centerPivot:Bool = false):ParticleGeneric
 	{
 		var p:ParticleGeneric = recycle(ParticleGeneric, function() { return new ParticleGeneric(info); } );
 		
@@ -75,7 +63,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			p.setPosition(x, y);
 		}
 
-		p.start(type);
+		if (type != null) p.start(type);
 		p.velocity.set(0, 0);
 		
 		return p;
@@ -108,10 +96,23 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
 	}//---------------------------------------------------;
 	
+
+	// --
+	public function popup(x:Float, y:Float, frame:Int)
+	{
+		var p = createOneAt(x, y, null, true);
+		p.velocity.set(0, Reg.JSON._popup.speed);
+		p.animation.frameIndex = frame;
+		var timer:FlxTimer = new FlxTimer();
+		timer.start(Reg.JSON._popup.timer1, function(_) {
+			p.velocity.set(0, 0);
+			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); } );
+		});
+	}//---------------------------------------------------;
 	
 	
 	/**
-	 * 
+	 * Round out particles.
 	 * @param	x World pos
 	 * @param	y World pos
 	 * @param	type Defined in the particleGeneric
@@ -139,3 +140,19 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	}//---------------------------------------------------;
 	
 }// --
+
+
+// --
+typedef _ParticleJsonPAnims = {
+	name:String,
+	frames:Array<Int>,
+	fps:Int
+}
+
+// --
+typedef _ParticleJsonParams = {
+	height:Int,
+	width:Int,
+	sheet:String,
+	anims:Array<_ParticleJsonPAnims>
+}

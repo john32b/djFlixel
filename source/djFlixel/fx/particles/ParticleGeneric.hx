@@ -4,12 +4,14 @@ import djFlixel.tool.DynAssets;
 import flixel.FlxSprite;
 
 /**
+ * Simple Particle, Managed by "ParticlesGroup.hx"
  * ...
- * @author 
+ * Is not responsible for animation
+ * particle animation is done by the manager
  */
 class ParticleGeneric extends FlxSprite
 {
-	// --
+	// Optional, gets called on particle life completion
 	public var onComplete:Void->Void;
 	
 	// Length of the current animation
@@ -29,8 +31,8 @@ class ParticleGeneric extends FlxSprite
 		
 		loadGraphic(DynAssets.getImage(info.sheet), true, info.width, info.height);
 		
-		for (i in info.anims)
-		{
+		if (info.anims != null)
+		for (i in info.anims) {
 			// Looped = true
 			animation.add(i.name, i.frames, i.fps);
 		}
@@ -38,6 +40,8 @@ class ParticleGeneric extends FlxSprite
 	}//---------------------------------------------------;
 	
 	// --
+	// NOTE: Be careful when setting the times to play to 0
+	//		 You will need to kill the particle manually
 	public function start(animationName:String, timesToPlay:Int = 1)
 	{
 		repeatTimes = timesToPlay;
