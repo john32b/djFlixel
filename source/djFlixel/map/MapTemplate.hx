@@ -29,6 +29,7 @@
 	
   :: STREAM_PAD_X,Y is the amount of tiles to read ahead on streaming objects ::
   :: Streamable objects must extend the StreamableSprite class
+  ::
   
  ================================================== */
 
@@ -36,7 +37,7 @@
 package djFlixel.map;
 
 import djFlixel.map.TiledLoader;
-import djFlixel.map.StreamableSprite;
+import flixel.util.FlxArrayUtil;
 
 import flash.geom.Rectangle;
 import flixel.FlxBasic;
@@ -46,6 +47,8 @@ import flixel.FlxSprite;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
+
+import djFlixel.map.StreamableSprite; // TODO, put this into djFlixel //
 
 class MapTemplate implements IFlxDestroyable
 {
@@ -126,6 +129,8 @@ class MapTemplate implements IFlxDestroyable
 	var _camVF:Int;
 	var _camHF:Int;
 	
+	// If you set this, then it will adjust the offset of the data object IDs
+	public var dataObjectTileset:String;
 	//====================================================;
 	// --
 	public function new() 
@@ -203,12 +208,6 @@ class MapTemplate implements IFlxDestroyable
 	function reset()
 	{
 		// -- Clear the streaming layer
-		if (streamingLayer != null) {
-			for (i in streamingLayer) {
-				i = null;
-			}
-		}
-		
 		streamingLayer = null;
 		dataLayer = null;
 		streamedObjects = [];
@@ -281,8 +280,14 @@ class MapTemplate implements IFlxDestroyable
 			var tileX:Int;
 			var tileY:Int;
 			
+			// ERROR ::
+			// Automatically fix the entity ID offset ??
+			// First Tile starts at 1
+			var idOffset = loader.tilesetFirstGid.get(dataObjectTileset) - 1;
+			
 			for (i in loader.layerEntities.get(DATA_LAYER))
 			{
+				i.id -= idOffset;
 				tileX = Std.int((i.x + tileSizeHalf) / TILEWIDTH);
 				tileY = Std.int((i.y + tileSizeHalf) / TILEHEIGHT);
 				dataLayer.set('$tileX,$tileY', i);
@@ -416,7 +421,7 @@ class MapTemplate implements IFlxDestroyable
 			}
 		}
 		for (i in deleteQueue) {
-			streamedObjects.remove(i);
+			FlxArrayUtil.fastSplice(streamedObjects, i);
 		}
 		
 		deleteQueue = [];	
@@ -436,7 +441,7 @@ class MapTemplate implements IFlxDestroyable
 			if (streamingLayer[y][x] == null) return;
 			
 			for (i in streamedObjects) {
-				if (i.alive && i.exists && streamingLayer[y][x].uid == i.UID) {
+				if (i.exists && streamingLayer[y][x].uid == i.UID) {
 					// trace("Already exists", streamingLayer[y][x]);
 					return;
 				}
@@ -514,6 +519,15 @@ class MapTemplate implements IFlxDestroyable
 		return streamingLayer[y][x];
 	}//---------------------------------------------------;
 	
+	// --
+	// x,y :: Tile Coordinates
+	public function removeEntityFromMap(x:Int, y:Int, sprite:StreamableSprite)
+	{
+		Game.map.setStreamingTileAt(x, y, 0);
+		FlxArrayUtil.fastSplice(streamedObjects, sprite);
+		trace("Removing from streamed objects", sprite);
+		trace("Streamed len" , streamedObjects.length);
+	}//---------------------------------------------------;
 	
 	/// This is automatically called on map load
 	// -- OVERRIDE THIS --
