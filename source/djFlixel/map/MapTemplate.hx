@@ -490,10 +490,20 @@ class MapTemplate implements IFlxDestroyable
 	
 	// Returns the mapEntity on the DATA layer
 	// , If nothing is found, returns NULL
-	public function getDataObjectAt(x:Int, y:Int):MapEntity
+	public inline function getDataObjectAt(x:Int, y:Int):MapEntity
 	{
 		return dataLayer.get('$x,$y');
 	}//---------------------------------------------------;
+	public function getDataObjectStrAt(x:Int, y:Int):String
+	{
+		var obj = getDataObjectAt(x, y);
+		if (obj != null) return obj.type; else return "";
+	}//---------------------------------------------------;
+	public function getDataObjectIdAt(x:Int, y:Int):Int
+	{
+		var obj = getDataObjectAt(x, y);
+		if (obj != null) return obj.id; else return -1;
+	}//---------------------------------------------------;	
 	
 	// --
 	// Read a tile from the streaming layer.
