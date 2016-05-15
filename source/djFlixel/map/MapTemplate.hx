@@ -85,7 +85,7 @@ class MapTemplate implements IFlxDestroyable
 	
 	// # USER SET - ( MUST BE SET )
 	// This will be called with map entities that need to be added to the game
-	// DON'T FORGET to push the create object to streamedObjects[]
+	// DON'T FORGET to push created objects to streamedObjects[]
 	public var onStreamEntity:MapEntity->Void;
 	
 	// # LAYER FOR STREAMING OBJECTS
@@ -533,10 +533,13 @@ class MapTemplate implements IFlxDestroyable
 	// x,y :: Tile Coordinates
 	public function removeEntityFromMap(x:Int, y:Int, sprite:StreamableSprite)
 	{
-		Game.map.setStreamingTileAt(x, y, 0);
+		streamingLayer[y][x] = null;
+		// #if debug
+		// if (streamedObjects.indexOf(sprite) < 0) {
+		//		trace("Error: Sprite does not exist in array");
+		// }
+		// #end
 		FlxArrayUtil.fastSplice(streamedObjects, sprite);
-		trace("Removing from streamed objects", sprite);
-		trace("Streamed len" , streamedObjects.length);
 	}//---------------------------------------------------;
 	
 	/// This is automatically called on map load

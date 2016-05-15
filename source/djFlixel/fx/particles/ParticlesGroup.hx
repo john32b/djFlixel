@@ -51,7 +51,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	}//---------------------------------------------------;
 	
 	// --
-	public function createOneAt(x:Float, y:Float, ?type:String, centerPivot:Bool = false):ParticleGeneric
+	public function createOneAt(x:Float, y:Float, ?type:String, centerPivot:Bool = false, rotation:Float = 0):ParticleGeneric
 	{
 		var p:ParticleGeneric = recycle(ParticleGeneric, function() { return new ParticleGeneric(info); } );
 		
@@ -65,6 +65,8 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 
 		if (type != null) p.start(type);
 		p.velocity.set(0, 0);
+	
+		p.angle = rotation;
 		
 		return p;
 	}//---------------------------------------------------;
@@ -98,15 +100,16 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	
 
 	// --
-	public function popup(x:Float, y:Float, frame:Int)
+	public function popup(x:Float, y:Float, frame:Int, scale:Float = 1)
 	{
 		var p = createOneAt(x, y, null, true);
 		p.velocity.set(0, Reg.JSON._popup.speed);
 		p.animation.frameIndex = frame;
+		p.scale.set(scale, scale);
 		var timer:FlxTimer = new FlxTimer();
 		timer.start(Reg.JSON._popup.timer1, function(_) {
 			p.velocity.set(0, 0);
-			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); } );
+			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); p.scale.set(1, 1); } );
 		});
 	}//---------------------------------------------------;
 	

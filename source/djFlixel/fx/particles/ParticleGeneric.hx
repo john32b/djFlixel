@@ -1,6 +1,7 @@
 package djFlixel.fx.particles;
 import djFlixel.fx.particles.ParticlesGroup._ParticleJsonParams;
 import djFlixel.tool.DynAssets;
+import flixel.FlxG;
 import flixel.FlxSprite;
 
 /**
@@ -13,9 +14,6 @@ class ParticleGeneric extends FlxSprite
 {
 	// Optional, gets called on particle life completion
 	public var onComplete:Void->Void;
-	
-	// Length of the current animation
-	var animLength:Int;
 	
 	// 0 : Forever
 	// 1 : Play Once then kill/callback
@@ -34,8 +32,10 @@ class ParticleGeneric extends FlxSprite
 		if (info.anims != null)
 		for (i in info.anims) {
 			// Looped = true
-			animation.add(i.name, i.frames, i.fps);
+			animation.add(i.name, i.frames, i.fps, false);
 		}
+		
+		animation.finishCallback = __onAnimationFinish;
 		
 	}//---------------------------------------------------;
 	
@@ -46,29 +46,18 @@ class ParticleGeneric extends FlxSprite
 	{
 		repeatTimes = timesToPlay;
 		animation.play(animationName, true);
-		
-		// Don't call the callbackfunction if the animation loops forever
-		if (timesToPlay > 0)
-		{
-			animLength = animation.getByName(animationName).numFrames - 1;
-			animation.callback = __onAnimationEndStop;
-		}else
-		{
-			animation.callback = null;
-		}
 	}//---------------------------------------------------;
 	
 	// --
 	// Handle animation end
-	function __onAnimationEndStop(_name:String, _index:Int, _frame:Int)
-	{
-		if (_index == animLength)
+	function __onAnimationFinish(_name:String)
+	{		
+		if (--repeatTimes == 0) // Infinite particles eventually are going to stop after 4 billion times.
 		{
-			if (--repeatTimes == 0)
-			{
-				kill();
-				if (onComplete != null) onComplete();
-			}
+			kill();
+			if (onComplete != null) onComplete();
+		}else {	
+			animation.curAnim.restart();
 		}
 	}//---------------------------------------------------;
 	

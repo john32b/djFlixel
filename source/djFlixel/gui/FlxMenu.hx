@@ -48,6 +48,8 @@ class FlxMenu extends FlxGroup
 	// Pointer to the current loaded page.
 	var currentPage:PageData;
 	
+	public var currentPageName(get, null):String;
+	
 	// A queue of page IDs
 	var history:Array<String>;
 	
@@ -753,5 +755,11 @@ class FlxMenu extends FlxGroup
 	inline function _mcallback(msg:String, ?data:String) 
 	{
 		if (callbacks_menu != null) callbacks_menu(msg, data);
+	}//---------------------------------------------------;
+	
+	//--
+	public function get_currentPageName():String
+	{
+		if (currentPage != null) return currentPage.SID; else return "";
 	}//---------------------------------------------------;
 }// -- end -- //

@@ -104,7 +104,7 @@ class PageData
 	/**
 	 * Quick add a Link type to the page
 	 * @param label The display name
-	 * @param page Start with "@" to link to page, Start with "!" to callback action, "#back" to go back
+	 * @param page Start with "@" to link to page, Start with "!" to confirm action, "#back" to go back
 	 */
 	public inline function link(label:String, SID:String, ?description:String):PageData
 	{

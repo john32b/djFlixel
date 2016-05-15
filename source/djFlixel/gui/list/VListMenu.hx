@@ -294,7 +294,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		}// end switch--
 			
 		// =============================== CONTROLS SELECT   =======;
-		if (Controls.CURSOR_START())
+		if (Controls.CURSOR_OK())
 		{
 			// The option itself is responsible 
 			// for translating this fire signal
@@ -307,6 +307,13 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 			
 			if (!page.custom.lockNavigation) {
 				callback_menu("back");
+			}
+		}else
+		// =============================== Start Button     =======;
+		// This could be triggered to close the menu.
+		if (Controls.justPressed(Controls.START)) {
+			if (!page.custom.lockNavigation) {
+				callback_menu("start");
 			}
 		}
 		
