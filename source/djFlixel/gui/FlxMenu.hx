@@ -48,6 +48,8 @@ class FlxMenu extends FlxGroup
 	// Pointer to the current loaded page.
 	var currentPage:PageData;
 	
+	public var currentPageName(get, null):String;
+	
 	// A queue of page IDs
 	var history:Array<String>;
 	
@@ -70,7 +72,10 @@ class FlxMenu extends FlxGroup
 	public var styleHeader:OptionStyle;
 
 	// When you are going back to menus, remember the position it came from
-	public var flag_remember_cursor_position:Bool;
+	public var flag_remember_cursor_position:Bool = true;
+	
+	// If true, then the start button will fire the selected option
+	public var flag_start_button_ok:Bool = false;
 	
 	// ==  User callbacks
 	// -------------------==
@@ -80,8 +85,9 @@ class FlxMenu extends FlxGroup
 	// optFire   - An option recieved an action command
 	public var callbacks_option:String->OptionData->Void;
 	
+	// start    - Start button was pressed ( useful in pause menus, to close the menu )
 	// back  	- The menu went back a page
-	// rootback - When user wants to back out of the root menu
+	// rootback - When user wants to back out from the root menu
 	// open   	- The menu was just opened
 	// close  	- The menu was just closed
 	// pageOn 	- The page with $param == SID just went on screen
@@ -145,8 +151,6 @@ class FlxMenu extends FlxGroup
 		previousMenu = null;
 		currentPage = null;	
 		
-		flag_remember_cursor_position = true;
-		
 		animQ = new ArrayExecSync<(Void->Void)->Void>();
 		animQ.queue_complete = _transitionComplete;
 		animQ.queue_action = function(fn:(Void->Void)->Void) { fn(animQ.next); };
@@ -171,13 +175,11 @@ class FlxMenu extends FlxGroup
 	 */
 	public function applyMenuStyleFromJSON(styleID:String)
 	{
-		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
-		
+		var styleNode = Reflect.getProperty(Reg.JSON, styleID);		
 		Reg.applyFieldsInto(styleNode.option, styleOption);
 		Reg.applyFieldsInto(styleNode.list, styleList);
 		Reg.applyFieldsInto(styleNode.base, styleBase);
 		Reg.applyFieldsInto(styleNode.header, styleHeader);
-		
 	}//---------------------------------------------------;
 	
 	// Get a style node from the JSON file, and set it to a Page
@@ -478,7 +480,7 @@ class FlxMenu extends FlxGroup
 			if (i.page.SID == P.SID) {
 				// Found Element in pool
 				_pool.remove(i);
-				trace('Info: [${P.SID}] IS POOLED getting...');
+				// trace('Info: [${P.SID}] IS POOLED getting...');
 				return i;
 			}
 		}
@@ -522,6 +524,7 @@ class FlxMenu extends FlxGroup
 				if (o.data.link == "back") {
 					goBack();
 				}else {
+					_mcallback("tick_fire"); // new
 					showPage(o.data.link);
 				}
 				return;
@@ -541,6 +544,12 @@ class FlxMenu extends FlxGroup
 		if (status == "back")
 		{
 			goBack();
+			return;
+		}
+		
+		if (status == "start" && flag_start_button_ok)
+		{
+			currentMenu.option_pointer.sendInput("fire");
 			return;
 		}
 		
@@ -588,7 +597,7 @@ class FlxMenu extends FlxGroup
 	// --
 	function _sub_InitCursorPos()
 	{
-		trace('== Initializing Cursor pos for menu [${currentPage.SID}]');
+		// trace('== Initializing Cursor pos for menu [${currentPage.SID}]');
 		
 		var r1:Int; // Temp INT holder
 		
@@ -603,7 +612,7 @@ class FlxMenu extends FlxGroup
 		
 		// If the cursor needs to go back to where it was
 		if (flag_remember_cursor_position && currentPage.custom._cursorLastUID != null) {
-			trace('Cursor, get last position');
+			// trace('Cursor, get last position');
 			r1 = currentMenu.getOptionIndexWithCrit("UID", currentPage.custom._cursorLastUID);
 			__sub_SetCursToPos(r1);
 		}else {
@@ -752,6 +761,14 @@ class FlxMenu extends FlxGroup
 	// --
 	inline function _mcallback(msg:String, ?data:String) 
 	{
-		if (callbacks_menu != null) callbacks_menu(msg, data);
+		if (callbacks_menu != null) {
+			callbacks_menu(msg, data);
+		}
+	}//---------------------------------------------------;
+	
+	//--
+	public function get_currentPageName():String
+	{
+		if (currentPage != null) return currentPage.SID; else return "";
 	}//---------------------------------------------------;
 }// -- end -- //

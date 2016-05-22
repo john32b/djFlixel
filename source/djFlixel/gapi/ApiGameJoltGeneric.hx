@@ -8,8 +8,6 @@ import lime.utils.ByteArray;
 // --
 // -- Gamejolt API
 // 
-// Future Knight specific for now, until I find a better way to generilize
-// Search for #SPECIFIC for the game specific code
 
 @:file("assets/gamejolt.key") class GamejoltKey extends ByteArray { }
 

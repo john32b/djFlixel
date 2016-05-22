@@ -47,6 +47,16 @@ class MainTemplate extends Sprite
 	// --
 	function setupGame():Void
 	{
+		//-- Try to get the initial state to boot
+		Reg.JSON = DynAssets.json.get(Reg.PARAMS_FILE);
+
+		try {
+			if(Reg.JSON.reg.START_STATE!=null)
+				initialState = cast Type.resolveClass(Reg.JSON.reg.START_STATE);
+		}catch (e:Dynamic) {
+			trace(e);
+		}
+		
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
 
@@ -63,7 +73,8 @@ class MainTemplate extends Sprite
 		FlxG.signals.stateSwitched.addOnce(function() {
 			Reg.initOnce();
 		});
-			
+					
 		addChild(new FlxGame(render_width, render_height, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
+		
 	}//---------------------------------------------------;
 }// --

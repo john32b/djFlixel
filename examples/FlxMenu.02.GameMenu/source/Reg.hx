@@ -1,46 +1,50 @@
+/*
+ * Default REG class
+ * =======================
+ * Version: 05-2016
+ * ---------------- *
+ * 
+ * You should copy-paste this file to your new Project and use this as a template.
+ * Expand the functions as you like
+ * 
+ */
+
 package;
 
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.util.FlxSave;
 import djFlixel.tool.DynAssets;
 import djFlixel.gapi.ApiEmpty;
 import djFlixel.SAVE;
 import djFlixel.Controls;
 import djFlixel.SND;
-
-
-/*
- * Default REG class
- * --------------
- * You should copy-paste this file to your new Project and use this as a template.
- * Expand the functions as you like
- */
+import openfl.events.KeyboardEvent;
 
 class Reg
 {
+	
 	// -- Parameters file --
 	// -  It is useful to have various game parameters to an external file
 	// -  so that I don't have to compile everytime I want to change a value.
 	inline static public var PARAMS_FILE:String = "data/params.json";
-	
-	// This is the list of files to load dynamically.
-	// Use EXTERNAL_LOAD compiler flag
-	// MAIN.hx reads this.
-	public static var DYNAMIC_FILES:Array<String> = [PARAMS_FILE];
-	
+
 	// -  These vars are loaded externally from the JSON parameters file ::
 	//    If the parameter is not present on the ext file, then defaults will be used.
 	public static var VERSION:String = "0.1";
 	public static var NAME:String = "HaxeFlixel app";
-	public static var FULLSCREEN:Bool = false;
 	public static var VOLUME:Float = 0.6;
+	public static var MUSIC:Bool = false;
+
+	// Changing this will also take effect
+	public static var FULLSCREEN(default, set):Bool = false;
 	// Currently Antialiasing on/off, comes with a setter that applies to all cameras
 	public static var ANTIALIASING(default, set):Bool = true;
 	
-	// ------- 
 	// Store the json parameters loaded from the file
 	public static var JSON:Dynamic;
-	// -- APIS 
+	
+	// -- APIS  ------ 
 	#if GAMEJOLT
 		// Extend the ApiGameJoltGeneric and set it to api
 		// public static var api:ApiGameJolt = new ApiGameJolt();
@@ -52,6 +56,7 @@ class Reg
 	#else
 		public static var api:ApiEmpty = new ApiEmpty();
 	#end
+
 	
 	//====================================================;
 	// FUNCTIONS
@@ -62,21 +67,29 @@ class Reg
 	// and before any state is created.
 	public static function initOnce()
 	{
-		trace("Info: Initializing REG --");		
-		// --
-		JSON = DynAssets.json.get(PARAMS_FILE);	// *Create a pointer for quicker access
-		#if debug
-		if (JSON == null) {
-			trace("Error: JSON Error, check $PARAMS_FILE");
-			throw "Error: JSON Error, check $PARAMS_FILE";
-		}
+		trace(" - Initializing REG");
+
+		// When an SWF is being played from a browser,
+		// The fullscreen switch must be done in the same call as the keyboard input
+		#if (flash)
+		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, function(event:KeyboardEvent) {
+			if (event.keyCode == 113) { // F11 key
+				Reg.FULLSCREEN = !Reg.FULLSCREEN;
+			}
+		});
 		#end
 		
-		applyParamsInto("reg", Reg); // Works with static objects as well.
+		// -- Useful in some cases
+		// FlxG.log.redirectTraces = true;
 		
-		// Add some triggers
+		// JSON data was loaded earlier over at Main.HX class
+		// Works with static objects as well.
+		applyParamsInto("reg", Reg);
+		
+		// Add a state switch trigger, useful to re-set antialiasing automatically
 		FlxG.signals.stateSwitched.add(onStateSwitch);
-		
+		FlxG.signals.preGameReset.add(onPreGameReset);
+		FlxG.signals.postGameReset.add(onPostGameReset);
 		FlxG.sound.volume = VOLUME;
 		FlxG.fullscreen = FULLSCREEN;
 		FlxG.mouse.useSystemCursor = true;
@@ -87,8 +100,9 @@ class Reg
 			FlxG.autoPause = true;
 		#end
 
-		// Load the sounds.
+		// Init and load Sounds
 		SND.init();
+		SND.MUSIC_ENABLED = MUSIC;
 		loadSounds();
 		
 		// Init the controls
@@ -101,7 +115,8 @@ class Reg
 	
 	
 	// --
-	// # USER CODE
+	// Sounds on the json file are autoloaded
+	// # User can expand this with custom sounds
 	static function loadSounds()
 	{
 		/* LOAD SOUNDS HERE
@@ -116,38 +131,91 @@ class Reg
 			
 		/*
 		 * Or auto-load sounds from the params file:
+		 * example node in params.json: 	
+			"sounds" : {
+				"c_tick" : "cursor_tick",
+			}
+			// cursor_tick is in assets/sounds/cursor_tick.mp3, c_tick is the ID
+			
+			"soundGroups" : { "explosion" : ["expl1","expl2"] }
+			// expl1, expl2 are sound IDs, defined in the "sounds" node
 		 */
-		if (JSON.sounds == null) return;
 		
-		for (field in Reflect.fields(JSON.sounds)) {
-			trace('- Loading Sound with ID-$field, FILE -' + Reflect.field(JSON.sounds, field));
-			SND.as(Reflect.field(JSON.sounds, field), field);
+		if (JSON.soundGroups != null)
+		for (field in Reflect.fields(JSON.soundGroups)) {
+			var sounds:Array<String>;
+			sounds = Reflect.getProperty(JSON.soundGroups, field);
+			for (s in sounds) {
+				SND.addGroup(s, field);	
+			}
+		}
+		 
+		var customVolume:Float;
+		
+		if (JSON.soundFiles != null)
+		for (field in Reflect.fields(JSON.soundFiles)) {
+			
+			// Look for custom volumes
+			if (JSON.soundVolumes != null && Reflect.hasField(JSON.soundVolumes, field)) {
+				customVolume = cast Reflect.field(JSON.soundVolumes, field);
+			}else {
+				customVolume = 1;
+			}
+			
+			
+			SND.as(Reflect.field(JSON.soundFiles, field), field, customVolume);
 		}
 		
 	}//---------------------------------------------------;
+	
+	//====================================================;
+	// SYSTEM FUNCTIONS
+	//====================================================;
 	
 	// --
 	// Gets called after every state switch.
 	static function onStateSwitch()
 	{
 		// Force the cameras to use the default AA (with setter)
-		Reg.ANTIALIASING = Reg.ANTIALIASING;		
-		// # USER CODE
+		Reg.ANTIALIASING = Reg.ANTIALIASING;
 	}//---------------------------------------------------;
+	
+	// --
+	static function onPreGameReset()
+	{
+		trace("- on Pre Game Reset");
+		SND.destroy();
+	}//---------------------------------------------------;
+	
+	// --
+	static function onPostGameReset()
+	{
+		// Reload the sounds!
+		trace("- on Post Game Reset");
+		SND.init();
+		loadSounds();
+	}//---------------------------------------------------;
+	
 	
 	// --
 	// Quick way to alter the Antialiasing of all cameras
 	static function set_ANTIALIASING(value:Bool):Bool
 	{
 		ANTIALIASING = value;
-		
-		for (i in FlxG.cameras.list)
-		{
+		for (i in FlxG.cameras.list) {
 			i.antialiasing = ANTIALIASING;
 		}
-	
 		return value;
 	}//---------------------------------------------------;
+	
+	// --
+	// Quick way to alter the Antialiasing of all cameras
+	static function set_FULLSCREEN(value:Bool):Bool
+	{
+		FULLSCREEN = value;
+		FlxG.fullscreen = FULLSCREEN;
+		return value;
+	}//---------------------------------------------------;	
 	
 	// --
 	// Apply all the variables from a json node into an object
@@ -158,7 +226,11 @@ class Reg
 		var jsonNode = Reflect.getProperty(JSON, node);
 		
 		for (field in Reflect.fields(jsonNode)) {
+			try{
 			Reflect.setField(Object, field, Reflect.field(jsonNode, field));
+			}catch (e:Dynamic) {
+				trace('Could not set field $field');
+			}
 		}
 	}//---------------------------------------------------;
 	
@@ -169,18 +241,60 @@ class Reg
 			Reflect.setField(into, field, Reflect.field(node, field));
 		}
 	}//---------------------------------------------------;
-	#if debug
-	// -- Call this on main update() to reload settings and reset the game
-	public static function OnKeyReloadParamsAndGame()
+
+	//-- Quickly set the default parameters of an object
+	public static function defParams(obj:Dynamic, target:Dynamic):Dynamic
 	{
+		if (obj == null) {
+			obj = { };
+		}
+
+		// THIS IS VERY IMPORTANT ::
+		obj = Reflect.copy(obj);
+		
+		for (field in Reflect.fields(target)) {
+			if (!Reflect.hasField(obj, field)) {
+				Reflect.setField(obj, field, Reflect.field(target, field));
+			}
+		}
+		
+		return obj;
+	}//---------------------------------------------------;
+	
+	
+	//====================================================;
+	// DEBUGGING
+	//====================================================;
+
+	#if debug
+	public static function debug_keys()
+	{	
 		if (FlxG.keys.justPressed.F12)
 		{
-			trace("Re-loading external parameters file ---");
+			trace(" = Reloading external parameters file :: ");
 			DynAssets.loadFiles(function() {
-					JSON = DynAssets.json.get(Reg.PARAMS_FILE);
+					JSON = DynAssets.json.get(PARAMS_FILE);
 					FlxG.resetState();
 			});
+		}else
+		if (FlxG.keys.justPressed.F9)
+		{
+			ANTIALIASING = !ANTIALIASING;
+		}
+	}//---------------------------------------------------;
+	
+	// -
+	// Useful tool for debugging
+	public static function translateDir(dir:Int):String
+	{
+		return switch(dir) {
+			case FlxObject.LEFT:"left";	
+			case FlxObject.RIGHT:"right";	
+			case FlxObject.UP:"up";	
+			case FlxObject.DOWN:"down";	
+			default:"";
 		}
 	}//---------------------------------------------------;
 	#end
+	
 }//--

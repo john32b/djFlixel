@@ -1,6 +1,7 @@
 package ;
 
 import djFlixel.Controls;
+import djFlixel.gui.PageData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -45,6 +46,9 @@ class State_Main extends FlxState
 		// Be sure the flag "EXTERNAL_LOAD" is set on the Project.xml
 		// If it's not, then the data is going to be embedded into the bin.
 		Reg.applyParamsInto("boxData", this);
+		trace("TYPEOF STARTPOSX") ;
+		trace(Type.typeof(STARTPOS_X));
+		trace(STARTPOS_X);
 		
 		//-- Add a simple box
 		box = new FlxSprite(STARTPOS_X, STARTPOS_Y);
@@ -59,7 +63,7 @@ class State_Main extends FlxState
 			var txt = new FlxText((c), (c * 10), 0, Reg.JSON.titleText[c]);
 			add(txt);
 		}
-		
+	
 	}//---------------------------------------------------;
 	
 	
@@ -119,7 +123,7 @@ class State_Main extends FlxState
 		#if debug
 		// On keypress "f12" reload JSON parameters and reset game
 		// So I can quickly make changes to the json file and see them in action
-		Reg.OnKeyReloadParamsAndGame();
+		Reg.debug_keys();
 		#end
 	
 	}//---------------------------------------------------;

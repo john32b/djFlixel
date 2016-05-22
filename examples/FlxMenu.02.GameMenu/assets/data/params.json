@@ -7,7 +7,7 @@
 		"VOLUME" : 0.6
 	},
 	
-	"sounds" : {
+	"soundFiles" : {
 		"c_tick" : "cursor_tick",
 		"c_back" : "cursor_low",
 		"c_sel"  : "cursor_high",

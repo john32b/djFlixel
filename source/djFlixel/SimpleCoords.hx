@@ -63,9 +63,14 @@ class SimpleCoords
 		return '$x,$y';
 	}//---------------------------------------------------;
 	
-	public function isEqual(o:SimpleCoords):Bool
+	public inline function isEqual(o:SimpleCoords):Bool
 	{
 		return (this.x == o.x && this.y == o.y);
+	}//---------------------------------------------------;
+	
+	public inline function isEqualWith(x:Int, y:Int):Bool
+	{
+		return(this.x == x && this.y == y);
 	}//---------------------------------------------------;
 	
 }// -- end -- //

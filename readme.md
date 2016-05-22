@@ -1,13 +1,13 @@
 djFlixel Tools
 ==============
-**Version:** 0.2.x (in development)
+**Version:** 0.2.4
 **Author:** John Dimi, <johndimi@outlook.com>, twitter:[@jondmt](https://twitter.com/jondmt)  
-**Language:** Haxe 3.x
-**Requires:** haxeflixel 4.x (dev)
+**Language:** Haxe 3.x , __LICENCE__ :  MIT
+**Requires:** haxeflixel 4.x (dev) 
 
 __djFlixel__  is a library containing various helpers and tools for haxeflixel. I created this during the development of my other game projects. Feel free to use it, study it, fork it, or whatever :-)
 
-####  [!! CLICK HERE FOR A QUICK DEMO !!](http://bit.ly/djflx)
+####  [!! CLICK HERE FOR A QUICK FEATURES DEMO !!](http://bit.ly/djflx)
 
 ----------
 
@@ -34,7 +34,7 @@ The wiki is in development !
 
 #### [CHECKOUT THE EXAMPLES DIR](https://github.com/johndimi/djFlixel/tree/master/examples)
 
-Also in development !
+More examples to come eventually.
 
 ----------
 
@@ -99,10 +99,9 @@ if (Controls.pressed(Controls.UP)) {
 
 --------
 
-#### More documentation soon !
 
-Feel free to contact me for questions, suggestions, or anything else.
+#### This library is in development !!
 
-Cheers,
-
--- John
+I am developing this library in parallel with my video game projects, Updates can be slow but eventually there will be. Feel free to contact me for questions, suggestions, or anything else.
+Cheers, 
+John

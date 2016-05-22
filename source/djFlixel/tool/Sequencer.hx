@@ -92,9 +92,7 @@ class Sequencer implements IFlxDestroyable
 	// --
 	public function destroy():Void 
 	{
-		if (timer != null)
-		{
-			timer.cancel();
+		if (timer != null) {
 			timer.destroy();
 			timer = null;
 		}

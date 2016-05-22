@@ -14,9 +14,9 @@ class DataTool
 	 * @param	width The width of the Array
 	 * @param	height The height of the Array
 	 */
-	public static function create2DArray(width:Int, height:Int):Array<Array<Int>>
+	public static function create2DArray<T>(width:Int, height:Int):Array<Array<T>>
 	{
-		var r:Array<Array<Int>> = [];
+		var r:Array<Array<T>> = [];
 		for (y in 0...height) {
 			r[y] = [];
 		}

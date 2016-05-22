@@ -1,0 +1,28 @@
+{
+	"reg" : {
+		"NAME" : "Map example 1",
+		"VERSION" : "0.1",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"MUSIC" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"titleText" : [
+		" djFlixel, Map example 1, Simple Map loading",
+		" . Use controls to scroll camera"
+	],
+	
+	"map" : {
+		"STREAM_PAD_X" : -1,
+		"STREAM_PAD_Y" : -1,
+		"BG_COLOR" : "0xFF992552",
+		"BG_TILEWIDTH" : 16,
+		"BG_TILEHEIGHT" : 16,
+		"BG_STARTING_INDEX" : 1,
+		"BG_DRAW_INDEX" : 1,
+		"BG_COL_START" : 19,
+		"BG_LAYER" : "tiles",
+		"BG_TILES" : "assets/layerBG.png"
+	}
+}

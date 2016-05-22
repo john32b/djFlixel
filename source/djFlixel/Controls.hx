@@ -27,7 +27,6 @@ class Controls
 	// --
 	static inline var DEADZONE:Float = 0.5;	
 	
-	
 	// -- Quick reference to buttons.
 	// - I am using the xbox360 gamepad layout as a map
 	// - Directions are digital & analog
@@ -54,7 +53,7 @@ class Controls
 	// no need to keep initializing this class
 	static var isInited:Bool = false;
 	// pointer to the first connected gamepad
-	static var gamepad(default, null):FlxGamepad;
+	static var gamepad(default, null):FlxGamepad = null;
 	// Pointer to the keyboard for quick access
 	static var keys(default, null):FlxKeyboard;
 	
@@ -92,11 +91,12 @@ class Controls
 		// Create a pointer
 		keys = FlxG.keys;
 		
-		// Get controller status?
-		// Try to get the first controller
-		gamepad = FlxG.gamepads.getByID(0);
-
-		initializeGamepad();
+		// If a gamepad is found, it maps controls automatically
+		if (!findGamepad())
+		{
+			// Map controls to just keyboard
+			mapControls();
+		}
 		
 	}//---------------------------------------------------;
 	
@@ -135,10 +135,10 @@ class Controls
 	static function findGamepad():Bool
 	{		
 		gamepad = FlxG.gamepads.lastActive;
+		
 		if (gamepad != null)
 		{
-			// I found a gamepad!
-			initializeGamepad();
+			mapControls();
 			return true;
 		}
 		return false;
@@ -147,7 +147,7 @@ class Controls
 	// --
 	// If a controller hasn't been found on start
 	// You can always do it later
-	static function initializeGamepad()
+	static function mapControls()
 	{
 		if (gamepad == null) 
 		{
@@ -168,7 +168,9 @@ class Controls
 		}
 		else 
 		{
+			#if FLX_GAMEINPUT_API
 			trace('Info: Controller found, MODEL=${gamepad.model}, NAME=${gamepad.name}');
+			#end
 			
 			gamepad.deadZone = DEADZONE;
 			
@@ -266,8 +268,8 @@ class Controls
 	static public function RESET()
 	{
 		FlxG.keys.reset();
-		if (gamepad != null)
-		{
+		
+		if (gamepad != null) {
 			gamepad.reset();
 		}
 	}//---------------------------------------------------;
@@ -348,16 +350,20 @@ class Controls
 		return switch(id) {
 			case UP: 
 				gamepad.justPressed.DPAD_UP ||
-				gamepad.analog.value.LEFT_STICK_Y < 0;
+				(	gamepad.analog.justMoved.LEFT_STICK_Y && 
+					gamepad.analog.value.LEFT_STICK_Y < 0 );
 			case DOWN:
 				gamepad.justPressed.DPAD_DOWN ||
-				gamepad.analog.value.LEFT_STICK_Y > 0;
+				(	gamepad.analog.justMoved.LEFT_STICK_Y &&
+					gamepad.analog.value.LEFT_STICK_Y > 0 );
 			case LEFT:
 				gamepad.justPressed.DPAD_LEFT ||
-				gamepad.analog.value.LEFT_STICK_X < 0;
+				(	gamepad.analog.justMoved.LEFT_STICK_X &&
+					gamepad.analog.value.LEFT_STICK_X < 0 );				
 			case RIGHT:
 				gamepad.justPressed.DPAD_RIGHT ||
-				gamepad.analog.value.LEFT_STICK_X > 0;
+				(	gamepad.analog.justMoved.LEFT_STICK_X &&
+					gamepad.analog.value.LEFT_STICK_X > 0 );				
 			case A:
 				gamepad.justPressed.A;
 			case X:
@@ -382,16 +388,16 @@ class Controls
 		return switch(id) {
 			case UP: 
 				gamepad.justReleased.DPAD_UP ||
-				gamepad.analog.value.LEFT_STICK_Y < 0;
+				gamepad.analog.justReleased.LEFT_STICK_Y;
 			case DOWN:
 				gamepad.justReleased.DPAD_DOWN ||
-				gamepad.analog.value.LEFT_STICK_Y > 0;
+				gamepad.analog.justReleased.LEFT_STICK_Y;
 			case LEFT:
 				gamepad.justReleased.DPAD_LEFT ||
-				gamepad.analog.value.LEFT_STICK_X < 0;
+				gamepad.analog.justReleased.LEFT_STICK_X;
 			case RIGHT:
 				gamepad.justReleased.DPAD_RIGHT ||
-				gamepad.analog.value.LEFT_STICK_X > 0;
+				gamepad.analog.justReleased.LEFT_STICK_X;
 			case A:
 				gamepad.justReleased.A;
 			case X:
@@ -422,7 +428,7 @@ class Controls
 			case A: keys.pressed.K;
 			case X: keys.pressed.J;
 			case Y: keys.pressed.I;
-			case B: keys.pressed.U;
+			case B: keys.pressed.L;
 			case START: keys.pressed.ENTER;
 			case SELECT: keys.pressed.SPACE;
 			case LB: keys.pressed.SHIFT;
@@ -441,7 +447,7 @@ class Controls
 			case A: keys.justPressed.K; 
 			case X: keys.justPressed.J; 
 			case Y: keys.justPressed.I; 
-			case B: keys.justPressed.U;
+			case B: keys.justPressed.L;
 			case START: keys.justPressed.ENTER;
 			case SELECT: keys.justPressed.SPACE;
 			case LB: keys.justPressed.SHIFT;
@@ -460,7 +466,7 @@ class Controls
 			case A: keys.justReleased.K; 
 			case X: keys.justReleased.J; 
 			case Y: keys.justReleased.I; 
-			case B: keys.justReleased.U; 
+			case B: keys.justReleased.L; 
 			case START: keys.justReleased.ENTER;
 			case SELECT: keys.justReleased.SPACE;
 			case LB: keys.justReleased.SHIFT;
