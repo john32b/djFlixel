@@ -4,6 +4,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.effects.FlxFlicker;
 import flixel.group.FlxGroup;
+import flixel.util.FlxArrayUtil;
 import flixel.util.FlxTimer;
 
 
@@ -19,11 +20,14 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 {
 	
 	// Keep this many particles in a pool for quick retrieval
-	var BUFFER_LEN:Int = 16;
+	var BUFFER_LEN:Int = 4;
 
 	// The node object describing the particles
 	var info:_ParticleJsonParams;
 	
+	// Store all particle timers here
+	// Destroy them on reset();
+	var timers:Array<FlxTimer>;
 	//====================================================;
 
 	/**
@@ -31,13 +35,16 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	 * @param	particleInfoNode The node name in the JSON params file
 	 * @param	buffer Options, create this many particles for recycling
 	 */
-	public function new(particleInfoNode:String, buffer:Int = 16 )
+	public function new(particleInfoNode:String, buffer:Int = -1)
 	{
 		super();
+
+		// maxSize = 0; Growing style. It's already 0
 		
-		// maxSize = 0; Growing style.
+		if (buffer > 0) {
+			BUFFER_LEN = buffer;
+		}
 		
-		BUFFER_LEN = buffer;
 		info = Reflect.getProperty(Reg.JSON, particleInfoNode);
 		
 		// Create some buffer particles
@@ -47,6 +54,11 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			p.kill();
 			add(p);
 		}
+
+		trace("Created particlegroup +++");
+		trace("Length = ", length);
+		
+		timers = [];
 		
 	}//---------------------------------------------------;
 	
@@ -87,6 +99,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 										freq:Float = 0.14, ?soundID:String, ?onComplete:Void->Void)
 	{
 		var timer:FlxTimer = new FlxTimer();
+		timers.push(timer);
 		timer.start(freq, function(_) {
 			createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
 			if (soundID != null) SND.play(soundID);
@@ -141,6 +154,31 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		}
 		
 	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Kills children but not self
+	 */
+	public function reset():Void 
+	{
+		for (i in timers) {
+			i.destroy();
+			i = null;
+		}
+		timers = [];
+		
+		for (b in this) {
+			b.kill();
+		}
+		
+		// Free up some memory
+		// Clear objects exceeding target buffer length.
+		if (length > BUFFER_LEN) {
+			members.splice(BUFFER_LEN, length);
+			length = BUFFER_LEN;
+		}
+	}//---------------------------------------------------;
+	
 	
 }// --
 

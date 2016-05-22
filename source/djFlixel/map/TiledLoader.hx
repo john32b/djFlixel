@@ -93,7 +93,7 @@ class TiledLoader implements IFlxDestroyable
 	 */
 	public function loadFile(file:String, ?skipGIDIncrement:Array<String>)
 	{
-		trace(' = Loading map from "$file"');
+		trace('Info: Getting map "$file"');
 		
 		layerTiles = new Map();
 		layerEntities = new Map();
@@ -109,14 +109,14 @@ class TiledLoader implements IFlxDestroyable
 		
 		#if (EXTERNAL_LOAD)
 			if (DynAssets.files.exists(file)) {
-				trace(" .from dynamicAssets");
+				trace(" .. from dynamic Assets");
 				root = new Fast(Xml.parse(DynAssets.files.get(file))).node.resolve("map");
 			}else {	
-				trace('Error: Can\'t load "$file" dynamically. Push it to the dynamic file list. !!');
+				trace('Warning: Can\'t load "$file" dynamically. Push it to the dynamic file list.');
 		#end
 		
 		// #If not EXTERNAL_LOAD ::
-			trace(" .from embedded Assets");
+			trace(" .. from embedded Assets");
 			root = new Fast(Xml.parse(Assets.getText(ASSETS_PATH + file))).node.resolve("map");
 			
 		#if (EXTERNAL_LOAD)
@@ -149,6 +149,7 @@ class TiledLoader implements IFlxDestroyable
 			tilesetFirstGid.set(tnode.att.name, layers_firstGID[layers_firstGID.length - 1]);
 		}
 		
+		
 		// 2: Read the layers
 		// Note: The layers are read in order. From Bottom To top.
 		// 		 Make sure the tileset order matches the layer order
@@ -173,13 +174,13 @@ class TiledLoader implements IFlxDestroyable
 		for (tnode in root.nodes.objectgroup)
 		{
 			layerName = tnode.att.resolve("name");
-			
+
 			var tempArray:Array<MapEntity> = readObjectLayer(tnode);
 			
 			if (tempArray != null)
 			{
-				layerEntities.set(layerName, tempArray);
 				trace("Reading Object layer -- " + layerName);
+				layerEntities.set(layerName, tempArray);
 			}
 		}
 	}//---------------------------------------------------;

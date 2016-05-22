@@ -27,7 +27,7 @@ class ParticleGeneric extends FlxSprite
 	{
 		super();
 		
-		loadGraphic(DynAssets.getImage(info.sheet), true, info.width, info.height);
+		loadGraphic(info.sheet, true, info.width, info.height);
 		
 		if (info.anims != null)
 		for (i in info.anims) {

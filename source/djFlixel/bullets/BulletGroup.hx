@@ -1,11 +1,9 @@
 package djFlixel.bullets;
 
 import flixel.FlxG;
-import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxVelocity;
-import flixel.util.FlxTimer;
 
 
 // --

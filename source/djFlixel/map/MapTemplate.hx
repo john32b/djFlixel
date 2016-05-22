@@ -38,6 +38,7 @@ package djFlixel.map;
 
 import djFlixel.map.TiledLoader;
 import flixel.util.FlxArrayUtil;
+import flixel.util.FlxColor;
 
 import flash.geom.Rectangle;
 import flixel.FlxBasic;
@@ -48,7 +49,7 @@ import flixel.tile.FlxTilemap;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
-import djFlixel.map.StreamableSprite; // TODO, put this into djFlixel //
+import djFlixel.map.StreamableSprite;
 
 class MapTemplate implements IFlxDestroyable
 {
@@ -86,7 +87,7 @@ class MapTemplate implements IFlxDestroyable
 	// # USER SET - ( MUST BE SET )
 	// This will be called with map entities that need to be added to the game
 	// DON'T FORGET to push created objects to streamedObjects[]
-	public var onStreamEntity:MapEntity->Void;
+	public var onStreamEntity:MapEntity->Void = function(m:MapEntity) { };
 	
 	// # LAYER FOR STREAMING OBJECTS
 	// This layer holds data in tile format, not actual drawn tiles.
@@ -114,6 +115,7 @@ class MapTemplate implements IFlxDestroyable
 	
 	// Hold all the onscreen streamable objects
 	// Objects here are auto-destroyed when off screen
+	// Dead objects should not be in here!
 	// * User should push objects here *
 	public var streamedObjects:Array<StreamableSprite>;
 	
@@ -129,7 +131,8 @@ class MapTemplate implements IFlxDestroyable
 	var _camVF:Int;
 	var _camHF:Int;
 	
-	// If you set this, then it will adjust the offset of the data object IDs
+	// If you use and data object layer you MUST set the tileset filename here
+	// Used to calculate offsets and entity sizes
 	public var dataObjectTileset:String;
 	//====================================================;
 	// --
@@ -147,7 +150,8 @@ class MapTemplate implements IFlxDestroyable
 		
 		// Use the default camera, use setCustomViewport() later
 		camera = FlxG.camera;
-		camera.bgColor = Reg.JSON.map.BG_COLOR;
+		if (Reg.JSON.map.BG_COLOR != null)
+			camera.bgColor = FlxColor.fromString(Reg.JSON.map.BG_COLOR);
 		
 		// Hold the camera starting point in tile coords
 		cameraPos = new SimpleCoords();
@@ -176,7 +180,8 @@ class MapTemplate implements IFlxDestroyable
 	public function setCustomViewport(x:Int, y:Int, width:Int, height:Int)
 	{
 		camera = new FlxCamera(x, y, width, height, 0);
-		camera.bgColor = Reg.JSON.map.BG_COLOR;
+		if (Reg.JSON.map.BG_COLOR != null)
+			camera.bgColor = FlxColor.fromString(Reg.JSON.map.BG_COLOR);
 		camera.antialiasing = Reg.ANTIALIASING; // apply the AA status to this cam
 		layerBG.cameras = [camera];
 		
@@ -186,6 +191,8 @@ class MapTemplate implements IFlxDestroyable
 		
 		_camVF = cameraHeight + vPadding;	// Reduce a calculation later at the streaming 
 		_camHF = cameraWidth + hPadding;
+		
+		FlxG.cameras.add(camera);
 		
 		trace("Camera Area Size in Tiles", cameraWidth, cameraHeight);
 	}//---------------------------------------------------;
@@ -204,7 +211,8 @@ class MapTemplate implements IFlxDestroyable
 	}//---------------------------------------------------;
 	
 	
-	// -- Reset and map elements before loading a new map.
+	// -- Reset and map elements before loading a new map
+	// -- # Automatically called
 	function reset()
 	{
 		// -- Clear the streaming layer
@@ -216,7 +224,7 @@ class MapTemplate implements IFlxDestroyable
 	}//---------------------------------------------------;
 
 	/**
-	 * Load a map file and init all layers
+	 * Load a map file, clears the object automatically before loading
 	 * @param	levelID This must be at "assets/maps/" + levelID + "tmx"
 	 */
 	public function loadLevel(levelID:String)
@@ -239,15 +247,16 @@ class MapTemplate implements IFlxDestroyable
 					Reg.JSON.map.BG_DRAW_INDEX,
 					Reg.JSON.map.BG_COL_START);
 		
-		layerBG.setDirty(true);
+		layerBG.updateBuffers(); // new bug fix
 		
 		// - Any more layers have to be loaded by an extended class
 		// ---> ()
 		
 		// This sets the worldbounds and the camera bounds:
-		camera.setScrollBoundsRect(0,0,width,height,true);
-	
-		trace('** Loaded level "$levelID" | mapWidth = $mapWidth | mapHeight = $mapHeight');
+		camera.setScrollBoundsRect(0, 0, width, height, true);
+		camera.onResize();
+		
+		trace(' .. map loaded [OK] | mapWidth = $mapWidth | mapHeight = $mapHeight');
 		
 		// Create those objects 
 		// Because a data check could be called externally.
@@ -255,8 +264,8 @@ class MapTemplate implements IFlxDestroyable
 		dataLayer = new Map();
 		
 		// Load those 2 from the JSON, #optional
-		var OBJECT_LAYER = Reg.JSON.map.OBJECT_LAYER;
-		var DATA_LAYER = Reg.JSON.map.DATA_LAYER;
+		var OBJECT_LAYER:String = Reg.JSON.map.OBJECT_LAYER;
+		var DATA_LAYER:String = Reg.JSON.map.DATA_LAYER;
 		
 		// - Streaming entities --
 		// - Scan the ENTIRE objects layer to get data:
@@ -275,8 +284,7 @@ class MapTemplate implements IFlxDestroyable
 		// - Now scan any DATA layer
 		if (loader.layerEntities.exists(DATA_LAYER))
 		{
-			var tileSizeHalf:Int = Std.int(loader.tilesetWidths.get(DATA_LAYER) / 2);
-
+			var tileSizeHalf:Int = Std.int(loader.tilesetWidths.get(dataObjectTileset) / 2);
 			var tileX:Int;
 			var tileY:Int;
 			
@@ -347,7 +355,8 @@ class MapTemplate implements IFlxDestroyable
 		
 		if (!cameraPos.isEqual(cameraPosOld))
 		{
-			deleteOffScreen();
+			// NEW: Check enemies at a timer, not each time it scrolls
+			// deleteOffScreen(); 
 			
 			// Camera changed tile pos
 			feedDataFromRow(cameraPos.y - cameraPosOld.y);
@@ -409,7 +418,7 @@ class MapTemplate implements IFlxDestroyable
 	
 	// --	
 	// Check for offscreen entities and delete them.
-	inline function deleteOffScreen() 
+	public function deleteOffScreen() 
 	{
 		// Check for offscreen entities and kill them.
 		// --

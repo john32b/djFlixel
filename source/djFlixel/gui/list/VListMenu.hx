@@ -28,7 +28,8 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	var _indexData:Int;
 	// Current selected slot index
 	var _indexSlot:Int;
-	// Pointer to the selected Option Element;
+	// Pointer to the selected Option Element
+	@:allow(djFlixel.gui.FlxMenu)
 	var option_pointer:IListOption<OptionData>;
 	
 	// # Calculated and corrected option padding to use
@@ -426,7 +427,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		// Don't go to the same place
 		if (_indexData == R) return;
 		
-		trace('Info: Requesting pointer to ($R)');
+		// trace('Info: Requesting pointer to ($R)');
 		
 		// Unfocus previous
 		if (option_pointer != null) {
@@ -700,6 +701,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 	
 	// Option related callback
+	// Child options are calling this directly.
 	@:allow(djFlixel.gui.listoption)
 	function callback_option(status:String)
 	{

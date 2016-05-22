@@ -9,7 +9,7 @@ class Main extends MainTemplate
 	public function new()
 	{
 		MainTemplate.framerate = 60;
-		DynAssets.filesToLoad = Reg.DYNAMIC_FILES;
+		DynAssets.FILE_LOAD_LIST = [Reg.PARAMS_FILE];
 		super(State_Main);
 	}//---------------------------------------------------;
 	// --

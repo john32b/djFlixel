@@ -18,16 +18,9 @@ import djFlixel.SND;
 
 class Reg
 {
-	// -- Parameters file --
-	// -  It is useful to have various game parameters to an external file
-	// -  so that I don't have to compile everytime I want to change a value.
 	inline static public var PARAMS_FILE:String = "data/params.json";
-	
-	// This is the list of files to load dynamically.
-	// Use EXTERNAL_LOAD compiler flag
-	// MAIN.hx reads this.
-	public static var DYNAMIC_FILES:Array<String> = [PARAMS_FILE];
-	
+
+		
 	// -  These vars are loaded externally from the JSON parameters file ::
 	//    If the parameter is not present on the ext file, then defaults will be used.
 	public static var VERSION:String = "0.1";
@@ -91,8 +84,11 @@ class Reg
 		SND.init();
 		loadSounds();
 		
+		
+		FlxG.log.redirectTraces = true;
 		// Init the controls
 		Controls.init();
+		
 		
 		// Enable Saving
 		// SAVE.init("Game_Unique_Name");

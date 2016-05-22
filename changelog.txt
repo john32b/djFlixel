@@ -4,7 +4,26 @@ DJFLIXEL CHANGE LOG
 
 
 
-# 04-2016 (dev)
+# 22-05-2016, v. 0.2.4
+============================================================
+
+ + Controls
+	. added analog support for justReleased and justPressed functions
+	
+ + Examples
+	. added a example Map 01, very basic how to load a TILED map with a few lines of code
+	
+ + MapTemplate
+	. BUGFIX, when loading new map, it scrolls correctly
+	
+ + Other
+	. Can set starting state from the JSON params
+	
+ + REG
+	. updated the REG.HX file, you still need to copy it to new projects until I invent another way
+	
+
+# 04-2016 (dev) v. 0.2.3
 ============================================================
 
  + Controls
@@ -32,7 +51,7 @@ DJFLIXEL CHANGE LOG
 	. use FILE_LOAD_LIST static var to push files
 	. use putTextFile(file) to prepare a map file to be loaded later dynamically
 	
-# 03-2016 (dev)
+# 03-2016 (dev) v. 0.2.2
 ============================================================
 
  + MapTemplate.hx
@@ -44,7 +63,7 @@ DJFLIXEL CHANGE LOG
  . FlxMenu can load styles from the JSON parameters file
 
  
-# 02-2016 (dev)
+# 02-2016 (dev) v. 0.2.1
 ============================================================
 
  + MainTemplate. Quicker way to start a new project
