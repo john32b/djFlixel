@@ -1,5 +1,13 @@
 ## Examples
 
+
+
+#### TiledMap Example 01
+
+Example use of how to quickly load and display a TILED editor map
+[see flash build here](http://johndimi.github.io/djFlixel/examples/TiledMap01.swf)
+
+
 #### Controls.Example
 
 Example use of the controls.hx static class. Basic controls manager for WASD,ARROW KEYS and 360 CONTROLLER<br/>
