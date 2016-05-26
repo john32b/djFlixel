@@ -93,12 +93,12 @@ class PageData
 	 * 
 	 * @return The produced OptionData
 	 */
-	public function add(label:String, ?params:Dynamic):PageData
+	public function add(label:String, ?params:Dynamic):OptionData
 	{
 		var o = new OptionData(label, params);
 		
 		collection.push(o);
-		return this;
+		return o; // CHANGED
 	}//---------------------------------------------------;
 	
 	/**
@@ -106,7 +106,7 @@ class PageData
 	 * @param label The display name
 	 * @param page Start with "@" to link to page, Start with "!" to confirm action, "#back" to go back
 	 */
-	public inline function link(label:String, SID:String, ?description:String):PageData
+	public inline function link(label:String, SID:String, ?description:String):OptionData
 	{
 		return add(label, { type:"link", sid:SID, desc:description } );
 	}//---------------------------------------------------;
@@ -115,7 +115,7 @@ class PageData
 	/**
 	 * Quick way to add a back button
 	 */
-	public inline function addBack(?text:String):PageData
+	public inline function addBack(?text:String):OptionData
 	{
 		return add(text != null?text:"Back", { type:"link", sid:"@back", desc:"Go back" } );
 	}//---------------------------------------------------;
@@ -148,6 +148,14 @@ class PageData
 		
 		collection = null;
 		custom = null;
+	}//---------------------------------------------------;
+	
+	// --
+	// Returns the optionData of the page with target SID
+	// NULL if nothing is found
+	public function get(sid:String):OptionData
+	{
+		for (i in collection) if (i.SID == sid) return i; return null;
 	}//---------------------------------------------------;
 
 	

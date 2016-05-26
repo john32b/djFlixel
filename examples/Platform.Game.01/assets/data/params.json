@@ -1,0 +1,20 @@
+{
+	"reg" : {
+		"NAME" : "platform example",
+		"VERSION" : "0.1.0",
+		"START_STATE": "State_Main",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"MUSIC" : true,
+		"VOLUME" : 0.6
+	},
+	
+	"gravity" : 700,
+	
+	"player":{ 
+		"movespeed":80,
+		"jumpspeed":250,
+		"jumpease":30,
+		"bounceSpeed":100
+	}
+}

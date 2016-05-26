@@ -21,7 +21,6 @@ import flixel.tweens.FlxTween;
  */
 class FlxMenu extends FlxGroup
 {
-	
 	// -- System ::
 	public var x(default, null):Float;
 	public var y(default, null):Float;
@@ -43,7 +42,7 @@ class FlxMenu extends FlxGroup
 	var previousMenu:VListMenu;
 	
 	// Hold all the pages data this menu is going to use
-	var pages:Map<String,PageData>;
+	public var pages(default, null):Map<String,PageData>;
 	
 	// Pointer to the current loaded page.
 	var currentPage:PageData;

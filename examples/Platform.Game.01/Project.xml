@@ -2,7 +2,7 @@
 <project>
 	<!------------------------------APPLICATION SETTINGS---------------------------->
 	
-	<app title="djFlixel Project" file="djFlixelProject" main="Main" version="0.2.0" company="" />
+	<app title="platformExample" file="platformExample" main="Main" version="0.1.0" company="" />
 	
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 	<!--or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"!-->
@@ -27,25 +27,27 @@
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="build/debug" /> <!-- compile to RAM, Change this!!! -->
+	<set name="BUILD_DIR" value="build/debug/" />
 	<classpath name="source" />
-	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
+	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg|editor_obj.png|_object.png"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
 
 	<haxelib name="flixel"/>
-	<haxelib name="djFlixel"/>
+	<include path="../../source/" />
+	<!--<haxelib name="flixel-addons"/>-->
 	
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
-	<haxedef name="openfl_next"/>
+	<!--<haxedef name="openfl_next"/>-->
 	
 	<!-- EXTERNAL_LOAD:
 	<!-- If set, then some files will be loaded in real time 
 	<!-- Useful to modifing things without re-compiling every time 
 	<!-- -->
 	<haxedef name="EXTERNAL_LOAD"/> 
+	
 	<!-- -->
 	
 	<!-- Newgrounds API:

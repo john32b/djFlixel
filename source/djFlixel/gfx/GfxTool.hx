@@ -1,5 +1,7 @@
 package djFlixel.gfx;
 
+import flash.display.Bitmap;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets.FlxGraphicAsset;
@@ -112,7 +114,57 @@ class GfxTool
 		s.animation.frameIndex = frame;
 		return s;
 	}//---------------------------------------------------;
-
 	
+	
+	
+	/**
+	 * Replace a set of colors in a bitmap with another set of colors
+	 * Creates a new bitmap, does not modify the original one.
+	 * #NOTE: You should declare "persist==true" if you want to keep it after state change
+	 * @param	b The bitmap to read
+	 * @param	source Source Array of colors [black,red]
+	 * @param	dest Destination array of colors [targetcol, targetcol]
+	 * @return
+	 */
+	public static function getGraphicColorReplace(b:BitmapData, source:Array<Int>, dest:Array<Int>):FlxGraphic
+	{
+		var gfx:FlxGraphic = FlxG.bitmap.create(b.width, b.height, 0x00000000, true);
+			
+		// gfx.persist = true;
+		
+		// Check to see if the source and dest are the same length
+		#if debug
+		if (source.length != dest.length) {
+			trace("Error: Source and Destination color mappings are different sized");
+			return null;
+		}
+		#end
+		
+		gfx.bitmap.lock();
+		
+		var col:Int;
+		var ind:Int;
+		
+		for (y in 0...b.height)
+		for (x in 0...b.width)
+		{
+			col = b.getPixel32(x, y);
+			if (col == 0) continue;
+			
+			ind = source.indexOf(col);
+			if (ind >= 0) {
+				// Write the mapped color
+				gfx.bitmap.setPixel32(x, y, dest[ind]);
+			}else {
+				// Write the same color with no change
+				gfx.bitmap.setPixel32(x, y, col);
+			}
+		}
+			
+		gfx.bitmap.unlock();
+	
+		return gfx;
+	
+	}//---------------------------------------------------;
 	
 }// -- end --//
