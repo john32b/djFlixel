@@ -70,7 +70,14 @@ class Player extends FlxSprite
 	{
 		isJumping = true;
 		isFalling = false;
-		velocity.y = -bounceSpeed;
+
+		// If jump button is being pressed while stomping on enemy, jump heigher
+		if (Controls.pressed(Controls.A)) {
+			velocity.y = -jumpspeed * 0.8;
+		}else {
+			velocity.y = -bounceSpeed;
+		}
+		
 	}//---------------------------------------------------;
 	
 	override public function hurt(Damage:Float):Void 

@@ -96,6 +96,8 @@ class State_Main extends FlxState
 	// --
 	function onCollide_player_enemy(p:Player, e:Enemy)
 	{
+		if (!e.alive || !p.alive) return;
+		
 		FlxObject.updateTouchingFlags(p, e);
 		
 		if (e.justTouched(FlxObject.WALL)) { // left or right
