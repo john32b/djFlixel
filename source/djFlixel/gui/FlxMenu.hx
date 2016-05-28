@@ -615,7 +615,7 @@ class FlxMenu extends FlxGroup
 			r1 = currentMenu.getOptionIndexWithCrit("UID", currentPage.custom._cursorLastUID);
 			__sub_SetCursToPos(r1);
 		}else {
-			trace('Cursor, from the top');
+			// trace('Cursor, from the top');
 			currentMenu.setViewIndex(currentMenu.findNextSelectableIndex(0));
 		}
 		

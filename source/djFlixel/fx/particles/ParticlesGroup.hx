@@ -98,17 +98,21 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	public function createManyRandomAt(x:Float, y:Float, radius:Float, type:String, total:Int, 
 										freq:Float = 0.14, ?soundID:String, ?onComplete:Void->Void)
 	{
-		var timer:FlxTimer = new FlxTimer();
-		timers.push(timer);
-		timer.start(freq, function(_) {
-			createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
-			if (soundID != null) SND.play(soundID);
-			if (timer.loopsLeft == 0) {
-				if (onComplete != null) onComplete();
-			}
-		},total - 1);
+		if (total > 1) {
+			var timer:FlxTimer = new FlxTimer();
+			timers.push(timer);
+			timer.start(freq, function(_) {
+				createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+				if (soundID != null) SND.play(soundID);
+				if (timer.loopsLeft == 0) {
+					timers.remove(timer);
+					if (onComplete != null) onComplete();
+				}
+			},total - 1);
+		}
 		// The first particle should start now
 		createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+		if (soundID != null) SND.play(soundID);
 	}//---------------------------------------------------;
 	
 
