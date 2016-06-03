@@ -5,6 +5,7 @@ import djFlixel.gui.Styles;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.OptionData;
 import flixel.FlxBasic;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
@@ -28,7 +29,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	var style:OptionStyle;
 	
 	// Whether or not this optionelement is keyboard focused right now
-	var isFocused:Bool;
+	public var isFocused(default, null):Bool;
 	
 	// Pointer to the parent menu
 	var parent:VListMenu;
@@ -42,7 +43,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 
 	// How many pixels right of the label to pad the active element
 	var PADDING_FROM_LABEL:Int;
-	 
+
 	//====================================================;
 	
 	/**
@@ -79,7 +80,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		opt = OPT;
 		
 		// Updates the data portion
-		updateElements();
+		initElements();
 		
 		// Check and set the visual state (disabled,default)
 		updateState();
@@ -96,7 +97,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// Gets called JUST AFTER getting data
 	// Updates the Elements with the new data
 	// * Override to init other elements *
-	function updateElements()
+	function initElements()
 	{			
 		label.fieldWidth = 0; // Auto width
 		label.text = opt.label;
@@ -184,7 +185,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		return alpha = Value;
 	}//---------------------------------------------------;
 	// --
-	public function getOptionHeight():Int
+	public inline function getOptionHeight():Int
 	{
 		return style.fontSize;
 	}//---------------------------------------------------;

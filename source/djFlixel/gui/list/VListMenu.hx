@@ -1,7 +1,11 @@
 package djFlixel.gui.list;
+import djFlixel.SimpleCoords;
 import djFlixel.gui.Styles;
+import flixel.FlxG;
+import flixel.math.FlxPoint;
+import flixel.tweens.misc.VarTween;
+import flixel.util.FlxTimer;
 
-import djFlixel.gfx.GfxTool;
 import djFlixel.gui.listoption.*;
 import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.Styles.VListStyle;
@@ -14,21 +18,19 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 
 
-
-
- 
  /**
   * VlistMenu, Responsible for just one list,
-  * use FLXMenu instead.
+  * Used by FlxMenu.
   **/	
 class VListMenu extends VListBase<MenuOptionBase,OptionData>
 {
-	// Current selected data index
+	// Current selected data index. (max = _dataTotal)
 	@:allow(djFlixel.gui.FlxMenu)
 	var _indexData:Int;
 	// Current selected slot index
 	var _indexSlot:Int;
-	// Pointer to the selected Option Element
+	
+	// * Pointer to the selected Option Element
 	@:allow(djFlixel.gui.FlxMenu)
 	var option_pointer:IListOption<OptionData>;
 	
@@ -43,12 +45,13 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	// ==-- _Conditionals --==
 	// This is an early approach
 	// .Ver 0.1
-	// .In case this menu features conditionals store their indexes
+	// .In case this menu features conditionals, store their indexes
 	var _condIndexes:Array<Int>;
 	
 	// Conditional Check Method.
+	// How often the conditional options will be checked.
 	// once 	: check on creation,
-	// onscreen : every time this page gets on screen. INDEV
+	// onscreen : every time this page gets on screen. (INDEV, not implemented)
 	var _conditional_method:String;
 	
 	
@@ -57,7 +60,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	var cursor:FlxSprite;
 	var hasCursor:Bool;
 	// Keep the tween in case I want to cancel it
-	var cursorTween:FlxTween;
+	var cursorTween:VarTween;
 	var cursorIsAnimating:Bool;
 	
 	// Cursor position is auto-generated
@@ -68,6 +71,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	
 	// =-- Styles  --= 
 	// =-------------=
+
 	// General menu parameters
 	public var styleList:VListStyle;
 	// Menu Option Styles, You can customize it.
@@ -78,6 +82,14 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 
 	// Check FlxMenu for usability, it's almost the same.
 	public var callbacks:String->OptionData->Void;
+	
+	
+	// -- You can set this at any time
+	// Enables mouse interaction with the optionelements
+	public var flag_use_mouse:Bool = true;
+	
+	// Precalculate camera viewport and scrolling for mouse overlap calculations
+	var _camCheckOffset:SimpleCoords;
 	
 	//====================================================;
 	// FUNCTIONS
@@ -173,7 +185,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		
 		// _Conditionals, ver 0.1, Just check for conds here
 		if (_conditional_method == "once") {
-			trace("Conditional checking ONCE");
+			// trace("Conditional checking ONCE");
 			_cond_checkAll();
 		}
 		
@@ -318,6 +330,24 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 			}
 		}
 		
+		
+		// -- Check mouse controls ::
+		if (!flag_use_mouse) return;
+		if (isScrolling) return;
+		for (counter in 0..._slotsTotal) {
+			if (elementSlots[counter] != null) {
+				r_el = elementSlots[counter];
+				if (r_el.opt.disabled || !r_el.opt.selectable) continue;
+				if ((FlxG.mouse.screenX + _camCheckOffset.x > r_el.x) && (FlxG.mouse.screenX + _camCheckOffset.x < r_el.x + r_el.width) &&  
+					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
+						if (!r_el.isFocused) requestRollOver(counter); else
+						if (FlxG.mouse.justPressed) r_el.sendInput("fire"); else
+						if (FlxG.mouse.wheel < 0) r_el.sendInput("left"); else
+						if (FlxG.mouse.wheel > 0) r_el.sendInput("right");
+					}
+			}// end if not null
+		}// end for
+	
 	}//---------------------------------------------------;
 	
 	
@@ -325,16 +355,19 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	// Highlight an option of a target SID
 	public function option_highlight(sid:String)
 	{
-		var ind = getOptionIndexWithCrit("SID", sid);
+		var ind = getOptionIndexWithField("SID", sid);
 		if (ind > -1) {
 			setViewIndex(ind);
 		}
 	}//---------------------------------------------------;
+	
+	
 	// --
 	// Enable or disable an option of a target SID
+	// Sets DATA and also draws the change
 	public function option_setEnabled(sid:String, state:Bool)
 	{
-		var ind = getOptionIndexWithCrit("SID", sid);
+		var ind = getOptionIndexWithField("SID", sid);
 		
 		if (ind > -1) {	
 			
@@ -394,51 +427,60 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		if (hasCursor) {
 			cursor.alpha = 0;
 			cursor.visible = true;
-			FlxTween.tween(cursor, { alpha:1 }, styleBase.element_scroll_time);
+			cursorTween = FlxTween.tween(cursor, { alpha:1 }, styleBase.element_scroll_time);
 		}
 		
-		//if (bg != null) bg.visible = true;
+		if (flag_use_mouse) {
+			if (_camCheckOffset == null) {
+				_camCheckOffset = new SimpleCoords();
+				_camCheckOffset.x = -Std.int( (camera.x / camera.zoom) );
+				_camCheckOffset.y = -Std.int( (camera.y / camera.zoom) );
+				trace(_camCheckOffset);
+			}
+		}
 	}//---------------------------------------------------;
 	
-	
+	// --
 	override public function unfocus() 
 	{
 		if (!isFocused) return;
 			isFocused = false;
 			
-		if (option_pointer != null) {
-			unfocusPointerElement();
-		}
+		unfocusPointerElement();
 		
 		if (hasCursor) {
 			cursor.visible = false;
 		}
 		
-		//if (bg != null) bg.visible = false;
 	}//---------------------------------------------------;
 	
 	
 	// -- 
 	// Update the view also the pointer position to target element
 	// Sets the scroll of the list
-	// Takes cursor padding into consideration when placing it.
+	// Takes cursor padding into consideration.
 	override public function setViewIndex(R:Int = 0) 
 	{
+		// # Safeguard #
+		// - Nothing is selected, Check for just in case
+		if (_dataTotal == 0) {
+			_indexData = -1;
+			_indexSlot = -1;
+			option_pointer = null;
+			trace("Error: You need to have at least one element option");
+			return;
+		}
+
 		// Don't go to the same place
 		if (_indexData == R) return;
 		
 		// trace('Info: Requesting pointer to ($R)');
 		
-		// Unfocus previous
-		if (option_pointer != null) {
-			unfocusPointerElement();
-			option_pointer = null;
-		}
-	
+
 		if (R >= _dataTotal) {
 			R = _dataTotal - 1;
 		}
-	
+		
 		/*
 		 * Scroll the view and autoposition cursor
 		 * --------
@@ -471,31 +513,22 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 			var delta = _scroll - _scrollOffset;
 			_indexSlot += delta;
 		}
-
-		// # Safeguard #
-		// - Nothing is selected, Check for just in case
-		if (_dataTotal == 0) {
-			_indexData = -1;
-			_indexSlot = -1;
-			option_pointer = null;
-			trace("Error: You need to have at least one element option");
-			return;
-		}
 		
+		// --
+		unfocusPointerElement();
 		option_pointer = elementSlots[_indexSlot];
 		
 		if (isFocused) {
 			focusPointerElement();
 		}
+		
 	}//---------------------------------------------------;
-	
 	
 	
 	
 	// Request to set the cursor to the first entry
 	// It's faster than setting the view again.
-	/// UNTESTED !!
-	/// UNUSED ?
+	/// UNTESTED , UNUSED !!
 	public function resetPointerToTop()
 	{
 		if (_indexData == 0) return; // already selected
@@ -506,10 +539,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		_indexData = 0;
 		_indexSlot = 0;
 		
-		if (option_pointer != null) { 
-			unfocusPointerElement();
-		}
-		
+		unfocusPointerElement();
 		option_pointer = elementSlots[0];
 		
 		if (isFocused) {
@@ -521,7 +551,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	// --
 	// Returns the index of the option with target SID,
 	// Returns -1 if nothing found
-	public function getOptionIndexWithCrit(field:String, check:Dynamic):Int
+	public function getOptionIndexWithField(field:String, check:Dynamic):Int
 	{
 		var i = 0;
 		for (i in 0...data.length) {
@@ -543,6 +573,7 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	
 	// -- 
 	// Cursor data has changed, reflect to visual
+	// :: _indexSlot,_indexData have changed.
 	// # Called when the input moves the cursor
 	function _dataIndexChanged()
 	{
@@ -569,9 +600,10 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 	
 	// --
-	// PRE: option_pointer IS NOT NULL
+	// If any option is focused, unfocus it with an animation
 	function unfocusPointerElement()
 	{
+		if (option_pointer == null) return;
 		option_pointer.unfocus();
 		FlxTween.tween(option_pointer, { x:this.x }, styleBase.element_scroll_time);
 	}//---------------------------------------------------;
@@ -646,13 +678,10 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 		}
 		
 		// Tween from left to right now
-		// Vertical movement is handles on the update function
-		// in case the option has scrolls I call ALIGNV at the end of this tween
-		cursorTween = FlxTween.tween(cursor, { x:_cursor_x_end, alpha:1 }, _cursor_tween_time,
-									{	ease: FlxEase.backOut,
-										onComplete: function(_) { }	
-									});
-									
+		// Vertical movement is handled on the update function
+		// in case the option has scrolled, I call ALIGNV at the end of this tween
+		cursorTween = FlxTween.tween(cursor, { x:_cursor_x_end, alpha:1 }, 
+									_cursor_tween_time, { ease: FlxEase.backOut } );
 	}//---------------------------------------------------;
 
 	// -- 
@@ -674,8 +703,8 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 	
 
-	// Check all conditional options again.
 	// --
+	// Check all conditional options again.
 	function _cond_checkAll()
 	{		
 		var res:Bool;
@@ -686,6 +715,18 @@ class VListMenu extends VListBase<MenuOptionBase,OptionData>
 				page.collection[i].selectable = res;
 			}
 		}
+	}//---------------------------------------------------;
+	
+	// --
+	@:allow(djFlixel.gui.listoption.MenuOptionBase)
+	function requestRollOver(newSlot:Int)
+	{
+		if (_indexSlot == newSlot) return;
+		
+		_indexData += newSlot - _indexSlot;
+		_indexSlot = newSlot;
+		
+		_dataIndexChanged();
 	}//---------------------------------------------------;
 	
 	//====================================================;

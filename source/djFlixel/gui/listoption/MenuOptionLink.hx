@@ -78,9 +78,9 @@ class MenuOptionLink extends MenuOptionBase
 		}
 	}//---------------------------------------------------;
 	// --
-	override function updateElements() 
+	override function initElements() 
 	{
-		super.updateElements();
+		super.initElements();
 		
 		if (opt.data.fn == "call" || opt.SID == "@back")
 		{	

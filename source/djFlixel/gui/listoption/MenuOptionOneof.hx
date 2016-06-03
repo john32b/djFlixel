@@ -72,9 +72,9 @@ class MenuOptionOneof extends MenuOptionBase
 	}//---------------------------------------------------;
 	
 	// --
-	override function updateElements() 
+	override function initElements() 
 	{
-		super.updateElements();
+		super.initElements();
 		
 		// The left arrow has a constant X, so check it once
 		part2_start = label.fieldWidth + PADDING_FROM_LABEL;

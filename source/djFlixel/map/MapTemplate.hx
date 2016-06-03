@@ -418,6 +418,7 @@ class MapTemplate implements IFlxDestroyable
 	
 	// --	
 	// Check for offscreen entities and delete them.
+	// Usually called from a timer or in feedRoomData();
 	public function deleteOffScreen() 
 	{
 		// Check for offscreen entities and kill them.

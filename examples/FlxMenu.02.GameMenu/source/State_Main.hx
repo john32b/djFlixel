@@ -260,6 +260,14 @@ class State_Main extends FlxState
 		add(menu);
 		// Show the first page, it will be auto-focused.
 		menu.showPage("main");
+		
+		var curs= new FlxSprite();
+		curs.makeGraphic(4,4,0xFFFFFFFF);
+		FlxG.mouse.load(curs.pixels);
+		
+		
+		
 	}//---------------------------------------------------;
+	
 	
 }// --

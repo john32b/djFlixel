@@ -166,7 +166,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	public function reset():Void 
 	{
 		for (i in timers) {
-			i.destroy();
+			i.cancel();
 			i = null;
 		}
 		timers = [];
@@ -181,6 +181,17 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			members.splice(BUFFER_LEN, length);
 			length = BUFFER_LEN;
 		}
+	}//---------------------------------------------------;
+	
+	//--
+	public function pauseTimers(on:Bool = true)
+	{
+		if (on) {
+			for (i in timers) if (i != null) i.active = false;
+		}else {
+			for (i in timers) if (i != null) i.active = true;
+		}
+			
 	}//---------------------------------------------------;
 	
 	

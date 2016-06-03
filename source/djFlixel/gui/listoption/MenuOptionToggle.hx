@@ -33,9 +33,9 @@ class MenuOptionToggle extends MenuOptionBase
 	
 	// --
 	// Position the checkbox.
-	override function updateElements() 
+	override function initElements() 
 	{
-		super.updateElements();
+		super.initElements();
 		
 		box.y = 1 + (label.height / 2) - box.height / 2;
 		box.x = label.fieldWidth + PADDING_FROM_LABEL;

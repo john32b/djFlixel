@@ -76,6 +76,9 @@ class FlxMenu extends FlxGroup
 	// If true, then the start button will fire the selected option
 	public var flag_start_button_ok:Bool = false;
 	
+	// Allow mouse interaction with the menu options
+	public var flag_use_mouse:Bool = true;
+	
 	// ==  User callbacks
 	// -------------------==
 
@@ -111,8 +114,7 @@ class FlxMenu extends FlxGroup
 	var headerText:FlxText;
 	
 	// -- Animation helper
-	var animQ:ArrayExecSync<(Void->Void)->Void>;
-	
+	var animQ:ArrayExecSync < (Void->Void)->Void > ;
 	
 	//====================================================;
 
@@ -278,7 +280,7 @@ class FlxMenu extends FlxGroup
 	{
 		if (isAnimating) return;
 		
-		trace('Request to show page [$pageSID]');
+		// trace('Request to show page [$pageSID]');
 		
 		// Don't show the same page I am currently in
 		if (history[history.length - 1] == pageSID) {
@@ -487,13 +489,14 @@ class FlxMenu extends FlxGroup
 		// -----
 		
 		// Creating the new page
-		trace('Info: [${P.SID}] does not exist in the pool, creating...');
+		// trace('Info: [${P.SID}] does not exist in the pool, creating...');
 		// #Style
 		var m = new VListMenu(x, y, 
 			P.custom.width != null ? P.custom.width : width,
 			P.custom.slots != null ? P.custom.slots : slotsTotal);
 			
 			m.flag_InitViewAfterDataSet = false;
+			m.flag_use_mouse = flag_use_mouse;
 			m.styleList = styleList;
 			m.styleOption = styleOption;
 			m.styleBase = styleBase;
@@ -603,8 +606,8 @@ class FlxMenu extends FlxGroup
 		// If the page needs the cursor to always point to a specific option:
 		// This gets priority
 		if (currentPage.custom.cursorStart != null) {
-			trace('Cursor, custom start');
-			r1 = currentMenu.getOptionIndexWithCrit("SID", currentPage.custom.cursorStart);
+			// trace('Cursor, custom start');
+			r1 = currentMenu.getOptionIndexWithField("SID", currentPage.custom.cursorStart);
 			__sub_SetCursToPos(r1);
 			return;
 		}
@@ -612,7 +615,7 @@ class FlxMenu extends FlxGroup
 		// If the cursor needs to go back to where it was
 		if (flag_remember_cursor_position && currentPage.custom._cursorLastUID != null) {
 			// trace('Cursor, get last position');
-			r1 = currentMenu.getOptionIndexWithCrit("UID", currentPage.custom._cursorLastUID);
+			r1 = currentMenu.getOptionIndexWithField("UID", currentPage.custom._cursorLastUID);
 			__sub_SetCursToPos(r1);
 		}else {
 			// trace('Cursor, from the top');
