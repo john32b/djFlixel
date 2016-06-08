@@ -637,7 +637,6 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		}
 		
 		r_el.y = y + (ySlot * elementHeight);
-		r_el.slotIndex = ySlot;
 			
 		// Note: At this point the alpha could be anything because of recycle
 		// Set the desired alpha after getting this.

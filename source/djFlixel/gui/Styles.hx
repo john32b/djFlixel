@@ -86,6 +86,7 @@ import flixel.text.FlxText;
 		// Custom embedded font, null for flixel default
 		var font:String; 
 		var fontSize:Int;
+		var alignment:String;
 		var color_default:Int;
 		var color_focused:Int;
 		var color_accent:Int;
@@ -128,6 +129,7 @@ class Styles
 	public static var default_OptionStyle:OptionStyle = {
 		font:null,
 		fontSize:8,
+		alignment:"left",
 		color_default:Palette_DB32.COL_21,
 		color_focused:Palette_DB32.COL_09,
 		color_accent:Palette_DB32.COL_06,
@@ -147,6 +149,7 @@ class Styles
 	{
 		t.size = style.fontSize;
 		t.wordWrap = false;
+		t.alignment = style.alignment;
 		if (style.font != null) 
 			t.font = style.font;
 		if (style.useBorder) {

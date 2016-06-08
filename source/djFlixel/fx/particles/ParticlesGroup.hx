@@ -124,8 +124,10 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		p.animation.frameIndex = frame;
 		p.scale.set(scale, scale);
 		var timer:FlxTimer = new FlxTimer();
+		timers.push(timer);
 		timer.start(Reg.JSON._popup.timer1, function(_) {
 			p.velocity.set(0, 0);
+			timers.remove(timer);
 			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); p.scale.set(1, 1); } );
 		});
 	}//---------------------------------------------------;
