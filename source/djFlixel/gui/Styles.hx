@@ -69,14 +69,14 @@ import flixel.text.FlxText;
 		 // How many pixels to the right to animate the highlighted element
 		 var focus_nudge:Int;
 		 // If set then a cursor will be created as an FlxText
-		 var cursorSymbol:String; 
-		 
-		 // TODO: It doesn't work.
-		 // TODO: parameterize the sprite and frame etc
-		 // var cursorSprite:Bool;
+		 var cursorSymbol:String;  /// delete ?
+		 // Text size if cursor is enabled
+		 var cursorSize:Int; /// delete ?
 		 
 	 }// :: -- ::
  
+	 
+	 
 //====================================================;
 // Visual parameters for a <MenuOptionBase>
 //====================================================;
@@ -97,6 +97,7 @@ import flixel.text.FlxText;
 	}// :: -- ::
 	 
 	
+
 //====================================================;
 // Various MenuStyle Helpers
 //====================================================;
@@ -110,7 +111,8 @@ class Styles
 	public static var default_ListStyle:VListStyle = {
 		focus_nudge:5,
 		scrollPad:1,
-		cursorSymbol:">"
+		cursorSymbol:">", 
+		cursorSize:16
 	}; // --
 		
 	public static var default_BaseStyle:VBaseStyle = {
@@ -145,7 +147,7 @@ class Styles
 	//====================================================;
 
 	// Convert a text objet style to this style
-	public static function styleOptionText(t:FlxText,style:OptionStyle)
+	public static function styleOptionText(t:FlxText, style:OptionStyle)
 	{
 		t.size = style.fontSize;
 		t.wordWrap = false;

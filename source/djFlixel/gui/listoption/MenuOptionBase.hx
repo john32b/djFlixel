@@ -34,10 +34,6 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// Pointer to the parent menu
 	var parent:VListMenu;
 	
-	// The option menu is separated into 2 parts, the label and the operational.
-	// part2length is how long the second part should be, in pixels.
-	// var part2Length:Float; // <--- Unused
-	
 	// This is part 1, the label
 	var label:FlxText;
 
