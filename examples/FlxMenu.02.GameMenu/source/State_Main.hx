@@ -76,21 +76,10 @@ class State_Main extends FlxState
 		// The new game is going to be a simple link button
 		p.link("New game", "newgame", "Start a new game!");
 		
-		// NEW ::
-		//  Conditionally enabled options. This option is enabled only 
-		//  if the conditional function returns true. 
 		
-		// NOTES : Currently this is checked only once,
-		//         But it suits our needs, because when the state is re-created,
-		//         this is going to be checked and autoset accordingly.
-		
-		// NOTE 2: I am still thinking whether this should be hidden, disabled
-		//         or unselectanble. For now it's unselectable.. Perhaps customize with a parameter?
-		p.add("Resume", { type:"link", sid:"resume", desc:"Resume from where you left off",
-						  conditional:function() { 
-							return HAS_SAVE_DATA; 
-						} 
-		});
+		// VER 0.3. Removed conditionals from FlxMenu.
+		// 			I can still have conditionals, but are going to be hand-checked.
+		p.add("Resume", { type:"link", sid:"resume", desc:"Resume from where you left off" });
 		
 		// NEW ::
 		// If a link starts with a "@", it will call the menu page with 
@@ -247,27 +236,27 @@ class State_Main extends FlxState
 							// -- These will fire from the save game simulation menu:
 							case "sg_yes":
 								HAS_SAVE_DATA = true;
-								FlxG.resetState();
+								menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
+								menu.goHome();
 								
 							case "sg_no":
 								HAS_SAVE_DATA = false;
-								FlxG.resetState();
+								menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
+								menu.goHome();
 								
 					}
 			}//- end switch(type);
 		};//--end function
 		
 		add(menu);
+		
 		// Show the first page, it will be auto-focused.
 		menu.showPage("main");
 		
-		var curs= new FlxSprite();
-		curs.makeGraphic(4,4,0xFFFFFFFF);
-		FlxG.mouse.load(curs.pixels);
-		
-		
+		// -- Check for any conditional options, BEFORE opening the page
+		// You can call it everywhere you like
+		menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
 		
 	}//---------------------------------------------------;
-	
 	
 }// --

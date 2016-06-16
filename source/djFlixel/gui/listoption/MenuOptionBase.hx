@@ -26,13 +26,16 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	public var opt(default, null):OptionData;
 	
 	// Pointer to a color style
-	var style:OptionStyle;
+	// Parent sets this
+	public var style:OptionStyle;
 	
 	// Whether or not this optionelement is keyboard focused right now
 	public var isFocused(default, null):Bool;
-	
-	// Pointer to the parent menu
-	var parent:VListMenu;
+
+	// -- Set by parent, fire input events.
+	//    The ID is handled by parent.
+	public var callbacks:String->Void;
+	function cb(a:String) { if (callbacks != null) callbacks(a); }	
 	
 	// This is part 1, the label
 	var label:FlxText;
@@ -46,7 +49,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	 * @param	Width Needs to fit inside this target Width, it's the parent list width
 	 * @param	Style A pointer to a custom coloring style
 	 */
-	public function new(P:VListMenu)
+	public function new(_style:OptionStyle)
 	{
 		super();
 		
@@ -56,10 +59,10 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		// It WILL report bad values. Use parent.width instead
 		
 		// - Init
-		parent = P;
-		style = P.styleOption;
 		isFocused = false;
+		style = _style;
 		
+		// - All options have a label
 		label = new FlxText();
 		Styles.styleOptionText(label, style);
 		add(label);
@@ -74,13 +77,10 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	public function setData(OPT:OptionData) 
 	{
 		opt = OPT;
-		
 		// Updates the data portion
 		initElements();
-		
 		// Check and set the visual state (disabled,default)
 		updateState();
-		
 	}//---------------------------------------------------;
 	// --
 	public function isSame(OPT:OptionData)
@@ -97,10 +97,11 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	{			
 		label.fieldWidth = 0; // Auto width
 		label.text = opt.label;
-
-		if (label.fieldWidth > parent.width) {
-			label.fieldWidth = parent.width;
-		}
+	
+		// VERSION: 0.3 removed:
+		//if (label.fieldWidth > parent.width) {
+		//	label.fieldWidth = parent.width;
+		// }
 	
 	}//---------------------------------------------------;
 	// --
@@ -108,7 +109,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	public function sendInput(inputName:String) 
 	{
 		if (opt.disabled) {
-			parent.callback_option("optInvalid");
+			cb("optInvalid");
 		}else {
 			handleInput(inputName);
 		}
@@ -183,7 +184,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// --
 	public inline function getOptionHeight():Int
 	{
-		return style.fontSize;
+		return Std.int(label.height);
 	}//---------------------------------------------------;
 	
 }// --

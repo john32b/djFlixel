@@ -19,7 +19,7 @@ class SaveSlotGfx extends FlxSpriteGroup implements IListOption<SaveSlotData>
 	
 	var data:SaveSlotData;
 	
-	public var isFocused:Bool;
+	public var isFocused(default, null):Bool;
 	
 	public var callbacks:String->Void = null;
 
@@ -81,7 +81,7 @@ class SaveSlotGfx extends FlxSpriteGroup implements IListOption<SaveSlotData>
 	// -
 	public function isSame(data:SaveSlotData):Bool
 	{
-		return this.data.slot == data.slot;
+		return this.data == data;
 	}//---------------------------------------------------;
 	
 	// -- 

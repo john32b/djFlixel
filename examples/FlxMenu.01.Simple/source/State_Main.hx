@@ -111,10 +111,8 @@ class State_Main extends FlxState
 		add(menu);
 		// And just tell it to show the page you just created
 		menu.showPage("main");
-		// And give it focus, so that it is controllable
-		menu.focus();
-		// ^ or you could just do:
-		// menu.showPage("main", true);
+		
+		// Note: The menu is autofocused when calling showPage(..);
 		
 		// That's it!
 		// FlxMenu is responsible for the controls, it uses the Controls.hx Class

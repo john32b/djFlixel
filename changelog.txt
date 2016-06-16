@@ -4,6 +4,17 @@ DJFLIXEL CHANGE LOG
 
 
 
+
+# 06-2016, v0.3
+============================================================
+. FlxMenu.option_updateData(...); Will update the data of an option on the fly.
+. FlxMenu, BUGFIX, pageOn callback now reports at the correct time
+. Improved VListBase, VListMenu
+. Added VListNav, which is a navigatable vertical list with custom elements
+. Removed Conditionals from VListMenu
+
+
+
 # 22-05-2016, v. 0.2.4
 ============================================================
 

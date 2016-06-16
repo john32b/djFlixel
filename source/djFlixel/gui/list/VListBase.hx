@@ -86,10 +86,10 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	//			  -- Useful in multiple child types
 	//            -- USE in short lists, BAD FOR LONG LISTS !
 	
-	var pooling_mode:String = null;
+	var pooling_mode:String;
 	// It is quicker to read BOOLS than compare STRINGS, so I have those:
-	var flag_pool_recycle:Bool = true;
-	var flag_pool_reuse:Bool = false;
+	var flag_pool_recycle:Bool;
+	var flag_pool_reuse:Bool;
 	
 	var _pool:Array<T> = null;
 	var _pool_length:Int;
@@ -101,7 +101,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	// -- Elements ::
 	// --
 	var elementSlots:Array<T>;	// As the elements appear on the menu
-	var elementHeight:Int; 		// All the elements should share a same height
+	var elementHeight:Int; 		// INCLUDES PADDING !!
 
 	
 	// -- Data ::
@@ -137,17 +137,15 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	 * @param	WIDTH Set to 0 to Fill Screen Width with some padding
 	 * @param	SlotsTotal How many slots to show on the screen.
 	 */
-	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int, ?SlotsTotal:Int)
+	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, SlotsTotal:Int = 0)
 	{
 		super();
 		x = X; y = Y; width = WIDTH;
 		_elementClass = ObjClass;
 		
-		if (SlotsTotal != null) {
-			_slotsTotal = SlotsTotal;
-			if (_slotsTotal == 0) _slotsTotal = DEF_SLOTS;	// Safeguard
-		}else{
-			trace("Warning: No slots set. Setting to default", _slotsTotal);
+		_slotsTotal = SlotsTotal;
+		if (_slotsTotal == 0) {
+			trace("Info: Setting default slots to ", DEF_SLOTS);
 			_slotsTotal = DEF_SLOTS;
 		}
 		
@@ -155,9 +153,6 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		r_el = null;
 		elementHeight = -1;	// Set later
 		elementSlots = new Array<T>();
-		
-		//_pool_recycle = null;
-		//_pool_reuse = null;
 		
 		isScrolling = false;
 		isFocused = false;
@@ -167,6 +162,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		_scrollOffset = -1; // -1 allows it to be initialized because it's going to be checked if 0
 				
 		allTweens = [];
+		pooling_mode = null;
 	}//---------------------------------------------------;
 	
 	
@@ -175,29 +171,31 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	public function setDataSource(arr:Array<K>)
 	{
 		// - Some checks for safeguarding
-				
 		if (arr == null) {
 			trace("Error: Array is null"); return;
 		}
 		
-		clear();
+		_data = arr;
+		_data_length = _data.length;
+		// trace('Info: Added data source with [$_data_length] number of elements');
+		
+		// Ready this to accept new data
+		clearTweens();
 		
 		// Get the default style if it's not set already.
 		if (styleBase == null) {
 			styleBase = Styles.default_BaseStyle;
 		}
 		
-		// Check for auto width
-		if (width == 0) {
-			width = Std.int(FlxG.width - (x * 2));
-			if (width < 32) width = Std.int(FlxG.width - x);
-		}
+		// Removed Width init
+		// --
 		
 		// Get Child Height if not already
 		// Also :: Set the starting positions of all the slots ::
 		if (elementHeight < 0) {
 			r_el = factory_getElement(0);
 			elementHeight = r_el.getOptionHeight() + styleBase.element_padding;
+			r_el.destroy();
 			height = _slotsTotal * elementHeight;
 			
 			// -- Get the starting positions of the slots
@@ -210,10 +208,6 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		
 		if (pooling_mode == null) 
 			setPoolingMode(DEF_POOL_MODE);
-		
-		_data = arr;
-		_data_length = _data.length;
-		trace('Info: Added data source with [$_data_length] number of elements');
 
 		// It's going to be called upon the first showpage
 		if (flag_InitViewAfterDataSet) {
@@ -222,12 +216,6 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
-	// --
-	// Clear the entiry object, ready to accept new data.
-	function clear()
-	{
-		
-	}//---------------------------------------------------;
 	
 	// -- Helper
 	function clearTweens()
@@ -242,13 +230,8 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	override public function destroy():Void 
 	{
 		super.destroy();
-		
+	
 		clearTweens();
-		
-		if (animTimer != null) {
-			animTimer.cancel();
-			animTimer = null;
-		}
 		
 		_data = null;
 		elementSlots = null;
@@ -256,7 +239,13 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		styleBase = null;
 		elementYPositions = null;
 		
+		if (animTimer != null) {
+			animTimer.cancel();
+			animTimer = null;
+		}
+				
 		if (_pool != null) { for (i in _pool) i.destroy(); _pool = null; }
+		
 	}//---------------------------------------------------;
 	
 	
@@ -281,7 +270,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			while (counter < _slotsTotal)
 			{
 				// Make sure the tween starts from a valid pos
-				if(counter==0) {
+				if (counter == 0) {
 				 allTweens.push(FlxTween.tween(elementSlots[counter], 
 					{ alpha:0, y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
 				} else {
@@ -493,7 +482,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		if (ind > 0 && ind + _slotsTotal > _data_length) {
 			ind = _data_length - _slotsTotal;
 			if (ind < 0) ind = 0;
-			trace('Debug: Generated index out of bounds, setting to [$ind]');
+			// trace('Debug: Generated index out of bounds, setting to [$ind]');
 		}
 		
 		_scrollOffset = ind;
@@ -506,6 +495,17 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 				// trace("Info: No more data to fill into slots");
 				break;
 			}
+		}
+		
+		// -- This is the first time the autowidth is going to be calculated
+		if (width == 0)
+		{
+			var maxw:Float = 0;
+			for (i in elementSlots) {
+				if (i != null && i.width > maxw) maxw = i.width;
+			}
+			width = cast maxw;
+			if (width == 0) { trace("Error: Autowidth was 0 !"); width = 42; }	
 		}
 		
 	}//---------------------------------------------------;
@@ -611,8 +611,8 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 				pooling_mode = "off";
 		}
 		
-		trace('Info: Setting POOL mode to [$val]');
-		trace('Info: POOL MAX SIZE [$_pool_max_size]');
+		//trace('Info: Setting POOL mode to [$val]');
+		//trace('Info: POOL MAX SIZE [$_pool_max_size]');
 		
 		// -- Initialie the pool
 		
@@ -692,7 +692,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			//trace('Pool PUT - OVERFLOW, destroying first element. New pool size = $_pool_length');
 		}
 		
-		trace('Pool PUT , New pool size = $_pool_length');
+		// trace('Pool PUT , New pool size = $_pool_length');
 	}//---------------------------------------------------;
 
 	

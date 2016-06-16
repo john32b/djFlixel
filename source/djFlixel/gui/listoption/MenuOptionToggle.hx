@@ -2,6 +2,7 @@ package djFlixel.gui.listoption;
 
 import djFlixel.gfx.GfxTool;
 import djFlixel.gfx.Palette_DB32;
+import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.OptionData;
 import flixel.FlxSprite;
@@ -15,12 +16,13 @@ class MenuOptionToggle extends MenuOptionBase
 	var frameStart:Int;
 	
 	//---------------------------------------------------;
-	public function new(P:VListMenu) 
+	public function new(_style:OptionStyle)
 	{
-		super(P);
+		super(_style);
+		
 		box = GfxTool.getSpriteFrame(MenuOptionBase.GFX_ICONS, 6, 16, 16);
 		// Depending on the font size, set the small or big box.
-		if (parent.styleOption.fontSize < 12) {
+		if (style.fontSize < 12) {
 			box.setSize(8, 8);
 			frameStart = 6;
 		}else {
@@ -28,15 +30,16 @@ class MenuOptionToggle extends MenuOptionBase
 			frameStart = 8;
 		}
 		
-		add(box);		
+		add(box);	
 	}//---------------------------------------------------;
+	
 	
 	// --
 	// Position the checkbox.
 	override function initElements() 
 	{
 		super.initElements();
-		
+				
 		box.y = 1 + (label.height / 2) - box.height / 2;
 		box.x = label.fieldWidth + PADDING_FROM_LABEL;
 		
@@ -51,7 +54,7 @@ class MenuOptionToggle extends MenuOptionBase
 			case "fire":
 				opt.data.current = !opt.data.current;
 				updateOptionData();
-				parent.callback_option("optChange");
+				cb("optChange");
 		}
 	}//---------------------------------------------------;
 	

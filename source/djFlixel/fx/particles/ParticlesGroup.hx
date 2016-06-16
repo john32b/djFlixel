@@ -55,8 +55,8 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			add(p);
 		}
 
-		trace("Created particlegroup +++");
-		trace("Length = ", length);
+		// trace("Created particlegroup +++");
+		// trace("Length = ", length);
 		
 		timers = [];
 		

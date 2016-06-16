@@ -17,13 +17,13 @@ class MenuOptionSlider extends MenuOptionOneof
 				if (Std.int(opt.data.current) > Std.int(opt.data.pool[0])) {
 					opt.data.current--;
 					updateOptionData();
-					parent.callback_option("optChange");
+					cb("optChange");
 				}
 			case "right":
 				if (Std.int(opt.data.current) < Std.int(opt.data.pool[1])) {
 					opt.data.current++;
 					updateOptionData();
-					parent.callback_option("optChange");
+					cb("optChange");
 				}		
 		}
 	}//---------------------------------------------------;

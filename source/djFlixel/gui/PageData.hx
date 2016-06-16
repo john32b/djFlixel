@@ -30,8 +30,6 @@ class PageData
 	// width			 Int, Custom page width
 	// slots	 		 Int, How many slots this page should have for the screen representation
 	
-	// DEPRECATED: divider Int, The percent of the total Width that the divider will go to
-	
 	// styleOption		Object, custom styleOption 
 	// styleList		Object, custom styleList
 	// styleBase		Object, custom styleBase
@@ -47,7 +45,6 @@ class PageData
 	// -----------------------------------------------
 	// 
 	// _cursorLastPos   Int, Store the latest cursor position if it's needed later
-	// _condIndexes	    Array<Int> store the indexes of the conditionals
 	
 	
 	//====================================================;
@@ -88,7 +85,6 @@ class PageData
 	 * 		desc: String,	Description
 	 * 		pool: Dynamic, Data associated with the controller
 	 * 		current: Dynamic, Current value of the controller ! Warning: Unsanitized
-	 * 		conditional: Bool->Void that if true will enable this option
 	 * 		confirmation: String, Question to present if a confirmation check is required
 	 * 
 	 * @return The produced OptionData

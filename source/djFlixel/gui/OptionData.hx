@@ -39,6 +39,7 @@ class OptionData
 	public var type:String;
 	
 	// Hold all the internal data
+	// Also can put custom user data in this object
 	public var data:Dynamic;
 	
 	//====================================================;
@@ -50,41 +51,47 @@ class OptionData
 	 * 
 	 * 					current: Depending on type
 	 * 					desc: Description
+	 * 					type: starting with 
+	 * 							#, popup confirmation
+	 * 							!, fullpage confirmation
+	 * 							@, goto target page
 	 * 					pool: Depending on type
-	 * 					confirmation: String, Question
-	 * 					conditional: Void->Bool, Must check this to be enabled		
+	 * 					conf_question: String, Question, optional
+	 * 					conf_options:  Array<String>, instead of YES NO
+	 * 
 	 */		
 	public function new(?label:String, ?params:Dynamic)
 	{
-		if (label != null) this.label = label;
-		
 		// Info: Actionscript INT MaxSize = 2147483647;
 		UID = UID_GENERATOR++;
-		
-		data = { };
-		
+		data = { };		
+		this.label = label;
+		setNewParameters(params);
+	}//---------------------------------------------------;
+	
+	// --
+	// Set and initialize new data
+	public function setNewParameters(?params:Dynamic)
+	{
 		if (params == null) return;
 		
-		// Optional Parameters
-		if (params != null)
 		for (f in Reflect.fields(params)) {
 			switch(f) {
 				// Those fields apply to the object
 				case "sid": SID = Reflect.field(params, f);
+				case "label": label = Reflect.field(params, f);
 				case "type": type = Reflect.field(params, f);
 				case "desc": description = Reflect.field(params, f);
 				case "selectable": selectable = Reflect.field(params, f);
 				case "disabled": disabled = Reflect.field(params, f);
-				
-				// Map all other fields to the data var
+				// Map all other custom fields to the data object.
 				default: Reflect.setProperty(data, f, Reflect.field(params, f));
 			}
 		}
 		
 		initData();
-		
 	}//---------------------------------------------------;
-
+	
 	// --
 	public function destroy()
 	{
@@ -94,20 +101,29 @@ class OptionData
 	}//---------------------------------------------------;
 	
 	// --
-	// TODO: Stupid name, change it.
-	// Call this after setting data
-	public function initData()
+	// Call this after setting data to initialize it
+	 function initData()
 	{
-		// Some Safeguards --
-		#if debug
-		if (type == null) {
-			type == "link";
-			label = "(er)" + label;
-			trace("Error: Forgot to set a type");
-		} 
-		#end
+		// -- Some Safeguards
+		#if (debug) 
+			if (type == null) {
+				type == "label";
+				label = "(null)" + label;
+				trace("Error: Forgot to set a type",this);
+			}
+			if ((type != "label") && (SID == null || SID.length == 0)) {
+				// It should be filled with something.
+				trace("Error: SID is NULL",this);
+				SID = "null";
+			}
+			if (label == null) {
+				label = "(null)";
+			}
+		#end // --
+			
 		
-		// Initialize the types 
+		// Initialize the types
+		// --
 		switch(type) {
 			
 		case "label": // ------------------------------ label
@@ -139,45 +155,48 @@ class OptionData
 			}
 			#end
 			if (data.current == null)
-				data.current = data.pool[0];
-				
+				data.current = data.pool[0];	
 				
 		case "link":  // ----------------------------- link
-			#if debug
-			if (SID == null || SID.length == 0) {
-				// It should be filled with something.
-				trace("Error: SID is NULL");
-				SID = "null";
-			}
-			#end
 			
-			if (SID.charAt(0) == "!") // Confirm before calling
+			if (SID.charAt(0) == "#") // Confirm before calling, POPUP STYLE
 			{
 				data.fn = "call";
-				data.link = SID.substring(1);
-				data.confirm = true;
-				
-				if (data.confirmation == null) {
-					data.confirmation = label + ", Are you sure?";
-				}
-				
-			}else
-			if (SID.charAt(0) == "@") 
+				SID = SID.substring(1);
+				data.conf_active = true;
+				data.conf_style = "popup";
+				// If a question is missing, it won't be presented
+				// data.conf_question, defaults are at FLXMENU
+				// data.conf_options , defaults are at FLXMENU
+			}
+			else if (SID.charAt(0) == "!")
+			{
+				data.fn = "call";
+				SID = SID.substring(1);
+				data.conf_active = true;
+				data.conf_style = "full";
+				if (data.conf_options == null)
+					data.conf_options = ["Yes", "No"];
+				if (data.conf_question == null)
+					data.conf_question = data.label + ", Are you sure?";
+			}
+			else if (SID.charAt(0) == "@") 
 			{
 				data.fn = "page";
-				data.link = SID.substring(1);
-			}else 
-			{
+				SID = SID.substring(1);
+			}
+			else {
 				data.fn = "call";
-				data.link = SID;
 			}
 			
-		default:  // ----------------------------- default
+		default:  // If not null but something else
 			trace('Error: Invalid type ($type) for MenuOptionData');
 		}
 		
 	}//---------------------------------------------------;
 
+	
+	
 	// --
 	public function toString():String
 	{

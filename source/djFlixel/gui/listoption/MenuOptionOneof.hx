@@ -25,9 +25,9 @@ class MenuOptionOneof extends MenuOptionBase
 	var part2_start:Float = 0;
 	
 	//---------------------------------------------------;
-	public function new(P:VListMenu) 
+	public function new(_style:OptionStyle)
 	{
-		super(P);
+		super(_style);
 		
 		label2 = new FlxText();
 		Styles.styleOptionText(label2, style);
@@ -124,14 +124,14 @@ class MenuOptionOneof extends MenuOptionBase
 				if (opt.data.current < opt.data.pool.length - 1) {
 					opt.data.current ++;
 					updateOptionData();
-					parent.callback_option("optChange");
+					cb("optChange");
 				};
 				
 			case "left":
 				if (opt.data.current > 0) {
 					opt.data.current--;
 					updateOptionData();
-					parent.callback_option("optChange");
+					cb("optChange");
 				}
 		}
 	}//---------------------------------------------------;

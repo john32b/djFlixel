@@ -17,18 +17,26 @@ import flixel.text.FlxText;
 class State_Main extends FlxState
 {
 	var menu:VListNav<SaveSlotGfx,SaveSlotData>;
+	var savesData:Array<SaveSlotData>;
+	var savesData2:Array<SaveSlotData>;
 	// --
 	override public function create():Void
 	{
 		super.create();
 
 		// Create some test data
-		var savesData:Array<SaveSlotData> = [];
+		savesData = [];
+		
 		var datalen:Int = Reg.JSON.menu.testDataLen;
 		for (i in 0...datalen) {
 			savesData.push(new SaveSlotData(i));
 		}
-			
+		
+		savesData2 = [];
+		for (i in 0...datalen) {
+			savesData2.push(new SaveSlotData(i + 100));
+		}
+
 		var stars:StarfieldSimple = new StarfieldSimple();
 			add(stars);
 			
@@ -38,6 +46,8 @@ class State_Main extends FlxState
 		menu.onScreen();
 		add(menu);
 	
+		
+		
 	
 	}//---------------------------------------------------;
 	
@@ -52,6 +62,10 @@ class State_Main extends FlxState
 		if (FlxG.keys.justPressed.L)
 		{
 			if (menu.isFocused) menu.unfocus(); else menu.focus();
+		}
+		else if (FlxG.keys.justPressed.P)
+		{
+			menu.setDataSource(savesData2);
 		}
 	}//---------------------------------------------------;
 	

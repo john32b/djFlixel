@@ -12,7 +12,7 @@ interface IListOption<T>
 	public function sendInput(inputName:Dynamic):Void;
 	public function focus():Void;
 	public function unfocus():Void;
-	public var isFocused:Bool;
+	public var isFocused(default, null):Bool;
 	// This gets reported to the list as the visual height of the element
 	public function getOptionHeight():Int;
 	// Returns true if passed data is the same as the data set to this object

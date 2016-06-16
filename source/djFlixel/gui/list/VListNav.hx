@@ -21,7 +21,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// Current highlighted slot index
 	var _index_slot:Int;
 	// Current highlighted element pointer
-	var currentElement:T;
+	public var currentElement(default, null):T;
+	
+	// What is says, I need it when I need the list to be focused visually, but not interactable
+	var inputAllowed:Bool;
 	
 	// #user set
 	public var callbacks:String->K->Void = null;
@@ -29,10 +32,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	// -- STYLINGS
 	// --
-	// How far from the edges to trigger a pad
-	var pointerPadding:Int;
+	// How far from the edges to trigger a pad. Sanitized styleList.scrollpad
+	var scrollPadding:Int;
 	// General menu parameters
-	public var styleList:VListStyle;
+	public var styleList(default,set):VListStyle;
 	
 	// -- Sprite Cursor
 	// --
@@ -60,34 +63,29 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	//---------------------------------------------------;
 	
-	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int, ?SlotsTotal:Int) 
+	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
 	{
 		super(ObjClass, X, Y, WIDTH, SlotsTotal);
 		setPoolingMode("reuse");
 		_index_data = -1;
 		_index_slot = -1;
 		currentElement = null;
-		pointerPadding = 0;
+		scrollPadding = 0;
+		inputAllowed = false;
 	}//---------------------------------------------------;	
 	
 	
 	override public function setDataSource(arr:Array<K>) 
 	{
 		if (arr == null) return;
-		if (_data != null) {
-			trace("Error: Re-set of data not supported.");   return;
-		}
-		
+
 		if (styleList == null) {
 			styleList = Styles.default_ListStyle;
 		}
 		
-		pointerPadding = styleList.scrollPad;
-		if (pointerPadding > Math.floor(_slotsTotal / 2)) {
-			pointerPadding = Math.floor(_slotsTotal / 2);
-		}
-		
-		super.setDataSource(arr);
+		// This will call the setViewIndex back to 0,
+		// which will reset the cursor back to top.
+		super.setDataSource(arr); 
 	}//---------------------------------------------------;
 	
 	
@@ -127,8 +125,8 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		var _scroll:Int;
 		
 		// Case it fits
-		_scroll = R - pointerPadding;
-		_index_slot = pointerPadding;
+		_scroll = R - scrollPadding;
+		_index_slot = scrollPadding;
 		_index_data = R;
 		
 		if (_scroll < 0) {
@@ -142,7 +140,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		// back to a safe view scroll
 		if (_scrollOffset < _scroll)
 		{
-			trace("Warning: Overflow at bottom. Fixing.");
+			// trace("Warning: Overflow at bottom. Fixing.");
 			var delta = _scroll - _scrollOffset;
 			_index_slot += delta;
 		}
@@ -187,19 +185,14 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 			
 		currentElement_Focus();
 		
-		if (hasCursor) {
-			cursor.alpha = 0;
-			cursor.visible = true;
-			allTweens.push(FlxTween.tween(cursor, { alpha:1 }, styleBase.element_scroll_time));
-			cursor_updatePos();
-		}
+		setInputFocus(true);
 		
 		if (flag_use_mouse) {
 			if (_camCheckOffset == null) {
 				_camCheckOffset = new SimpleCoords();
 				_camCheckOffset.x = -Std.int( (camera.x / camera.zoom) );
 				_camCheckOffset.y = -Std.int( (camera.y / camera.zoom) );
-				trace("Camera CheckOffset = ", _camCheckOffset);
+				// trace("Camera CheckOffset = ", _camCheckOffset);
 			}
 		}
 	}//---------------------------------------------------;
@@ -209,16 +202,47 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	{
 		if (!isFocused) return;
 			isFocused = false;
-			
+		
 		currentElement_Unfocus();
 		
-		if (hasCursor) {
+		setInputFocus(false);
+	}//---------------------------------------------------;
+	
+	// --
+	// Sets the input flag to on or off
+	// Also, adds or remove the cursor
+	public function setInputFocus(state:Bool)
+	{
+		
+		inputAllowed = state; 
+		
+		if (!hasCursor) return;
+		
+		if (inputAllowed)
+		{
+			cursor.alpha = 0;
+			cursor.visible = true;
+			allTweens.push(FlxTween.tween(cursor, { alpha:1 }, styleBase.element_scroll_time));
+			cursor_updatePos();
+			
+		}else {
 			cursor.visible = false;
 		}
 	}//---------------------------------------------------;
 	
-	// --
-	// -- Check Keys and move cursor
+	
+	
+	/**
+	 * Functionality to move the cursor within boundaries
+	 * taking into account a padding value
+	 * --
+	 * V1.0. Tested and works.
+	 *       . when the list is more than full
+	 * 		 . when the list is half full
+	 * 		 . when the list is exactly full
+	 * 
+	 * PRE: OptionPointer is not NULL
+	 */
 	function checkInput() 
 	{
 		switch(Controls.CURSOR_DIR()) {
@@ -232,14 +256,14 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 			// r_1 is now Delta, Amount to go up
 			r_1 = _index_data - r_1;
 			
-			if (_index_slot - r_1 >= pointerPadding) { // No view scroll is needed
+			if (_index_slot - r_1 >= scrollPadding) { // No view scroll is needed
 				_index_slot -= r_1;
 				_index_data -= r_1;
 				_dataIndexChanged();
 			}else
 			{
 				if (r_1 > 1) {
-					trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
+					// trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
 					setViewIndex(_index_data - r_1);
 					// callback_menu("tick");
 					return;
@@ -271,14 +295,14 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		// r_1 is now Delta, Amount to go down
 		r_1 = r_1 - _index_data;
 		
-		if (_index_slot + r_1 < _slotsTotal - pointerPadding) { // No view scroll is needed
+		if (_index_slot + r_1 < _slotsTotal - scrollPadding) { // No view scroll is needed
 			_index_slot += r_1;
 			_index_data += r_1;
 			_dataIndexChanged();
 		}else
 		{
 			if (r_1 > 1) {
-				trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
+				// trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
 				setViewIndex(_index_data + r_1);
 				// callback_menu("tick");
 				return;
@@ -363,6 +387,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	// --
 	// Request a mouse rollover
+	// ASSURED: newSlot exists.
 	function requestRollOver(newSlot:Int)
 	{
 		if (_index_slot == newSlot) return;
@@ -387,6 +412,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	
 	// --
+	// Override this to set the callback function
 	override function getNewElement(index:Int):T 
 	{
 		r_el = super.getNewElement(index);
@@ -431,25 +457,34 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 			remove(cursor); cursor.destroy();
 		}
 		
+		var elHeight:Int = Std.int(s.height); // Safeguard?
+		
 		hasCursor = true;
 		cursor = s;
 		cursor.scrollFactor.set(0, 0);
 		cursor.cameras = [camera];
+		cursor.setSize(1, 1);
+		cursor.centerOffsets();
 		add(cursor);
 
-		var elHeight:Int = Std.int(cursor.height);
+		
+		// BUG. elemenSlots[0] can be null 
 		if (elementSlots[0] != null) {
 			elHeight = elementSlots[0].getOptionHeight();
+		}else {
+			r_el = factory_getElement(0);
+			elHeight = r_el.getOptionHeight();
+			r_el.destroy();
 		}
-		
+	
 		// These values only make sense if the cursor is an FlxText
 		// If the cursor is a graphic, these won't work well
-		_cursor_y_offset = (elHeight - cursor.height) / 2;
-		_cursor_x_start = this.x - cursor.width;
-		_cursor_x_end = this.x + styleList.focus_nudge - (cursor.width * 0.85); // #BROKEN
+		_cursor_y_offset = elHeight / 2;
+		_cursor_x_start = this.x - (cursor.frameWidth / 2);
+		_cursor_x_end = this.x + styleList.focus_nudge - (cursor.frameWidth / 4);
 		_cursor_tween_time = styleBase.element_scroll_time * 1.25;
-		if (_offset != null) cursor.offset.set( _offset[0], _offset[1]);
 		
+		if (_offset != null) cursor.offset.set( cursor.offset.x + _offset[0], cursor.offset.y +_offset[1]);
 		
 		if (isFocused && _data.length > 0) {
 			cursor_updatePos();
@@ -491,6 +526,22 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		cursor.y = elementSlots[_index_slot].y + _cursor_y_offset;
 	}//---------------------------------------------------;
 	
+	
+	// --
+	// Set the style and sanitize the scrollPadding
+	function set_styleList(val:VListStyle):VListStyle
+	{
+		styleList = val;
+		if (styleList != null) {
+			scrollPadding = styleList.scrollPad;
+			if (scrollPadding > Math.floor(_slotsTotal / 2)) {
+				scrollPadding = Math.floor(_slotsTotal / 2);
+			}
+		}
+		return styleList;
+	}//---------------------------------------------------;
+	
+	
 	//====================================================;
 	// FLIXEL
 	//====================================================;
@@ -500,7 +551,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	{
 		super.update(elapsed);
 		
-		if (isFocused) 
+		if (inputAllowed) 
 		{
 			checkInput();
 			

@@ -68,11 +68,8 @@ import flixel.text.FlxText;
 		 var scrollPad:Int;
 		 // How many pixels to the right to animate the highlighted element
 		 var focus_nudge:Int;
-		 // If set then a cursor will be created as an FlxText
-		 var cursorSymbol:String;  /// delete ?
-		 // Text size if cursor is enabled
-		 var cursorSize:Int; /// delete ?
-		 
+		 // Apply a custom cursor offset [x,y]
+		 var cursor_offset:Array<Int>;
 	 }// :: -- ::
  
 	 
@@ -109,20 +106,19 @@ class Styles
 	// those can be overriden.
 	
 	public static var default_ListStyle:VListStyle = {
-		focus_nudge:5,
-		scrollPad:1,
-		cursorSymbol:">", 
-		cursorSize:16
+		focus_nudge : 5,
+		scrollPad : 1,
+		cursor_offset : null
 	}; // --
 		
 	public static var default_BaseStyle:VBaseStyle = {
 		element_scroll_time:0.18,
 		element_padding:2,
 		anim_time_between_elements:0,
-		anim_total_time: 0.7,
+		anim_total_time: 0.4,
 		anim_start_x:0,
 		anim_start_y:-12,
-		anim_end_x:32,
+		anim_end_x:16,
 		anim_end_y:2,
 		anim_tween_ease:"linear",
 		anim_style:"none"

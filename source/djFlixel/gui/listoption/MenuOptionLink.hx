@@ -1,5 +1,6 @@
 package djFlixel.gui.listoption;
 
+import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.list.VListMenu;
 import flixel.FlxG;
 import flixel.text.FlxText;
@@ -19,9 +20,9 @@ class MenuOptionLink extends MenuOptionBase
 	
 	//====================================================;
 	// --
-	public function new(P:VListMenu)
+	public function new(_style:OptionStyle)
 	{
-		super(P);
+		super(_style);
 		
 		deco = new FlxText(0, 0, 0);
 		Styles.styleOptionText(deco, style);
@@ -52,7 +53,7 @@ class MenuOptionLink extends MenuOptionBase
 	{
 		if (inputName == "fire")
 		{
-			parent.callback_option("optFire");
+			cb("optFire");
 		}
 	}//---------------------------------------------------;
 	// --
@@ -82,7 +83,7 @@ class MenuOptionLink extends MenuOptionBase
 	{
 		super.initElements();
 		
-		if (opt.data.fn == "call" || opt.SID == "@back")
+		if (opt.data.fn == "call" || opt.SID == "back")
 		{	
 			hasDeco = false;
 		}else if(opt.data.fn == "page")

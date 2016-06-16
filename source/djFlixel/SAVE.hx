@@ -41,7 +41,7 @@ class SAVE
 	// -- The FlashAPI needs a unique ID for the savegame
 	static var FLASH_SAVE_ID:String;	
 	// -- How many SAVESLOTS this game will use ( +1 settings slot which is permanent )
-	static inline var SAVE_SLOTS:Int = 1;
+	static var SAVE_SLOTS:Int = 1;
 	// -- Prefix for the slot fields inside the save.data object
 	static inline var PREFIX_SLOT:String = 'slot_';
 	
@@ -53,9 +53,10 @@ class SAVE
 	static var currentData:Dynamic;
 	//---------------------------------------------------;
 	// --
-	public static function init(saveName:String)
+	public static function init(saveName:String, maxUserSlots:Int = 1)
 	{
 		FLASH_SAVE_ID = "djflx" + saveName;
+		SAVE_SLOTS = maxUserSlots; if (SAVE_SLOTS > 9) SAVE_SLOTS = 9;
 		saveObj = new FlxSave();
 		saveObj.bind(FLASH_SAVE_ID);
 		setSlot(0);
@@ -82,16 +83,19 @@ class SAVE
 		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
 	}//---------------------------------------------------;
 	// --
+	// Save to the currently selected slot
 	public static function save(key:String, data:Dynamic)
 	{
 		Reflect.setField(currentData, key, data);
 	}//---------------------------------------------------;
 	// --
+	// Load from the currently selected slot
 	public static function load(key:String):Dynamic
 	{
 		return Reflect.getProperty(currentData, key);
 	}//---------------------------------------------------;
 	// --
+	// Check from the currently selected slot
 	public static function exists(key:String):Bool
 	{
 		return Reflect.hasField(currentData, key);
@@ -99,6 +103,7 @@ class SAVE
 	
 	// --
 	// Call this after a bulk save to save for sure?
+	// REQUIRED FOR NON FLASH TARGETS ! !
 	public static function flush():Void
 	{
 		saveObj.flush();
@@ -123,6 +128,5 @@ class SAVE
 	
 	// - savegame() -> call all game objects to save
 	// - loadgame() -> call all game objects to load??
-	
 	
 }// --
