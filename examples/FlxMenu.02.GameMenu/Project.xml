@@ -21,18 +21,19 @@
 	
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
-	
+	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
+
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" />
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="build/debug/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
+	<set name="BUILD_DIR" value="g:/build/debug/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
-
+	<set name="next"/>
 	<haxelib name="flixel"/>
 	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />
@@ -40,7 +41,6 @@
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
-	<haxedef name="openfl_next"/>
 	
 	<!-- EXTERNAL_LOAD:
 	<!-- If set, then some files will be loaded in real time 

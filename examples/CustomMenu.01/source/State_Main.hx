@@ -39,15 +39,12 @@ class State_Main extends FlxState
 
 		var stars:StarfieldSimple = new StarfieldSimple();
 			add(stars);
-			
+				
 		menu = new VListNav(SaveSlotGfx, 46, 46, 200, Reg.JSON.menu.slots);
 		menu.setDataSource(savesData);
-		menu.cursor_setSprite(new FlxText(0, 0, 0, Reg.JSON.menu.cursorText, 16));
-		menu.onScreen();
+		menu.cursor_setSprite(new FlxText(0, 0, 0, Reg.JSON.menu.cursorText, 16));		
 		add(menu);
-	
-		
-		
+		menu.onScreen();
 	
 	}//---------------------------------------------------;
 	

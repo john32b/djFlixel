@@ -68,7 +68,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// HACK: Specific for menuoption elements
 		//       why? becaust text.height are longer than they actually are
 		// Try to fix the padding between elements.
-		styleBase.element_padding = -Std.int(styleOption.fontSize * 0.4);
+		// styleBase.element_padding = -Std.int(styleOption.fontSize * 0.4);
 		
 		// NOTE V0.3: Conditionals are scrapped.
 		

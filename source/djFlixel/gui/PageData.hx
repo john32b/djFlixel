@@ -108,6 +108,12 @@ class PageData
 	}//---------------------------------------------------;
 
 	
+	public inline function label(label:String):OptionData
+	{
+		return add(label, { type:"label" } );
+	}//---------------------------------------------------;
+	
+	
 	/**
 	 * Quick way to add a back button
 	 */

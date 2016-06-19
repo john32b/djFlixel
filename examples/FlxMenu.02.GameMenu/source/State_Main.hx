@@ -116,7 +116,7 @@ class State_Main extends FlxState
 		// + Create a page that will enable or disable a simulated save game
 		//   for demonstrating the "resume game" conditional option
 		p = menu.newPage("rstate");
-		p.add("Test out the conditional resume option:", { type:"label" } );
+		p.label("Test out the conditional resume option : " );
 		p.link("- Save Exists", "sg_yes");
 		p.link("- Save Missing", "sg_no");
 		
@@ -236,12 +236,12 @@ class State_Main extends FlxState
 							// -- These will fire from the save game simulation menu:
 							case "sg_yes":
 								HAS_SAVE_DATA = true;
-								menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
+								menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 								menu.goHome();
 								
 							case "sg_no":
 								HAS_SAVE_DATA = false;
-								menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
+								menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 								menu.goHome();
 								
 					}
@@ -255,7 +255,7 @@ class State_Main extends FlxState
 		
 		// -- Check for any conditional options, BEFORE opening the page
 		// You can call it everywhere you like
-		menu.option_setEnabledState("main", "resume", HAS_SAVE_DATA);
+		menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 		
 	}//---------------------------------------------------;
 	

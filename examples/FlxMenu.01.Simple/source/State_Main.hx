@@ -50,7 +50,7 @@ class State_Main extends FlxState
 		//    check OptionData.hx for more info
 	
 		// A simple label, labels are unselectable by default.
-		p.add("Label", { type:"label" } );
+		p.label("Label");
 		// A link to another page of custom user function.
 		// Needs to have an SID ( string ID )
 		p.add("Option 1, Link", { type:"link", sid:"opt1" } );

@@ -13,12 +13,16 @@ package;
 
 import flixel.FlxG;
 import flixel.FlxObject;
+import flixel.effects.postprocess.PostProcess;
+import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxSave;
 import djFlixel.tool.DynAssets;
 import djFlixel.gapi.ApiEmpty;
 import djFlixel.SAVE;
 import djFlixel.Controls;
 import djFlixel.SND;
+import openfl.filters.BitmapFilter;
+import openfl.filters.BlurFilter;
 import openfl.events.KeyboardEvent;
 
 class Reg
@@ -79,8 +83,9 @@ class Reg
 		});
 		#end
 		
-		// -- Useful in some cases
-		// FlxG.log.redirectTraces = true;
+		#if (desktop)
+			initFilter();
+		#end
 		
 		// JSON data was loaded earlier over at Main.HX class
 		// Works with static objects as well.
@@ -111,6 +116,27 @@ class Reg
 		// Enable Saving
 		// SAVE.init("Game_Unique_Name");
 		
+		
+
+	}//---------------------------------------------------;
+	
+	
+	
+	static var screenFilter:BitmapFilter;
+	// Get params from JSON file and set the filter
+	static function initFilter()
+	{
+		var params = Reg.defParams(Reg.JSON.filter, { x:3.0, y:3.0, q:1 } );
+		trace(" - Adding Blur Shader -");
+		screenFilter = new BlurFilter(params.x, params.y, params.q);
+		FlxG.game.setFilters([screenFilter]);
+		// GLSL SHADERS :: UNUSED ::
+		// add some post processing FX
+		//var SHADER = new PostProcess("assets/shaders/blur.txt");
+		//SHADER.setUniform("diry", 1);
+		//SHADER.setUniform("dirx", 1);
+		//SHADER.setUniform("radius", 1);
+		//FlxG.addPostProcess(SHADER);
 	}//---------------------------------------------------;
 	
 	

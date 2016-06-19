@@ -77,7 +77,7 @@ class SAVE
 		if (Reflect.hasField(saveObj.data, '$PREFIX_SLOT$num') == false)
 		{
 			trace('Info: Creating Save Slot [$num]');
-			Reflect.setField(saveObj.data, '$PREFIX_SLOT$num', { } );
+			Reflect.setProperty(saveObj.data, '$PREFIX_SLOT$num', { } );
 		}
 		
 		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
@@ -121,7 +121,8 @@ class SAVE
 	// -- Delete a save slot entirely.
 	public static function deleteSlot(num:Int)
 	{
-		Reflect.setField(saveObj.data, '$PREFIX_SLOT$num', { } );
+		Reflect.setProperty(saveObj.data, '$PREFIX_SLOT$num', { } );
+		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
 	}//---------------------------------------------------;
 		
 	// -- GAME SPECIFIC LOGIC -- //

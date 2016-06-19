@@ -16,6 +16,10 @@ class DataTool
 	 */
 	public static function create2DArray<T>(width:Int, height:Int):Array<Array<T>>
 	{
+		#if cpp
+			throw "INCOMPATIBLE WITH CPP";
+		#end
+		
 		var r:Array<Array<T>> = [];
 		for (y in 0...height) {
 			r[y] = [];

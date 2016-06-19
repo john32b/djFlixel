@@ -67,7 +67,7 @@ class Reg
 	// and before any state is created.
 	public static function initOnce()
 	{
-		trace(" - Initializing REG");
+		trace(" - Initializing REG :");
 
 		// When an SWF is being played from a browser,
 		// The fullscreen switch must be done in the same call as the keyboard input
@@ -79,9 +79,6 @@ class Reg
 		});
 		#end
 		
-		// -- Useful in some cases
-		// FlxG.log.redirectTraces = true;
-		
 		// JSON data was loaded earlier over at Main.HX class
 		// Works with static objects as well.
 		applyParamsInto("reg", Reg);
@@ -90,21 +87,19 @@ class Reg
 		FlxG.signals.stateSwitched.add(onStateSwitch);
 		FlxG.signals.preGameReset.add(onPreGameReset);
 		FlxG.signals.postGameReset.add(onPostGameReset);
+		FlxG.mouse.useSystemCursor = true;
 		FlxG.sound.volume = VOLUME;
 		FlxG.fullscreen = FULLSCREEN;
-		FlxG.mouse.useSystemCursor = true;
+		FlxG.autoPause = false;
 		
-		#if debug
-			FlxG.autoPause = false;
-		#else
-			FlxG.autoPause = true;
-		#end
-
+		
 		// Init and load Sounds
+		trace(" - Initializing Sound");
 		SND.init();
 		SND.MUSIC_ENABLED = MUSIC;
 		loadSounds();
 		
+		trace(" - Initializing Controls");
 		// Init the controls
 		Controls.init();
 		

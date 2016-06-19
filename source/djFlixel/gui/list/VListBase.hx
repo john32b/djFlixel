@@ -29,11 +29,7 @@ import haxe.Constraints.Function;
  * 
  */
 
- 
-// Note: generic means that the compiler will create classes for each data 
-//       type required. Thus making it faster at the cost of compiled size.
-// Note: Commented out because it doesn't compile??
-// @:generic
+
 class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 {	
 	

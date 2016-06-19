@@ -170,11 +170,15 @@ class FlxMenu extends FlxGroup
 	 */
 	public function applyMenuStyleFromJSON(styleID:String)
 	{
-		var styleNode = Reflect.getProperty(Reg.JSON, styleID);		
-		Reg.applyFieldsInto(styleNode.option, styleOption);
-		Reg.applyFieldsInto(styleNode.list, styleList);
-		Reg.applyFieldsInto(styleNode.base, styleBase);
-		Reg.applyFieldsInto(styleNode.header, styleHeader);
+		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
+		if (styleNode == null) {
+			trace('Warning: Can\'t find style "$styleID" in the json file');
+			return;
+		}
+		Styles.applyStyleNodeTo(styleNode.option, styleOption);
+		Styles.applyStyleNodeTo(styleNode.list, styleList);
+		Styles.applyStyleNodeTo(styleNode.base, styleBase);
+		Styles.applyStyleNodeTo(styleNode.header, styleHeader);
 	}//---------------------------------------------------;
 	
 	// Get a style node from the JSON file, and set it to a Page
@@ -758,12 +762,14 @@ class FlxMenu extends FlxGroup
 				popupCloseFunction();
 				qcallback((o.SID == "yes"));
 				return;
-			}
+			}else
 			if (s == "back") {
 				popupCloseFunction();
 				_mcallback("back");
 				return;
-			}
+			}else
+			if (s == "start") return;	// no start button
+			
 			// pass through all others
 			_listCallbacks(s, o);
 		};

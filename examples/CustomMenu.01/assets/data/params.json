@@ -15,7 +15,24 @@
 		"slots" : 5,
 		"testDataLen" : 20,
 		"cursorText": "->>"
-		
+	},
+	
+	"FlxMenuStyle1" : {
+		"option": {
+			"fontSize" : 18,
+			"useBorder" : true,
+			"color_default" : "0xffffffff",
+			"color_focused" : "0xffbe2633",
+			"color_accent"  : "0xff31a2f2"
+		},
+		"base" : {
+			"anim_start_x" : -20,
+			"anim_end_x" : 10,
+			"anim_start_y" : 0,
+			"anim_end_y" : 0,
+			"anim_time_between_elements" : 0.07,
+			"anim_style" : "sequential"
+		}
 	}
 
 }

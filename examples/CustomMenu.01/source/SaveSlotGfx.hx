@@ -10,9 +10,9 @@ import flixel.text.FlxText;
 //--
 class SaveSlotGfx extends FlxSpriteGroup implements IListOption<SaveSlotData>
 {	
-	static var WIDTH:Int = 160;
-	static var HEIGHT:Int = 32;
-
+	inline static var WIDTH:Int = 160;
+	inline static var HEIGHT:Int = 32;
+	
 	var bg:FlxSprite;
 	var textLevel:FlxText;
 	var textSlot:FlxText;
@@ -73,7 +73,7 @@ class SaveSlotGfx extends FlxSpriteGroup implements IListOption<SaveSlotData>
 		bg.color = 0xFF22FF22;
 	}//---------------------------------------------------;
 	
-	public function getOptionHeight():Int
+	public inline function getOptionHeight():Int
 	{
 		return HEIGHT;
 	}//---------------------------------------------------;

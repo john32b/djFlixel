@@ -3,6 +3,7 @@ import djFlixel.Controls;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.effects.FlxFlicker;
+import flixel.util.FlxTimer;
 
 
 class Player extends FlxSprite
@@ -83,7 +84,12 @@ class Player extends FlxSprite
 	override public function hurt(Damage:Float):Void 
 	{
 		if (FlxFlicker.isFlickering(this)) return;
-		FlxFlicker.flicker(this);
+		
+		FlxFlicker.flicker(this, 0.4, 0.08);
+		setColorTransform(1, 1, 1, 1, 255, 255, 255, 0);
+		var t = new FlxTimer().start(0.20, function(t1:FlxTimer) {
+			setColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+		});
 	}//---------------------------------------------------;
 	
 }

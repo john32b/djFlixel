@@ -4,9 +4,11 @@ import flixel.FlxG;
 import flixel.system.FlxSound;
 
 /**
+ * Version 0.3
  * Responsible for loading and playing sounds.
  */
-#if (flash)
+
+#if (flash) 
 class SND
 {
 	static inline var PATH_SOUNDS:String = "assets/sounds/";
@@ -59,6 +61,57 @@ class SND
 		FILE_EXT_OGG,
 		#end
 		VOL_EFFECTS, false, true, true);
+	}//---------------------------------------------------;
+	
+	
+	/*
+	 *  --
+	 * Load sounds from the main JSON file automatically
+	 * JSON file example:
+	 * ---------------	
+	 * 		"soundFiles" : {
+	 *			"fx1"  : "fx1" , ==> fx1 is the handle for "assets/sounds/fx1.mp3" 
+	 *			"fx2"  : "fx2", ==> fx2 is the handle for "assets/sounds/fx2.mp3"
+	 * 
+	 * 		"soundGroups" : { "fx" : ["fx1","fx2"] }
+	 * 	
+	 * 		"soundVolumes" : { "fx1" : 0.6 ,"fx2":0.2 }
+	 * 
+	 * :: 
+	 * 
+	 *  If SoundVolume is set it's applied to the sound
+	 * 	Snd.play("fx1");	  :: Will play the sound
+	 * 	Snd.playGroup("fx");  :: Will play a random sound from the group
+	 * 
+	 * @param	JSON pointer to the JSON object to load from
+	 */
+	public static function loadFromJSON(JSON:Dynamic)
+	{
+		
+		if (JSON.soundGroups != null)
+		for (field in Reflect.fields(JSON.soundGroups)) {
+			var sounds:Array<String>;
+			sounds = Reflect.getProperty(JSON.soundGroups, field);
+			for (s in sounds) {
+				addGroup(s, field);	
+			}
+		}
+		 
+		var customVolume:Float;
+		
+		if (JSON.soundFiles != null)
+		for (field in Reflect.fields(JSON.soundFiles)) {
+			
+			// Look for custom volumes
+			if (JSON.soundVolumes != null && Reflect.hasField(JSON.soundVolumes, field)) {
+				customVolume = cast Reflect.field(JSON.soundVolumes, field);
+			}else {
+				customVolume = 1;
+			}
+			
+			as(Reflect.field(JSON.soundFiles, field), field, customVolume);
+		}
+		
 	}//---------------------------------------------------;
 	
 	// --
@@ -179,6 +232,9 @@ class SND
 	public static inline function playGroup(groupID:String)
 	{
 	}//---------------------------------------------------;
+	public static function loadFromJSON(JSON:Dynamic)
+	{
+	}	//---------------------------------------------------;
 	public static inline function destroy()
 	{
 	}//---------------------------------------------------;

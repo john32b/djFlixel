@@ -3,6 +3,7 @@ package djFlixel.gui;
 import djFlixel.gfx.Palette_DB32;
 import djFlixel.gui.Styles.VBaseStyle;
 import flixel.text.FlxText;
+import flixel.util.FlxColor;
 
 
 
@@ -90,7 +91,7 @@ import flixel.text.FlxText;
 		var color_disabled:Int;		// Note: Labels will not be of this color, but a diff one
 		var color_disabled_f:Int;	// Focused color for a disabled element
 		var useBorder:Bool;
-		var border_color:Int;	
+		var border_color:Int;
 	}// :: -- ::
 	 
 	
@@ -165,19 +166,44 @@ class Styles
 	// use these functions.
 	
 	// --
-	public static function newStyle_Base():VBaseStyle
+	public static function newStyle_Base(?styleNode:Dynamic):VBaseStyle
 	{
-		return Reflect.copy(default_BaseStyle);
+		return applyStyleNodeTo(styleNode, Reflect.copy(default_BaseStyle));
 	}//---------------------------------------------------;
 	// --
-	public static function newStyle_Option():OptionStyle
+	public static function newStyle_Option(?styleNode:Dynamic):OptionStyle
 	{
-		return Reflect.copy(default_OptionStyle);
+		return applyStyleNodeTo(styleNode, Reflect.copy(default_OptionStyle));
 	}//---------------------------------------------------;
 	// --
-	public static function newStyle_List():VListStyle
+	public static function newStyle_List(?styleNode:Dynamic):VListStyle
 	{
-		return Reflect.copy(default_ListStyle);
+		return applyStyleNodeTo(styleNode, Reflect.copy(default_ListStyle));
+	}//---------------------------------------------------;
+	
+	/**
+	 * Applies a Dynamic Object with styles to a style target
+	 * It will convert colors from "0xffffff" or "blue" to proper INTS
+	 * @param	node The object with the styles.
+	 * @param	target Must exist
+	 */
+	public static function applyStyleNodeTo(node:Dynamic, target:Dynamic):Dynamic
+	{
+		if (node != null)
+		for (i in Reflect.fields(node)) {
+			// Convert COLOR string to INT
+			if (Std.is(i, String) && i.indexOf("color_") == 0) {
+				trace(i, "is a color");
+				Reflect.setField(target, i, FlxColor.fromString(Reflect.field(node, i)));
+				continue;
+			}
+			
+			// Just copy everything else.
+			Reflect.setField(target, i, Reflect.field(node, i));
+		}
+		
+		// Useful sometimes for inlines
+		return target;
 	}//---------------------------------------------------;
 	
 }// -- 

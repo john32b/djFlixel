@@ -21,7 +21,8 @@
 	
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
-	
+	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
+
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" />
 	
@@ -32,15 +33,14 @@
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
-
+	<set name="next"/> 
 	<haxelib name="flixel"/>
-	<haxelib name="flixel-addons"/>
+	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />
 	
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
-	<haxedef name="openfl_next"/>
 	
 	<!-- EXTERNAL_LOAD:
 	<!-- If set, then some files will be loaded in real time 

@@ -19,6 +19,8 @@
 	<!--Web-specific-->
 	<window if="web" orientation="portrait"  />
 	
+	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
+
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
 	
@@ -33,13 +35,13 @@
 	
 	<!--------------------------------LIBRARIES------------------------------------->
 
+	<set name="next"/>
 	<haxelib name="flixel"/>
 	<include path="../../source/" />
 	
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
-	<haxedef name="openfl_next"/>
 	
 	<!-- EXTERNAL_LOAD:
 	<!-- If set, then some files will be loaded in real time 
