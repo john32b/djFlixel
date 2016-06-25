@@ -166,6 +166,8 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 						styleBase.element_scroll_time, { ease:FlxEase.cubeOut } );
 						
 		cursor_updatePos();
+		
+		callback_option("optFocus");
 	}//---------------------------------------------------;	
 	
 	// --
@@ -451,7 +453,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// --
 	// Note: elementHeight is known.
 	// Note: Apply after setting the DATA SOURCE
-	public function cursor_setSprite(s:FlxSprite, ?_offset:Array<Int>):Void
+	public function cursor_setSprite(s:FlxSprite, centerOrigin:Bool = true, ?_offset:Array<Int>):Void
 	{
 		if (cursor != null) {
 			remove(cursor); cursor.destroy();
@@ -463,12 +465,17 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		cursor = s;
 		cursor.scrollFactor.set(0, 0);
 		cursor.cameras = [camera];
-		cursor.setSize(1, 1);
+		cursor.width = 1;
+		if (centerOrigin) {	
+			cursor.height = 1;
+			_cursor_y_offset = elHeight / 2;
+		}else {
+			_cursor_y_offset = 0;
+		}
 		cursor.centerOffsets();
 		add(cursor);
-
 		
-		// BUG. elemenSlots[0] can be null 
+		// SAFEGUARD : elemenSlots[0] can be null 
 		if (elementSlots[0] != null) {
 			elHeight = elementSlots[0].getOptionHeight();
 		}else {
@@ -479,12 +486,13 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 		// These values only make sense if the cursor is an FlxText
 		// If the cursor is a graphic, these won't work well
-		_cursor_y_offset = elHeight / 2;
 		_cursor_x_start = this.x - (cursor.frameWidth / 2);
 		_cursor_x_end = this.x + styleList.focus_nudge - (cursor.frameWidth / 4);
 		_cursor_tween_time = styleBase.element_scroll_time * 1.25;
 		
-		if (_offset != null) cursor.offset.set( cursor.offset.x + _offset[0], cursor.offset.y +_offset[1]);
+		if (_offset != null) {
+			cursor.offset.set( cursor.offset.x - _offset[0], cursor.offset.y - _offset[1]);
+		}
 		
 		if (isFocused && _data.length > 0) {
 			cursor_updatePos();

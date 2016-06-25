@@ -80,7 +80,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 			var cur:FlxText = new FlxText(0, 0, 0, ">");
 			hasCursor = true;
 			Styles.styleOptionText(cur, styleOption);
-			cursor_setSprite(cur,styleList.cursor_offset);
+			cursor_setSprite(cur, false);
 		}
 	}//---------------------------------------------------;
 

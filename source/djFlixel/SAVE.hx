@@ -29,6 +29,7 @@
  
 package djFlixel;
 import flixel.util.FlxSave;
+import haxe.Json;
 
 
 /*
@@ -59,7 +60,7 @@ class SAVE
 		SAVE_SLOTS = maxUserSlots; if (SAVE_SLOTS > 9) SAVE_SLOTS = 9;
 		saveObj = new FlxSave();
 		saveObj.bind(FLASH_SAVE_ID);
-		setSlot(0);
+		setSlot(0);             
 	}//---------------------------------------------------;
 	// --
 	public static function setSlot(num:Int):Void
@@ -125,6 +126,25 @@ class SAVE
 		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
 	}//---------------------------------------------------;
 		
+	// --
+	// Save a target object as Stringified JSON
+	public static function saveStr(key:String, obj:Dynamic)
+	{
+		save(key, Json.stringify(obj));
+	}//---------------------------------------------------;
+	
+	
+	// --
+	// Load a stringified string to an object
+	// Null if nothing is found
+	public static function loadStr(handle:String):Dynamic
+	{
+		if (!exists(handle)) return null;
+		return Json.parse(load(handle));
+	}//---------------------------------------------------;
+	
+	
+	
 	// -- GAME SPECIFIC LOGIC -- //
 	
 	// - savegame() -> call all game objects to save

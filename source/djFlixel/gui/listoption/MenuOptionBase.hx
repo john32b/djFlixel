@@ -184,7 +184,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// --
 	public inline function getOptionHeight():Int
 	{
-		return Std.int(label.size); // NEW, works for Desktop
+		return Std.int(label.size); 
 	}//---------------------------------------------------;
 	
 }// --

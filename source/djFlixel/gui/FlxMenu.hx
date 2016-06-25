@@ -4,6 +4,7 @@ import djFlixel.gui.Styles;
 import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.Styles.VListStyle;
 import djFlixel.gui.list.VListMenu;
+import djFlixel.gui.listoption.MenuOptionBase;
 import djFlixel.tool.ArrayExecSync;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -780,6 +781,27 @@ class FlxMenu extends FlxGroup
 		_mcallback("tick_fire"); // For the sound effect?
 	}//---------------------------------------------------;
 	
+	//====================================================;
+	//  Small API
+	//====================================================;
+	
+	
+	//--
+	// Can return NULL
+	public function get_currentElement():MenuOptionBase
+	{
+		if (currentMenu != null) 
+		return currentMenu.currentElement;
+		return null;
+	}//---------------------------------------------------;
+	
+	//--
+	// Can return Empty String
+	public function get_currentPageName():String
+	{
+		if (currentPage != null) return currentPage.SID; else return "";
+	}//---------------------------------------------------;
+	
 	
 	
 	//====================================================;
@@ -821,12 +843,6 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
-	//--
-	public function get_currentPageName():String
-	{
-		if (currentPage != null) return currentPage.SID; else return "";
-		
-	}//---------------------------------------------------;
 	
 	//====================================================;
 	// Animation Helpers

@@ -193,7 +193,6 @@ class Styles
 		for (i in Reflect.fields(node)) {
 			// Convert COLOR string to INT
 			if (Std.is(i, String) && i.indexOf("color_") == 0) {
-				trace(i, "is a color");
 				Reflect.setField(target, i, FlxColor.fromString(Reflect.field(node, i)));
 				continue;
 			}
@@ -204,6 +203,38 @@ class Styles
 		
 		// Useful sometimes for inlines
 		return target;
+	}//---------------------------------------------------;
+	
+	//====================================================;
+	// Custom Global Text Formatting
+	//====================================================;
+		
+	// --
+	public static var formatPairs(default, null):Array<FlxTextFormatMarkerPair>;
+	// --
+	public static function addFormatRule(symbol:String, color:Int, borderColor:Int, bold:Bool = false)
+	{
+		if (formatPairs == null) {
+			formatPairs = [];
+		}
+		trace('- New textFormatRule | symbol:$symbol');
+		var format = new FlxTextFormat(color, bold, false, borderColor);
+		var pair = new FlxTextFormatMarkerPair(format, symbol);
+		formatPairs.push(pair);
+	}//---------------------------------------------------;
+	
+	// --
+	public static function getFlxTextMark(text:String, size:Int = 8, useBorder:Bool = false):FlxText
+	{
+		var t = new FlxText(0, 0, 0, "", size);
+		if(useBorder) {
+			t.borderColor = default_OptionStyle.border_color;
+			t.borderStyle = FlxTextBorderStyle.SHADOW;
+			t.borderSize = Math.ceil(size / 8);
+			t.borderQuality = 2;
+		}
+		t.applyMarkup(text, formatPairs);
+		return t;
 	}//---------------------------------------------------;
 	
 }// -- 
