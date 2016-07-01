@@ -178,7 +178,7 @@ class OptionData
 				if (data.conf_options == null)
 					data.conf_options = ["Yes", "No"];
 				if (data.conf_question == null)
-					data.conf_question = data.label + ", Are you sure?";
+					data.conf_question = label + ", Are you sure?";
 			}
 			else if (SID.charAt(0) == "@") 
 			{

@@ -9,6 +9,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
+import flixel.util.FlxColor;
 
 /**
  * FlxMenu, Example 02, More advanced use of a menu.
@@ -53,10 +54,12 @@ class State_Main extends FlxState
 		// -- Create the info box It will display some info about the selected option
 		// NOTE: some parameters are stored in "params.json" file
 		var box = new FlxSprite(0, 220);
-			box.makeGraphic(320, 20, Reg.JSON.box.bg);
-		var infoText = new FlxText(box.x + 8, box.y + 4, box.width - 16, "Test info box text");
-			infoText.color = Reg.JSON.box.textColor;
+		box.makeGraphic(320, 20, FlxColor.fromString(Reg.JSON.box.bg));
 		add(box);
+			
+
+		var infoText = new FlxText(box.x + 8, box.y + 4, box.width - 16, "Test info box text");
+		infoText.color = FlxColor.fromString(Reg.JSON.box.textColor);
 		add(infoText);
 		// --
 		
@@ -91,8 +94,7 @@ class State_Main extends FlxState
 		// Adding a "!" before the sid, will ask the user for a confirmation
 		p.link("Quit", "!quit", "Quit to OS");
 	
-		// - Done creating the main menu
-
+		// - Done creating the main menu --------
 		
 		// + Create the options menu
 		p = menu.newPage("options");
@@ -152,7 +154,6 @@ class State_Main extends FlxState
 				
 				// -- 
 				// The following types are mainly for sound effects:
-				// THIS IS NOT THE PLACE TO HANDLE THE OPTION DATA!
 				// Option Callbacks are handled in FlxMenu.callbacks_option;
 				// ---
 				case "tick" :	   // An option was focused, The cursor moved.

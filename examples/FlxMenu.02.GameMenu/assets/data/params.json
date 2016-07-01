@@ -15,8 +15,8 @@
 	},
 	
 	"box" : {
-		"bg":"0x33FFFFFF",
-		"textColor":"0xFFAAAAAA"
+		"bg":"0xFFFFFF",
+		"textColor":"0xAAAAAA"
 	}
 
 }

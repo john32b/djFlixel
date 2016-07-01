@@ -91,6 +91,7 @@ class SAVE
 	}//---------------------------------------------------;
 	// --
 	// Load from the currently selected slot
+	// Null if nothing is found
 	public static function load(key:String):Dynamic
 	{
 		return Reflect.getProperty(currentData, key);

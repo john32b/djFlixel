@@ -27,6 +27,11 @@ import haxe.Constraints.Function;
  * T: Type Element of Child
  * K: Type of Child Data
  * 
+ * 
+ * # DEV NOTES:
+ * 
+ * 	width : if 0 will guess this from the max width of the first elements
+ * 
  */
 
 

@@ -205,36 +205,17 @@ class Styles
 		return target;
 	}//---------------------------------------------------;
 	
-	//====================================================;
-	// Custom Global Text Formatting
-	//====================================================;
-		
-	// --
-	public static var formatPairs(default, null):Array<FlxTextFormatMarkerPair>;
-	// --
-	public static function addFormatRule(symbol:String, color:Int, borderColor:Int, bold:Bool = false)
-	{
-		if (formatPairs == null) {
-			formatPairs = [];
-		}
-		trace('- New textFormatRule | symbol:$symbol');
-		var format = new FlxTextFormat(color, bold, false, borderColor);
-		var pair = new FlxTextFormatMarkerPair(format, symbol);
-		formatPairs.push(pair);
-	}//---------------------------------------------------;
 	
 	// --
-	public static function getFlxTextMark(text:String, size:Int = 8, useBorder:Bool = false):FlxText
+	// Quickly apply border to an FlxText object
+	public static function quickBorder(textObj:FlxText, color:Int = 0xFF222222):FlxText
 	{
-		var t = new FlxText(0, 0, 0, "", size);
-		if(useBorder) {
-			t.borderColor = default_OptionStyle.border_color;
-			t.borderStyle = FlxTextBorderStyle.SHADOW;
-			t.borderSize = Math.ceil(size / 8);
-			t.borderQuality = 2;
-		}
-		t.applyMarkup(text, formatPairs);
-		return t;
+		textObj.borderStyle = FlxTextBorderStyle.SHADOW;
+		textObj.borderSize = Math.ceil(textObj.size / 8);
+		textObj.borderColor = color;
+		textObj.borderQuality = 2;
+		return textObj;
 	}//---------------------------------------------------;
 	
+
 }// -- 

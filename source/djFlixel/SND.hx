@@ -172,6 +172,23 @@ class SND
 		FlxG.sound.playMusic("assets/music/" + filename + ".mp3", vol, true); // todo OGG?
 	}//---------------------------------------------------;
 	
+	/**
+	 * Quick play a sound
+	 * 
+	 * @param	filename Without extension, must be in /assets/sounds
+	 * @param	customVolume
+	 */
+	public static function playFile(fileshort:String, customVolume:Float = 1)
+	{
+		FlxG.sound.play(PATH_SOUNDS + fileshort + 
+		#if flash
+			FILE_EXT_MP3 ,
+		#else
+			FILE_EXT_OGG , 
+		#end
+		VOL_EFFECTS * customVolume);
+	}//---------------------------------------------------;
+	
 	
 	// --
 	// Play a random sound from a group
@@ -232,12 +249,16 @@ class SND
 	public static inline function playGroup(groupID:String)
 	{
 	}//---------------------------------------------------;
-	public static function loadFromJSON(JSON:Dynamic)
+	public static inline function loadFromJSON(JSON:Dynamic)
 	{
 	}	//---------------------------------------------------;
 	public static inline function destroy()
 	{
 	}//---------------------------------------------------;
+	public static inline function playFile(fileshort:String, customVolume:Float = 1)
+	{
+	}//---------------------------------------------------;
+
 }//-- end --//
 
 

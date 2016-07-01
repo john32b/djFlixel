@@ -51,8 +51,11 @@ class MainTemplate extends Sprite
 		Reg.JSON = DynAssets.json.get(Reg.PARAMS_FILE);
 
 		try {
-			if(Reg.JSON.reg.START_STATE!=null)
+			if (Reg.JSON.reg.START_STATE != null) {
+				trace("Forced Initial State :: ", Reg.JSON.reg.START_STATE);
 				initialState = cast Type.resolveClass(Reg.JSON.reg.START_STATE);
+				
+			}
 		}catch (e:Dynamic) {
 			trace(e);
 		}

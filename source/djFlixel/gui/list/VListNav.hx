@@ -10,7 +10,10 @@ import flixel.tweens.misc.VarTween;
 
 /**
  * Provide element navigation with a cursor on a VList
- * ...
+ *
+ * DEV NOTES:
+ * ----------------
+ * 
  */
 class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 {

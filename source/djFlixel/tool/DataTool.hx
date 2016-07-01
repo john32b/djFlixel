@@ -92,4 +92,26 @@ class DataTool
 		return ar[Std.random(ar.length)];
 	}//---------------------------------------------------;
 	
+	
+	
+	
+	//-- Quickly set the default parameters of an object
+	public static function defParams(obj:Dynamic, target:Dynamic):Dynamic
+	{
+		if (obj == null) {
+			obj = { };
+		} else {
+			// THIS IS VERY IMPORTANT ::
+			obj = Reflect.copy(obj);
+		}
+		
+		for (field in Reflect.fields(target)) {
+			if (!Reflect.hasField(obj, field)) {
+				Reflect.setField(obj, field, Reflect.field(target, field));
+			}
+		}
+		
+		return obj;
+	}//---------------------------------------------------;
+	
 }// -- end --//
