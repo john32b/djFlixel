@@ -71,6 +71,8 @@ import flixel.util.FlxColor;
 		 var focus_nudge:Int;
 		 // Apply a custom cursor offset [x,y]
 		 var cursor_offset:Array<Int>;
+		 // If set then the cursor will be a sprite with this image asset.
+		 var cursor_image:String;
 	 }// :: -- ::
  
 	 
@@ -109,7 +111,8 @@ class Styles
 	public static var default_ListStyle:VListStyle = {
 		focus_nudge : 5,
 		scrollPad : 1,
-		cursor_offset : null
+		cursor_offset : null,
+		cursor_image : null
 	}; // --
 		
 	public static var default_BaseStyle:VBaseStyle = {
@@ -208,7 +211,7 @@ class Styles
 	
 	// --
 	// Quickly apply border to an FlxText object
-	public static function quickBorder(textObj:FlxText, color:Int = 0xFF222222):FlxText
+	public static function quickTextBorder(textObj:FlxText, color:Int = 0xFF222222):FlxText
 	{
 		textObj.borderStyle = FlxTextBorderStyle.SHADOW;
 		textObj.borderSize = Math.ceil(textObj.size / 8);

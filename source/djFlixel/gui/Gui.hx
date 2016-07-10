@@ -17,7 +17,7 @@ import flixel.ui.FlxButton;
 class Gui
 {
 	static inline var DEFAULT_TEXT_COLOR:Int   = 0xFFFFFFFF;
-	static inline var DEFAULT_BORDER_COLOR:Int = 0xFF222233;
+	static inline var DEFAULT_BORDER_COLOR:Int = 0xFF111111;
 	
 	//====================================================;
 	// Custom Global Text Formatting

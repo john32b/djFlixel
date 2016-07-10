@@ -193,7 +193,7 @@ class TiledLoader implements IFlxDestroyable
 	{
 		if (!dataNode.hasNode.object)
 		{
-			trace("Waning: Entity layer contains NO entities");
+			trace("Warning: Entity layer contains NO entities");
 			return null;
 		}
 		

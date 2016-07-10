@@ -4,6 +4,7 @@ import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.PageData;
 import djFlixel.gui.OptionData;
 import djFlixel.gui.listoption.*;
+import flixel.FlxSprite;
 import flixel.text.FlxText;
 
 
@@ -77,9 +78,17 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// -- Add a cursor --
 		if (!hasCursor) 
 		{
-			var cur:FlxText = new FlxText(0, 0, 0, ">");
+			var cur:FlxSprite;
+			if (styleList.cursor_image != null) {
+				// BUG:
+				// It doesn't align well
+				cur = new FlxSprite(0, 0, styleList.cursor_image);                                                                                                                   
+			}else {
+				var t = new FlxText(0, 0, 0, ">");
+				Styles.styleOptionText(t, styleOption);
+				cur = cast t;
+			}
 			hasCursor = true;
-			Styles.styleOptionText(cur, styleOption);
 			cursor_setSprite(cur, false);
 		}
 	}//---------------------------------------------------;
