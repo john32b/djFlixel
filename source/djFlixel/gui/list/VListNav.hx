@@ -11,8 +11,10 @@ import flixel.tweens.misc.VarTween;
 /**
  * Provide element navigation with a cursor on a VList
  *
- * DEV NOTES:
+ * NOTES:
  * ----------------
+ * 
+ *  new VListNav<GraphicElement,DataElement>
  * 
  */
 class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
@@ -60,6 +62,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// -- You can set this at any time
 	// Enables mouse interaction with the optionelements
 	public var flag_use_mouse:Bool = true;
+	
+	// -- Set this at any time
+	// Loops at edges
+	public var flag_loop_on_edge:Bool = false;
 
 	// Precalculate camera viewport and scrolling for mouse overlap calculations
 	var _camCheckOffset:SimpleCoords;
@@ -253,7 +259,12 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		switch(Controls.CURSOR_DIR()) {
 		// =============================== CONTROLS UP   =======;
 		case Controls.UP:
-			if (_index_data == 0) return;
+			if (_index_data == 0) {
+				if (flag_loop_on_edge) {
+					setViewIndex(_data_length - 1); callback_menu("tick");
+				}
+				return;
+			}
 			
 			r_1 = findNextSelectableIndex(_index_data - 1, -1);
 			if (r_1 == -1) return; // Can't find a selectable element
@@ -292,7 +303,12 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		case Controls.DOWN:		
 		// Sometimes when not the entire slots are filled,
 		// prevent scrolling to an empty slot by checking this.
-		if (_index_data == _data_length - 1) return;
+		if (_index_data == _data_length - 1) {
+			if (flag_loop_on_edge) {
+				setViewIndex(0); callback_menu("tick");
+			}
+			return;
+		}
 		
 		r_1 = findNextSelectableIndex(_index_data + 1, 1);
 		if (r_1 == -1) return;

@@ -696,7 +696,17 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		// trace('Pool PUT , New pool size = $_pool_length');
 	}//---------------------------------------------------;
 
-	
+	// --
+	public function setPosition(X:Float, Y:Float)
+	{
+		var dx = X - x;
+		var dy = Y - y;
+		for (i in elementSlots) {
+			i.x += dx;
+			i.y += dy;
+		}
+		x = X; y = Y;
+	}//---------------------------------------------------;
 	
 	//====================================================;
 	// DEBUG FUNCTIONS

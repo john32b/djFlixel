@@ -1,5 +1,6 @@
 package djFlixel;
 
+import djFlixel.SND.SoundInfo;
 import flixel.FlxG;
 import flixel.system.FlxSound;
 
@@ -8,6 +9,16 @@ import flixel.system.FlxSound;
  * Responsible for loading and playing sounds.
  */
 
+ 
+typedef SoundInfo = {
+	var id:String;
+	var file:String;
+	var path:String; // Full path of the sound. Precalculated on creation
+	var vol:Float;
+	var fast:Bool;
+	@:optional var group:String;
+}
+ 
 #if (flash) 
 class SND
 {
@@ -23,15 +34,20 @@ class SND
 	//---------------------------------------------------;
 	static var isInited:Bool = false;
 	
-	// Store all the sounds here
-	static var hash:Map<String,FlxSound> = null;
+	// Short ID to Actual Asset ID
+	static var memorySounds:Map<String,FlxSound> = null;
 	
 	// Groups of sounds
 	static var group:Map<String,Array<String>> = null;
 	
-	// helper pointer
-	static var rg:Array<String>;
 	
+	// Map shortID to full Sound Info as it's on the json node
+	static var infos:Map<String,SoundInfo>;
+
+	// Helper pointer for group playing
+	static var _r1:Array<String>;
+	
+	static var _r2:SoundInfo;
 	//====================================================;
 	// FUNCTIONS
 	//====================================================;
@@ -39,85 +55,88 @@ class SND
 	//-- Preload and init the sounds
 	public static function init()
 	{	
-		if (hash != null) {
+		if (memorySounds != null) {
 			trace("Warning: SND already inited");
 			return;
 		}
-		trace(" - SND init()");
 		
-		hash = new Map();
-		group = new Map();		
-	}//---------------------------------------------------;
-	
-	// Play a sound and destroy it right after playing
-	// * Useful for sounds that are going to be played Rarely, or once
-	// --
-	public static function playAndDestroy(fileShort:String)
-	{
-		FlxG.sound.load(PATH_SOUNDS + fileShort +	
-		#if flash
-		FILE_EXT_MP3,
-		#else
-		FILE_EXT_OGG,
-		#end
-		VOL_EFFECTS, false, true, true);
+		memorySounds = new Map();
+		group = new Map();
+		infos = new Map();
 	}//---------------------------------------------------;
 	
 	
-	/*
-	 *  --
-	 * Load sounds from the main JSON file automatically
-	 * JSON file example:
-	 * ---------------	
-	 * 		"soundFiles" : {
-	 *			"fx1"  : "fx1" , ==> fx1 is the handle for "assets/sounds/fx1.mp3" 
-	 *			"fx2"  : "fx2", ==> fx2 is the handle for "assets/sounds/fx2.mp3"
+	/**
+	 * Node Example:
 	 * 
-	 * 		"soundGroups" : { "fx" : ["fx1","fx2"] }
-	 * 	
-	 * 		"soundVolumes" : { "fx1" : 0.6 ,"fx2":0.2 }
+	 * 	"soundFiles": [
+	 * 		{ "id":"fx2", "file":"effect_01", "fast":true, "group" : "tres", "vol": 0.9 },
+	 * 		{ .. }
+	 * ]
 	 * 
-	 * :: 
+	 * 	id: Short identifier
+	 *  file: Filename in the sounds folder without the extension
+	 *  fast: If true, then this sound will be kept in memory @optional @default=false
+	 *  group: An identifier to group sounds @optional
+	 *  vol: Float custom volume @optional
 	 * 
-	 *  If SoundVolume is set it's applied to the sound
+	 *  ---
 	 * 	Snd.play("fx1");	  :: Will play the sound
 	 * 	Snd.playGroup("fx");  :: Will play a random sound from the group
-	 * 
-	 * @param	JSON pointer to the JSON object to load from
+	 * @param	JSON
+	 * @return
 	 */
 	public static function loadFromJSON(JSON:Dynamic)
 	{
+		var numOfSounds:Int = 0;
+		var numOfCached:Int = 0;
+		trace("-- Loading sounds from JSON node --");
 		
-		if (JSON.soundGroups != null)
-		for (field in Reflect.fields(JSON.soundGroups)) {
-			var sounds:Array<String>;
-			sounds = Reflect.getProperty(JSON.soundGroups, field);
-			for (s in sounds) {
-				addGroup(s, field);	
-			}
-		}
-		 
-		var customVolume:Float;
+		var jsonData:Array<SoundInfo> = JSON.soundFiles;
 		
-		if (JSON.soundFiles != null)
-		for (field in Reflect.fields(JSON.soundFiles)) {
-			
-			// Look for custom volumes
-			if (JSON.soundVolumes != null && Reflect.hasField(JSON.soundVolumes, field)) {
-				customVolume = cast Reflect.field(JSON.soundVolumes, field);
-			}else {
-				customVolume = 1;
-			}
-			
-			as(Reflect.field(JSON.soundFiles, field), field, customVolume);
+		if (jsonData == null) {
+			trace("Can't find 'soundFiles' node to load sounds from JSON");
+			jsonData = [];
+			return;
 		}
 		
+		for (i in jsonData)
+		{
+			numOfSounds++;
+			// -- Create the node in the Info
+			if (!Reflect.hasField(i, "vol")) Reflect.setField(i, "vol", 1.0);
+			if (!Reflect.hasField(i, "fast")) Reflect.setField(i, "fast", false);
+			i.path = PATH_SOUNDS + i.file + 
+				#if flash
+					FILE_EXT_MP3;
+				#else
+					FILE_EXT_OGG;
+				#end
+			infos.set(i.id, i);
+			
+			if (i.fast == true) {
+				cacheSound(i.file, i.id, i.vol);
+				numOfCached++;
+			}
+			
+			if (i.group != null) {
+				addGroup(i.id, i.group);
+			}
+			
+		}// --
+		
+		trace("  total sounds : " , numOfSounds);
+		trace("  total cached : " , numOfCached);
+		#if debug
+		trace("  sound Groups  ::");
+		for (i in group.keys()) trace(' "$i" => ', group.get(i));
+		#end
 	}//---------------------------------------------------;
 	
 	// --
-	// + Add Sound
-	// Quick way to add a sound
-	public static function as(fileShort:String, ?ID:String, volumeRatio:Float = 1):FlxSound
+	// + Preload a sound, create a soundObject to stay in memory.
+	//
+	public static function cacheSound(fileShort:String, ?ID:String, volumeRatio:Float = 1):FlxSound
 	{
 		if (ID == null) ID = fileShort;
 		
@@ -138,7 +157,7 @@ class SND
 		s.volume = VOL_EFFECTS * volumeRatio;
 		s.persist = true;	// -- Do not delete this if you switch states
 		
-		hash.set(ID, s);
+		memorySounds.set(ID, s);
 
 		return s;
 	}//---------------------------------------------------;
@@ -156,7 +175,13 @@ class SND
 	// -- Play the sound with id $soundID
 	public static inline function play(soundID:String, restart:Bool = true)
 	{
-		hash.get(soundID).play(restart);
+		// Lookup the table only once
+		_r2 = infos.get(soundID);
+		if (_r2.fast) {
+			memorySounds.get(soundID).play(restart);
+		}else {
+			FlxG.sound.play(_r2.path, VOL_EFFECTS * _r2.vol);
+		}
 	}//---------------------------------------------------;
 	
 	// -- 
@@ -181,11 +206,11 @@ class SND
 	public static function playFile(fileshort:String, customVolume:Float = 1)
 	{
 		FlxG.sound.play(PATH_SOUNDS + fileshort + 
-		#if flash
-			FILE_EXT_MP3 ,
-		#else
-			FILE_EXT_OGG , 
-		#end
+			#if flash
+				FILE_EXT_MP3 ,
+			#else
+				FILE_EXT_OGG , 
+			#end
 		VOL_EFFECTS * customVolume);
 	}//---------------------------------------------------;
 	
@@ -194,15 +219,15 @@ class SND
 	// Play a random sound from a group
 	public static function playGroup(groupID:String)
 	{
-		rg = group.get(groupID);
-		play(rg[Std.random(rg.length)]);
+		_r1 = group.get(groupID);
+		play(_r1[Std.random(_r1.length)]);
 	}//---------------------------------------------------;
 	// --
 	public static function destroy()
 	{
 		trace(" - Destroying SND");
 		
-		for (i in hash) {
+		for (i in memorySounds) {
 			i.destroy();
 			i = null;
 		}
@@ -211,7 +236,7 @@ class SND
 			i = null;
 		}
 		
-		hash = null;
+		memorySounds = null;
 		group = null;
 	}//---------------------------------------------------;
 }//-- end --//
@@ -230,10 +255,7 @@ class SND
 	public static inline function init()
 	{	
 	}//---------------------------------------------------;
-	public static inline function playAndDestroy(fileShort:String)
-	{
-	}//---------------------------------------------------;
-	public static inline function as(fileShort:String, ?ID:String, volumeRatio:Float = 1):FlxSound
+	public static inline function cacheSound(fileShort:String, ?ID:String, volumeRatio:Float = 1):FlxSound
 	{
 		return null;
 	}//---------------------------------------------------;

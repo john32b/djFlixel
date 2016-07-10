@@ -5,6 +5,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxSpriteUtil;
 import openfl.Assets;
 import openfl.geom.Rectangle;
 import openfl.display.BitmapData;
@@ -101,7 +102,7 @@ class GfxTool
 		
 	/**
 	 * Return an animated flxSprite loaded with the "img" tilesheet
-	 * stopped to frame Frame. The 
+	 * stopped to target frame.
 	 * @param img Path of the image
 	 * @param frame number the frame to stop
 	 * @param width Frame Width

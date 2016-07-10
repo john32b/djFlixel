@@ -323,6 +323,8 @@ class MapTemplate implements IFlxDestroyable
 		// Just in case.
 		if (camera.target != null) {
 			camera.snapToTarget();
+			camera.updateFollow();
+			camera.updateScroll();
 		}
 		
 		cameraPos.x = Std.int(camera.scroll.x / TILEWIDTH);
