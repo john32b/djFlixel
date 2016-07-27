@@ -50,6 +50,11 @@ class Controls
 	static var mapping_left = [FlxKey.A, FlxKey.LEFT];
 	static var mapping_right = [FlxKey.D, FlxKey.RIGHT];
 	
+	// 2 Buttons for the A button.
+	static var mapping_A  = [FlxKey.K, FlxKey.X];
+	static var mapping_X  = [FlxKey.J, FlxKey.Z];
+	
+	
 	// no need to keep initializing this class
 	static var isInited:Bool = false;
 	// pointer to the first connected gamepad
@@ -425,8 +430,8 @@ class Controls
 			case DOWN: keys.anyPressed(mapping_down);
 			case LEFT: keys.anyPressed(mapping_left);
 			case RIGHT: keys.anyPressed(mapping_right);
-			case A: keys.pressed.K;
-			case X: keys.pressed.J;
+			case A: keys.anyPressed(mapping_A);
+			case X: keys.anyPressed(mapping_X);
 			case Y: keys.pressed.I;
 			case B: keys.pressed.L;
 			case START: keys.pressed.ENTER;
@@ -444,8 +449,8 @@ class Controls
 			case DOWN: keys.anyJustPressed(mapping_down);
 			case LEFT: keys.anyJustPressed(mapping_left);
 			case RIGHT: keys.anyJustPressed(mapping_right);
-			case A: keys.justPressed.K; 
-			case X: keys.justPressed.J; 
+			case A: keys.anyJustPressed(mapping_A);
+			case X: keys.anyJustPressed(mapping_X);
 			case Y: keys.justPressed.I; 
 			case B: keys.justPressed.L;
 			case START: keys.justPressed.ENTER;
@@ -463,8 +468,8 @@ class Controls
 			case DOWN: keys.anyJustReleased(mapping_down);
 			case LEFT: keys.anyJustReleased(mapping_left);
 			case RIGHT: keys.anyJustReleased(mapping_right);
-			case A: keys.justReleased.K; 
-			case X: keys.justReleased.J; 
+			case A: keys.anyJustReleased(mapping_A);
+			case X: keys.anyJustReleased(mapping_X);
 			case Y: keys.justReleased.I; 
 			case B: keys.justReleased.L; 
 			case START: keys.justReleased.ENTER;

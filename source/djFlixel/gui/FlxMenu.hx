@@ -373,12 +373,21 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	// --
-	public function close()
+	/**
+	 * 
+	 * @param	flagRememberPos If true, then when you call open() the current selected menu will be selected
+	 */
+	public function close(flagRememberPos:Bool = false)
 	{
 		if (visible) {
 			visible = false;	
 			_mcallback("close");
+		}
+		
+		if (flag_remember_cursor_position && currentPage!=null)
+		{
+			var d1 = currentMenu.getCurrentOptionData();
+			if (d1 != null) currentPage.custom._cursorLastUID =	d1.UID;
 		}
 		
 		// Unload current menus
@@ -426,6 +435,7 @@ class FlxMenu extends FlxGroup
 		}
 		
 	}//---------------------------------------------------;
+	
 	
 	// --
 	public function goBack()
@@ -625,7 +635,7 @@ class FlxMenu extends FlxGroup
 		if (currentPage.custom.cursorStart != null) {
 			// trace('Cursor, custom start');
 			r1 = currentMenu.getOptionIndexWithField("SID", currentPage.custom.cursorStart);
-			_sub_SetCursToPos(r1);
+			_sub_SetCursToPos(r1); // will check for -1 there
 			return;
 		}
 		
@@ -633,7 +643,7 @@ class FlxMenu extends FlxGroup
 		if (flag_remember_cursor_position && currentPage.custom._cursorLastUID != null) {
 			// trace('Cursor, get last position');
 			r1 = currentMenu.getOptionIndexWithField("UID", currentPage.custom._cursorLastUID);
-			_sub_SetCursToPos(r1);
+			_sub_SetCursToPos(r1); // will check for -1 there
 		}else {
 			// trace('Cursor, from the top');
 			currentMenu.setViewIndex(currentMenu.findNextSelectableIndex(0));

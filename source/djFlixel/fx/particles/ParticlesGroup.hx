@@ -86,6 +86,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 
 	
 	/**
+	 * Coordinates are NOT centered
 	 * 
 	 * @param	x World Coords
 	 * @param	y World Coords

@@ -95,6 +95,7 @@ class Gui
 	
 	
 	// --
+	// WARNING: Will add to the current active state! Be careful with substates.
 	public static function addAndTween(obj:FlxSprite, startX:Int = 0, startY:Int = 0):FlxSprite
 	{
 		var endX = obj.x;
