@@ -27,7 +27,7 @@ class Sequencer implements IFlxDestroyable
 	// The callback to call when the timer triggers
 	public var callback:Int->Void = null;
 	
-	var timer:FlxTimer = null;	
+	public var timer(default, null):FlxTimer = null;
 	var currentStep:Int = 0;
 	//----------------------------------------------------;
 	public function new(?callback_:Int->Void) 
@@ -36,6 +36,7 @@ class Sequencer implements IFlxDestroyable
 		currentStep = 0;
 		timer = new FlxTimer();
 	}//---------------------------------------------------;
+	// --
 	public function stop()
 	{
 		timer.finished = true;

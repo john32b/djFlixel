@@ -20,7 +20,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 {
 	
 	// Keep this many particles in a pool for quick retrieval
-	var BUFFER_LEN:Int = 4;
+	var BUFFER_LEN:Int = 6;
 
 	// The node object describing the particles
 	var info:_ParticleJsonParams;
@@ -178,23 +178,18 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			b.kill();
 		}
 		
-		// Free up some memory
-		// Clear objects exceeding target buffer length.
+		// Destroy any objects exceeding buffer length
 		if (length > BUFFER_LEN) {
-			members.splice(BUFFER_LEN, length);
-			length = BUFFER_LEN;
+			var delta:Int = length - BUFFER_LEN;
+			for (i in 0...delta) { members.pop().destroy(); }
+			length = members.length;
 		}
 	}//---------------------------------------------------;
 	
 	//--
 	public function pauseTimers(on:Bool = true)
 	{
-		if (on) {
-			for (i in timers) if (i != null) i.active = false;
-		}else {
-			for (i in timers) if (i != null) i.active = true;
-		}
-			
+		for (i in timers) if (i != null) i.active = !on;
 	}//---------------------------------------------------;
 	
 	

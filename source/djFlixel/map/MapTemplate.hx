@@ -486,12 +486,14 @@ class MapTemplate implements IFlxDestroyable
 	 * @param	sprite
 	 * @return
 	 */
+	@:deprecated("Use FlxSprite.onscreen()")
 	public inline function spriteIsOffScreen(sprite:FlxSprite):Bool
 	{
-		return (	sprite.x < camera.scroll.x ||
-					sprite.x > camera.scroll.x + camera.width ||
-					sprite.y < camera.scroll.y ||
-					sprite.y > camera.scroll.y + camera.height );
+		return false;
+		//return (	sprite.x < camera.scroll.x ||
+					//sprite.x > camera.scroll.x + camera.width ||
+					//sprite.y < camera.scroll.y ||
+					//sprite.y > camera.scroll.y + camera.height );
 	}//---------------------------------------------------;
 	
 	
