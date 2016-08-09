@@ -96,13 +96,13 @@ class Gui
 	
 	// --
 	// WARNING: Will add to the current active state! Be careful with substates.
-	public static function addAndTween(obj:FlxSprite, startX:Int = 0, startY:Int = 0):FlxSprite
+	public static function addAndTween(obj:FlxSprite, startX:Int = 0, startY:Int = 0, noAdd:Bool = false):FlxSprite
 	{
 		var endX = obj.x;
 		var endY = obj.y;
 		obj.alpha = 0;
 		obj.setPosition(endX + startX, endY + startY);
-		FlxG.state.add(obj);
+		if (!noAdd) FlxG.state.add(obj);
 		FlxTween.tween(obj, { x:endX, y:endY, alpha:1 }, 0.2, { ease:FlxEase.quadOut } );
 		return obj;
 	}//---------------------------------------------------;

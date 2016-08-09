@@ -189,12 +189,18 @@ class SND
 	public static function playMusic(filename:String, customVolume:Float = -1)
 	{
 		if (MUSIC_ENABLED == false) {
-			if (FlxG.sound.music != null) FlxG.sound.music.stop();
+			stopMusic();
 			return;
 		}
 		var vol:Float = VOL_MUSIC;
 		if (customVolume > 0) vol = customVolume;
 		FlxG.sound.playMusic("assets/music/" + filename + ".mp3", vol, true); // todo OGG?
+	}//---------------------------------------------------;
+	
+	//-- Stop if music is playing
+	public static function stopMusic()
+	{
+		if (FlxG.sound.music != null) FlxG.sound.music.stop();
 	}//---------------------------------------------------;
 	
 	/**

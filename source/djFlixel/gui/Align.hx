@@ -77,12 +77,12 @@ class Align
 	}//---------------------------------------------------;
 	
 	
-	public static function downCenterM(source:Array<FlxObject>, of:FlxObject, paddindY:Int = 0, paddingEl:Int = 0)
+	public static function downCenterM(source:Array<FlxObject>, of:FlxObject, paddingY:Int = 0, paddingEl:Int = 0)
 	{
 		var tot:Float = 0;
 		for (i in source) {
 			tot += i.width;
-			i.y = of.y + of.height + paddindY;
+			i.y = of.y + of.height + paddingY;
 		}
 		source[0].x = of.x + ((of.width - tot) / 2);
 		for (i in 1...source.length) {
