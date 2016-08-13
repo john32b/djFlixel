@@ -175,7 +175,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		if (arr == null) {
 			trace("Error: Array is null"); return;
 		}
-		
+
 		_data = arr;
 		_data_length = _data.length;
 		// trace('Info: Added data source with [$_data_length] number of elements');
@@ -207,12 +207,14 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			//trace("Info: Set element positions", elementYPositions);
 		}
 		
-		if (pooling_mode == null) 
+		// Pooling?
+		if (pooling_mode == null)
 			setPoolingMode(DEF_POOL_MODE);
 
 		// It's going to be called upon the first showpage
 		if (flag_InitViewAfterDataSet) {
 			trace('Info: Setting data, initializing view');
+			_scrollOffset = -1;
 			setViewIndex(0);
 		}
 	}//---------------------------------------------------;
@@ -593,7 +595,6 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	 */
 	public function setPoolingMode(val:String, param:Int = 0 )
 	{
-		
 		switch(val) {
 			case 'recycle':
 				flag_pool_recycle = true;
@@ -605,21 +606,22 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 				flag_pool_reuse = true;
 				pooling_mode = val;
 				_pool_max_size = param; if (_pool_max_size < 1) _pool_max_size = DEF_POOL_REUSE_MAX;
-			default : // off
+			case 'off':
 				flag_pool_recycle = false;
 				flag_pool_reuse = false;
 				_pool_max_size = 0;
 				pooling_mode = "off";
+			default : throw "Invalid pooling move";
 		}
 		
 		//trace('Info: Setting POOL mode to [$val]');
 		//trace('Info: POOL MAX SIZE [$_pool_max_size]');
 		
-		// -- Initialie the pool
-		
-		#if debug
-			if (_pool != null) trace("Error: Pool was already initialized, and it shouldn't be");
-		#end
+		// -- Initialize the pool
+		if (_pool != null) {
+			trace("Error: Resetting data is still in development, be careful");
+			return;
+		}
 		
 		_pool = [];
 		_pool_length = 0;
