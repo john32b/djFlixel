@@ -255,7 +255,8 @@ class FlxMenu extends FlxGroup
 	 * 
 	 * @param	pageSID You must provide the pageSID the option is in
 	 * @param	SID SID of the option
-	 * @param	param New Data, e.g. { label:"NewLabel", disabled:false }
+	 * @param	param New Data, e.g. { label:"NewLabel", disabled:false, current: }
+	 * 			note: will work with fields inside the option.data as well
 	 */
 	public function option_updateData(pageSID:String, SID:String, param:Dynamic)
 	{

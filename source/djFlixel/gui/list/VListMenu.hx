@@ -121,7 +121,10 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// . Check to see if it's onscreen
 			for (i in elementSlots) {
 				if (i.isSame(_data[ind])) {
+					trace("FOUND DATA", _data[ind]);
+					trace(i.y);
 					i.setData(_data[ind]); // Resets whole option from the start
+					trace(i.y);
 					return;
 				}
 			}		

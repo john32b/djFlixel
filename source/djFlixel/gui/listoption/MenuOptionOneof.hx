@@ -79,8 +79,8 @@ class MenuOptionOneof extends MenuOptionBase
 		// The left arrow has a constant X, so check it once
 		part2_start = label.fieldWidth + PADDING_FROM_LABEL;
 		
-		label2.y = 0;
-		label2.x = part2_start + arrows[0].width;
+		label2.y = label.y;
+		label2.x = label.x + part2_start + arrows[0].width;
 		
 		updateOptionData();
 		

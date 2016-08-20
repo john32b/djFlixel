@@ -108,14 +108,14 @@ class Styles
 	// Create the default styles here,
 	// those can be overriden.
 	
-	public static var default_ListStyle:VListStyle = {
+	public static var default_ListStyle(default, never):VListStyle = {
 		focus_nudge : 5,
 		scrollPad : 1,
 		cursor_offset : null,
 		cursor_image : null
 	}; // --
 		
-	public static var default_BaseStyle:VBaseStyle = {
+	public static var default_BaseStyle(default, never):VBaseStyle = {
 		element_scroll_time:0.18,
 		element_padding:2,
 		anim_time_between_elements:0,
@@ -128,7 +128,7 @@ class Styles
 		anim_style:"none"
 	}; // --
 	
-	public static var default_OptionStyle:OptionStyle = {
+	public static var default_OptionStyle(default, never):OptionStyle = {
 		font:null,
 		fontSize:8,
 		alignment:"left",
@@ -160,7 +160,6 @@ class Styles
 			t.borderQuality = 2;
 			t.borderStyle = FlxTextBorderStyle.SHADOW;
 		}
-		
 	}//---------------------------------------------------;
 	
 	// NEW STYLES

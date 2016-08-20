@@ -93,7 +93,13 @@ class DataTool
 	}//---------------------------------------------------;
 	
 	
-	
+	// Apply a dynamic's object fields into another field
+	public static function applyFieldsInto(node:Dynamic, into:Dynamic)
+	{
+		for (field in Reflect.fields(node)) {
+			Reflect.setField(into, field, Reflect.field(node, field));
+		}
+	}//---------------------------------------------------;
 	
 	//-- Quickly set the default parameters of an object
 	public static function defParams(obj:Dynamic, target:Dynamic):Dynamic

@@ -168,4 +168,29 @@ class GfxTool
 	
 	}//---------------------------------------------------;
 	
+	static inline public function extractRed(c:Int):Int 
+	{
+		return (( c >> 16 ) & 0xFF);
+	}//---------------------------------------------------;
+	static inline public function extractGreen(c:Int):Int 
+	{
+		return ( (c >> 8) & 0xFF );
+	}//---------------------------------------------------;
+	static inline public function extractBlue(c:Int):Int 
+	{
+		return ( c & 0xFF );
+	}//---------------------------------------------------;
+	
+	/**
+	 * Snaps to color
+	 * @param	a COLOR 
+	 * @param	div snap value(1-255)
+	 * @return
+	 */
+	static inline public function snapToLowerBitRepr(a:Int,div:Int = 64):Int
+	{
+		return Math.floor(a / div) * div;
+	}//---------------------------------------------------;
+	
+	
 }// -- end --//

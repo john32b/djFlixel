@@ -128,7 +128,7 @@ class SND
 		trace("  total sounds : " , numOfSounds);
 		trace("  total cached : " , numOfCached);
 		#if debug
-		trace("  sound Groups  ::");
+		// trace("  sound Groups  ::");
 		// for (i in group.keys()) trace(' "$i" => ', group.get(i));
 		#end
 	}//---------------------------------------------------;

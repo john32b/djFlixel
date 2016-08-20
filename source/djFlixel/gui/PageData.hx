@@ -25,14 +25,15 @@ class PageData
 	public var custom:Dynamic;	
 	
 	// Things that you can store in custom:
-	// These vars are OPTIONAl and will override the flxMenu defaults for this page.
+	// These vars are OPTIONAL and will override the flxMenu defaults for this page.
 	// ------------------------------------------------------------------------------
 	// width			 Int, Custom page width
 	// slots	 		 Int, How many slots this page should have for the screen representation
 	
-	// styleOption		Object, custom styleOption 
+	// styleOption		Object, custom styleOption
 	// styleList		Object, custom styleList
 	// styleBase		Object, custom styleBase
+	
 	// -- note: Get styles from the "Styles.hx" static class --
 	
 	// lockNavigation    Bool, If true the page cannot send a "back" request ( by pressing the back button )
