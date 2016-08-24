@@ -4,6 +4,7 @@ import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.PageData;
 import djFlixel.gui.OptionData;
 import djFlixel.gui.listoption.*;
+import djFlixel.tool.DataTool;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
@@ -43,19 +44,22 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// 3. Get the default style
 		// List style
 		if (page.custom.styleList != null) {
-			styleList = page.custom.styleList;
+			styleList = Reflect.copy(styleList);
+			DataTool.applyFieldsInto(page.custom.styleList, styleList);
 		}
 		
 		// Option Style from page
 		if (page.custom.styleOption != null) {
-			styleOption = page.custom.styleOption;
+			styleOption = Reflect.copy(styleOption);
+			DataTool.applyFieldsInto(page.custom.styleOption, styleOption);
 		}else {
 			if (styleOption == null) 
 				styleOption = Styles.default_OptionStyle;
 		}
 		// Base Style from page
 		if (page.custom.styleBase != null) {
-			styleBase = page.custom.styleBase;
+			styleBase = Reflect.copy(styleBase);
+			DataTool.applyFieldsInto(page.custom.styleBase, styleBase);
 		}
 		
 		// -- HACK FIX --

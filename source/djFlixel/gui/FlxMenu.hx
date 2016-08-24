@@ -6,6 +6,7 @@ import djFlixel.gui.Styles.VListStyle;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.listoption.MenuOptionBase;
 import djFlixel.tool.ArrayExecSync;
+import djFlixel.tool.DataTool;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
@@ -190,17 +191,17 @@ class FlxMenu extends FlxGroup
 
 		if (styleNode.option != null) {
 			page.custom.styleOption = Styles.newStyle_Option();
-			Reg.applyFieldsInto(styleNode.option, page.custom.styleOption);
+			DataTool.applyFieldsInto(styleNode.option, page.custom.styleOption);
 		}
 		
 		if (styleNode.list != null) {
 			page.custom.styleList = Styles.newStyle_List();
-			Reg.applyFieldsInto(styleNode.list, page.custom.styleList);
+			DataTool.applyFieldsInto(styleNode.list, page.custom.styleList);
 		}
 		
 		if (styleNode.base != null) {
 			page.custom.styleBase = Styles.newStyle_Base();
-			Reg.applyFieldsInto(styleNode.base, page.custom.styleBase);
+			DataTool.applyFieldsInto(styleNode.base, page.custom.styleBase);
 		}
 	}//---------------------------------------------------;
 	
@@ -720,10 +721,10 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	// --
-	// Confirm action for currently selected option
 
 	/**
+	 *  Confirm action for currently selected option
+	 * 
 	 * @param	qcallback Callback to this function with a result
 	 * @param	question If set it will display this text
 	 * @param	options Custom names instead of YES,NO
@@ -737,7 +738,7 @@ class FlxMenu extends FlxGroup
 
 		// -- Create a list and adjust the style a bit ::
 		var list = new VListMenu(X, Y, 0, question != null?3:2);
-			list.flag_InitViewAfterDataSet = false;
+			list.flag_InitViewAfterDataSet = false; // because option_highlight() is called
 			list.styleBase = Styles.newStyle_Base();
 			list.styleBase.anim_tween_ease = "elastic";
 			list.styleBase.anim_total_time = 0.2;

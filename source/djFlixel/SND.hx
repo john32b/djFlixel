@@ -286,7 +286,10 @@ class SND
 	public static inline function playFile(fileshort:String, customVolume:Float = 1)
 	{
 	}//---------------------------------------------------;
-
+	public static inline function stopMusic()
+	{
+	}//---------------------------------------------------;
+	
 }//-- end --//
 
 
