@@ -66,7 +66,7 @@ class BulletGroup extends FlxTypedGroup<Bullet>
 	
 	/**
 	 * Fire a bullet from this coordinates to X
-	 * @param	type The animation name as defined on the params.json
+	 * @param	type The animation name as defined in the parameters object
 	 * @param	x starting point, centered
 	 * @param	y starting point, centered
 	 */
@@ -99,7 +99,7 @@ class BulletGroup extends FlxTypedGroup<Bullet>
 	
 	
 	// -- Destroy all sprites exceeding the minSize
-	//    The rest is killed()
+	//    The rest are killed()
 	public function reset()
 	{
 		for (i in this) i.kill();

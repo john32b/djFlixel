@@ -8,6 +8,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
 /**
+ * Just use FlxBackdrop
  * ...
  */
 class BGScroller extends FlxSprite

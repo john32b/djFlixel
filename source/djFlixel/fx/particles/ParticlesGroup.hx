@@ -118,6 +118,9 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	
 
 	// --
+	// Popup effect for one particle. e.g. Score popup.
+	// TODO:
+	// THIS IS NOT GENERALIZED. I NEED TO FIX THIS.
 	public function popup(x:Float, y:Float, frame:Int, scale:Float = 1)
 	{
 		var p = createOneAt(x, y, null, true);
