@@ -26,8 +26,8 @@ class SND
 	static inline var FILE_EXT_MP3:String = ".mp3";
 	static inline var FILE_EXT_OGG:String = ".ogg";
 	
-	static var VOL_MUSIC:Float = 0.8;	// Global music volume
-	static var VOL_EFFECTS:Float = 0.8;	// Global effects volume
+	public static var VOL_MUSIC:Float = 0.8;	// Global music volume
+	public static var VOL_EFFECTS:Float = 0.8;	// Global effects volume
 	
 	public static var MUSIC_ENABLED:Bool = true;
 	

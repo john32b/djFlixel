@@ -132,8 +132,15 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		timer.start(Reg.JSON._popup.timer1, function(_) {
 			p.velocity.set(0, 0);
 			timers.remove(timer);
-			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); p.scale.set(1, 1); } );
-		});
+			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.04, true, true, function(_) { 
+				if (p == null || !p.exists) {
+					trace("warning: Popup callbacks to a dead sprite. Cancelled");
+					return;
+				}
+				p.kill();
+				p.scale.set(1, 1); 
+			});// end flicker callback
+		});// end timer callback
 	}//---------------------------------------------------;
 	
 	
@@ -171,6 +178,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	 */
 	public function reset():Void 
 	{
+		trace(" - Resetting particles Group - ");
 		for (i in timers) {
 			i.cancel();
 			i = null;
@@ -178,6 +186,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 		timers = [];
 		
 		for (b in this) {
+			// FlxFlicker.stopFlickering(b);
 			b.kill();
 		}
 		

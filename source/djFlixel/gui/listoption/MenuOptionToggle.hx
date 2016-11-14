@@ -40,8 +40,8 @@ class MenuOptionToggle extends MenuOptionBase
 	{
 		super.initElements();
 				
-		box.y = 1 + (label.height / 2) - box.height / 2;
-		box.x = label.fieldWidth + PADDING_FROM_LABEL;
+		box.y = y + 1 + (label.height / 2) - box.height / 2;
+		box.x = x + label.fieldWidth + PADDING_FROM_LABEL;
 		
 		updateOptionData();
 		

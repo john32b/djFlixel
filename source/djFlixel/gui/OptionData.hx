@@ -64,7 +64,7 @@ class OptionData
 	{
 		// Info: Actionscript INT MaxSize = 2147483647;
 		UID = UID_GENERATOR++;
-		data = { };		
+		data = { };	
 		this.label = label;
 		setNewParameters(params);
 	}//---------------------------------------------------;
@@ -85,7 +85,7 @@ class OptionData
 				case "selectable": selectable = Reflect.field(params, f);
 				case "disabled": disabled = Reflect.field(params, f);
 				// Map all other custom fields to the data object.
-				default: Reflect.setProperty(data, f, Reflect.field(params, f));
+				default: Reflect.setField(data, f, Reflect.field(params, f));
 			}
 		}
 		
