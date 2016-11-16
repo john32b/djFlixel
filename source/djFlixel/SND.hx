@@ -173,7 +173,7 @@ class SND
 	}//---------------------------------------------------;
 	
 	// -- Play the sound with id $soundID
-	public static inline function play(soundID:String, restart:Bool = true)
+	public static function play(soundID:String, restart:Bool = true)
 	{
 		// Lookup the table only once
 		_r2 = infos.get(soundID);
@@ -182,6 +182,27 @@ class SND
 		}else {
 			FlxG.sound.play(_r2.path, VOL_EFFECTS * _r2.vol);
 		}
+	}//---------------------------------------------------;
+	public static function playV(soundID:String, restart:Bool = true, volRatio:Float = 1)
+	{
+		_r2 = infos.get(soundID);
+		if (_r2.fast) {
+			var s = memorySounds.get(soundID);
+				s.volume = VOL_EFFECTS * _r2.vol * volRatio;
+				s.play(restart);
+		}else {
+			FlxG.sound.play(_r2.path, VOL_EFFECTS * _r2.vol * volRatio);
+		}
+	}//---------------------------------------------------;
+	
+	// --
+	// In some cases you may need a sound object to stop/pause/etc
+	public static function getSound(soundID:String):FlxSound
+	{
+		_r2 = infos.get(soundID);
+		if (_r2 != null && _r2.fast) { return memorySounds.get(soundID); }
+		trace("Could not get sound. It must exist and be cached");
+		return null;
 	}//---------------------------------------------------;
 	
 	// -- 

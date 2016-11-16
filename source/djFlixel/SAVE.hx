@@ -32,10 +32,6 @@ import flixel.util.FlxSave;
 import haxe.Json;
 
 
-/*
- * slot_0 = settingsslot_1._exists = true, false
- */
-	
 class SAVE
 {
 

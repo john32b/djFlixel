@@ -13,6 +13,9 @@ import flixel.ui.FlxButton;
  * Static class
  * Quick item generators and tools
  * ...
+ * 
+ * 	Notes: 	Be sure to add text formal rules with addFormatRule(), 
+ * 			before calling getFText() ot getFButton
  */
 class Gui
 {

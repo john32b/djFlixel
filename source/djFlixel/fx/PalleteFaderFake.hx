@@ -49,7 +49,10 @@ class PalleteFaderFake extends FlxSprite
 		stime = new StepTimer();
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * As many steps as you want, from low to high.
+	 * @param	ar [..] 0 to 1 values
+	 */
 	public function setAlphaSteps(ar:Array<Float>)
 	{
 		ALPHA_STEPS = ar;
@@ -126,9 +129,7 @@ class PalleteFaderFake extends FlxSprite
 		if (alpha != 1 || visible == false)
 		{ 
 			// trace("Warning: Trying to restore from a not solid state");
-			alpha = 0;
-			stime.clear();
-			_stepTimerComplete();
+			resetState();
 			return;
 		}
 		
@@ -141,6 +142,17 @@ class PalleteFaderFake extends FlxSprite
 			}, 
 			_stepTimerComplete);
 		
+	}//---------------------------------------------------;
+	
+	/**
+	 * Force reset to a blank state
+	 */
+	public function resetState()
+	{
+		callback_complete = null;
+		alpha = 0;
+		stime.clear();
+		_stepTimerComplete();
 	}//---------------------------------------------------;
 	
 	// --

@@ -1,86 +1,141 @@
 package djFlixel;
 
+import flash.display.Sprite;
 import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
-import flixel.util.FlxTimer;
+import flixel.util.FlxColor;
 
 /**
  * 
  * Simple Autotext / Autotype effect FlxText
  * -------------------------------------
  * 
+ * NOTES:
+ * 			+ One Line Text, NOT multiline!
+ * 			+ Supports a carrier text e.g.  "_" or "."
+ * 
  * Special markup:
  * 
- * (s0) default speed
- * (s1) very slow
- * (s2) slow
- * (s3) faster
- * (s4) fastest
- * 
- * (w1) wait short
- * (w2) wait a bit
- * (w3) wait long
- * 
+ * (s0) - (s10) // speeds, 0 is slowest
+ * (w1) - (w99) // waits, 0 is wait shortest
+ * (c1) - (c99) // characters per tick
+ * (q0),(q1) 	// carret on/off
+ *  
  * e.g.
- *		setDialog( "Hello(s1)...(w1) Is this thing on?(w3)(s4)...." );
+ *		setDialog( "(c4)Hello(s1)...(w1) Is this thing on?(w3)(s4)...." );
+ * 
+ * 
+ * ------------
+ * TODO:
+ * 	. Replace times with a better customizable system
  * 
  */
-class FlxAutoText extends FlxText
+
+ 
+typedef AutoTextMeta = {
+	?c:Int,
+	?w:Int,
+	?s:Int,
+	?q:Int // Special
+};//------------------------------------;
+ 
+class FlxAutoText extends FlxSpriteGroup
 {
 	// -- Defaults --
 	
 	// How many characters per update
 	static inline var TIME_CPU_DEF:Int = 1;
+	static inline var TIME_SPD_DEF:Float = 0.1; // New char(s) every 0.1sec
+	static inline var TIME_STEP:Float = 0.1; // This is the slowest speed, you can set multiples
 	
-	// Interval for character updates
-	// These apply for the markup times.
-	static inline var TIME_SPEED_S0:Float = 0.08;	// Default
-	static inline var TIME_SPEED_S1:Float = 0.28;   // Slower
-	static inline var TIME_SPEED_S2:Float = 0.14;   // Slow
-	static inline var TIME_SPEED_S3:Float = 0.08;   // Fast, 2 CPU
-	static inline var TIME_SPEED_S4:Float = 0.04;   // Faster. 2 CPU
-
 	// Current characters per update
 	var time_CPU:Int;
 	// Curent update every seconds.
 	var time_FREQ:Float;
+	// If there is any waiting time, hold that time.
+	// var time_WAIT:Float;
+	
 	// Hold the last update time
 	var timer:Float;
 	// --
-	var currentLength:Int = 0;
-	var targetLength:Int = 0;
+	var currentLength:Int = 0;	// Currently displayed chars in len
+	var targetLength:Int = 0;	// TargetText length in chars
 	var targetText:String;
-	
+	var nextCPUrestore:Int = 0;
 	// is it in the process of displaying the text or not
-	var isWorking:Bool;
+	// var isWorking:Bool; // TO DELETE, replaced with active=true,false
 	
 	// Call this after the autotext ends.
-	var onComplete:Void->Void;
+	public var onComplete:Void->Void = null;
+	// Called after a character is displayed
+	public var onTick:Void->Void = function() { };
 	
-	// Store the times if present
-	// (index => speed)
-	var mapTimes:Map<Int,Int>;
-	var mapTimesTotal:Int;
+	// Store the string metadata here with key the index letter
+	var mapMetaData:Map<Int,AutoTextMeta>;
+	
+	// -- CARRIER ::
+	var useCarrier:Bool = false;
+	var carrier:FlxSprite = null;
+	var carrierBlinkRate:Float = 0.2;
+	var carrierOffsetX:Int = 0;
+	var carrierTimer:Float; // Carrier blink rate handled on the update();
+	
+	// -- TEXT :
+	public var textObj(default, null):FlxText;
 	
 	//====================================================;
 	// --
-	public function new(X:Float, Y:Float, FieldWidth:Float = 0, Size:Int = 8)
+	public function new(X:Float = 0, Y:Float = 0,FieldWidth:Float = 0)
 	{
-		super(X, Y, FieldWidth, null, Size);
-		wordWrap = false;	
-		isWorking = false;
-		mapTimes = null;
-		mapTimesTotal = 0;
+		super(X,Y);
+		
+		// Create the text object
+		textObj = new FlxText(0, 0, FieldWidth, null);
+		// textObj.wordWrap = false;
+		add(textObj);
+		
+		active = false;
+		mapMetaData = null;
+		
+		// Set the default timings
+		time_FREQ = TIME_SPD_DEF;
+		time_CPU = TIME_CPU_DEF;
+	}//---------------------------------------------------;
+		
+	// -- Set a symbol and activate the carrier
+	public function setCarrierSymbol(symbol:String)
+	{
+		// Try to copy the style of the main text
+		var c = new FlxText(0, 0, 0, symbol, textObj.size);
+			c.font = textObj.font;
+			c.color = textObj.color;
+		setCarrierSprite(cast c);
+	}//---------------------------------------------------;
+		
+	// -- Set a symbol and activate the carrier
+	public function setCarrierSprite(symbol:FlxSprite, offsetX:Int = 0, offsetY:Int = 0 )
+	{
+		carrier = symbol;
+		carrier.visible = false;
+		useCarrier = true;
+		carrierTimer = 0;
+		add(carrier);
+		carrier.y += offsetY;
+		carrierOffsetX = offsetX;
 	}//---------------------------------------------------;
 	
-	// -- USER SET --
-	// Trigger a user call whenever a character is displayed
-	// Useful to set audio effects.
-	dynamic public function onCharacter():Void
+	// -- 
+	private function updateCarrierPos()
 	{
-		// Empty for now
+		if (useCarrier)
+		{
+			carrierTimer = 0;
+			carrier.visible = true;
+			carrier.x = this.x + (currentLength * textObj.size) + carrierOffsetX;
+		}
 	}//---------------------------------------------------;
-	
 	
 	/**
 	 * Sometimes if you want to set custom text times
@@ -102,39 +157,56 @@ class FlxAutoText extends FlxText
 	 */
 	public function start(_text:String, ?_onComplete:Void->Void)
 	{
-		text = "";
+		textObj.text = "";
 		currentLength = 0;
 		timer = 0;
-		isWorking = true;
+		active = true;
 		onComplete = _onComplete;
 		
-		// Set the default timings because the autotext might restart from old values
-		time_FREQ = TIME_SPEED_S0;
-		time_CPU = TIME_CPU_DEF;
-
-		// Check the markup of the _text
-		// Match (s0)..(s9)
-		var regSpeeds:EReg = ~/(\(s\d\))/g;
-		if (regSpeeds.match(_text)) 
+		/* Capture (s1) for speeds
+		 * Capture (w1) for waits
+		 * Capture (c1) for chars per tick
+		 */
+		var regSpeeds:EReg = ~/(\([s|w|c|q]\d+\))/g;
+	
+		if (regSpeeds.match(_text))
 		{
 			// trace("+ Reg Exp found.");
-			// Init the map and start counting total times found
-			mapTimes = new Map();
-			mapTimesTotal = 0;
+			mapMetaData = new Map();
+			var indAcc = 0;
+			
 			_text = regSpeeds.map(_text, function(reg:EReg) {
-				var m:String = reg.matched(0);
-				var spd:Int = Std.parseInt(m.substr(2, 1));
-				// Compensate for the added length of the (s1) markup
-				var ind:Int = (reg.matchedPos().pos) - 4 * mapTimesTotal;
-				mapTimes.set(ind, spd);
-				// Increment after adjusting index
-				mapTimesTotal++;
-				// trace('+ Speed ($spd) at index ($ind)');
-				// remove the markup by returning empty string
+				var match = reg.matched(0);
+				var trueIndex = reg.matchedPos().pos - indAcc;
+				// trace(' + REG MATCH $match at $trueIndex');
+				// trace("Index Accumulator", indAcc);
+				
+				var data:AutoTextMeta;
+				if (mapMetaData.exists(trueIndex)) {
+					data = mapMetaData.get(trueIndex);
+				}else {
+					data = { };
+				}
+				
+				var number:Int = Std.parseInt(match.substr(2, reg.matchedPos().len - 3));
+				// trace(' Number GOT $number');
+				switch(match.charAt(1))
+				{
+					case "s" : data.s = number;
+					case "w" : data.w = number;
+					case "c" : data.c = number;
+					case "q" : data.q = number;
+					default : trace("Error: Parse Error");
+				}
+				
+				mapMetaData.set(trueIndex, data);
+				// trace('Setting DATA at $trueIndex with data', data);
+				indAcc += reg.matchedPos().len;
 				return "";
+				// Note: It all works OK, I checked.
 			});
 		}
-			
+
 		targetText = _text;
 		targetLength = targetText.length;
 		
@@ -142,20 +214,43 @@ class FlxAutoText extends FlxText
 		checkAndSetTime();
 	}//---------------------------------------------------;
 	
-	function checkAndSetTime()
+	// Text has been updated, check the next times
+	private function checkAndSetTime()
 	{
-		if (mapTimesTotal > 0 && mapTimes.exists(currentLength)) {
-			time_FREQ = switch(mapTimes.get(currentLength)) {
-				case 1: time_CPU = 1; TIME_SPEED_S1;
-				case 2: time_CPU = 1; TIME_SPEED_S2;
-				case 3: time_CPU = 2; TIME_SPEED_S3;
-				case 4: time_CPU = 3; TIME_SPEED_S4;
-				case 0: time_CPU = 1; TIME_SPEED_S0;
-				default: TIME_SPEED_S0;
-			};
-			trace('-- Setting speed from map = $time_FREQ');
-			trace('-- Setting CHARS from map = $time_CPU');
+		if (mapMetaData != null && mapMetaData.exists(currentLength))
+		{
+			// I need to apply new variables
+			var data = mapMetaData.get(currentLength);
+			if (data.s != null) time_FREQ = data.s * TIME_STEP; // What about slower?
+			if (data.w != null) timer -= data.w * TIME_STEP;
+			if (data.q != null) useCarrier = data.q == 1;
+			if (data.c != null) {
+				time_CPU = data.c;
+				if (time_CPU > 1) checknextCPUrestore(currentLength + 1);
+			}
+			
+			//trace("Setting new vars to ", data);
 		}
+
+		updateCarrierPos();
+	}//---------------------------------------------------;
+	
+
+	
+	// Call this when setting the CPU over 1,
+	// I need to know where the next CPU change occurs so
+	// I can stop the text before going over another change!
+	private function checknextCPUrestore(startIndex:Int)
+	{
+		for (i in startIndex...targetLength)
+		{
+			if (mapMetaData.exists(i) && mapMetaData.get(i).c != null) {
+				nextCPUrestore = i;
+				// trace("NEXT CPU CHANGE INDEX AT", nextCPUrestore);
+				return;
+			}
+		}
+		nextCPUrestore = 0;
 	}//---------------------------------------------------;
 	
 	// --
@@ -163,13 +258,35 @@ class FlxAutoText extends FlxText
 	{
 		super.update(elapsed);
 		
-		if (!isWorking) return;
-	
-		timer += FlxG.elapsed;
+		// -- Update Carrier
+		if (useCarrier)
+		{
+			carrierTimer += FlxG.elapsed;
+			if (carrierTimer >= carrierBlinkRate) {
+				carrierTimer = 0;
+				carrier.visible = !carrier.visible;
+			}
+		}
+		
+		// -- Is there a WAIT in effect?
+		//if (time_WAIT > 0) {
+		//	time_WAIT -= elapsed;
+		//	return;
+		//}
+		
+		// -- Update Character
+		timer += elapsed;
 		if (timer >= time_FREQ)
 		{
 			timer = 0;
 			currentLength += time_CPU;
+			
+			// It is going to be>0 only when 2CPU and up
+			if (nextCPUrestore > 0 && currentLength > nextCPUrestore)
+			{
+				currentLength = nextCPUrestore;
+				nextCPUrestore = 0;
+			}
 			
 			if (currentLength >= targetLength)
 			{
@@ -180,11 +297,13 @@ class FlxAutoText extends FlxText
 				}
 				
 			}else {	
-				text = targetText.substr(0, currentLength);
+				textObj.text = targetText.substr(0, currentLength);
 				checkAndSetTime();
-				onCharacter();
+				onTick();
 			}
 		}
+		
+
 	}//---------------------------------------------------;
 	// --
 	public function stop(showFinal:Bool = false)
@@ -192,16 +311,18 @@ class FlxAutoText extends FlxText
 		if (showFinal && targetText != null)
 		{
 			currentLength = targetLength;
-			text = targetText;
+			textObj.text = targetText;
+			if (useCarrier) carrier.visible = false;
 		}
 		
 		timer = 0;
-		isWorking = false;
+		active = false;
 	}//---------------------------------------------------;
 	// --
 	override public function destroy():Void 
 	{
 		super.destroy();
+		mapMetaData = null;
 	}//---------------------------------------------------;	
 	
 }// -- end -- //

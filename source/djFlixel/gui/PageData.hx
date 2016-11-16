@@ -93,22 +93,23 @@ class PageData
 	public function add(label:String, ?params:Dynamic):OptionData
 	{
 		var o = new OptionData(label, params);
-		
 		collection.push(o);
-		return o; // CHANGED
+		return o;
 	}//---------------------------------------------------;
 	
 	/**
-	 * Quick add a Link type to the page
+	 * Quickly add a Link
 	 * @param label The display name
-	 * @param page Start with "@" to link to page, Start with "!" to confirm action, "#back" to go back
+	 * @param SID Start with "@" to link to page, Start with "!" to confirm action, "#back" to go back
 	 */
-	public inline function link(label:String, SID:String, ?description:String):OptionData
+	public inline function link(label:String, SID:String, ?callback:Void->Void):OptionData
 	{
-		return add(label, { type:"link", sid:SID, desc:description } );
+		return add(label, { type:"link", sid:SID, callback:callback } );
 	}//---------------------------------------------------;
 
-	
+	/**
+	 * Quickly add a Label
+	 */
 	public inline function label(label:String):OptionData
 	{
 		return add(label, { type:"label" } );
@@ -116,7 +117,7 @@ class PageData
 	
 	
 	/**
-	 * Quick way to add a back button
+	 * Quickly add a back button
 	 */
 	public inline function addBack(?text:String):OptionData
 	{

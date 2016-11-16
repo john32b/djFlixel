@@ -51,20 +51,22 @@ class OptionData
 	 * 
 	 * 					current: Depending on type
 	 * 					desc: Description
-	 * 					type: starting with 
+	 * 					type: "link", "slider", "oneof", "toggle", "label"
+	 * 					sid: starting with
 	 * 							#, popup confirmation
 	 * 							!, fullpage confirmation
 	 * 							@, goto target page
 	 * 					pool: Depending on type
 	 * 					conf_question: String, Question, optional
 	 * 					conf_options:  Array<String>, instead of YES NO
+	 * 					callback: If it's a link, this (void->void) will be called
 	 * 
 	 */		
 	public function new(?label:String, ?params:Dynamic)
 	{
 		// Info: Actionscript INT MaxSize = 2147483647;
 		UID = UID_GENERATOR++;
-		data = { };	
+		data = { };		
 		this.label = label;
 		setNewParameters(params);
 	}//---------------------------------------------------;
@@ -85,7 +87,7 @@ class OptionData
 				case "selectable": selectable = Reflect.field(params, f);
 				case "disabled": disabled = Reflect.field(params, f);
 				// Map all other custom fields to the data object.
-				default: Reflect.setField(data, f, Reflect.field(params, f));
+				default: Reflect.setProperty(data, f, Reflect.field(params, f));
 			}
 		}
 		
@@ -195,7 +197,6 @@ class OptionData
 		
 	}//---------------------------------------------------;
 
-	
 	
 	// --
 	public function toString():String

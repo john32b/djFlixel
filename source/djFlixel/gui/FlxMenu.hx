@@ -839,7 +839,11 @@ class FlxMenu extends FlxGroup
 	{
 		// new: Call the menu callback as well to handle sounds
 		switch(s) {
-			case "optFire": _mcallback("tick_fire");
+			case "optFire": 
+				_mcallback("tick_fire");
+				if (o.type == "link" && Reflect.hasField(o.data, "callback")) {
+					o.data.callback();
+				}
 			case "optChange": _mcallback("tick_change");
 			case "optInvalid": _mcallback("tick_error"); return;	// do not proceed
 		}
@@ -850,6 +854,7 @@ class FlxMenu extends FlxGroup
 		}
 		
 		if (callbacks_option != null) callbacks_option(s, o);
+		
 	}//---------------------------------------------------;
 	
 	// --
