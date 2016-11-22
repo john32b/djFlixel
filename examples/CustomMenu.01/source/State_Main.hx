@@ -58,11 +58,11 @@ class State_Main extends FlxState
 		
 		if (FlxG.keys.justPressed.L)
 		{
-			if (menu.isFocused) menu.unfocus(); else menu.focus();
+			(menu.isFocused?menu.unfocus():menu.focus());
 		}
 		else if (FlxG.keys.justPressed.P)
 		{
-			menu.setDataSource(savesData2);
+			menu.setDataSource(savesData2); // buggy
 		}
 	}//---------------------------------------------------;
 	

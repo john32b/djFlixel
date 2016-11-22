@@ -10,8 +10,8 @@ import openfl.display.BitmapData;
 
 class DynAssets
 {
-
-	static var ASSETS_PATH = "assets/";
+	public static var ASSETS_PATH = "assets/";
+	public static var REAL_PATH = "assets/";
 	
 	// Map a fileID with fileContents
 	// Useful for dynamically reloading maps, etc.
@@ -60,7 +60,7 @@ class DynAssets
 		#if (EXTERNAL_LOAD) // ------------------------
 				
 			var get:DataGet = new DataGet();
-			get.url = MacroHelp.getProjectPath() + ASSETS_PATH + f;
+			get.url = MacroHelp.getProjectPath() + REAL_PATH + f;
 			get.onLoad = function(loadedData:Dynamic) {
 				var nfo = 'Loaded file $f..';
 				switch(get.type) {
@@ -123,7 +123,7 @@ class DynAssets
 		trace(' - Loading Dynamically "$path" as Text...');
 		
 		var get:DataGet = new DataGet();
-			get.url = MacroHelp.getProjectPath() + ASSETS_PATH + path;
+			get.url = MacroHelp.getProjectPath() + REAL_PATH + path;
 			get.onLoad = function(loadedData:Dynamic) {
 				onComplete(cast loadedData);
 			};

@@ -37,7 +37,14 @@ class StepTimer
 		clear();
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * 
+	 * @param	from Count from here
+	 * @param	to to this
+	 * @param	frequency in seconds
+	 * @param	onTick
+	 * @param	onComplete
+	 */
 	public function once(from:Int, to:Int, frequency:Float, onTick:Int->Void, ?onComplete:Void->Void)
 	{
 		if (from == to)

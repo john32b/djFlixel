@@ -28,7 +28,7 @@
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="g:/build/debug/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
+	<set name="BUILD_DIR" value="builds/debug/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	

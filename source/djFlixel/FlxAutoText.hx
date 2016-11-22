@@ -13,14 +13,15 @@ import flixel.util.FlxColor;
  * -------------------------------------
  * 
  * NOTES:
- * 			+ One Line Text, NOT multiline!
+ * 			+ Edit textObj if you want multilines or etc.
  * 			+ Supports a carrier text e.g.  "_" or "."
+ * 			+
  * 
  * Special markup:
  * 
  * (s0) - (s10) // speeds, 0 is slowest
  * (w1) - (w99) // waits, 0 is wait shortest
- * (c1) - (c99) // characters per tick
+ * (c1) - (c99) // characters per tick !NOTE! Be sure to set to (c1) before applying new ta
  * (q0),(q1) 	// carret on/off
  *  
  * e.g.
@@ -54,8 +55,6 @@ class FlxAutoText extends FlxSpriteGroup
 	var time_CPU:Int;
 	// Curent update every seconds.
 	var time_FREQ:Float;
-	// If there is any waiting time, hold that time.
-	// var time_WAIT:Float;
 	
 	// Hold the last update time
 	var timer:Float;
@@ -267,12 +266,6 @@ class FlxAutoText extends FlxSpriteGroup
 				carrier.visible = !carrier.visible;
 			}
 		}
-		
-		// -- Is there a WAIT in effect?
-		//if (time_WAIT > 0) {
-		//	time_WAIT -= elapsed;
-		//	return;
-		//}
 		
 		// -- Update Character
 		timer += elapsed;

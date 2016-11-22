@@ -120,4 +120,27 @@ class DataTool
 		return obj;
 	}//---------------------------------------------------;
 	
+	/**
+	 * Pads a string to reach a certain length.
+	 * If string is longer it gets trimmed
+	 * If string is shorter it gets padded with $char
+	 * LEFT PAD so "john" => ".....john"
+	 */
+	public static function padTrimString(str:String, size:Int, char:String = ".", leftPad:Bool = true):String
+	{
+		if (str.length > size) {
+			// Add a couple of chars in the end to indicate that it was truncated
+			return str.substr(0, size-2) + "..";
+		}
+		else if (str.length < size) {
+			if(leftPad)
+				return StringTools.lpad(str, char, size);
+			else
+				return StringTools.rpad(str, char, size);
+		}else {
+			// no need to change it
+			return str;
+		}
+	}//---------------------------------------------------;
+	
 }// -- end --//

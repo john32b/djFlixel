@@ -73,6 +73,31 @@ class Gui
 		return t;
 	}//---------------------------------------------------;
 	
+	/**
+	 * Get a quick text object with color and border color. NO TEXT MARKUP!!
+	 * @param	text
+	 * @param	size
+	 * @param	color
+	 * @param	border
+	 * @param	X
+	 * @param	Y
+	 * @return
+	 */
+	public static function getQText(text:String, size:Int = 8, color:Int = DEFAULT_TEXT_COLOR,
+							borderC:Int = -1, X:Float = 0, Y:Float = 0):FlxText
+	{
+		
+		var t = new FlxText(X, Y, 0, text, size);
+		t.scrollFactor.set(0, 0);
+		t.color = color;
+		if (borderC >-1) {
+			t.borderStyle = FlxTextBorderStyle.SHADOW;
+			t.borderSize = Math.ceil(size / 8);
+			t.borderColor = borderC;
+			t.borderQuality = 1;
+		}
+		return t;
+	}//---------------------------------------------------;
 	
 	/**
 	 * Quickly get a text button that can be clicked to a void callback

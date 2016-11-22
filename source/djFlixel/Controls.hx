@@ -58,7 +58,7 @@ class Controls
 	// no need to keep initializing this class
 	static var isInited:Bool = false;
 	// pointer to the first connected gamepad
-	static var gamepad(default, null):FlxGamepad = null;
+	public static var gamepad(default, null):FlxGamepad = null;
 	// Pointer to the keyboard for quick access
 	static var keys(default, null):FlxKeyboard;
 	
@@ -128,7 +128,7 @@ class Controls
 	// Quick way for user to know if gamepad is connected
 	// Preferably called once on init
 	// Else you can keep calling findGamepad to check for gamepad
-	public static function gamepadConnected():Bool
+	public static inline function gamepadConnected():Bool
 	{
 		return (gamepad != null);
 	}//---------------------------------------------------;

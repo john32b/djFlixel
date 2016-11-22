@@ -9,8 +9,17 @@ import openfl.geom.Rectangle;
 /**
  * A solid background that pops up with an animation
  * 
- * V0.9
- * 		First Ver
+ * - V0.1
+ * ------
+ * 
+ * - Use
+ * -------
+ * 
+ * 	new BGPOP(100,100,black);
+ *  bg.start(callback);
+ * 
+ * 	// prior to starting it's transparent
+ * 
  */
 class BGPop extends FlxSprite
 {

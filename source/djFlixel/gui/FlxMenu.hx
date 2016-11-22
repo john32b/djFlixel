@@ -386,7 +386,7 @@ class FlxMenu extends FlxGroup
 			_mcallback("close");
 		}
 		
-		if (flag_remember_cursor_position && currentPage!=null)
+		if (flagRememberPos && currentPage!=null)
 		{
 			var d1 = currentMenu.getCurrentOptionData();
 			if (d1 != null) currentPage.custom._cursorLastUID =	d1.UID;
@@ -642,9 +642,11 @@ class FlxMenu extends FlxGroup
 		}
 		
 		// If the cursor needs to go back to where it was
-		if (flag_remember_cursor_position && currentPage.custom._cursorLastUID != null) {
+		if (currentPage.custom._cursorLastUID != null) {
 			// trace('Cursor, get last position');
 			r1 = currentMenu.getOptionIndexWithField("UID", currentPage.custom._cursorLastUID);
+			// Reset the cursorLastUID, because I used it.
+			currentPage.custom._cursorLastUID = null;
 			_sub_SetCursToPos(r1); // will check for -1 there
 		}else {
 			// trace('Cursor, from the top');
@@ -841,7 +843,7 @@ class FlxMenu extends FlxGroup
 		switch(s) {
 			case "optFire": 
 				_mcallback("tick_fire");
-				if (o.type == "link" && Reflect.hasField(o.data, "callback")) {
+				if (o.type == "link" && o.data.callback != null) {
 					o.data.callback();
 				}
 			case "optChange": _mcallback("tick_change");

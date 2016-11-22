@@ -115,7 +115,8 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		}
 		
 		// Don't go to the same place
-		if (_index_data == R) return;
+		if (_index_data == R) return; // TODO: If you want to replace data, this is a problem.
+									 // if (R < 0) R = 0; // ^ Fix for above
 		
 		if (R >= _data_length) {
 			R = _data_length - 1;

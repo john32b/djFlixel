@@ -5,12 +5,16 @@ import com.newgrounds.APIEvent;
 import com.newgrounds.SaveFile;
 import com.newgrounds.SaveGroup;
 import com.newgrounds.SaveQuery;
+import com.newgrounds.Score;
+import com.newgrounds.ScoreBoard;
 import com.newgrounds.components.MedalPopup;
+import djFlixel.gapi.ApiOffline.Trophy;
 import flixel.util.FlxTimer;
 
 import flixel.FlxG;
 import flash.Lib;
-import lime.utils.ByteArray;
+
+import flash.utils.ByteArray;
 
 /**
  * Newgrounds API
@@ -32,17 +36,20 @@ import lime.utils.ByteArray;
  * 	<haxedef name="NEWGROUNDS"/>
  *	<haxeflag name="-swf-lib" value="assets/newgrounds/NewgroundsAPI.swc"/>
  *	<haxedef name="as3_native" if="flash"/>
+ * 
+ * ---------------------
+ * - DEV NOTES -
+ * 	API reference : https://www.newgrounds.com/wiki/creator-resources/flash-api/reference/api#wiki_toc_31
+ * 
+ * - Useful
+ *	API.logCustomEvent(eventName:String):void -> add custom developer event 
  *=================================================================*/
 
 @:file("assets/newgrounds.key") class NewgroundsKey extends ByteArray { }
-class ApiNewgroundsGeneric extends ApiEmpty
+class ApiNewgroundsGeneric extends ApiOffline
 {
 	// - Every newgrounds game has an ID String
 	var API_ID:String;
-	// Override on child
-	var trophyMap:Map<String,String>;	// # SET ON CHILD
-	// Keep track of which trophies are already got in the runtime
-	var trophyGot:Map<String,Bool>;
 	// All save files will be saved with this name
 	var saveName:String = "data";
 	// Currently connected save file
@@ -50,20 +57,23 @@ class ApiNewgroundsGeneric extends ApiEmpty
 	
 	// All save files will go to this group.
 	var saveGroupName:String = null; // # SET ON CHILD
+	// I will just use one scoreboard
+	var scoreBoardName:String = null; // # SET ON CHILD
 	// - Whether or not to show the newgrounds Medal Popup
 	var flag_show_popup:Bool = true; // # SET ON CHILD
-		
-	
+	// - General Purpose Score Board
+	var scoreBoard:ScoreBoard;
 	//---------------------------------------------------;
+	/**
+	 * Get apiID after creating your Project at Newgrounds.
+	 * @param	apiID looks like this "46705:24BCOlS1"
+	 */
 	public function new(apiID:String) 
 	{ 
 		super();
 		SERVICE_NAME = "Newgrounds";
-		trophyMap = new Map();
-		trophyGot = new Map();
 		API_ID = apiID;
 		trace('Info: Creating Newgrounds API Handler, API_ID = $API_ID');
-		// Override and add trophies!
 	}//---------------------------------------------------;
 	// --
 	function getPrivateKey():String
@@ -88,16 +98,42 @@ class ApiNewgroundsGeneric extends ApiEmpty
 		
 		connectStatus = "working";
 		
-		// #if debug
-		// API.debugMode = API.DEBUG_MODE_LOGGED_IN;
-		// #else
-		// API.debugMode = API.RELEASE_MODE;
-		// #end
+		 #if debug
+		 API.debugMode = API.DEBUG_MODE_LOGGED_IN;
+		 #else
+		 API.debugMode = API.RELEASE_MODE;
+		 #end
 		
 		API.addEventListener(APIEvent.API_CONNECTED, onAPIConnected);
 		API.connect(Lib.current.root, API_ID, getPrivateKey());
 	}//---------------------------------------------------;
-	// --
+	
+	/**
+	 * You have to call this after flixel is initialized 
+	 * DO NOT CALL THIS on the preloader
+	 */
+	public function initMedal()
+	{
+		if (!isConnected) {
+			trace("Error: Is not connected");
+			return;
+		}
+	
+		// Add the newgrounds custom popup
+		if (flag_show_popup) 
+		{
+			var popup:MedalPopup = new MedalPopup();
+				popup.x = (FlxG.width * FlxG.initialZoom) / 2 - popup.width / 2;
+				popup.y = 2;
+				popup.alwaysOnTop = "true";
+			Lib.current.stage.addChild(popup);
+		}		
+	}//---------------------------------------------------;
+	
+	/**
+	 * Autocalled on api connect or fail
+	 * @param	event
+	 */
 	function onAPIConnected(event:APIEvent)
 	{
 		if (connectTimer != null) {
@@ -109,21 +145,20 @@ class ApiNewgroundsGeneric extends ApiEmpty
 		if(event.success)
 		{
 			connectStatus = "ok";
-			trace("Warning: The API is connected and ready to use!");
+			trace("Info: The API is connected and ready to use!");
 			
-			// Add the newgrounds custom popup
-			if (flag_show_popup) 
-			{
-				var popup:MedalPopup = new MedalPopup();
-					popup.x = (FlxG.width * FlxG.initialZoom) / 2 - popup.width / 2;
-					popup.y = 2;
-					popup.alwaysOnTop = "true";
-				Lib.current.stage.addChild(popup);
+			// -- Try to load the savegame
+			if (saveGroupName != null) {
+				trace("Trying to get SaveGroup::", saveGroupName);
+				fetchSave();
 			}
 			
-			// Try to load the savegame
-			if (saveGroupName != null) {
-				fetchSave();
+			// -- Try to get scores
+			if (scoreBoardName != null) {
+				// trace("Trying to get scoreboard", scoreBoardName);
+				// I am thinking that scoreboards should be loaded everytime they are requested.
+				// So that they are fresh.
+				// fetchScores();
 			}
 			
 			isConnected = true;
@@ -132,41 +167,44 @@ class ApiNewgroundsGeneric extends ApiEmpty
 		else
 		{
 			trace("Error: Connecting to the API: " + event.error);
+			
+			switch(event.error) {
+				case APIEvent.ERROR_HOST_BLOCKED:
+					isBlocked = true;
+				default:
+			}
+			
 			connectStatus = "fail";
 			if (onConnect != null) onConnect();
 		}
 	}//---------------------------------------------------;
-
-	override public function trophy(trophyID:String) 
-	{ 
+	
+	// --
+	override function _onTrophyUnlock(tr:Trophy) 
+	{
 		if (!isConnected) return;
-		
-		if (trophyGot.exists(trophyID)) {
-			return;
-		}
-		
-		API.unlockMedal(trophyMap.get(trophyID));
-		
-		trophyGot.set(trophyID, true);
-	}//---------------------------------------------------;
-	override public function uploadScores() 
-	{ 
-		// * OVERRIDE THIS AND PUSH SCORES *
-		
-		// Make sure the table exists
-		
-		// e.g.
-		// ng_score("Score Board Name", 400);
+		API.unlockMedal(tr.name);	
 	}//---------------------------------------------------;
 	
-	private function ng_score(scoreboard:String, score:Int)
+	// --
+	var onScoreUploaded:Void->Void;
+	override public function uploadScore(score:Int, ?callback:Void->Void = null) 
 	{
 		if (!isConnected) {
 			trace("Error: Is not connected to API");
 			return;
 		}
-		
-		API.postScore(scoreboard, score);
+		onScoreUploaded = callback;
+		if (onScoreUploaded != null) {
+			API.addEventListener(APIEvent.SCORE_POSTED, __onScoreUploaded);
+		}
+		API.postScore(scoreBoardName, score);
+	}//---------------------------------------------------;
+	function __onScoreUploaded(e:APIEvent)
+	{
+		trace("Score Upload success");
+		API.removeEventListener(APIEvent.SCORE_POSTED, __onScoreUploaded);
+		if (onScoreUploaded != null) onScoreUploaded();
 	}//---------------------------------------------------;
 	
 	// --
@@ -219,7 +257,11 @@ class ApiNewgroundsGeneric extends ApiEmpty
 	// --
 	// Saves or overwrites the save with "savename" with "data"
 	override public function save(data:String)
-	{		
+	{
+		if (!isConnected) return;
+		
+		if (saveGroupName == null) return;
+		
 		if (savefile == null)
 		{
 			savefile = API.createSaveFile(saveGroupName);	
@@ -246,9 +288,9 @@ class ApiNewgroundsGeneric extends ApiEmpty
 	{
 		// Create a saveQuery and load by NAME, search name to be savegame.		
 		var query:SaveQuery = API.createSaveQueryByName(saveGroupName, saveName, true);
-		query.addEventListener(APIEvent.QUERY_COMPLETE, _queryLoadComplete);
+			query.addEventListener(APIEvent.QUERY_COMPLETE, _queryLoadComplete);
 		
-		// Cancel the transaction after X seconds
+		// Cancel the transaction after X seconds and set the loadstatus to FAIL
 		connectTimer = new FlxTimer();
 		connectTimer.start(CONNECT_TIMEOUT, function(_) {
 			if (query != null){
@@ -272,6 +314,7 @@ class ApiNewgroundsGeneric extends ApiEmpty
 	// Usually it's only one file I need.
 	function _queryLoadComplete(e:APIEvent)
 	{
+		// Stop timing for a timeout.
 		if (connectTimer != null) {
 			connectTimer.destroy();
 		}
@@ -304,11 +347,14 @@ class ApiNewgroundsGeneric extends ApiEmpty
 	}//---------------------------------------------------;
 
 	// --
+	public function log(s:String)
+	{
+		API.logCustomEvent(s);
+	}//---------------------------------------------------;
+	
+	// --
 	override public function destroy()
 	{
-		trophyGot = null;
-		trophyMap = null;
-		
 		if (isConnected && savefile != null )
 		{
 			savefile.removeEventListener(APIEvent.FILE_SAVED, __onSave );
@@ -321,4 +367,48 @@ class ApiNewgroundsGeneric extends ApiEmpty
 		}
 	}//---------------------------------------------------;
 
+	// --
+	override public function openURLGame() 
+	{
+		if (isConnected) 
+			API.loadOfficialVersion();
+		else
+			super.openURLGame();
+	}//---------------------------------------------------;
+	
+	/**
+	 * This can be called by the user also.
+	 * Check the 'scores' object on the callback. Check for null also.
+	 */
+	var onScoreLoad:Void->Void = null;
+	override public function fetchScores(callback:Void->Void = null)
+	{
+		if (!isConnected) return;
+		onScoreLoad = callback;
+		API.addEventListener(APIEvent.SCORES_LOADED, __onScoreLoad);
+		scoreBoard = API.loadScores(scoreBoardName, ScoreBoard.ALL_TIME, 1, SCORES_TO_GET);
+	}//---------------------------------------------------;
+	// --
+	function __onScoreLoad(e:APIEvent)
+	{
+		// -
+		API.removeEventListener(APIEvent.SCORES_LOADED, __onScoreLoad);
+		
+		if (e.success) {
+			scores = [];
+			for (sc in scoreBoard.scores) {
+				trace("-- Scores loaded --");
+				var ss = { rank:sc.rank, user:sc.username, score_str:sc.score, score_num:sc.numericValue };
+				scores.push(ss);
+				trace(ss);
+			}
+			
+		}else {
+			trace("-- Failed to load scores --");
+			scores = null;
+		}
+		
+		if (onScoreLoad != null) onScoreLoad();
+	}//---------------------------------------------------;
+	
 }// --

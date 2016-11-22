@@ -16,11 +16,9 @@ class State_Main extends FlxState
 	{
 		super.update(elapsed);
 		
-		#if debug
 		// On keypress "f12" reload JSON parameters and reset game
 		// So I can quickly make changes to the json file and see them in action
 		Reg.debug_keys();
-		#end
 	
 	}//---------------------------------------------------;
 	
