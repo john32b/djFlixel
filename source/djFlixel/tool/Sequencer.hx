@@ -13,6 +13,7 @@
  *********************************************************/
 package djFlixel.tool;
 
+import flixel.tweens.FlxTween;
 import flixel.util.FlxTimer;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
@@ -84,8 +85,20 @@ class Sequencer implements IFlxDestroyable
 		currentStep = step;
 		callback(currentStep);
 	}//---------------------------------------------------;
-	// --
+	
+	/**
+	 * Quick use on a void callback
+	 */
 	public function nextF()
+	{
+		next();
+	}//---------------------------------------------------;
+		
+	/**
+	 * Quick use on a tween callback
+	 * @param e
+	 */
+	public function nextT(e:FlxTween)
 	{
 		next();
 	}//---------------------------------------------------;

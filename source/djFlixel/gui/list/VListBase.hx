@@ -1,5 +1,6 @@
 package djFlixel.gui.list;
 
+import djFlixel.gui.BlinkSprite;
 import djFlixel.gui.Styles;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -8,7 +9,6 @@ import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
-import flixel.util.FlxPool;
 import flixel.util.FlxTimer;
 import djFlixel.gui.listoption.IListOption;
 import haxe.Constraints.Function;
@@ -128,6 +128,16 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	// Store the starting Y position of each slot, used later in the animation
 	var elementYPositions:Array<Int>;
 	
+	
+	// -- Scrolling Indicators
+	var scrollInd:Array<BlinkSprite>; //Index0 is up, Index1 is down
+	
+	
+	// -- HACKS --------------------------------------
+	
+	// Useful when the optionelement heights is not the same as the display size
+	public var hack_bottom_scroll_indicator_nudge:Int = 0;
+	
 	// ===================================================;
 	// ===================================================;
 	
@@ -166,6 +176,29 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		pooling_mode = null;
 	}//---------------------------------------------------;
 	
+	/**
+	 * call this after any scroll change
+	 */
+	function updateScrollIndicator()
+	{
+		if (scrollInd == null) {
+			if (width == 0 || height == 0) {
+				trace("Error: Must have width and height set");
+				return;
+			}
+			scrollInd = [];	
+			for (i in 0...2) {
+				scrollInd[i] = new BlinkSprite(0, 0, "assets/hud_icons.png", 16, 14 + i);
+				add(scrollInd[i]);
+			}
+			scrollInd[0].setPosition(this.x + (this.width / 2) - 8, this.y - 8);
+			scrollInd[1].setPosition(this.x + (this.width / 2) - 8, this.y + this.height + 2 + hack_bottom_scroll_indicator_nudge);
+		} // --
+		
+		scrollInd[0].set(hasMoreAbove());
+		scrollInd[1].set(hasMoreBelow());
+	}//---------------------------------------------------;
+	
 	
 	// Sets a new data source AND INITIALIZES
 	// Be sure to have any initialization or styles done up to this point
@@ -197,7 +230,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			r_el = factory_getElement(0);
 			elementHeight = r_el.getOptionHeight() + styleBase.element_padding;
 			r_el.destroy();
-			height = _slotsTotal * elementHeight;
+			height = (_slotsTotal * elementHeight) - styleBase.element_padding;
 			
 			// -- Get the starting positions of the slots
 			elementYPositions = [];
@@ -252,9 +285,11 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	
-	// Reveal the bottom, like moving the camera down
-	// v0.1: It works!
+	/**
+	 * Scroll the entire list down by one element
+	 * :: Reveals the bottom! the elements actually will go up
+	 * @return
+	 */
 	public function scrollDownOne():Bool
 	{	
 		#if debug
@@ -272,28 +307,44 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			counter = 0;
 			while (counter < _slotsTotal)
 			{
-				// Make sure the tween starts from a valid pos
-				if (counter == 0) {
-				 allTweens.push(FlxTween.tween(elementSlots[counter], 
-					{ alpha:0, y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
-				} else {
-				 allTweens.push(FlxTween.tween(elementSlots[counter], 
-					{ y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
+				if (styleBase.instantScroll) {
+					elementSlots[counter].y -= elementHeight;
+				}else
+				{
+					// Make sure the tween starts from a valid pos
+					if (counter == 0) { // This is to fade off the first one only
+					 allTweens.push(FlxTween.tween(elementSlots[counter], 
+						{ alpha:0, y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
+					} else {
+					 allTweens.push(FlxTween.tween(elementSlots[counter], 
+						{ y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
+					}
 				}
+
 				elementSlots[counter] = elementSlots[counter + 1];
 				counter++;
 			}
-			// At this point counter points to the index that isn't there
-			// New element at the bottom;
-			r_el = getNewElementIntoPos(counter , _scrollOffset + counter);
-			elementSlots[counter - 1] = r_el;
-			isScrolling = true;
+			
+			if (styleBase.instantScroll) {
+				
+				r_el = getNewElementIntoPos(counter - 1 , _scrollOffset + counter);
+				_scrollOffset++;
+				elementSlots[counter - 1] = r_el;
+				__scrollComplete(null);
+				
+			}else {
+				// At this point counter points to the index that isn't there
+				// New element at the bottom;
+				r_el = getNewElementIntoPos(counter , _scrollOffset + counter);
+				_scrollOffset++;
+				elementSlots[counter - 1] = r_el;
+				isScrolling = true;
 
-			r_el.alpha = 0;
-			allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y - elementHeight }, styleBase.element_scroll_time, 
-					{ onComplete:__scrollComplete } ));
-					
-			_scrollOffset++;
+				r_el.alpha = 0;
+				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y - elementHeight }, styleBase.element_scroll_time, 
+						{ onComplete:__scrollComplete } ));
+			}
+
 			return true;
 			
 		}else {
@@ -302,7 +353,11 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		}
 	}//---------------------------------------------------;
 
-	// v0.1: It works!
+	/**
+	 * Scrolls entire list up by one element
+	 * :: Reveals the top! the elements actually will go down
+	 * @return
+	 */
 	public function scrollUpOne():Bool
 	{
 		if (isScrolling) {
@@ -322,28 +377,42 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			counter = r_1; // last index
 			while (counter >= 0)
 			{
-				if (counter == r_1) {
-				allTweens.push(FlxTween.tween(elementSlots[counter],
-					{alpha:0, y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
+				if (styleBase.instantScroll) {
+					elementSlots[counter].y += elementHeight; // elementHeight includes padding
 				}else {
-				allTweens.push(FlxTween.tween(elementSlots[counter],
-					{y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
+					if (counter == r_1) {
+						allTweens.push(FlxTween.tween(elementSlots[counter],
+							{alpha:0, y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
+					}else {
+						allTweens.push(FlxTween.tween(elementSlots[counter],
+							{y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
+					}
 				}
+			
 				elementSlots[counter] = elementSlots[counter - 1];
 				counter--;
 			}
 			
-			// Counter is now -1;
-			r_el = getNewElementIntoPos(counter, _scrollOffset - 1);
-			r_el.alpha = 0;
-			elementSlots[0] = r_el;
-			
-			isScrolling = true;
+			if (styleBase.instantScroll)
+			{
+				// Counter is now -1;
+				r_el = getNewElementIntoPos(counter + 1, _scrollOffset - 1);
+				_scrollOffset--;
+				elementSlots[0] = r_el;
+				__scrollComplete(null);
+			}else
+			{
+				// Counter is now -1;
+				r_el = getNewElementIntoPos(counter, _scrollOffset - 1);
+				_scrollOffset--;
+				r_el.alpha = 0;
+				elementSlots[0] = r_el;
+				
+				isScrolling = true;
 
-			allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y + elementHeight }, styleBase.element_scroll_time, 
-					{ onComplete:__scrollComplete } ));
-					
-			_scrollOffset--;
+				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y + elementHeight }, styleBase.element_scroll_time, 
+						{ onComplete:__scrollComplete } ));
+			}
 			
 			return true;
 		}else {
@@ -427,8 +496,11 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	// --
-	// # OPTIONAL
+	/**
+	 * Animates the menu to onScreen
+	 * @param	focusAfter
+	 * @param	onComplete
+	 */
 	public function onScreen(focusAfter:Bool = true, ?onComplete:Void->Void)
 	{
 		visible = true;
@@ -440,7 +512,10 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 								if (onComplete != null) onComplete(); 
 							});
 	}//---------------------------------------------------;
-	
+	/**
+	 * Animates the menu to offScreen
+	 * @param	onComplete
+	 */
 	public function offScreen(?onComplete:Void->Void)
 	{
 		unfocus();
@@ -511,6 +586,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			if (width == 0) { trace("Error: Autowidth was 0 !"); width = 42; }	
 		}
 		
+		updateScrollIndicator();
 	}//---------------------------------------------------;
 	
 	//====================================================;
@@ -542,6 +618,8 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		}
 		
 		markedForRemoval.splice(0, markedForRemoval.length);
+		
+		updateScrollIndicator();
 	}//---------------------------------------------------;	
 	
 	

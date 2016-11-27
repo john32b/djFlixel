@@ -25,15 +25,19 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	var _index_data:Int;
 	// Current highlighted slot index
 	var _index_slot:Int;
+	
 	// Current highlighted element pointer
 	public var currentElement(default, null):T;
 	
 	// What is says, I need it when I need the list to be focused visually, but not interactable
 	var inputAllowed:Bool;
 	
-	// #user set
+	// # USER SET::
+	// 
+	// tick : 
+	// back :
+	// start:
 	public var callbacks:String->K->Void = null;
-	
 	
 	// -- STYLINGS
 	// --
@@ -46,6 +50,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// --
 	public var cursor(default, null):FlxSprite;
 	var hasCursor:Bool;
+	
 	// Keep the tween in case I want to cancel it
 	var cursorTween:VarTween;
 	
@@ -56,17 +61,16 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	var _cursor_tween_time:Float;
 	
 	
-	// -- Mouse
-	// --
+	// -- Mouse Related
+	// ------------
 	
 	// -- You can set this at any time
 	// Enables mouse interaction with the optionelements
 	public var flag_use_mouse:Bool = true;
 	
-	// -- Set this at any time
-	// Loops at edges
-	public var flag_loop_on_edge:Bool = false;
-
+	// -- If true will try to scroll up and down using the mouse
+	public var flag_mouse_scroll:Bool = true;
+	
 	// Precalculate camera viewport and scrolling for mouse overlap calculations
 	var _camCheckOffset:SimpleCoords;
 	
@@ -83,7 +87,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		inputAllowed = false;
 	}//---------------------------------------------------;	
 	
-	
+	// --
 	override public function setDataSource(arr:Array<K>) 
 	{
 		if (arr == null) return;
@@ -193,7 +197,13 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	override public function focus() 
 	{	
 		if (isFocused) return;
-			isFocused = true;
+		
+		if (_data_length == 0) {
+			trace("Error: No elements in the menu");
+			return;
+		}
+		
+		isFocused = true;
 			
 		currentElement_Focus();
 		
@@ -209,7 +219,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		}
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * Focus the menu,
+	 * Starts accepting input
+	 */
 	override public function unfocus() 
 	{
 		if (!isFocused) return;
@@ -220,12 +233,14 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		setInputFocus(false);
 	}//---------------------------------------------------;
 	
-	// --
-	// Sets the input flag to on or off
-	// Also, adds or remove the cursor
-	public function setInputFocus(state:Bool)
+	
+	/**
+	 * Sets the input flag to on or off
+	 * Also, adds or remove the cursor
+	 * Useful when you want to keep the menu on screen but unfocused?
+	 */
+	function setInputFocus(state:Bool)
 	{
-		
 		inputAllowed = state; 
 		
 		if (!hasCursor) return;
@@ -258,54 +273,138 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	function checkInput() 
 	{
 		switch(Controls.CURSOR_DIR()) {
-		// =============================== CONTROLS UP   =======;
-		case Controls.UP:
-			if (_index_data == 0) {
-				if (flag_loop_on_edge) {
-					setViewIndex(_data_length - 1); callback_menu("tick");
+			case Controls.UP: 		selectionOneUp();
+			case Controls.DOWN:		selectionOneDown();
+			case Controls.LEFT:		currentElement.sendInput("left");
+			case Controls.RIGHT:	currentElement.sendInput("right");
+		}// end switch--
+		
+		// =============================== CONTROLS SELECT   =======;
+		if (Controls.CURSOR_OK())
+		{
+			currentElement.sendInput("fire");
+		}else
+		// =============================== CONTROLS BACK     =======;
+		if (Controls.CURSOR_CANCEL()) {
+			if (isScrolling) return;
+			callback_menu("back");
+			
+		}else
+		// =============================== Start Button     =======;
+		// This could be triggered to close the menu.
+		if (Controls.justPressed(Controls.START)) {
+			if (isScrolling) return;
+			callback_menu("start");
+		}
+
+		// -- Check mouse controls ::
+		if (!flag_use_mouse || isScrolling) return;
+		
+		// :: Check for mouse scrolling
+		if (flag_mouse_scroll && (FlxG.mouse.wheel < 0 || FlxG.mouse.wheel > 0))
+		{
+			if ((FlxG.mouse.screenX + _camCheckOffset.x > this.x) && (FlxG.mouse.screenX + _camCheckOffset.x < this.x + this.width) &&  
+				(FlxG.mouse.screenY + _camCheckOffset.y > this.y) && (FlxG.mouse.screenY + _camCheckOffset.y < this.y + this.height )) {
+					
+					if (FlxG.mouse.wheel < 0) 
+					{
+						if (scrollDownOne()) {	
+							_index_data++;
+							_dataIndexChanged();
+						}
+					}
+					else
+					{
+						 if (scrollUpOne()) {
+							_index_data--;
+							_dataIndexChanged();
+						 }
+					}
+					
+					// In the case where this scrolls instantly continue
+					if (isScrolling) return; 
+				
 				}
+		}// --
+	
+		
+		// -- Check Collision on all slots
+		for (counter in 0..._slotsTotal) 
+		{
+			if (elementSlots[counter] != null) 
+			{
+				r_el = elementSlots[counter]; // Readability
+				// if (r_el.opt.disabled || !r_el.opt.selectable) continue;
+				if ((FlxG.mouse.screenX + _camCheckOffset.x > r_el.x) && (FlxG.mouse.screenX + _camCheckOffset.x < r_el.x + r_el.width) &&  
+					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
+						if (!r_el.isFocused) requestRollOver(counter); else
+						if (FlxG.mouse.justPressed) r_el.sendInput("fire");
+						//else if (FlxG.mouse.wheel < 0) r_el.sendInput("left");
+						//else if (FlxG.mouse.wheel > 0) r_el.sendInput("right");
+					}
+			}//--
+		}//--
+
+	}//---------------------------------------------------;
+	
+
+	
+	/**
+	 * Move the cursor one position up
+	 */
+	function selectionOneUp()
+	{
+		if (_index_data == 0) {
+			if (styleList.loop_edge) {
+				setViewIndex(_data_length - 1); callback_menu("tick");
+			}
+			return;
+		}
+		
+		r_1 = findNextSelectableIndex(_index_data - 1, -1);
+		if (r_1 == -1) return; // Can't find a selectable element
+	
+		// r_1 is now Delta, Amount to go up
+		r_1 = _index_data - r_1;
+		
+		if (_index_slot - r_1 >= scrollPadding) { // No view scroll is needed
+			_index_slot -= r_1;
+			_index_data -= r_1;
+			_dataIndexChanged();
+		}else
+		{
+			if (r_1 > 1) {
+				// trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
+				setViewIndex(_index_data - r_1);
+				// callback_menu("tick");
 				return;
 			}
+	
+			if (isScrolling) return;
 			
-			r_1 = findNextSelectableIndex(_index_data - 1, -1);
-			if (r_1 == -1) return; // Can't find a selectable element
-		
-			// r_1 is now Delta, Amount to go up
-			r_1 = _index_data - r_1;
-			
-			if (_index_slot - r_1 >= scrollPadding) { // No view scroll is needed
-				_index_slot -= r_1;
-				_index_data -= r_1;
-				_dataIndexChanged();
-			}else
-			{
-				if (r_1 > 1) {
-					// trace("Warning: Scrolling more than 1 element is not supported. Hard Scrolling.");
-					setViewIndex(_index_data - r_1);
-					// callback_menu("tick");
-					return;
-				}
-		
-				if (isScrolling) return;
-				
-				if (scrollUpOne()) {
-						_index_data--;
-						_dataIndexChanged();
-				}else {
-					// The scroll padding has reached the end
-					if (_index_slot > 0) {
-						_index_slot--;
-						_index_data--;
-						_dataIndexChanged();
-					}
+			if (scrollUpOne()) {
+					_index_data--;
+					_dataIndexChanged();
+			}else {
+				// The scroll padding has reached the end
+				if (_index_slot > 0) {
+					_index_slot--;
+					_index_data--;
+					_dataIndexChanged();
 				}
 			}
-		// =============================== CONTROLS DOWN =======;
-		case Controls.DOWN:		
+		}
+	}//---------------------------------------------------;
+	
+	/**
+	 * Move the cursor one position down
+	 */
+	function selectionOneDown()
+	{
 		// Sometimes when not the entire slots are filled,
 		// prevent scrolling to an empty slot by checking this.
 		if (_index_data == _data_length - 1) {
-			if (flag_loop_on_edge) {
+			if (styleList.loop_edge) {
 				setViewIndex(0); callback_menu("tick");
 			}
 			return;
@@ -344,49 +443,9 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 				}
 			}
 		}
-		// =============================== CONTROLS LEFT     =======;
-		case Controls.LEFT:
-			currentElement.sendInput("left");
-		// =============================== CONTROLS RIGHT    =======;
-		case Controls.RIGHT:
-			currentElement.sendInput("right");
-		}// end switch--
-		
-		// =============================== CONTROLS SELECT   =======;
-		if (Controls.CURSOR_OK())
-		{
-			currentElement.sendInput("fire");
-		}else
-		// =============================== CONTROLS BACK     =======;
-		if (Controls.CURSOR_CANCEL()) {
-			if (isScrolling) return;
-			callback_menu("back");
-			
-		}else
-		// =============================== Start Button     =======;
-		// This could be triggered to close the menu.
-		if (Controls.justPressed(Controls.START)) {
-			if (isScrolling) return;
-			callback_menu("start");
-		}
-
-		// -- Check mouse controls ::
-		if (!flag_use_mouse) return;
-		if (isScrolling) return;
-		for (counter in 0..._slotsTotal) {
-			if (elementSlots[counter] != null) {
-				r_el = elementSlots[counter];
-//				if (r_el.opt.disabled || !r_el.opt.selectable) continue;
-				if ((FlxG.mouse.screenX + _camCheckOffset.x > r_el.x) && (FlxG.mouse.screenX + _camCheckOffset.x < r_el.x + r_el.width) &&  
-					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
-						if (!r_el.isFocused) requestRollOver(counter); else
-						if (FlxG.mouse.justPressed) r_el.sendInput("fire"); else
-						if (FlxG.mouse.wheel < 0) r_el.sendInput("left"); else
-						if (FlxG.mouse.wheel > 0) r_el.sendInput("right");
-					}
-			}// end if not null
-		}// end for
 	}//---------------------------------------------------;
+					
+	
 	
 	/**
 	 * Get the next selectable option index, starting and including &fromIndex 

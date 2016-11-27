@@ -30,6 +30,7 @@ class FlxMenu extends FlxGroup
 	public var width(default, null):Int;
 	public var height(get, null):Int;
 	public var isFocused(default, null):Bool;
+	// Check isOpen by checking visible
 	
 	// Whether is is going on or off right now
 	var isAnimating:Bool;
@@ -81,10 +82,20 @@ class FlxMenu extends FlxGroup
 	
 	// Allow mouse interaction with the menu options
 	public var flag_use_mouse:Bool = true;
+		
+	//---------------------------------------------------;
+	
+	// -- PAGE STATES --
+	
+	// Call a function when a page is on/off
+	/// TODO:
+	// var pageStates:Map<String,Bool->Void> = null;
+
 	
 	// ==  User callbacks
 	// -------------------==
 
+	// optBlur   - This option was just unfocused // Unimplemented. need to add it. VListNav
 	// optFocus  - A new option has been focused <sends option>
 	// optChange - When an option changed value, <sends option>
 	// optFire   - An option recieved an action command
@@ -94,7 +105,7 @@ class FlxMenu extends FlxGroup
 	// back  	- The menu went back a page
 	// rootback - When user wants to back out from the root menu
 	// open   	- The menu was just opened
-	// close  	- The menu was just closed
+	// close  	- The menu was just closed, $param == SID just went off screen
 	// pageOn 	- The page with $param == SID just went on screen
 	// pageOff  - The page with $param == SID just went off screen
 	
@@ -290,7 +301,15 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * Automatically OPEN the menu as well.
+	 * Sends 
+	 * 		"open" 
+	 * 		"pageOn",currentpage.SID
+	 * 		"pageOn",currentpage.SID
+	 * @param	pageSID
+	 * @param	autofocus
+	 */
 	public function showPage(pageSID:String, autofocus:Bool = true)
 	{
 		if (isAnimating) return;
@@ -382,8 +401,8 @@ class FlxMenu extends FlxGroup
 	public function close(flagRememberPos:Bool = false)
 	{
 		if (visible) {
-			visible = false;	
-			_mcallback("close");
+			visible = false;
+			_mcallback("close", currentPage!=null?currentPage.SID:null);
 		}
 		
 		if (flagRememberPos && currentPage!=null)
@@ -731,6 +750,7 @@ class FlxMenu extends FlxGroup
 	 * @param	question If set it will display this text
 	 * @param	options Custom names instead of YES,NO
 	 */
+	@:access(djFlixel.gui.list.VListNav.setInputFocus)
 	public function popup_YesNo(X:Int, Y:Int, qcallback:Bool->Void, ?question:String, ?yesno:Array<String>):Void
 	{
 		if (yesno == null) yesno = ["Yes", "No"];

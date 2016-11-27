@@ -23,6 +23,10 @@ import flixel.util.FlxColor;
 	typedef VBaseStyle = {
 		// Time it takes to scroll the elements in and out of the list.
 		var element_scroll_time:Float;
+		
+		// Use a tween to scroll elements or make them appear instantly
+		var instantScroll:Bool;
+		
 		// Padding between elements in pixels.
 		var element_padding:Int;
 
@@ -73,6 +77,8 @@ import flixel.util.FlxColor;
 		 var cursor_offset:Array<Int>;
 		 // If set then the cursor will be a sprite with this image asset.
 		 var cursor_image:String;
+		 // Loop at edges
+		 var loop_edge:Bool;
 	 }// :: -- ::
  
 	 
@@ -112,11 +118,13 @@ class Styles
 		focus_nudge : 5,
 		scrollPad : 1,
 		cursor_offset : null,
-		cursor_image : null
+		cursor_image : null,
+		loop_edge : false
 	}; // --
 		
 	public static var default_BaseStyle(default, never):VBaseStyle = {
 		element_scroll_time:0.18,
+		instantScroll:false,
 		element_padding:2,
 		anim_time_between_elements:0,
 		anim_total_time: 0.4,

@@ -1,5 +1,6 @@
 package djFlixel.gapi;
 import djFlixel.gapi.ApiOffline.Trophy;
+import djFlixel.gapi.TrophyPopup;
 import flixel.FlxG;
 import flixel.util.FlxTimer;
 
@@ -52,6 +53,7 @@ class ApiOffline
 		
 		trophyGot = new Map();
 		trophies = new Map();
+		trophiesAr = [];
 	}//---------------------------------------------------;
 	public function getUser():String 
 	{ 
@@ -122,6 +124,11 @@ class ApiOffline
 	//====================================================;
 	// ACHIEVEMENTS 
 	//====================================================;
+	
+	// # USER MUST SET THIS TO THE SPRITE SHEET IF YOU WANT POPUPS AND LISTS TO WORK!
+	// 32x32 size
+	public var SPRITE_SHEET:String = "";
+	
 	// Keep track of which trophies are already got. So I don't unlock them again.
 	// <Trophy.SID, unlocked>
 	var trophyGot:Map<String,Bool>;
@@ -129,19 +136,41 @@ class ApiOffline
 	// The entire game trophies,
 	// Set on the overrided object
 	// <Trophy.SID, Trophy{} >
-	public var trophies(default, null):Map<String,Trophy>;
-
+	public var trophies(default, null):Map<String,Trophy>;	
+	
+	// -- Store ALL Trophies serially
+	public var trophiesAr:Array<Trophy>;
+	
 	// User function, called whenever a trophy is unlocked
 	public var onTrophyUnlock:Trophy->Void = null;
+	
+	public var trophiesTotal(default, null):Int = 0;
+	public var trophiesUnlocked(default, null):Int = 0;
+	
+	// Prevent trophies from being unlocked. Useful when demorunning.
+	public var flag_trophies_disable:Bool = false;
+	
+	// Enable or disable the flash popup
+	public var flag_trophy_popup:Bool = true;
+	
+	// Global object displaying the popup
+	public var trophyPopup:TrophyPopup;
+	
+	// If set will play this sound on popup
+	public var TROPHY_SOUND:String = null;
 	
 	#if (!NO_TROPHIES)
 	
 	/**
-	 * Add a trophy. Call this on REG.INIT();
+	 * Add a trophy to the DB. Call this on REG.INIT();
 	 */
-	public function addTrophy(type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1)
+	public function addTrophy(imIndex_:Int = 0, type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1)
 	{
-		trophies.set(sid_, { uid:uid_, sid:sid_, name:name_, desc:desc_, type:type_ } );
+		var t:Trophy = { uid:uid_, sid:sid_, name:name_, desc:desc_, type:type_, imIndex:imIndex_, unlocked:false };
+		
+		trophies.set(sid_, t);
+		trophiesAr.push(t);
+		trophiesTotal++;
 	}//---------------------------------------------------;
 
 	/**
@@ -150,14 +179,31 @@ class ApiOffline
 	 */
 	public function trophy(trophyID:String) 
 	{ 
-		if (trophyGot.exists(trophyID)) {
+		if (flag_trophies_disable || trophyGot.exists(trophyID)) {
 			return;
 		}
+		
+		if (!trophies.exists(trophyID)){
+			trace('Error: Trophy with ID [$trophyID] is not set');
+			return;
+		}
+		
 		trophyGot.set(trophyID, true);
+		trophiesUnlocked++;
 		
 		var tr = trophies.get(trophyID);
+			tr.unlocked = true;
+			
+		// NEW:
+		save_trophies();
+			
 		_onTrophyUnlock(tr); // Push trophy to extended objects
 		if (onTrophyUnlock != null) onTrophyUnlock(tr); // Push trophy to user
+		
+		if (flag_trophy_popup && trophyPopup != null)
+		{
+			trophyPopup.popup(trophyID);
+		}
 	}//---------------------------------------------------;
 	/**
 	 * Internal, Override and handle the trophy
@@ -167,14 +213,58 @@ class ApiOffline
 	function _onTrophyUnlock(tr:Trophy)
 	{
 	}//---------------------------------------------------;
+		
+	// Return the object to be saved and the restored
+	public function save_trophies()
+	{
+		var trophiesGot:Array<String> = [];
+		for (i in trophiesAr) {
+			if (i.unlocked) trophiesGot.push(i.sid);
+		}
+		SAVE.setSlot(0);
+		SAVE.save("_trophies",trophiesGot.join("|"));
+	}//---------------------------------------------------;
+	
+	// Set the trophies from the saved object
+	public function load_trophies()
+	{
+		SAVE.setSlot(0);
+		var ss:String = SAVE.load("_trophies");
+		if (ss == null) return;
+		var ar:Array<String> = ss.split('|');
+		if (ar == null) return;
+		trophiesUnlocked = 0;
+		for (i in ar) {
+			trophyGot.set(i, true);
+			trophies.get(i).unlocked = true;
+			trophiesUnlocked++;
+		}
+	}//---------------------------------------------------;
+	
 	
 	#else
 		// Skip trophy calls altogether
 		public inline function addTrophy(type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1) { }	
 		public inline function trophy(trophyID:String) { }
-		inline function _onTrophyUnlock(tr:Trophy) { }
+		public inline function save_trophies():Array<String> { return null; }
+		public inline function load_trophies(ar:Array<String>) { }
 	#end //-----------------------------------------------;
 	
+	#if debug
+	
+		// Current trophies AND saved trophies
+		public function delAllTrophies()
+		{
+			for (i in trophiesAr) {
+				i.unlocked = false;	
+			}
+			trophyGot = new Map();
+			save_trophies();
+			trophiesUnlocked = 0;
+			trace("Deleted Trophies");
+		}//---------------------------------------------------;
+	
+	#end
 	
 	//====================================================;
 	// SCORING AND LEADERBOARDS
@@ -248,5 +338,7 @@ typedef Trophy = {
 	sid:String,   // unique String ID, this is globally used.
 	name:String,  // Name of the achievement
 	?desc:String, // Description
-	?type:String  // Custom type. e.g. "silver","bronze","gold"..
+	?type:String, // Custom type. e.g. "silver","bronze","gold"..
+	?unlocked:Bool, // Used when displaying a trophy
+	?imIndex:Int   // Index in the achievements spritesheet
 }
