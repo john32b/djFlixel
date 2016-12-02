@@ -279,6 +279,8 @@ class SND
 class SND
 {
 	public static var MUSIC_ENABLED:Bool = true;
+	public static var VOL_MUSIC:Float = 0.8;
+	public static var VOL_EFFECTS:Float = 0.8;
 	public static inline function init()
 	{	
 	}//---------------------------------------------------;

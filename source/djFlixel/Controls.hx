@@ -139,6 +139,7 @@ class Controls
 	// Returns if it found anything.
 	static function findGamepad():Bool
 	{		
+		#if FLX_GAMEPAD
 		gamepad = FlxG.gamepads.lastActive;
 		
 		if (gamepad != null)
@@ -146,6 +147,7 @@ class Controls
 			mapControls();
 			return true;
 		}
+		#end
 		return false;
 	}//---------------------------------------------------;
 	

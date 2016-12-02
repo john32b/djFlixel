@@ -19,24 +19,23 @@
 	<!--Web-specific-->
 	<window if="web" orientation="portrait"  />
 	
-	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
-
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
-	
+	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
+
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" />
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="build/release" />
+	<set name="BUILD_DIR" value="builds/release" />
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
-
-	<set name="next"/>
+	<set name="next"/> 
 	<haxelib name="flixel"/>
+	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />
 	
 	<!--------------------------------HAXEDEFINES----------------------------------->

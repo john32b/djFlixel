@@ -631,9 +631,10 @@ class FlxMenu extends FlxGroup
 		if (!pages.exists(questionPageID)) {
 			var p:PageData = new PageData(questionPageID);
 				p.add(o.data.conf_question, { type:"label" } );
-				p.link(o.data.conf_options[0], o.data.link);
+				p.link(o.data.conf_options[0], o.SID);
 				p.link(o.data.conf_options[1], "@back");
 				p.custom.cursorStart = 'back'; // Highlight BACK first
+				if (o.data.styleOption != null) p.custom.styleOption = o.data.styleOption;
 			pages.set(questionPageID, p);
 		}
 		showPage(questionPageID);

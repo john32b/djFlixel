@@ -60,7 +60,7 @@ class ApiNewgroundsGeneric extends ApiOffline
 	// I will just use one scoreboard
 	var scoreBoardName:String = null; // # SET ON CHILD
 	// - Whether or not to show the newgrounds Medal Popup
-	var flag_show_popup:Bool = true; // # SET ON CHILD
+	var flag_show_popup:Bool = false; // Auto set when initializing trophy object
 	// - General Purpose Score Board
 	var scoreBoard:ScoreBoard;
 	//---------------------------------------------------;
@@ -119,15 +119,14 @@ class ApiNewgroundsGeneric extends ApiOffline
 			return;
 		}
 	
+		flag_show_popup = true;
+		
 		// Add the newgrounds custom popup
-		if (flag_show_popup) 
-		{
-			var popup:MedalPopup = new MedalPopup();
-				popup.x = (FlxG.width * FlxG.initialZoom) / 2 - popup.width / 2;
-				popup.y = 2;
-				popup.alwaysOnTop = "true";
-			Lib.current.stage.addChild(popup);
-		}		
+		var popup:MedalPopup = new MedalPopup();
+			popup.x = (FlxG.width * FlxG.initialZoom) / 2 - popup.width / 2;
+			popup.y = 2;
+			popup.alwaysOnTop = "true";
+		Lib.current.stage.addChild(popup);
 	}//---------------------------------------------------;
 	
 	/**
@@ -183,7 +182,7 @@ class ApiNewgroundsGeneric extends ApiOffline
 	override function _onTrophyUnlock(tr:Trophy) 
 	{
 		if (!isConnected) return;
-		API.unlockMedal(tr.name);	
+		API.unlockMedal(tr.name);
 	}//---------------------------------------------------;
 	
 	// --
@@ -211,7 +210,7 @@ class ApiNewgroundsGeneric extends ApiOffline
 	override public function getUser():String 
 	{ 
 		if (!isConnected) {
-			return USERNAME_OFFLINE;
+			return "offline";
 		}
 		
 		if (API.hasUserSession) 

@@ -46,6 +46,10 @@ class State_Main extends FlxState
 	{
 		super.create();
 		
+		
+		trace("TEST , is REG JSON LOADED");
+		trace(Reg.JSON);
+		
 		// -- Add a basic default starfield FX ::
 		var stars = new StarfieldSimple();
 		add(stars);
@@ -77,7 +81,7 @@ class State_Main extends FlxState
 		p.header = "Main Menu";
 		
 		// The new game is going to be a simple link button
-		p.link("New game", "newgame", "Start a new game!");
+		p.add("New game", { type:"link", sid:"newgame", desc:"Start a new game!" } );
 		
 		
 		// VER 0.3. Removed conditionals from FlxMenu.
@@ -88,12 +92,12 @@ class State_Main extends FlxState
 		// If a link starts with a "@", it will call the menu page with 
 		// that ID ( without the @ )
 		// The following link, will call the menu page with id=="options"
-		p.link("Options", "@options", "Go to the options menu");
+		p.add("Options", { type:"link", sid:"@options", desc:"Go to the options menu" } );
 		
 		// NEW ::
 		// Adding a "!" before the sid, will ask the user for a confirmation
-		p.link("Quit", "!quit", "Quit to OS");
-	
+		p.add("Quit", { type:"link", sid:"!quit", desc:"Quit to OS" } );
+
 		// - Done creating the main menu --------
 		
 		// + Create the options menu

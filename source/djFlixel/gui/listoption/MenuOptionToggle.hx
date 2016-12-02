@@ -51,7 +51,7 @@ class MenuOptionToggle extends MenuOptionBase
 	override function handleInput(inputName:String) 
 	{
 		switch(inputName){
-			case "fire":
+			case "fire" | "click":
 				opt.data.current = !opt.data.current;
 				updateOptionData();
 				cb("optChange");

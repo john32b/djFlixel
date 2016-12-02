@@ -74,6 +74,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// Precalculate camera viewport and scrolling for mouse overlap calculations
 	var _camCheckOffset:SimpleCoords;
 	
+	
+	// -- Tweens
+	var slotTweens:Map<T,VarTween>;
+	
 	//---------------------------------------------------;
 	
 	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
@@ -85,6 +89,8 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		currentElement = null;
 		scrollPadding = 0;
 		inputAllowed = false;
+		
+		slotTweens = new Map();
 	}//---------------------------------------------------;	
 	
 	// --
@@ -176,8 +182,14 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		
 		currentElement.focus();
 		
-		FlxTween.tween(	currentElement, { x:this.x + styleList.focus_nudge }, 
-						styleBase.element_scroll_time, { ease:FlxEase.cubeOut } );
+		// :: Try to cancel any previous tween
+		if (slotTweens.exists(currentElement)) {
+			slotTweens.get(currentElement).cancel();
+			// do not remove it will be replaced on set()
+		}
+		
+		slotTweens.set(currentElement, FlxTween.tween(	currentElement, { x:this.x + styleList.focus_nudge }, 
+						styleBase.element_scroll_time, { ease:FlxEase.cubeOut } ));
 						
 		cursor_updatePos();
 		
@@ -189,7 +201,12 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	{	
 		if (currentElement == null) return;
 		currentElement.unfocus();
-		FlxTween.tween(currentElement, { x:this.x }, styleBase.element_scroll_time);
+		// :: Try to cancel any previous tween
+		if (slotTweens.exists(currentElement)) {
+			slotTweens.get(currentElement).cancel();
+			// do not remove it will be replaced on set()
+		}
+		slotTweens.set(currentElement, FlxTween.tween(currentElement, { x:this.x }, styleBase.element_scroll_time));
 	}//---------------------------------------------------;
 	
 	
@@ -311,6 +328,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 						if (scrollDownOne()) {	
 							_index_data++;
 							_dataIndexChanged();
+							
 						}
 					}
 					else
@@ -322,7 +340,8 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 					}
 					
 					// In the case where this scrolls instantly continue
-					if (isScrolling) return; 
+					// if (isScrolling) return; 
+					return;
 				
 				}
 		}// --
@@ -338,9 +357,9 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 				if ((FlxG.mouse.screenX + _camCheckOffset.x > r_el.x) && (FlxG.mouse.screenX + _camCheckOffset.x < r_el.x + r_el.width) &&  
 					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
 						if (!r_el.isFocused) requestRollOver(counter); else
-						if (FlxG.mouse.justPressed) r_el.sendInput("fire");
-						//else if (FlxG.mouse.wheel < 0) r_el.sendInput("left");
-						//else if (FlxG.mouse.wheel > 0) r_el.sendInput("right");
+						if (FlxG.mouse.justPressed) r_el.sendInput("click");
+						//else if (FlxG.mouse.wheel < 0) r_el.sendInput("wdown");
+						//else if (FlxG.mouse.wheel > 0) r_el.sendInput("wup");
 					}
 			}//--
 		}//--
@@ -654,6 +673,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	override public function destroy():Void 
 	{
 		super.destroy();
+		for (tw in slotTweens) {
+			tw.cancel();
+		}
+		slotTweens = null;
 		
 		if (cursorTween != null) {
 			cursorTween.cancel();

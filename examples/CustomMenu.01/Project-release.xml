@@ -2,7 +2,7 @@
 <project>
 	<!------------------------------APPLICATION SETTINGS---------------------------->
 	
-	<app title="djFlixel Examples" file="djFlixel" main="Main" version="0.2.2" company="" />
+	<app title="djFlixel Examples" file="djFlixel" main="Main" version="0.2.0" company="" />
 	
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 	<!--or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"!-->
@@ -17,23 +17,24 @@
 	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
 	
 	<!--Web-specific-->
-	<window if="web" orientation="portrait"  />
+	<window if="html5" width="640" height="480" resizable="false"/>
 	
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
 	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
-
+	
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" />
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="build/release" />
+	<set name="BUILD_DIR" value="builds/release/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
-	<set name="next"/> 
+
+	<set name="next"/>
 	<haxelib name="flixel"/>
 	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />
@@ -41,13 +42,10 @@
 	<!--------------------------------HAXEDEFINES----------------------------------->
 	
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
-	
-	<!-- EXTERNAL_LOAD:
-	<!-- If set, then some files will be loaded in real time 
-	<!-- Useful to modifing things without re-compiling every time 
-	<!--
-	<haxedef name="EXTERNAL_LOAD"/> 
-	<!-- -->
+
+	<haxedef name="EXTERNAL_LOAD" unless="html5"/> 
+	<haxedef name="FLX_NO_TOUCH"/>
+	<haxedef name="FLX_NO_GAMEPAD" />
 	
 	<!-- Newgrounds API:
 	<!-- Uncomment these lines to enable newgrounds api integration

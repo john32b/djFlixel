@@ -41,6 +41,11 @@ class State_Main extends FlxState
 			add(stars);
 				
 		menu = new VListNav(SaveSlotGfx, 46, 46, 200, Reg.JSON.menu.slots);
+		menu.callbacks = function(s:String, f:Dynamic) {
+			if (f != null) {
+				trace("OPTION INTERACTION", s);
+			}
+		};
 		menu.setDataSource(savesData);
 		menu.cursor_setSprite(new FlxText(0, 0, 0, Reg.JSON.menu.cursorText, 16));		
 		add(menu);

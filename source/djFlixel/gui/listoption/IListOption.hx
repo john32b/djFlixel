@@ -10,8 +10,8 @@ interface IListOption<T>
 	public function setData(data:T):Void;
 	// Send key input, can be anything like [select, cancel, right, left]..etc
 	public function sendInput(inputName:String):Void;
-	public function focus():Void;
-	public function unfocus():Void;
+	public function focus():Void; // Visually Focus
+	public function unfocus():Void; // Visually Unfocus
 	public var isFocused(default, null):Bool;
 	// This gets reported to the list as the visual height of the element
 	public function getOptionHeight():Int;

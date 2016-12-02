@@ -1,11 +1,26 @@
 package djFlixel.gapi;
 
+import flixel.group.FlxSpriteGroup;
+
+#if (!TROPHIES)
+	// Save some Memory
+	class TrophyPopup extends FlxSpriteGroup
+	{
+		public static var TIME_TO_SHOW:Float;
+		public static var ALIGN_PADDING:Int;
+	}
+#else
+
 import djFlixel.gapi.ApiOffline.Trophy;
 import djFlixel.gfx.Palette_DB32;
+import djFlixel.gui.Align;
 import djFlixel.gui.Gui;
 import djFlixel.tool.Sequencer;
+import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
-import flixel.group.FlxSpriteGroup;
+
+import flixel.math.FlxPoint;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxSpriteUtil;
@@ -13,48 +28,68 @@ import flixel.util.FlxSpriteUtil;
 /**
  * Basic popup BG trophy notification
  * ...
- * HACKS USED :
- * + To align text vertically when chars>16 field goes up a it.
  */
 class TrophyPopup extends FlxSpriteGroup
 {
-	public static var WIDTH:Int = 120;
-	public static var HEIGHT:Int = 40;
-	// --
-	public static var TIME_TO_SHOW:Float = 2;
 	
+	//====================================================;
+	// # USER SET 
+	//====================================================;
+	
+	// Seconds to display
+	public static var TIME_TO_SHOW:Float = 2;
+	// Pixels from the edges when aligning
+	public static var ALIGN_PADDING:Int = 2;
+	// If this is not null then try not to obstruct it when displaying the popup
+	public var objectRef:FlxObject = null;
+	
+	
+	// You can change the colors or tween styles if you want
+	// Colors are DB32 base
 	public static var P:Dynamic = {
-		col : { border:20, bg:21, thumb:15, text:14 },
-		bg  : { 
-			pos : { x:0, y:0 }, tw: { x:0, y: -4 }	
-		},
-		thumb  : { 
-			pos : { x:3, y:4 }, tw: { x:-2, y: -2 }	
-		},		
-		text  : { 
-			pos : { x:36, y:12 }, tw: { x:0, y: -2 }	
-		},
-	};// ---------------------------;
-
+		col 	: { border:20, bg:21, thumb:15, text:14 },
+		bg  	: { pos : { x:0, y:0 }, tw: { x: 0, y: -4 } },
+		thumb  	: { pos : { x:3, y:4 }, tw: { x:-2, y: -2 }	},		
+		text  	: { 					tw: { x: 0, y: -2 } }
+	};
+	
+	//====================================================;
+	
+	// Sizes of the whole box depending on a 32x32, 24x24, 16x16 thumb
+	static var SIZES(default,never):Array<Int> = [ 
+		120  , 40,
+		110  , 32,
+		100  , 24
+	];
+	
 	// --
 	var bg:FlxSprite;
 	var text:FlxText;
 	var thumb:FlxSprite;
 	// Handle sequences
 	var seq:Sequencer;
-	// Parameters
-	
-	//====================================================;
-	// STATIC 
-	//====================================================;
-	
 	// Store the ID of the trophies to popup
 	var queue:Array<String>;	
 	
+	var THUMB_SIZE:Int;
+	var WIDTH:Int;	// Auto get from available sizes
+	var HEIGHT:Int; // Auto get from available sizes
+	
 	//---------------------------------------------------;
-	public function new(X:Float,Y:Float)
+	/**
+	 * Thumbnail size
+	 * @param	size_ 16,24,[32]
+	 */
+	public function new(size_:Int = 32)
 	{
-		super(X, Y);
+		super(4,4);
+		THUMB_SIZE = size_;
+		switch(THUMB_SIZE) {
+			case 32: WIDTH = SIZES[0]; HEIGHT = SIZES[1];
+			case 24: WIDTH = SIZES[2]; HEIGHT = SIZES[3];
+			case 16: WIDTH = SIZES[4]; HEIGHT = SIZES[5]; 
+		}
+		
 		scrollFactor.set(0, 0);
 		visible = false;
 		// --
@@ -65,11 +100,11 @@ class TrophyPopup extends FlxSpriteGroup
 		// --
 		text = Gui.getQText("", 8, Palette_DB32.COL[P.col.text], -1);
 		text.alignment = "center";
-		text.fieldWidth = WIDTH - (P.thumb.pos.x + 32);
+		text.fieldWidth = WIDTH - (P.thumb.pos.x + THUMB_SIZE);
 		add(text);
 		// --
 		thumb = new FlxSprite();
-		thumb.loadGraphic(Reg.api.SPRITE_SHEET, true, 32, 32);
+		thumb.loadGraphic(Reg.api.TROPHY_SPRITE_SHEET, true, THUMB_SIZE, THUMB_SIZE);
 		add(thumb);
 		// --
 		seq = new Sequencer(seqHandler);
@@ -110,7 +145,7 @@ class TrophyPopup extends FlxSpriteGroup
 		case 7:
 			visible = false;
 			active = false;
-			queue.pop();   // Finished working with it.
+			queue.shift();   // Finished working with it.
 			processNext(); // Will check for others and process, else, it will return.
 			
 		default:
@@ -123,15 +158,35 @@ class TrophyPopup extends FlxSpriteGroup
 	 */
 	public function popup(id:String)
 	{
+		trace("PUSHING POPUP ID", id);
 		queue.push(id);
 		// Only process it now if it's the only one.
 		if (queue.length == 1) processNext();
 	}//---------------------------------------------------;
 	
+	/**
+	 * Reads the achievement queue and displays the trophy popup
+	 */
 	function processNext()
 	{
+		// --
+		// Automatically position the trophy depending on an object or global align mode
+		var al :Array<String> = [];
+		if (objectRef != null) {
+			var point = objectRef.getScreenPosition(null, objectRef.camera);
+			if (point.x < camera.width / 2) al[0] = "right" else al[0] = "left";
+			if (point.y < camera.height / 2) al[1] = "bottom" else al[1] = "top";
+			point.put();
+		}else {			
+			al = Reg.api.TROPHY_ALIGN.split('|');
+		}
+		Align.screen(this, al[0], al[1], ALIGN_PADDING);
+		
+		// --
+
 		if (queue.length == 0) return;
-		var id = queue[queue.length - 1]; // Don't pop it!
+		var id = queue[0]; // Don't pop it! Get the First One!
+		trace("DISPLAYING POPUP WITH ID", id);
 		
 		var tr:Trophy = Reg.api.trophies.get(id);
 		if (tr == null) return; //Could not find anything
@@ -145,13 +200,13 @@ class TrophyPopup extends FlxSpriteGroup
 		
 		// -- Positions
 		visible = true;
-		bg.setPosition(x + P.bg.tw.x, y + P.bg.tw.y);
-		text.visible = false; text.setPosition(x + P.text.pos.x + P.text.tw.x, y + P.text.pos.y + P.text.tw.y);
-		thumb.visible = false; thumb.setPosition(x + P.thumb.pos.x + P.thumb.tw.x, y + P.thumb.pos.y + P.thumb.tw.y);
-		thumb.animation.frameIndex = tr.imIndex - 1;
-		// --
-		text.text = tr.name;
-		if (text.text.length >= 16) text.y -= 8;
+		bg.setPosition(x + P.bg.tw.x, y + P.bg.tw.y);		
+		thumb.visible = false; 
+		thumb.setPosition(x + P.thumb.pos.x + P.thumb.tw.x, y + P.thumb.pos.y + P.thumb.tw.y);
+		text.text = tr.name; text.visible = false; 
+		text.setPosition(thumb.x + THUMB_SIZE + 1 + P.text.tw.x, y + (HEIGHT / 2) - text.height / 2 + P.text.tw.y);
+		if (tr.imIndex > 0) thumb.animation.frameIndex = tr.imIndex - 1;
+		
 		// --
 		seq.forceTo(1);
 	}//---------------------------------------------------;
@@ -165,7 +220,7 @@ class TrophyPopup extends FlxSpriteGroup
 	
 }// -- 
 
-
+#end
 
 /*------------------------------------------
 	"trophyPopup" :{	
@@ -179,7 +234,7 @@ class TrophyPopup extends FlxSpriteGroup
 		"pos" : { "x" : 3, "y" : 4 }, "tw" : { "x" : -2, "y" : -2 }
 	},	
 	"text" : { 
-		"pos" : { "x" : 36, "y" : 12 }, "tw" : { "x" : 0, "y" : -2 }
+		"tw" : { "x" : 0, "y" : -2 }
 	}
 },
 ------------------------------------------*/

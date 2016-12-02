@@ -60,6 +60,7 @@ class OptionData
 	 * 					conf_question: String, Question, optional
 	 * 					conf_options:  Array<String>, instead of YES NO
 	 * 					callback: If it's a link, this (void->void) will be called
+	 * 					styleOption : Applicable in some occations like a full confirmation page
 	 * 
 	 */		
 	public function new(?label:String, ?params:Dynamic)
@@ -107,22 +108,19 @@ class OptionData
 	 function initData()
 	{
 		// -- Some Safeguards
-		#if (debug) 
-			if (type == null) {
-				type == "label";
-				label = "(null)" + label;
-				trace("Error: Forgot to set a type",this);
-			}
-			if ((type != "label") && (SID == null || SID.length == 0)) {
-				// It should be filled with something.
-				trace("Error: SID is NULL",this);
-				SID = "null";
-			}
-			if (label == null) {
-				label = "(null)";
-			}
-		#end // --
-			
+		if (type == null) {
+			type == "label";
+			label = "(null)" + label;
+			trace("Error: Forgot to set a type",this);
+		}
+		if ((type != "label") && (SID == null || SID.length == 0)) {
+			// It should be filled with something.
+			trace("Error: SID is NULL",this);
+			SID = "null";
+		}
+		if (label == null) {
+			label = "(null)";
+		}
 		
 		// Initialize the types
 		// --

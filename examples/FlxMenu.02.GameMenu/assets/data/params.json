@@ -7,12 +7,12 @@
 		"VOLUME" : 0.6
 	},
 	
-	"soundFiles" : {
-		"c_tick" : "cursor_tick",
-		"c_back" : "cursor_low",
-		"c_sel"  : "cursor_high",
-		"c_err"  : "cursor_error"
-	},
+	"soundFiles" : [
+		{ "id":"c_tick", "file":"cursor_tick","fast":true},
+		{ "id":"c_back", "file":"cursor_low","fast":true},
+		{ "id":"c_sel", "file":"cursor_high","fast":true},
+		{ "id":"c_err", "file":"cursor_error","fast":true}
+	],
 	
 	"box" : {
 		"bg":"0xFFFFFF",

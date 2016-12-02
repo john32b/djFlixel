@@ -19,10 +19,6 @@ import flixel.FlxSprite;
  */
 class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 {
-	inline static var WIDTH:Int = 200;
-	inline static var HEIGHT:Int = 38;
-	inline static var THUMB_SIZE:Int = 32;
-
 	var bg:FlxSprite;
 	var thumb:FlxSprite;
 	
@@ -39,26 +35,45 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 	public var callbacks:String->Void = null;
 	
 	// -- These values can be copied to a JSON for easier modification
-	public static var P:Dynamic = {
-		image: "", // you need to set the image!
-		name:  { x:41,  y:4 ,  w:170, colOff:22, colOn:1 },
-		desc:  { x:41,  y:16 , w:170, colOff:22, colOn:14 },
-		type:  { x:140, y:4 ,  w:60,  colOff:22, colOn:5 },
-		imbox: { x:3,   y:3 ,  w:170, col:20 }
+	public static var PMaster:Dynamic = {
+		
+		s32: {
+			width : 200, height:38,
+			name :  { x:41,  y:4 ,  w:170, colOff:22, colOn:1 },
+			desc :  { x:41,  y:16 , w:170, colOff:22, colOn:14 },
+			type :  { x:140, y:4 ,  w:60,  colOff:22 },
+			imbox:  { x:3,   y:3 ,  w:170, col:20 }
+		},
+		
+		s24: {
+			width : 200, height:38,
+			name :  { x:41,  y:4 ,  w:170, colOff:22, colOn:1 },
+			desc :  { x:41,  y:16 , w:170, colOff:22, colOn:14 },
+			type :  { x:140, y:4 ,  w:60,  colOff:22},
+			imbox:  { x:7,   y:7 ,  w:170, col:20 }
+		}
 	};
+	
+	public static var IMAGE:String = "";
+	public static var SIZE:Int = 32;
+	
+	// Locally used parameters
+	var P:Dynamic;
 	
 	//--
 	public function new() 
 	{
 		super();
 		
+		if (SIZE == 32) P = PMaster.s32; else P = PMaster.s24;
+		
 		bg = new FlxSprite(0, 0);
-		bg.loadGraphic(P.image, true, WIDTH, HEIGHT);
+		bg.loadGraphic(IMAGE, true, P.width, P.height);
 		bg.animation.frameIndex = 0;
 		add(bg);
 		// --
 		thumb = new FlxSprite(P.imbox.x, P.imbox.y);
-		thumb.loadGraphic(Reg.api.SPRITE_SHEET, true, 32, 32);
+		thumb.loadGraphic(Reg.api.TROPHY_SPRITE_SHEET, true, SIZE, SIZE);
 		thumb.visible = false;
 		add(thumb);
 		// --
@@ -98,7 +113,7 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 		{
 			name.color = Palette_DB32.COL[P.name.colOn];
 			desc.color = Palette_DB32.COL[P.desc.colOn];
-			type.color = Palette_DB32.COL[P.type.colOn];
+			type.color = getTypeColor(d.type);
 		}else {
 			name.color = Palette_DB32.COL[P.name.colOff];
 			desc.color = Palette_DB32.COL[P.desc.colOff];
@@ -107,6 +122,16 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 		
 	}//---------------------------------------------------;
 	
+	function getTypeColor(type:String):Int {
+		return switch(type) {
+				case "bronze" : Palette_DB32.COL[5];
+				case "silver" : Palette_DB32.COL[24];
+				case "gold" : Palette_DB32.COL[8];
+				case "platinum" : Palette_DB32.COL[20];
+				default : Palette_DB32.COL[1];
+		}
+	}//---------------------------------------------------;
+		
 	public function sendInput(inputName:Dynamic):Void
 	{
 	}//---------------------------------------------------;
@@ -138,7 +163,7 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 	// -
 	public inline function getOptionHeight():Int
 	{
-		return HEIGHT;
+		return P.height;
 	}//---------------------------------------------------;
 	
 	// -
@@ -165,6 +190,7 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
  
 	"trophyBox":{
 		"image": "assets/trophy_box.png",
+		"size" : 32,
 		"name" : { "x" : 41 , "y" : 4,  "w":170, "colOff" : 22, "colOn" : 1  },
 		"desc" : { "x" : 41 , "y" : 16, "w":170, "colOff" : 22, "colOn" : 14 },
 		"type" : { "x" : 140 , "y" : 4, "w":60,  "colOff" : 22, "colOn" : 5 },

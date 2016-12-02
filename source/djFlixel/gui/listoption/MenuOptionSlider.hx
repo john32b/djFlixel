@@ -24,7 +24,11 @@ class MenuOptionSlider extends MenuOptionOneof
 					opt.data.current++;
 					updateOptionData();
 					cb("optChange");
-				}		
+				}
+				
+			case "click":
+				var r = collideWithCursor();
+				if (r < 0) handleInput("left"); else if (r > 0) handleInput("right");
 		}
 	}//---------------------------------------------------;
 	// --

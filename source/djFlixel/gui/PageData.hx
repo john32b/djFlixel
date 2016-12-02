@@ -86,7 +86,8 @@ class PageData
 	 * 		desc: String,	Description
 	 * 		pool: Dynamic, Data associated with the controller
 	 * 		current: Dynamic, Current value of the controller ! Warning: Unsanitized
-	 * 		confirmation: String, Question to present if a confirmation check is required
+	 * 		conf_question: String, Question to present if a confirmation check is required
+	 * 		conf_options:  []:String, Options instead of YES/NO
 	 * 
 	 * @return The produced OptionData
 	 */

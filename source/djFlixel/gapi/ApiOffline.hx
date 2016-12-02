@@ -3,12 +3,22 @@ import djFlixel.gapi.ApiOffline.Trophy;
 import djFlixel.gapi.TrophyPopup;
 import flixel.FlxG;
 import flixel.util.FlxTimer;
+import flixel.util.FlxStringUtil;
 
 // -- 
 // This class can be overriden to specify a generic API.
 // If no APIs are used, then this is used as a blank
 
 /**
+ * This class can be overriden to specify a more specific API like newgrounds
+ * You can use this class as is for offline achievements.
+ * 
+ * HAXE DEFINES:
+ * ------------------
+ * 
+ * 		"FLASHONLINE"
+ * 		"TROPHIES"
+ * 
  * Example:
  * ---------------
  * 
@@ -57,7 +67,7 @@ class ApiOffline
 	}//---------------------------------------------------;
 	public function getUser():String 
 	{ 
-		return "Offline";
+		return "offline";
 	}//---------------------------------------------------;
 	public function connect() 
 	{ 
@@ -120,6 +130,38 @@ class ApiOffline
 		FlxG.openURL(officialPage);
 	}//---------------------------------------------------;
 	
+	//====================================================;
+	// PROTECTION 
+	//====================================================;
+	
+	#if FLASHONLINE
+	
+	// IMPORTANT!
+	// URLs MUST BEGIN WITH "http://"
+	var allowedURLs:Array<String> = null; // Set on Create?
+	
+	// --
+	public function isURLAllowed():Bool
+	{
+		if (allowedURLs == null) return false;
+		
+		var homeDomain:String = FlxStringUtil.getDomain(FlxG.stage.root.loaderInfo.loaderURL);
+		
+		for (allowedURL in allowedURLs)
+		{
+			if (FlxStringUtil.getDomain(allowedURL) == homeDomain)
+			{
+				return true;
+			}
+			else if (allowedURL == "local" && homeDomain == "local")
+			{
+				return false; // NO OFFLINE PLAY!
+			}
+		}
+		return false;
+	}//---------------------------------------------------;
+	
+	#end
 	
 	//====================================================;
 	// ACHIEVEMENTS 
@@ -127,7 +169,15 @@ class ApiOffline
 	
 	// # USER MUST SET THIS TO THE SPRITE SHEET IF YOU WANT POPUPS AND LISTS TO WORK!
 	// 32x32 size
-	public var SPRITE_SHEET:String = "";
+	public var TROPHY_SPRITE_SHEET:String = "";
+	
+	// # USER SET
+	// If set will play this sound on popup
+	public var TROPHY_SOUND:String = null;
+	
+	// # USER SET [x,y]. See Align.screen()
+	// Future: Put this on TrophyPopup ?
+	public var TROPHY_ALIGN:String = "left|top";
 	
 	// Keep track of which trophies are already got. So I don't unlock them again.
 	// <Trophy.SID, unlocked>
@@ -156,10 +206,8 @@ class ApiOffline
 	// Global object displaying the popup
 	public var trophyPopup:TrophyPopup;
 	
-	// If set will play this sound on popup
-	public var TROPHY_SOUND:String = null;
 	
-	#if (!NO_TROPHIES)
+	#if TROPHIES
 	
 	/**
 	 * Add a trophy to the DB. Call this on REG.INIT();
@@ -194,6 +242,8 @@ class ApiOffline
 		var tr = trophies.get(trophyID);
 			tr.unlocked = true;
 			
+		trace(" UNLOCKING TROPHY : ", tr.name);
+		
 		// NEW:
 		save_trophies();
 			
@@ -234,34 +284,50 @@ class ApiOffline
 		var ar:Array<String> = ss.split('|');
 		if (ar == null) return;
 		trophiesUnlocked = 0;
-		for (i in ar) {
-			trophyGot.set(i, true);
-			trophies.get(i).unlocked = true;
-			trophiesUnlocked++;
+		
+		try {
+			for (i in ar) {
+				trophyGot.set(i, true);
+				trophies.get(i).unlocked = true;
+				trophiesUnlocked++;
+			}
+		
+		}catch (e:Dynamic)
+		{
+			trace(e);
+			trace("Problem loading trophies, resetting all");
+			delAllTrophies();
 		}
 	}//---------------------------------------------------;
-	
+	// Current trophies AND saved trophies
+	public function delAllTrophies()
+	{
+		for (i in trophiesAr) {
+			i.unlocked = false;	
+		}
+		trophyGot = new Map();
+		save_trophies();
+		trophiesUnlocked = 0;
+		trace("Deleted Trophies");
+	}//---------------------------------------------------;
 	
 	#else
 		// Skip trophy calls altogether
-		public inline function addTrophy(type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1) { }	
+		public inline function addTrophy(imIndex_:Int = 0, type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1) { }
 		public inline function trophy(trophyID:String) { }
-		public inline function save_trophies():Array<String> { return null; }
-		public inline function load_trophies(ar:Array<String>) { }
+		public inline function save_trophies(){ }
+		public inline function load_trophies() { }
+		public inline function delAllTrophies() { }
 	#end //-----------------------------------------------;
 	
+		
 	#if debug
-	
-		// Current trophies AND saved trophies
-		public function delAllTrophies()
+		// --
+		public function addOneAtRandom()
 		{
 			for (i in trophiesAr) {
-				i.unlocked = false;	
+				if (i.unlocked == false) { trophy(i.sid); break; }
 			}
-			trophyGot = new Map();
-			save_trophies();
-			trophiesUnlocked = 0;
-			trace("Deleted Trophies");
 		}//---------------------------------------------------;
 	
 	#end

@@ -51,7 +51,7 @@ class MenuOptionLink extends MenuOptionBase
 	// --
 	override function handleInput(inputName:String) 
 	{
-		if (inputName == "fire")
+		if (inputName == "fire" || inputName == "click")
 		{
 			cb("optFire");
 		}

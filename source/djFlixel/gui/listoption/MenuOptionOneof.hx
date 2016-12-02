@@ -133,6 +133,10 @@ class MenuOptionOneof extends MenuOptionBase
 					updateOptionData();
 					cb("optChange");
 				}
+				
+			case "click":
+				var r = collideWithCursor();
+				if (r < 0) handleInput("left"); else if (r > 0) handleInput("right");				
 		}
 	}//---------------------------------------------------;
 	// --
@@ -160,6 +164,16 @@ class MenuOptionOneof extends MenuOptionBase
 			arrows[0].visible = arrowStat[0];
 			arrows[1].visible = arrowStat[1];
 		}
+	}//---------------------------------------------------;
+	
+	function collideWithCursor():Int 
+	{
+		
+		if (arrows[0].visible && FlxG.mouse.overlaps(arrows[0], camera)) return -1;
+		else
+		if (arrows[1].visible && FlxG.mouse.overlaps(arrows[1], camera)) return 1;
+		
+		return 0;
 	}//---------------------------------------------------;
 	
 }// -- end --

@@ -17,7 +17,7 @@
 	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
 	
 	<!--Web-specific-->
-	<window if="web" orientation="portrait"  />
+	<window if="html5" width="640" height="480" resizable="false"/>
 	
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
@@ -28,13 +28,12 @@
 	
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	
-	<set name="BUILD_DIR" value="g:/build/debug/" /> <!-- g:\ is my RAMDRIVE . Change this to another folder !!!! -->
+	<set name="BUILD_DIR" value="builds/debug/" />
 	<classpath name="source" />
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 	
 	<!--------------------------------LIBRARIES------------------------------------->
 
-	<set name="next"/>
 	<haxelib name="flixel"/>
 	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />
@@ -48,7 +47,10 @@
 	<!-- If set, then some files will be loaded in real time 
 	<!-- Useful to modifing things without re-compiling every time 
 	<!-- -->
-	<haxedef name="EXTERNAL_LOAD"/> 
+	<haxedef name="EXTERNAL_LOAD" if="debug"/>
+	<haxedef name="FLX_NO_TOUCH"/>
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
+	
 	<!-- -->
 	
 	<!-- Newgrounds API:
