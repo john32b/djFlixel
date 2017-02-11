@@ -14,16 +14,24 @@ class MainTemplate extends Sprite
 {
 	var render_width:Int = 320;
 	var render_height:Int = 240;
+	var framerate:Int = 40; // 40 is ok and fast. If it feels choppy, set to more (60)
 	var zoom:Float = 2;
-	// 40 is ok and fast. If it feels choppy, set to more (60)
-	public static var framerate:Int = 40;
 	var skipSplash:Bool = true;
 	var startFullscreen:Bool = true;
 	var initialState:Class<FlxState>;
 	
-	public function new(startState:Class<FlxState>) 
+	/**
+	 * 
+	 * @param	startState
+	 */
+	public function new(startState:Class<FlxState>, w_:Int = 0, h_:Int = 0, f_:Int = 0)
 	{
 		super();
+		
+		if (w_ > 0) render_width = w_;
+		if (h_ > 0) render_height= h_;
+		if (f_ > 0) framerate = f_;
+		// zoom ??
 		
 		initialState = startState;
 		

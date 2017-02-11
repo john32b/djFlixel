@@ -294,6 +294,9 @@ class SND
 	public static inline function play(soundID:String, restart:Bool = true)
 	{
 	}//---------------------------------------------------;
+	public static inline function playV(soundID:String, restart:Bool = true, volRatio:Float = 1)
+	{
+	}// --
 	public static inline function playMusic(filename:String, customVolume:Float = -1)
 	{
 	}//---------------------------------------------------;
@@ -311,6 +314,10 @@ class SND
 	}//---------------------------------------------------;
 	public static inline function stopMusic()
 	{
+	}//---------------------------------------------------;
+	public static inline function getSound(soundID:String):FlxSound
+	{
+		return null;
 	}//---------------------------------------------------;
 	
 }//-- end --//

@@ -54,7 +54,10 @@ class TrophyBigBox extends FlxSpriteGroup implements IListOption<Trophy>
 		}
 	};
 	
+	// -- # USER SET #
+	// - Path to the trophybox spritesheet
 	public static var IMAGE:String = "";
+	// -- Size of the trophy thumbs,
 	public static var SIZE:Int = 32;
 	
 	// Locally used parameters

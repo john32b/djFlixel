@@ -110,10 +110,12 @@ class PixelFader extends FlxSprite
 	
 	override public function draw():Void 
 	{
+		//#if (!(html5 && canvas))
 		if (!flag_isInited && !flag_toBlack) {
 			flag_isInited = true;
 			source = camera.buffer.clone();
 		}
+		//#end
 		super.draw();
 	}//---------------------------------------------------;
 	

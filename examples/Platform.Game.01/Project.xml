@@ -35,6 +35,7 @@
 	<!--------------------------------LIBRARIES------------------------------------->
 
 	<set name="next"/>
+	<haxedef name="next"/>
 	<haxelib name="flixel"/>
 	<!--<haxelib name="flixel-addons"/>-->
 	<include path="../../source/" />

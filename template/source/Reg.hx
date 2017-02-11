@@ -1,22 +1,24 @@
 /*
  * Default REG class
  * =======================
- * Version: 05-2016
+ * Version: 01-2017
  * ---------------- *
  * 
  * You should copy-paste this file to your new Project and use this as a template.
  * Expand the functions as you like
  * 
  */
+
 package;
 
+import djFlixel.gapi.ApiOffline;
 import djFlixel.tool.DataTool;
+import flixel.FlxG;
+import flixel.FlxObject;
 import djFlixel.tool.DynAssets;
-import djFlixel.gapi.ApiEmpty;
 import djFlixel.SAVE;
 import djFlixel.Controls;
 import djFlixel.SND;
-import flixel.FlxG;
 
 #if desktop
 	import openfl.filters.BitmapFilter;
@@ -25,7 +27,6 @@ import flixel.FlxG;
 
 class Reg
 {
-	
 	// -- Parameters file --
 	// -  It is useful to have various game parameters to an external file
 	// -  so that I don't have to compile everytime I want to change a value.
@@ -37,6 +38,7 @@ class Reg
 	public static var NAME:String = "HaxeFlixel app";
 	public static var VOLUME:Float = 0.6;
 	public static var MUSIC:Bool = false;
+	public static var WEBSITE:String = "";
 	
 	// Changing this will also take effect
 	public static var FULLSCREEN(default, set):Bool = false;
@@ -46,18 +48,8 @@ class Reg
 	// Store the json parameters loaded from the file
 	public static var JSON:Dynamic;
 	
-	// -- APIS  ------ 
-	#if GAMEJOLT
-		// Extend the ApiGameJoltGeneric and set it to api
-		// public static var api:ApiGameJolt = new ApiGameJolt();
-	#elseif KONG
-		// Extend the ApiKongregateGeneric and set it to api
-		// public static var api:ApiKongregate = new ApiKongregate();
-	#elseif NEWGROUNDS
-		// public static var api:ApiNewgrounds = new ApiNewgrounds();
-	#else
-		public static var api:ApiEmpty = new ApiEmpty();
-	#end
+	// new: Polymoprhic Api.
+	public static var api:ApiOffline = null;
 	
 	//====================================================;
 	// FUNCTIONS
@@ -95,11 +87,14 @@ class Reg
 		
 		trace("Initializing Controls.");
 		Controls.init();
-	
-		// -- Add Game specific Inits here:
-		// Game.init();
-		// Map.init();
-		// ..
+		
+		// -- This is the time to do it.
+		// api = new ApiOffline();
+		
+		#if (html5)
+			FlxG.drawFramerate = 60;
+			trace(":: build == HTML5");
+		#end
 	}//---------------------------------------------------;
 	
 	
@@ -112,10 +107,20 @@ class Reg
 		trace("Initializing Filters.");
 		var params = DataTool.defParams(Reg.JSON.filter, { x:3.0, y:3.0, q:1 } );
 		screenFilter = new BlurFilter(params.x, params.y, params.q);
-
+		
 		// Make sure no camera uses antialiasing
 		for (i in FlxG.cameras.list) i.antialiasing = false;
-
+		
+		// Don't add yet! it will be auto added if needed ::
+		// FlxG.game.setFilters([screenFilter]);
+		
+		// GLSL SHADERS :: UNUSED ::
+		// add some post processing FX
+		//var SHADER = new PostProcess("assets/shaders/blur.txt");
+		//SHADER.setUniform("diry", 1);
+		//SHADER.setUniform("dirx", 1);
+		//SHADER.setUniform("radius", 1);
+		//FlxG.addPostProcess(SHADER);
 	}//---------------------------------------------------;
 	#end
 
@@ -129,7 +134,7 @@ class Reg
 	static function onStateSwitch()
 	{
 		// Force the cameras to use the default AA (with setter)
-		#if(flash)
+		#if (!desktop)
 			Reg.ANTIALIASING = Reg.ANTIALIASING;
 		#end
 	}//---------------------------------------------------;
@@ -154,19 +159,20 @@ class Reg
 	static function set_ANTIALIASING(value:Bool):Bool
 	{
 		ANTIALIASING = value;
+		
 		#if (desktop)
 			if (ANTIALIASING) {
 				FlxG.game.setFilters([screenFilter]);
 			}else {
 				FlxG.game.setFilters([]);
 			}
+			return value;
 		#end
 		
-		#if(flash)
-			for (i in FlxG.cameras.list) {
-				i.antialiasing = ANTIALIASING;
-			}
-		#end
+		for (i in FlxG.cameras.list) {
+			i.antialiasing = ANTIALIASING;
+		}
+		
 		return value;
 	}//---------------------------------------------------;
 	
@@ -204,6 +210,7 @@ class Reg
 	#if debug
 	public static function debug_keys()
 	{	
+		#if EXTERNAL_LOAD
 		if (FlxG.keys.justPressed.F12)
 		{
 			trace(" = Reloading external parameters file :: ");
@@ -212,14 +219,30 @@ class Reg
 					FlxG.resetState();
 			});
 		}else
+		#end
 		if (FlxG.keys.justPressed.F9)
 		{
 			ANTIALIASING = !ANTIALIASING;
 		}
 	}//---------------------------------------------------;
+	
+	// -
+	// Useful tool for debugging
+	public static function translateDir(dir:Int):String
+	{
+		return switch(dir) {
+			case FlxObject.LEFT:"left";	
+			case FlxObject.RIGHT:"right";	
+			case FlxObject.UP:"up";	
+			case FlxObject.DOWN:"down";	
+			default:"";
+		}
+	}//---------------------------------------------------;
 	#else
-	// Inline so it will not be called at all if on release.
+	
+	// Inline so it will not be called at all.
 	public static inline function debug_keys() { }	
+	
 	#end
 	
 }//--
