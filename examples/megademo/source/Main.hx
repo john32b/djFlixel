@@ -1,14 +1,14 @@
 package;
 
-import djFlixel.tool.DynAssets;
+import djFlixel.FLS;
 import flash.Lib;
 
 class Main extends djFlixel.MainTemplate
 {
 	public function new()
 	{
-		DynAssets.FILE_LOAD_LIST = [Reg.PARAMS_FILE];
-		super(State_Main);
+		FLS.extendedClass = Reg;
+		super(StateTest);
 	}//---------------------------------------------------;
 	// --
 	public static function main():Void

@@ -3,6 +3,8 @@ import flixel.FlxSprite;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 
+/// IN DEVELOPMENT
+
 /**
  * Animate objects in and out of view
  * ...

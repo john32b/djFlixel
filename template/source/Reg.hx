@@ -88,13 +88,9 @@ class Reg
 		trace("Initializing Controls.");
 		Controls.init();
 		
-		// -- This is the time to do it.
+		// -- Api functionality for achievements and scores
 		// api = new ApiOffline();
 		
-		#if (html5)
-			FlxG.drawFramerate = 60;
-			trace(":: build == HTML5");
-		#end
 	}//---------------------------------------------------;
 	
 	

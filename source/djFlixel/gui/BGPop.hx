@@ -9,9 +9,6 @@ import openfl.geom.Rectangle;
 /**
  * A solid background that pops up with an animation
  * 
- * - V0.1
- * ------
- * 
  * - Use
  * -------
  * 

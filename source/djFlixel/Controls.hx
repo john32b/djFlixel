@@ -9,9 +9,21 @@ import flixel.input.keyboard.FlxKeyboard;
 /**
  *  Simple Controls class, for easy input checks.
  * 
- * - Cursor-like behavior support
- * - Unified keyboard and controller inputs
  * - Static class for portability and easier access
+ * - Unified keyboard and controller inputs
+ * - Cursor-like behavior support
+ * - Read inputs based on the 360 controller layout
+ * - Maps keyboard to 360 controller
+ * 	 {
+ * 	 	WASD, ARROW,
+ * 		Select:SPACE, Start:ENTER
+ * 		A: X,K
+ * 		B: L
+ * 		X: Z,J
+ * 		Y: I
+ * 		LR: SHIFT
+ * 		LT: CONTROLS
+ * 	 }
  * 
  * ...
  * @author John Dimi, @jondmt

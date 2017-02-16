@@ -1,5 +1,5 @@
 /**--------------------------------------------------------
- * classname.hx
+ * SAVE.hx
  * @author: johndimi, <johndimi@outlook.com> , @jondmt
  * --------------------------------------------------------
  * @Description
@@ -100,7 +100,7 @@ class SAVE
 	}//---------------------------------------------------;
 	
 	// --
-	// Call this after a bulk save to save for sure?
+	// Call this after a bulk save to force the data to be written
 	// REQUIRED FOR NON FLASH TARGETS ! !
 	public static function flush():Void
 	{

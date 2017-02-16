@@ -5,8 +5,13 @@ import flixel.FlxG;
 import flixel.system.FlxSound;
 
 /**
- * Version 0.3
+ * Sound Static class
  * Responsible for loading and playing sounds.
+ * 
+ * + Steamlined loading: You can bulk load sounds from the master JSON file
+ * + Sound groups: You can declare many sounds to belong to a group, and then play one at random
+ * + Simple one music track management
+ * 
  */
 
  
@@ -19,35 +24,28 @@ typedef SoundInfo = {
 	@:optional var group:String;
 }
  
-#if (flash) 
+#if (flash)
 class SND
 {
 	static inline var PATH_SOUNDS:String = "assets/sounds/";
+	static inline var PATH_MUSIC:String = "assets/music/";
 	static inline var FILE_EXT_MP3:String = ".mp3";
 	static inline var FILE_EXT_OGG:String = ".ogg";
-	
-	public static var VOL_MUSIC:Float = 0.8;	// Global music volume
-	public static var VOL_EFFECTS:Float = 0.8;	// Global effects volume
-	
+	public static var VOL_MUSIC:Float = 0.85;	// Global music volume
+	public static var VOL_SOUND:Float = 0.85;	// Global effects volume
 	public static var MUSIC_ENABLED:Bool = true;
-	
 	//---------------------------------------------------;
-	static var isInited:Bool = false;
-	
 	// Short ID to Actual Asset ID
 	static var memorySounds:Map<String,FlxSound> = null;
-	
 	// Groups of sounds
 	static var group:Map<String,Array<String>> = null;
-	
-	
 	// Map shortID to full Sound Info as it's on the json node
 	static var infos:Map<String,SoundInfo>;
-
 	// Helper pointer for group playing
 	static var _r1:Array<String>;
-	
+	// Helper var
 	static var _r2:SoundInfo;
+	
 	//====================================================;
 	// FUNCTIONS
 	//====================================================;
@@ -90,7 +88,7 @@ class SND
 	{
 		var numOfSounds:Int = 0;
 		var numOfCached:Int = 0;
-		trace("-- Loading sounds from JSON node --");
+		trace(":: Loading sounds from JSON node --");
 		
 		var jsonData:Array<SoundInfo> = JSON.soundFiles;
 		
@@ -127,10 +125,8 @@ class SND
 		
 		trace("  total sounds : " , numOfSounds);
 		trace("  total cached : " , numOfCached);
-		#if debug
 		// trace("  sound Groups  ::");
 		// for (i in group.keys()) trace(' "$i" => ', group.get(i));
-		#end
 	}//---------------------------------------------------;
 	
 	// --
@@ -154,7 +150,7 @@ class SND
 		}
 		#end
 			
-		s.volume = VOL_EFFECTS * volumeRatio;
+		s.volume = VOL_SOUND * volumeRatio;
 		s.persist = true;	// -- Do not delete this if you switch states
 		
 		memorySounds.set(ID, s);
@@ -180,18 +176,19 @@ class SND
 		if (_r2.fast) {
 			memorySounds.get(soundID).play(restart);
 		}else {
-			FlxG.sound.play(_r2.path, VOL_EFFECTS * _r2.vol);
+			FlxG.sound.play(_r2.path, VOL_SOUND * _r2.vol);
 		}
 	}//---------------------------------------------------;
+	// -- Play a sound with soundID with a temp custom volume 
 	public static function playV(soundID:String, restart:Bool = true, volRatio:Float = 1)
 	{
 		_r2 = infos.get(soundID);
 		if (_r2.fast) {
 			var s = memorySounds.get(soundID);
-				s.volume = VOL_EFFECTS * _r2.vol * volRatio;
+				s.volume = VOL_SOUND * _r2.vol * volRatio;
 				s.play(restart);
 		}else {
-			FlxG.sound.play(_r2.path, VOL_EFFECTS * _r2.vol * volRatio);
+			FlxG.sound.play(_r2.path, VOL_SOUND * _r2.vol * volRatio);
 		}
 	}//---------------------------------------------------;
 	
@@ -201,12 +198,12 @@ class SND
 	{
 		_r2 = infos.get(soundID);
 		if (_r2 != null && _r2.fast) { return memorySounds.get(soundID); }
-		trace("Could not get sound. It must exist and be cached");
+		trace("Error: Could not get sound. It must exist and be cached");
 		return null;
 	}//---------------------------------------------------;
 	
 	// -- 
-	// Audio files must be in the "assets/music/XXXX.mp3"
+	// Audio files must be in the PATH_MUSIC dir e.g."assets/music/XXXX.mp3"
 	public static function playMusic(filename:String, customVolume:Float = -1)
 	{
 		if (MUSIC_ENABLED == false) {
@@ -215,7 +212,7 @@ class SND
 		}
 		var vol:Float = VOL_MUSIC;
 		if (customVolume > 0) vol = customVolume;
-		FlxG.sound.playMusic("assets/music/" + filename + ".mp3", vol, true); // todo OGG?
+		FlxG.sound.playMusic(PATH_MUSIC + filename + ".mp3", vol, true); // todo OGG?
 	}//---------------------------------------------------;
 	
 	//-- Stop if music is playing
@@ -238,9 +235,8 @@ class SND
 			#else
 				FILE_EXT_OGG , 
 			#end
-		VOL_EFFECTS * customVolume);
+		VOL_SOUND * customVolume);
 	}//---------------------------------------------------;
-	
 	
 	// --
 	// Play a random sound from a group
@@ -269,18 +265,17 @@ class SND
 }//-- end --//
 
 
-
 #else
 
-// If you set the NO_OGG flag then no sounds will be loaded or player
-// Useful when you don't have any ogg sounds yet
-
+// Currently just just the flash build supports sound
+// The functionality is the same, it's just I don't want to deal with .ogg files for when testing other targets
+// So this completely nulls the SND system.
 
 class SND
 {
 	public static var MUSIC_ENABLED:Bool = true;
 	public static var VOL_MUSIC:Float = 0.8;
-	public static var VOL_EFFECTS:Float = 0.8;
+	public static var VOL_SOUND:Float = 0.8;
 	public static inline function init()
 	{	
 	}//---------------------------------------------------;

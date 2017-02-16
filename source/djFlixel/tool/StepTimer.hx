@@ -4,8 +4,12 @@ import flixel.FlxG;
 
 
 /**
- * Easy way to get step callbacks on a timer
- * Counts INTS
+ * IN DEVELOPMENT!
+ * TODO: Make it an FLXBasic so that it gets removed automatically
+ * 
+ * Counts and callback Numbers in a range
+ * Doesn't use flxTimer, User needs to call update manually :-/
+ * 
  * ...
  * @author JohnDimi, @jondmt
  */

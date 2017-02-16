@@ -183,7 +183,7 @@ class FlxMenu extends FlxGroup
 	 */
 	public function applyMenuStyleFromJSON(styleID:String)
 	{
-		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
+		var styleNode = Reflect.getProperty(FLS.JSON, styleID);
 		if (styleNode == null) {
 			trace('Warning: Can\'t find style "$styleID" in the json file');
 			return;
@@ -198,7 +198,7 @@ class FlxMenu extends FlxGroup
 	// node.list, node.base, node option
 	public function applyPageStyleFromJson(styleID:String, page:PageData)
 	{
-		var styleNode = Reflect.getProperty(Reg.JSON, styleID);
+		var styleNode = Reflect.getProperty(FLS.JSON, styleID);
 
 		if (styleNode.option != null) {
 			page.custom.styleOption = Styles.newStyle_Option();

@@ -1,5 +1,4 @@
 package djFlixel.tool;
-import haxe.ds.Vector;
 
 /**
  * Fixed size 2D Array

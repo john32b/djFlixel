@@ -8,6 +8,7 @@ import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.ui.FlxButton;
+import flixel.util.FlxColor;
 
 /**
  * Static class
@@ -19,8 +20,8 @@ import flixel.ui.FlxButton;
  */
 class Gui
 {
-	static inline var DEFAULT_TEXT_COLOR:Int   = 0xFFFFFFFF;
-	static inline var DEFAULT_BORDER_COLOR:Int = 0xFF111111;
+	public static var DEFAULT_TEXT_COLOR:FlxColor   = 0xFF333333;
+	public static var DEFAULT_BORDER_COLOR:FlxColor = 0xFF111111;
 	
 	//====================================================;
 	// Custom Global Text Formatting
@@ -38,31 +39,30 @@ class Gui
 	 * @param	borderColor
 	 * @param	bold
 	 */
-	public static function addFormatRule(symbol:String, color:Int, borderColor:Int, bold:Bool = false)
+	public static function addFormatRule(symbol:String, textC:Int, borderC:Int, bold:Bool = false)
 	{
 		if (formatPairs == null) {
 			formatPairs = [];
 		}
 		trace('- New textFormatRule | symbol:$symbol');
-		var format = new FlxTextFormat(color, bold, false, borderColor);
+		var format = new FlxTextFormat(textC, bold, false, borderC);
 		var pair = new FlxTextFormatMarkerPair(format, symbol);
 		formatPairs.push(pair);
 	}//---------------------------------------------------;
 	
 	/**
-	 * 
+	 * Get formatted text, add formats with addFormatRule();
 	 * @param	txt  Markup : [$ , #]
 	 * @param   color  The default color for non-styled 
 	 * @param	X optional
 	 * @param	Y optional
 	 * @return
 	 */
-	public static function getFText( text:String, size:Int = 8, color:Int = DEFAULT_TEXT_COLOR, 
-									 useBorder:Bool = true, X:Int = 0, Y:Int = 0):FlxText
+	public static function getFText( text:String, size:Int = 8, textC:Int = -1, useBorder:Bool = false, X:Int = 0, Y:Int = 0):FlxText
 	{
 		var t = new FlxText(X, Y, 0, "", size);
 		t.scrollFactor.set(0, 0);
-		t.color = color;
+		if (textC !=-1) t.color = textC; else t.color = DEFAULT_TEXT_COLOR;
 		if(useBorder) {
 			t.borderStyle = FlxTextBorderStyle.SHADOW;
 			t.borderSize = Math.ceil(size / 8);
@@ -83,14 +83,12 @@ class Gui
 	 * @param	Y
 	 * @return
 	 */
-	public static function getQText(text:String, size:Int = 8, color:Int = DEFAULT_TEXT_COLOR,
-							borderC:Int = -1, X:Float = 0, Y:Float = 0):FlxText
+	public static function getQText(text:String, size:Int = 8, textC:Int = -1, borderC:Int = -1, X:Float = 0, Y:Float = 0):FlxText
 	{
-		
 		var t = new FlxText(X, Y, 0, text, size);
 		t.scrollFactor.set(0, 0);
-		t.color = color;
-		if (borderC >-1) {
+		if (textC !=-1) t.color = textC; else t.color = DEFAULT_TEXT_COLOR;
+		if (borderC !=-1) {
 			t.borderStyle = FlxTextBorderStyle.SHADOW;
 			t.borderSize = Math.ceil(size / 8);
 			t.borderColor = borderC;

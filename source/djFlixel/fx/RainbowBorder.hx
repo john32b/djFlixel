@@ -125,10 +125,9 @@ class RainbowBorder extends FlxSprite
 		
 	}//---------------------------------------------------;
 	// --
+	@:deprecated("I need to test this")
 	public function setSolidBg(colorIndex:Int)
 	{
-		throw "IS THIS BEING USED?";
-		
 		_ch = 0;
 		while (_ch < pixels.height)
 		{

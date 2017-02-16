@@ -7,8 +7,10 @@ import openfl.display.BitmapData;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
+/// DEPRECATED
+
 /**
- * Just use FlxBackdrop
+ * Just use FlxBackdrop,same deal, I wrote this for nothing.
  * ...
  */
 class BGScroller extends FlxSprite

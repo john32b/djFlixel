@@ -6,7 +6,7 @@
  ----------
  
   + Provides a quick solution to load TILED maps
-  + Streamable Objects are FlxSprites that can are 
+  + Streamable Objects are FlxSprites that are 
     autocreated and autodestroyed as the camera pans
   + Extend this class for more control
   + Reads INFO from the main "params.json" file "map" node
@@ -41,7 +41,6 @@ import flixel.util.FlxArrayUtil;
 import flixel.util.FlxColor;
 
 import flash.geom.Rectangle;
-import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -142,16 +141,16 @@ class MapTemplate implements IFlxDestroyable
 		layerBG = new FlxTilemap();
 		
 		// -- Read parameters
-		TILEWIDTH = Reg.JSON.map.BG_TILEWIDTH;
-		TILEHEIGHT = Reg.JSON.map.BG_TILEHEIGHT;
+		TILEWIDTH = FLS.JSON.map.BG_TILEWIDTH;
+		TILEHEIGHT = FLS.JSON.map.BG_TILEHEIGHT;
 		
-		hPadding = Reg.JSON.map.STREAM_PAD_X;
-		vPadding = Reg.JSON.map.STREAM_PAD_Y;
+		hPadding = FLS.JSON.map.STREAM_PAD_X;
+		vPadding = FLS.JSON.map.STREAM_PAD_Y;
 		
 		// Use the default camera, use setCustomViewport() later
 		camera = FlxG.camera;
-		if (Reg.JSON.map.BG_COLOR != null)
-			camera.bgColor = FlxColor.fromString(Reg.JSON.map.BG_COLOR);
+		if (FLS.JSON.map.BG_COLOR != null)
+			camera.bgColor = FlxColor.fromString(FLS.JSON.map.BG_COLOR);
 		
 		// Hold the camera starting point in tile coords
 		cameraPos = new SimpleCoords();
@@ -180,9 +179,9 @@ class MapTemplate implements IFlxDestroyable
 	public function setCustomViewport(x:Int, y:Int, width:Int, height:Int)
 	{
 		camera = new FlxCamera(x, y, width, height, 0);
-		if (Reg.JSON.map.BG_COLOR != null)
-			camera.bgColor = FlxColor.fromString(Reg.JSON.map.BG_COLOR);
-		camera.antialiasing = Reg.ANTIALIASING; // apply the AA status to this cam
+		if (FLS.JSON.map.BG_COLOR != null)
+			camera.bgColor = FlxColor.fromString(FLS.JSON.map.BG_COLOR);
+		camera.antialiasing = FLS.ANTIALIASING; // apply the AA status to this cam
 		layerBG.cameras = [camera];
 		
 		// Don't forget to re-set the camera size
@@ -241,11 +240,11 @@ class MapTemplate implements IFlxDestroyable
 		height = mapHeight * TILEHEIGHT;
 		
 		// - Load the basic layer
-		layerBG.loadMapFrom2DArray(loader.layerTiles.get(Reg.JSON.map.BG_LAYER),
-					Reg.JSON.map.BG_TILES, TILEWIDTH, TILEHEIGHT, null,
-					Reg.JSON.map.BG_STARTING_INDEX, 
-					Reg.JSON.map.BG_DRAW_INDEX,
-					Reg.JSON.map.BG_COL_START);
+		layerBG.loadMapFrom2DArray(loader.layerTiles.get(FLS.JSON.map.BG_LAYER),
+					FLS.JSON.map.BG_TILES, TILEWIDTH, TILEHEIGHT, null,
+					FLS.JSON.map.BG_STARTING_INDEX, 
+					FLS.JSON.map.BG_DRAW_INDEX,
+					FLS.JSON.map.BG_COL_START);
 		
 		layerBG.updateBuffers(); // new bug fix
 		
@@ -264,8 +263,8 @@ class MapTemplate implements IFlxDestroyable
 		dataLayer = new Map();
 		
 		// Load those 2 from the JSON, #optional
-		var OBJECT_LAYER:String = Reg.JSON.map.OBJECT_LAYER;
-		var DATA_LAYER:String = Reg.JSON.map.DATA_LAYER;
+		var OBJECT_LAYER:String = FLS.JSON.map.OBJECT_LAYER;
+		var DATA_LAYER:String = FLS.JSON.map.DATA_LAYER;
 		
 		// - Streaming entities --
 		// - Scan the ENTIRE objects layer to get data:

@@ -2,7 +2,7 @@ package djFlixel.tool;
 
 /**
  * Executes a function for each element in the array
- * but will only iterate the next element on callback.
+ * but will only iterate the next element on a callback.
  * Useful when the operations done on the queue are ASYNC.
  * ...
 

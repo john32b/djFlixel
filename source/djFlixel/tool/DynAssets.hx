@@ -2,12 +2,24 @@ package djFlixel.tool;
 
 import djFlixel.net.DataGet;
 import djFlixel.tool.MacroHelp;
-import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import openfl.Assets;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 
+
+/**
+ * This is a helper class useful for debugging
+ * It keeps a list of path to files that can be reloaded at runtime.
+ * e.g. Reload some JSON or MAP files to quickly test out new things.
+ * 
+ * Requires : <haxedef name="EXTERNAL_LOAD"/>  to be set.
+ * 
+ * You can safely use this class to load files on production just make sure to
+ * remove the "EXTERNAL_LOAD" def and then it will load all the files from the internal assets
+ * and not seek them externally
+ * 
+ */
 class DynAssets
 {
 	public static var ASSETS_PATH = "assets/";
@@ -24,29 +36,28 @@ class DynAssets
 	// == USER SET ==
 	// Put here the list of files to be loaded every time the state resets
 	// Set this first thing in you MAIN class
-	public static var FILE_LOAD_LIST:Array<String>;
+	public static var FILE_LOAD_LIST:Array<String> = [];
 	
 	//====================================================;
 	// FUNCTIONS 
 	//====================================================;
 
 	/**
-	 * Reload all the queue files
+	 * Load or Reload all the files in the FILE_LODE_LIST[]
 	 * ---- 
 	 * @NOTE: Inline is VERY IMPORTANT. Prevents bug where the JSON object doesn't work properly.
 	 */
-	
-	inline public static function loadFiles(onLoadComplete:Void->Void)
+	public static function loadFiles(onLoadComplete:Void->Void)
 	{
 		json = new Map();
 		files = new Map();
 		
-		#if debug // save some memory?
+		#if debug // save some memory as it's only used in debug?
 			images = new Map();
 		#end
 		
-		if (FILE_LOAD_LIST == null) {
-			trace("Warning: No files to load");
+		if (FILE_LOAD_LIST.length == 0) {
+			trace("Info: No files to load");
 			onLoadComplete();
 			return;
 		}
@@ -154,6 +165,7 @@ class DynAssets
 	
 	// --
 	#if debug
+	// V0.01 Testing out dynamically loading images.
 	public static function getImage(path:String):FlxGraphicAsset
 	{
 		#if EXTERNAL_LOAD

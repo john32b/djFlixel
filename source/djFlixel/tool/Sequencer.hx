@@ -1,5 +1,5 @@
 /**--------------------------------------------------------
- * SequencerHaxe.hx
+ * Sequencer.hx
  * @author: johndimi, <johndimi@outlook.com> @jondmt
  * --------------------------------------------------------
  * @Description
@@ -22,15 +22,33 @@ import flixel.util.FlxDestroyUtil.IFlxDestroyable;
  * ----------------
  * Using the FlxTimer,
  * @note use Seconds for time
+ * 
+ * Example:
+ * 	var s = new Sequencer();
+ * 		s.callback = function(s:Int){
+ * 		switch(s){ default: //--
+ * 			case 1: 
+ * 				// do things
+ * 				s.next(0.4);
+ *			case 2:
+ * 				// do things
+ * 				s.next(1.4);
+ *		}		
+ * 	});
  */
 class Sequencer implements IFlxDestroyable
 {
 	// The callback to call when the timer triggers
 	public var callback:Int->Void = null;
-	
+	// --
 	public var timer(default, null):FlxTimer = null;
+	// --
 	var currentStep:Int = 0;
 	//----------------------------------------------------;
+	/**
+	 * 
+	 * @param	callback_ The function handling the steps
+	 */
 	public function new(?callback_:Int->Void) 
 	{
 		callback = callback_;
@@ -44,26 +62,31 @@ class Sequencer implements IFlxDestroyable
 		timer.active = false;
 		// faster than calling cancel();
 	}//---------------------------------------------------;
+	@:deprecated("In Development")
 	public function doXTimes()
 	{
-		// LOG.log("In Development");
 	}//---------------------------------------------------;
-	//-- 
-	// Call this when you want to quickly call a waiting seq.next(XXXX) timer
-	// e.g. A timer on a menu that is set to 5 seconds, but a keystroke 
-	//      calls this function to skip waiting.
+	/**
+	 * HELPER: Useful to attach to FlxTimer callbacks
+	 * @param	t
+	 */
 	public function resolveNextAndWait(?t:FlxTimer)
 	{
 		stop(); 
 		callback(currentStep);
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Stop and reset to 0, but doesn't start over
+	 */
 	public function reset()
 	{
 		stop();
 		currentStep = 0;
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Proceed to the next step
+	 * @param	delay Call the next action in X seconds
+	 */
 	public function next(?delay:Float)
 	{
 		currentStep++;
@@ -78,7 +101,10 @@ class Sequencer implements IFlxDestroyable
 			callback(currentStep);
 		}
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Forces the sequencer to stop and call a specified step
+	 * @param	step
+	 */
 	public function forceTo(step:Int)
 	{
 		reset();

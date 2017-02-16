@@ -17,6 +17,7 @@ import flixel.util.FlxColor;
  * -----------
  *  + It works
  *  + Fade into and out of a custom color
+ *  + It's not Dynamic!!! It will capture a screenshot and work on that screenshot
  * 
  * How to Use
  * -----------

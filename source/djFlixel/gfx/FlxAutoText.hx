@@ -3,7 +3,7 @@ import flixel.text.FlxText;
 import flixel.util.FlxTimer;
 
 
-
+/// UNUSED, DEPRECATED, user djFlixel.FlxAutoText
 /**
  * Simple AutoText
  */

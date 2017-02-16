@@ -86,7 +86,9 @@ class DataTool
 		return n;
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * Quickly get a random element from an array
+	 */
 	public static function arrayRandom<T>(ar:Array<T>):T 
 	{
 		return ar[Std.random(ar.length)];
@@ -99,6 +101,7 @@ class DataTool
 		for (field in Reflect.fields(node)) {
 			Reflect.setField(into, field, Reflect.field(node, field));
 		}
+		// TODO: add a try catch ?
 	}//---------------------------------------------------;
 	
 	//-- Quickly set the default parameters of an object
