@@ -35,7 +35,7 @@ class FLS
 	// -  It is useful to have various game parameters to an external file
 	// -  so that I don't have to compile everytime I want to change a value.
 	// -  !NOTE! This is automatically added to the DynAssets Load Files list.
-	inline static public var PARAMS_FILE:String = "data/params.json";
+	static public var PARAMS_FILE:String = "data/params.json";
 	
 	// -  These vars are loaded externally from the JSON parameters file ::
 	//    If the parameter is not present on the ext file, then these defaults will be used.

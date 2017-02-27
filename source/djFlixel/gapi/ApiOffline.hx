@@ -1,23 +1,21 @@
 package djFlixel.gapi;
 import djFlixel.gapi.ApiOffline.Trophy;
-import djFlixel.gapi.TrophyPopup;
 import flixel.FlxG;
 import flixel.util.FlxTimer;
 import flixel.util.FlxStringUtil;
-
-// -- 
-// This class can be overriden to specify a generic API.
-// If no APIs are used, then this is used as a blank
+#if TROPHIES
+	import djFlixel.gapi.TrophyPopup;
+#end
 
 /**
- * This class can be overriden to specify a more specific API like newgrounds
+ * This class can be overriden to specify a more specific API like newgrounds or gamejolt
  * You can use this class as is for offline achievements.
  * 
  * HAXE DEFINES:
  * ------------------
  * 
- * 		"FLASHONLINE"
- * 		"TROPHIES"
+ * 		"FLASHONLINE"	// All code related to scores and URL checking, 
+ * 		"TROPHIES" 		// Enable trophy functionality
  * 
  * Example:
  * ---------------
@@ -50,7 +48,7 @@ class ApiOffline
 	// Keep the connection timer.
 	var connectTimer:FlxTimer;
 	// If the game runs at an unauthorised place.
-	public var isBlocked:Bool;
+	public var isBlocked:Bool; // Don't use this, check isURLAllowed() instead
 	// False when it's GUEST
 	public var userLoggedIn:Bool = false;
 	//---------------------------------------------------;
@@ -104,7 +102,7 @@ class ApiOffline
 			// It is going to callback later
 			onConnect = fn;
 		}else {
-			fn();
+			fn(); // either "ok" or "fail"
 		}
 	}//---------------------------------------------------;
 	/**
@@ -136,11 +134,17 @@ class ApiOffline
 	
 	#if FLASHONLINE
 	
-	// IMPORTANT!
-	// URLs MUST BEGIN WITH "http://"
-	var allowedURLs:Array<String> = null; // Set on Create?
+	// !IMPORTANT! : URLs MUST BEGIN WITH the "http://" or "https://" prefix
+	// 
+	// NOTE : if a URL is "http://gamejolt.com" then allowed are all the subdomains
+	//		  e.g. "http://flash.upload.gamejolt.com" IS ALLOWED
+	var allowedURLs:Array<String> = null; // # USER SET #
 	
-	// --
+	/**
+	 * Make sure to set the 'allowedURLs' beforehand
+	 * Note that returns FALSE if local play
+	 * @return
+	 */
 	public function isURLAllowed():Bool
 	{
 		if (allowedURLs == null) return false;
@@ -163,56 +167,52 @@ class ApiOffline
 	
 	#end
 	
+	#if TROPHIES
+	
 	//====================================================;
-	// ACHIEVEMENTS 
+	// ACHIEVEMENTS , TROPHIES
 	//====================================================;
 	
-	// # USER MUST SET THIS TO THE SPRITE SHEET IF YOU WANT POPUPS AND LISTS TO WORK!
+	// # USER SETS ::
+	
+	// -- IMPORTANT -- SET THE SPRITE SHEET IF YOU WANT POPUPS AND LISTS TO WORK !
 	// 32x32 size
-	public var TROPHY_SPRITE_SHEET:String = "";
-	
-	// # USER SET
+	public var TROPHY_SPRITE_SHEET:String = ""; // Used by trophypopup class
 	// If set will play this sound on popup
-	public var TROPHY_SOUND:String = null;
-	
-	// # USER SET [x,y]. See Align.screen()
+	public var TROPHY_SOUND:String = null; // Used by trophypopup class
+	// [x,y]. See Align.screen()
 	// Future: Put this on TrophyPopup ?
-	public var TROPHY_ALIGN:String = "left|top";
-	
-	// Keep track of which trophies are already got. So I don't unlock them again.
-	// <Trophy.SID, unlocked>
-	var trophyGot:Map<String,Bool>;
+	public var TROPHY_ALIGN:String = "left|top"; // Used by trophypopup class
+	// Called whenever a trophy is unlocked
+	public var onTrophyUnlock:Trophy->Void = null;
+
+	// # PROPERTIES ::
 	
 	// The entire game trophies,
 	// Set on the overrided object
 	// <Trophy.SID, Trophy{} >
 	public var trophies(default, null):Map<String,Trophy>;	
-	
-	// -- Store ALL Trophies serially
-	public var trophiesAr:Array<Trophy>;
-	
-	// User function, called whenever a trophy is unlocked
-	public var onTrophyUnlock:Trophy->Void = null;
-	
+	// Stores ALL Trophies serially
+	public var trophiesAr(default, null):Array<Trophy>;
+	// How many trophies there are
 	public var trophiesTotal(default, null):Int = 0;
+	// How many are unlocked
 	public var trophiesUnlocked(default, null):Int = 0;
-	
 	// Prevent trophies from being unlocked. Useful when demorunning.
 	public var flag_trophies_disable:Bool = false;
-	
 	// Enable or disable the flash popup
 	public var flag_trophy_popup:Bool = true;
-	
 	// Global object displaying the popup
 	public var trophyPopup:TrophyPopup;
-	
-	
-	#if TROPHIES
+	// Keep track of which trophies are already got. So I don't unlock them again.
+	// <Trophy.SID, unlocked>
+	var trophyGot:Map<String,Bool>;
 	
 	/**
-	 * Add a trophy to the DB. Call this on REG.INIT();
+	 * Add a trophy to the DB.
 	 */
 	public function addTrophy(imIndex_:Int = 0, type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1)
+	
 	{
 		var t:Trophy = { uid:uid_, sid:sid_, name:name_, desc:desc_, type:type_, imIndex:imIndex_, unlocked:false };
 		
@@ -242,7 +242,7 @@ class ApiOffline
 		var tr = trophies.get(trophyID);
 			tr.unlocked = true;
 			
-		trace(" UNLOCKING TROPHY : ", tr.name);
+		trace(" Unlocking Trophy : ", tr.name);
 		
 		// NEW:
 		save_trophies();
@@ -264,7 +264,9 @@ class ApiOffline
 	{
 	}//---------------------------------------------------;
 		
-	// Return the object to be saved and the restored
+	/**
+	 * Saves the acquired trophies to the master save game
+	 */
 	public function save_trophies()
 	{
 		var trophiesGot:Array<String> = [];
@@ -275,7 +277,10 @@ class ApiOffline
 		SAVE.save("_trophies",trophiesGot.join("|"));
 	}//---------------------------------------------------;
 	
-	// Set the trophies from the saved object
+	/**
+	 * Try to load trophies from the master save game
+	 * NOTE: If for some reason trophies are corrupted, it resets them to none
+	 */
 	public function load_trophies()
 	{
 		SAVE.setSlot(0);
@@ -299,7 +304,9 @@ class ApiOffline
 			delAllTrophies();
 		}
 	}//---------------------------------------------------;
-	// Current trophies AND saved trophies
+	/**
+	 * Deletes Current trophies AND saved trophies 
+	 **/
 	public function delAllTrophies()
 	{
 		for (i in trophiesAr) {
@@ -311,6 +318,18 @@ class ApiOffline
 		trace("Deleted Trophies");
 	}//---------------------------------------------------;
 	
+	#if debug
+	/**
+	* For debugging, unlock a random trophy
+	*/
+	public function addOneAtRandom()
+	{
+		for (i in trophiesAr) {
+			if (i.unlocked == false) { trophy(i.sid); break; }
+		}
+	}//---------------------------------------------------;
+	#end
+	
 	#else
 		// Skip trophy calls altogether
 		public inline function addTrophy(imIndex_:Int = 0, type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1) { }
@@ -320,17 +339,6 @@ class ApiOffline
 		public inline function delAllTrophies() { }
 	#end //-----------------------------------------------;
 	
-		
-	#if debug
-		// --
-		public function addOneAtRandom()
-		{
-			for (i in trophiesAr) {
-				if (i.unlocked == false) { trophy(i.sid); break; }
-			}
-		}//---------------------------------------------------;
-	
-	#end
 	
 	//====================================================;
 	// SCORING AND LEADERBOARDS
@@ -341,32 +349,25 @@ class ApiOffline
 	// You should read this to get scores, nulls of no scores loaded
 	public var scores:Array<ScoreApi> = null;
 	//---------------------------------------------------;
-	/**
-	 * Override this and upload score
-	 * 
-	 * @param	score
-	 * @param	callback
-	 */
-	public function uploadScore(score:Int, ?callback:Void->Void = null) 
-	{ 
+	// -- Upload score and callback
+	public function uploadScore(score:Int, ?callback:Void->Void = null) // # OVERRIDE
+	{
+		if (callback != null) callback();
 	}//---------------------------------------------------;
-
+	// -- Populate the scores array and callback
+	public function fetchScores(callback:Void->Void = null) // # OVERRIDE
+	{
+		if (callback != null) callback();
+	}//---------------------------------------------------;
 	/**
-	 * @return Does the score makes the TOP TEN?
+	 * Does the score makes the TOP TEN?
 	 */
 	public function scoreMakesLeaderboard(score:Float):Bool
 	{
 		if (scores == null) return true;
 		if (scores.length == 0) return true;
-		var minScore = scores[scores.length - 1].score_num;
+		var minScore = scores[scores.length - 1].score_num; // The scores are sorted.
 		return (score >= minScore);
-	}//---------------------------------------------------;
-	
-	/**
-	 * Override and fetch scores to the scores object
-	 * @param	callback
-	 */
-	public function fetchScores(callback:Void->Void = null){ 
 	}//---------------------------------------------------;
 	
 	

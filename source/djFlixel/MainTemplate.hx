@@ -76,10 +76,9 @@ class MainTemplate extends Sprite
 		
 		try {
 			if (FLS.JSON.sys.START_STATE != null) {
-				trace("Forced Initial State :: ", FLS.JSON.sys.START_STATE);
+				trace("Forced Initial State :: ", initialState);
 				initialState = cast Type.resolveClass(FLS.JSON.sys.START_STATE);
 			}
-		}catch (e:Dynamic) {
 		}
 		
 		var stageWidth:Int = Lib.current.stage.stageWidth;

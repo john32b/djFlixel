@@ -382,8 +382,11 @@ class ApiNewgroundsGeneric extends ApiOffline
 	var onScoreLoad:Void->Void = null;
 	override public function fetchScores(callback:Void->Void = null)
 	{
-		if (!isConnected) return;
 		onScoreLoad = callback;
+		if (!isConnected) {
+			if (onScoreLoad != null) onScoreLoad();
+			return;
+		}
 		API.addEventListener(APIEvent.SCORES_LOADED, __onScoreLoad);
 		scoreBoard = API.loadScores(scoreBoardName, ScoreBoard.ALL_TIME, 1, SCORES_TO_GET);
 	}//---------------------------------------------------;

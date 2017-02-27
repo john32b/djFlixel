@@ -104,8 +104,14 @@ class DataTool
 		// TODO: add a try catch ?
 	}//---------------------------------------------------;
 	
-	//-- Quickly set the default parameters of an object
-	public static function defParams(obj:Dynamic, target:Dynamic):Dynamic
+	/**
+	 * Returns a UNION object from values from obj and template. If a field is missing 
+	 * from obj it gets copied from template
+	 * @param	obj	
+	 * @param	template 
+	 * @return
+	 */
+	public static function defParams(obj:Dynamic, template:Dynamic):Dynamic
 	{
 		if (obj == null) {
 			obj = { };
@@ -114,9 +120,9 @@ class DataTool
 			obj = Reflect.copy(obj);
 		}
 		
-		for (field in Reflect.fields(target)) {
+		for (field in Reflect.fields(template)) {
 			if (!Reflect.hasField(obj, field)) {
-				Reflect.setField(obj, field, Reflect.field(target, field));
+				Reflect.setField(obj, field, Reflect.field(template, field));
 			}
 		}
 		

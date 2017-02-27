@@ -1,9 +1,11 @@
 package djFlixel.gui;
 
 
+import djFlixel.SimpleVector;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
+import flixel.input.FlxPointer;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -20,7 +22,7 @@ import flixel.util.FlxColor;
  */
 class Gui
 {
-	public static var DEFAULT_TEXT_COLOR:FlxColor   = 0xFF333333;
+	public static var DEFAULT_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
 	public static var DEFAULT_BORDER_COLOR:FlxColor = 0xFF111111;
 	
 	//====================================================;
@@ -58,7 +60,7 @@ class Gui
 	 * @param	Y optional
 	 * @return
 	 */
-	public static function getFText( text:String, size:Int = 8, textC:Int = -1, useBorder:Bool = false, X:Int = 0, Y:Int = 0):FlxText
+	public static function getFText(text:String, size:Int = 8, textC:Int = -1, useBorder:Bool = false, X:Float = 0, Y:Float = 0):FlxText
 	{
 		var t = new FlxText(X, Y, 0, "", size);
 		t.scrollFactor.set(0, 0);
@@ -78,7 +80,7 @@ class Gui
 	 * @param	text
 	 * @param	size
 	 * @param	color
-	 * @param	border
+	 * @param	border Needs the color to be in 0xAARRGGBB format
 	 * @param	X
 	 * @param	Y
 	 * @return
@@ -134,4 +136,41 @@ class Gui
 	}//---------------------------------------------------;
 	
 	
-}
+	
+	// NEW for 3.0
+	
+	// Quick Box Start
+	static var qBoxS:SimpleVector;
+	// Quick Box Last
+	static var qBoxL:SimpleVector;
+	
+	
+	/**
+	 * Set the quick area to put qText on
+	 */
+	public static function qBox(X:Float, Y:Float)
+	{
+		qBoxS = new SimpleVector(X, Y);
+		qBoxL = new SimpleVector(X, Y);
+	}//---------------------------------------------------;
+	
+	/**
+	 * Puts text on the current state, automatically aligns it to the previous text put with qText
+	 * @param	text String of text
+	 * @param	next bool, if true it will place it next to the previous one
+	 */
+	public static function qText(txt:String="", next:Bool = false):FlxText
+	{
+		var t:FlxText = getQText(txt, 8, -1, -1);
+		// Info: All text should have the same height
+		if (next) {
+			t.setPosition(qBoxL.x, qBoxL.y);
+		}else {
+			t.setPosition(qBoxS.x, qBoxL.y + t.textField.height);
+		}
+		qBoxL.x = t.x + t.fieldWidth;
+		qBoxL.y = t.y; 
+		return cast(FlxG.state.add(t));
+	}//---------------------------------------------------;
+	
+}// --

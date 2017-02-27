@@ -12,25 +12,32 @@ import flixel.effects.FlxFlicker;
 import flixel.FlxG;
 
 /**
+ * LEADERBOARDS 
+ * ---------------
+ * A templated sprite group with build in functionality to retrieve scores
+ * from the connected API and then display them
+ * 
+ * NOTES :
+ * 
  * + Requires the following TextStyles to be set:
  * 	 '!' - for slot number
  * 	 '%' - for score
- * 	 username is default color
+ * 	 username is default color text
  * 
  * + Requires Reg.api to be set, it can be the empty one.
  * 
  * + Will work on whatever Service as long as you populate Reg.api.scores
  * 
- * + 
  * -------------------------------
  * 	
  */
 
 class LeaderBoards extends FlxGroup
 {
-
-	// Paranoid code, only once per X seconds, otherwise show old results?
-	static inline var MIN_TIME_BETWEEN_LOADS:Float = 5;
+	/*
+	 * Paranoid code, UNUSED
+	 * only once per X seconds, otherwise show old results? */
+	static inline var MIN_TIME_BETWEEN_LOADS:Float = 5; 
 	
 	var SLOTS_TOTAL:Int = 10;
 	var SLOT_DISPLAY_TIME:Float = 0.18;
@@ -51,6 +58,11 @@ class LeaderBoards extends FlxGroup
 	var flag_show_title:Bool = false;
 	//---------------------------------------------------;
 	
+	/**
+	 * Create the group, will align automatically on the X axis of the screen
+	 * @param	startY Y position on the screen
+	 * @param	showTitle Bool e.g. Displays "Gamejolt leaderboards" at the top
+	 */
 	public function new(startY:Float = 0, showTitle:Bool = true )
 	{
 		super();
@@ -74,10 +86,11 @@ class LeaderBoards extends FlxGroup
 	 * Fetches and displays at once
 	 * @param	timeout Timeout to fail, callbacks
 	 * @param	callback callback when finished or failed
+	 * @param	blinkScore_ A preliminary way to blink a row, useful to indicate the score that was just set
 	 */
-	public function fetch(timeout:Float = 5, ?callback_:Void->Void,blinkScore_:Float = -1)
+	public function fetch(timeout:Float = 5, ?callback_:Void->Void, blinkScore_:Float = -1)
 	{
-		trace("going to blink for score", blinkScore);
+		trace(" - Going to blink for score", blinkScore);
 		flag_new_scores_ready = false;
 		flag_has_timed_out = false;
 		callback = callback_;
@@ -128,13 +141,13 @@ class LeaderBoards extends FlxGroup
 	 */
 	private function scoresReady() 
 	{
-		if (flag_has_timed_out) return; // It could be possible.
+		if (flag_has_timed_out) return; // It is possible when it timeouts and the API fires the scores later
 		
 		trace(" - Scores fetched - ");
 		flag_new_scores_ready = true;
 				
 		timeoutFail.cancel(); timeoutFail.destroy();
-		trace(" - SCORES SUCCESS - ");
+		trace(" - Scores Success - ");
 		// --
 		remove(loadingText);
 		

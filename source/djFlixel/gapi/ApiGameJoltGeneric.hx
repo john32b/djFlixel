@@ -11,7 +11,6 @@ import flash.net.URLRequestMethod;
 import haxe.Json;
 import haxe.crypto.Md5;
 import djFlixel.gapi.ApiOffline.Trophy;
-import haxe.ds.ObjectMap;
 
 #if flash
 import flash.Lib;
@@ -20,7 +19,15 @@ import flash.Lib;
  * GameJolt API
  * ------------
  * 
- *  + Automatically starts a session
+ *  + Automatically starts a session when connected
+ * 
+ * # HOW TO USE:
+ * --------------
+ * 
+ * 	. Put the key on "assets/gamejolt.key"
+ *  . Extend this class and on the constructor call super() with the gameID
+ * 
+ * 
  */
 @:file("assets/gamejolt.key") class GamejoltKey extends ByteArray { }
 class ApiGameJoltGeneric extends ApiOffline
@@ -47,6 +54,9 @@ class ApiGameJoltGeneric extends ApiOffline
 		trace('Info: Creating GameJolt API Handler, GameId = $gameID');
 		SERVICE_NAME = "GameJolt";
 		GAME_ID = gameID;
+		
+		flag_https = FlxG.stage.root.loaderInfo.loaderURL.indexOf("https:") == 0;
+		verbose('Using HTTPS : $flag_https');
 	}//---------------------------------------------------;
 	
 	// --
@@ -72,16 +82,17 @@ class ApiGameJoltGeneric extends ApiOffline
 	{
 		if (d!=null)
 		{
+			trace("Gamejolt connect - OK -");
 			// Start a session and start pinging every XX seconds
 			openSession(_onOpenSession);
 			connectStatus = "ok";
 			isConnected = true;
-			trace("Info: Gamejolt connected");
 		}else
 		{
+			trace("Gamejolt connect - ERROR - ");
+			verbose(d);
 			connectStatus = "fail";
 			isConnected = false;
-			trace("Warning: Gamejolt CANNOT connect");
 		}
 		
 		if (onConnect != null) onConnect();
@@ -92,6 +103,7 @@ class ApiGameJoltGeneric extends ApiOffline
 	@:access(flixel.FlxGame._lostFocus)
 	function _onOpenSession(_)
 	{
+		verbose("Openning Session");
 		timer_ping = new FlxTimer();
 		timer_ping.start(PING_FREQUENCY, function(e:FlxTimer) {
 				pingSession(!FlxG.game._lostFocus);
@@ -118,6 +130,10 @@ class ApiGameJoltGeneric extends ApiOffline
 		});
 	}//---------------------------------------------------;
 	
+	/**
+	 * Returns the username if connected
+	 * @return
+	 */
 	override public function getUser():String 
 	{
 		if (!isConnected) return "Offline";
@@ -132,9 +148,16 @@ class ApiGameJoltGeneric extends ApiOffline
 	//====================================================;
 	// SCORING SYSTEM 
 	//====================================================;
-	
+	/**
+	 * Populates the scores array 
+	 */
 	override public function fetchScores(callback:Void->Void = null) 
 	{
+		if (!isConnected) {
+			if (callback != null) callback();
+			return;
+		}
+		
 		// Everyone can get scores
 		_fetchScores(10, function(o:Dynamic) {
 			if (o != null)
@@ -153,14 +176,19 @@ class ApiGameJoltGeneric extends ApiOffline
 					};
 					scores.push(ss);
 				}
+				verbose(scores);
 			}else {
 				trace("-- Failed to get scores --");
-				// Don't zero out the leaderboards
+				// Note : Don't zero out the leaderboards! use any previous values
 			}
 			if (callback != null) callback();
 		});
 	}//---------------------------------------------------;
-	
+	/**
+	 * Uploads score to the scoreboard. You should set the scoreboard ID at api creation 
+	 * @param	score
+	 * @param	callback
+	 */
 	override public function uploadScore(score:Int, ?callback:Void->Void = null) 
 	{
 		addScore('$score', score, scoreBoardID, null, function(_) {
@@ -174,13 +202,15 @@ class ApiGameJoltGeneric extends ApiOffline
 	// -- it's a mini verion of flixel.tools.FlxGameJolt.hx
 	// -- but with json returns instead.
 	//====================================================;
-	private static inline var URL_API:String = "http://gamejolt.com/api/game/v1/";
-	private static inline var RETURN_TYPE:String = "?format=json";
-	private static inline var URL_GAME_ID:String = "&game_id=";
-	private static inline var URL_USER_NAME:String = "&username=";
-	private static inline var URL_USER_TOKEN:String = "&user_token=";
+	static inline var URL_API:String = "gamejolt.com/api/game/v1/";
+	static inline var RETURN_TYPE:String = "?format=json";
+	static inline var URL_GAME_ID:String = "&game_id=";
+	static inline var URL_USER_NAME:String = "&username=";
+	static inline var URL_USER_TOKEN:String = "&user_token=";
+	
+	var flag_https:Bool;
 	// -------
-	var verbose:Bool = true; // set to true to debug URL requests and results
+	var _verbose:Bool = true; // set to true to debug URL requests and results
 	// -------
 	var _privateKey:String = "";
 	var _userName:String = "";
@@ -197,6 +227,7 @@ class ApiGameJoltGeneric extends ApiOffline
 	function _connect(PrivateKey:String,?callback_:Dynamic)
 	{
 		if (isConnected) return;
+		verbose("Requesting Connect");
 		_privateKey = PrivateKey;
 		identifyUser(callback_);
 	}//---------------------------------------------------;
@@ -206,9 +237,8 @@ class ApiGameJoltGeneric extends ApiOffline
 	 * @param	Callback
 	 */
 	function identifyUser(?Callback:Dynamic):Void
-	{		
-		trace('Gamejolt: Getting User');
-		
+	{				
+		#if flash
 		var parameters = Lib.current.loaderInfo.parameters;
 		if (parameters.gjapi_username != null) {
 			_userName = parameters.gjapi_username;
@@ -216,25 +246,40 @@ class ApiGameJoltGeneric extends ApiOffline
 		if (parameters.gjapi_token != null) {
 			_userToken = parameters.gjapi_token;
 		}
+		#else
+			throw "Need to get username and token"; // TODO
+		#end
+		
+		verbose('Gamejolt: Getting User');
+		verbose('_username : $_userName | token:$_userToken');
 	
 		// Only send initialization request to GameJolt if user name and token were found or passed.
 		_idURL = URL_GAME_ID + GAME_ID + URL_USER_NAME + _userName + URL_USER_TOKEN + _userToken;
-		sendLoaderRequest(URL_API + "users/auth/" + RETURN_TYPE + _idURL, function(o:Dynamic) {
+		sendLoaderRequest("users/auth/" + RETURN_TYPE + _idURL, function(o:Dynamic) {
 			if (o != null) {
 				if (o.success == "true") {
 					userLoggedIn = true;
 				}else {
 					userLoggedIn = false;
 				}
+				verbose('User Logged in : $userLoggedIn');
 			}
 			if (Callback != null) Callback(o);
 		});
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * 
+	 * @param	URLString The portion after the URL_API
+	 * @param	Callback
+	 */
 	function sendLoaderRequest(URLString:String, ?Callback:Dynamic):Void
 	{
-		var request:URLRequest = new URLRequest(URLString + "&signature=" + encryptURL(URLString));
+		URLString = URL_API + URLString;
+		var finalURL = (flag_https ? "https://" : "http://") + URLString + 
+						"&signature=" + encryptURL("http://" + URLString);
+		
+		var request:URLRequest = new URLRequest(finalURL);
 		request.method = URLRequestMethod.POST;
 		
 		_loaderCallback = Callback;
@@ -242,7 +287,7 @@ class ApiGameJoltGeneric extends ApiOffline
 		if (_loader == null)
 			_loader = new URLLoader();
 		
-		if(verbose) trace("Gamejolt: Contacting " + request.url);
+		verbose("API SEND : " + request.url);
 		
 		_loader.addEventListener(Event.COMPLETE, _onURLData);
 		_loader.load(request);
@@ -256,23 +301,21 @@ class ApiGameJoltGeneric extends ApiOffline
 		_loader.removeEventListener(Event.COMPLETE, _onURLData);
 		if (Std.string(e.currentTarget.data) == "")
 		{
-			trace("Gamejolt: Received no data back. This is probably because one of the values it was passed is wrong.");
+			verbose("Gamejolt: Received no data back. This is probably because one of the values it was passed is wrong.");
 			if (_loaderCallback != null) _loaderCallback(null); // Push that I got NO DATA
 			return;
 		}
 		
 		var obj:Dynamic = Json.parse(e.currentTarget.data);
 	
-		#if debug
-			if (verbose) trace("JSON GOT = ", obj.response);
-		#end
+		verbose(obj.response);
 		
 		if (_loaderCallback != null) _loaderCallback(obj.response);
 	}//---------------------------------------------------;
 	
 	function _fetchScores(?Limit:Int, ?Callback:Dynamic):Void
 	{
-		var tempURL = URL_API + "scores/" + RETURN_TYPE + URL_GAME_ID + GAME_ID;
+		var tempURL = "scores/" + RETURN_TYPE + URL_GAME_ID + GAME_ID;
 		
 		if (Limit == null)
 		{
@@ -290,25 +333,25 @@ class ApiGameJoltGeneric extends ApiOffline
 	function openSession(?Callback:Dynamic)
 	{
 		if (!userLoggedIn) return;
-		sendLoaderRequest(URL_API + "sessions/open/" + RETURN_TYPE + _idURL, Callback);
+		sendLoaderRequest("sessions/open/" + RETURN_TYPE + _idURL, Callback);
 	}//---------------------------------------------------;
 	
 	// --
 	function closeSession(?Callback:Dynamic)
 	{
 		if (!userLoggedIn) return;
-		sendLoaderRequest(URL_API + "sessions/close/" + RETURN_TYPE + _idURL, Callback);
+		sendLoaderRequest("sessions/close/" + RETURN_TYPE + _idURL, Callback);
 	}//---------------------------------------------------;
 	function  pingSession(Active:Bool = true, ?Callback:Dynamic):Void
 	{
 		if (!userLoggedIn) return;
-		var tempURL:String = URL_API + "sessions/ping/" + RETURN_TYPE + _idURL + "&active=" + (Active?"active":"idle");
+		var tempURL:String = "sessions/ping/" + RETURN_TYPE + _idURL + "&active=" + (Active?"active":"idle");
 		sendLoaderRequest(tempURL, Callback);
 	}//---------------------------------------------------;
 	function _addTrophy(TrophyID:Int, ?Callback:Dynamic):Void
 	{
 		if (!userLoggedIn) return;
-		sendLoaderRequest(URL_API + "trophies/add-achieved/" + RETURN_TYPE + _idURL + "&trophy_id=" + TrophyID, Callback);
+		sendLoaderRequest("trophies/add-achieved/" + RETURN_TYPE + _idURL + "&trophy_id=" + TrophyID, Callback);
 	}//---------------------------------------------------;
 	// --
 	function addScore(Score:String, Sort:Float, ?TableID:Int, ?ExtraData:String, ?Callback:Dynamic):Void
@@ -317,7 +360,7 @@ class ApiGameJoltGeneric extends ApiOffline
 	
 		// TO ALLOW GUEST, CHECK THE ORIGINAL FILE AND EDIT THIS.
 		
-		var tempURL = URL_API + "scores/add/" + RETURN_TYPE + "&game_id=" + GAME_ID + "&score=" + Score + "&sort=" + Std.string(Sort);
+		var tempURL = "scores/add/" + RETURN_TYPE + "&game_id=" + GAME_ID + "&score=" + Score + "&sort=" + Std.string(Sort);
 		
 		tempURL += URL_USER_NAME + _userName + URL_USER_TOKEN + _userToken;
 		
@@ -331,4 +374,13 @@ class ApiGameJoltGeneric extends ApiOffline
 		
 		sendLoaderRequest(tempURL, Callback);
 	}//---------------------------------------------------;
+	
+	// -- 
+	inline function verbose(log:Dynamic):Void
+	{
+		#if debug
+		if (_verbose) trace(log);
+		#end
+	}//---------------------------------------------------;
+	
 }// --

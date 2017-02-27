@@ -1,15 +1,16 @@
+/**
+ * 
+ * TrophyPopup 
+ * -------------
+ * A sprite group that pops up on the screen with basic Trophy information
+ * , like trophy pic, name, description and type
+ * 
+ */
+
+
 package djFlixel.gapi;
 
 import flixel.group.FlxSpriteGroup;
-
-#if (!TROPHIES)
-	// Save some Memory
-	class TrophyPopup extends FlxSpriteGroup
-	{
-		public static var TIME_TO_SHOW:Float;
-		public static var ALIGN_PADDING:Int;
-	}
-#else
 
 import djFlixel.gapi.ApiOffline.Trophy;
 import djFlixel.gfx.Palette_DB32;
@@ -220,7 +221,6 @@ class TrophyPopup extends FlxSpriteGroup
 	
 }// -- 
 
-#end
 
 /*------------------------------------------
 	"trophyPopup" :{	
