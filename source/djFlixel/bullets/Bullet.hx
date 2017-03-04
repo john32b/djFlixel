@@ -5,14 +5,18 @@ import flixel.effects.FlxFlicker;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
 /**
+ * First version, needs lots of improvements
  * ...
- * @author JohnDimi
  */
 class Bullet extends FlxSprite
 {
 
+	// -- 
 	var timeToLive:Float;
+	
+	// If true it will flicker before it dies, NOTE: it's hard coded to 0.5 seconds
 	var flag_flicker:Bool;
+	
 	
 	public function start(TTL:Float = 5)
 	{

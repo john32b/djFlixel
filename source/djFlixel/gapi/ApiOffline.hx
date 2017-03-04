@@ -59,9 +59,11 @@ class ApiOffline
 		isConnected = false;
 		isBlocked = false;
 		
+		#if TROPHIES
 		trophyGot = new Map();
 		trophies = new Map();
 		trophiesAr = [];
+		#end
 	}//---------------------------------------------------;
 	public function getUser():String 
 	{ 
@@ -78,8 +80,10 @@ class ApiOffline
 	}//---------------------------------------------------;
 	public function destroy() 
 	{ 
+		#if TROPHIES
 		trophyGot = null;
 		trophies = null;
+		#end
 	}//---------------------------------------------------;
 	
 	//====================================================;
@@ -318,19 +322,23 @@ class ApiOffline
 		trace("Deleted Trophies");
 	}//---------------------------------------------------;
 	
-	#if debug
-	/**
-	* For debugging, unlock a random trophy
-	*/
-	public function addOneAtRandom()
-	{
-		for (i in trophiesAr) {
-			if (i.unlocked == false) { trophy(i.sid); break; }
-		}
-	}//---------------------------------------------------;
-	#end
+		#if debug
+		/**
+		* For debugging, unlock a random trophy
+		*/
+		public function addOneAtRandom()
+		{
+			for (i in trophiesAr) {
+				if (i.unlocked == false) { trophy(i.sid); break; }
+			}
+		}//---------------------------------------------------;
+		#end
 	
 	#else
+		public var flag_trophies_disable:Bool;
+		public var flag_trophy_popup:Bool;
+		public var TROPHY_SOUND:String;
+		public var TROPHY_SPRITE_SHEET:String;
 		// Skip trophy calls altogether
 		public inline function addTrophy(imIndex_:Int = 0, type_:String, sid_:String, name_:String, desc_:String, uid_:Int = -1) { }
 		public inline function trophy(trophyID:String) { }

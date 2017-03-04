@@ -10,6 +10,8 @@ import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxTimer;
 import haxe.Timer;
 
+/// IN DEVELOPMENT
+
 /** ==========================
  *   DialogBox.hx, Version 0.1
  *  ==========================

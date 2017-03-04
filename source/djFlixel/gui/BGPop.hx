@@ -15,21 +15,22 @@ import openfl.geom.Rectangle;
  * 	new BGPOP(100,100,black);
  *  bg.start(callback);
  * 
- * 	// prior to starting it's transparent
+ * 	NOTE: It starts off as transparent.
  * 
  */
 class BGPop extends FlxSprite
 {
-	static var FREQ:Float = 0.08;
+	// Tick time
+	public static var FREQ:Float = 0.08;
 	//---------------------------------------------------;
 	var timer:FlxTimer;
 	// Helper store the drawing rect
 	var rect:Rectangle; 
 	// Current step in the tables
 	var step:Int = 0; 
-	// Offset from origin
+	// Ratios to final height
 	var heightSteps:Array<Float>;
-	// Offset from origin
+	// Ratios to final width
 	var widthSteps:Array<Float>;
 	// --
 	var bgColor:Int;

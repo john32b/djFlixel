@@ -138,12 +138,15 @@ class Gui
 	
 	
 	// NEW for 3.0
+	//====================================================;
+	// QUICK PANEL
+	// useful for quickly putting and aligning text
+	//====================================================;
 	
 	// Quick Box Start
 	static var qBoxS:SimpleVector;
 	// Quick Box Last
 	static var qBoxL:SimpleVector;
-	
 	
 	/**
 	 * Set the quick area to put qText on
@@ -172,5 +175,37 @@ class Gui
 		qBoxL.y = t.y; 
 		return cast(FlxG.state.add(t));
 	}//---------------------------------------------------;
+	
+	
+	
+	//====================================================;
+	// Debugging
+	//====================================================;
+	// Color for some debug shapes
+	public static var d_color:Int = 0xFFFF9933;
+	
+	#if debug
+	/**
+	 * Draw a quick line on the camera
+	 */
+	inline public static function d_lineX(x:Float, y:Float, width:Int)
+	{
+		d_box(x, y, width, 2);
+	}//---------------------------------------------------;
+	
+	
+	public static function d_box(x:Float, y:Float, w:Float, h:Float)
+	{
+		var f = new FlxSprite(x, y);
+			f.makeGraphic(Std.int(w),Std.int(h), d_color);
+			f.scrollFactor.set(0, 0);
+		FlxG.state.add(f);
+	}//---------------------------------------------------;
+	
+	#else
+	public static inline function d_lineX(x:Float, y:Float, width:Float) { }
+	public static inline function d_box(x:Float, y:Float, width:Float) { }
+	#end
+	
 	
 }// --

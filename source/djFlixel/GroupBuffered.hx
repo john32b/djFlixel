@@ -7,7 +7,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
 
-/// UNUSED
+/// UNUSED, EXPERIMENTAL
 
 class GroupBuffered<T:FlxSprite> extends FlxTypedGroup<T>
 {

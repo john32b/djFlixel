@@ -12,7 +12,8 @@ import flixel.tweens.misc.VarTween;
 /**
  * Generate a text bounce effect
  * ...
- * @author 
+ * 
+ * TODO: Parameterize font
  */
 class TextBouncer extends FlxSpriteGroup
 {	
@@ -31,7 +32,15 @@ class TextBouncer extends FlxSpriteGroup
 	var tweens:Array<VarTween>;
 	
 	//---------------------------------------------------;
-	// --
+	
+	/**
+	 * 
+	 * @param	text_
+	 * @param	fontSize_
+	 * @param	X
+	 * @param	Y
+	 * @param	params_
+	 */
 	public function new(text_:String, fontSize_:Int, X:Float = 0, Y:Float = 0, ?params_:Dynamic)
 	{
 		super();
@@ -55,7 +64,10 @@ class TextBouncer extends FlxSpriteGroup
 	
 	}//---------------------------------------------------;
 
-	
+	/**
+	 * Start the text animation
+	 * @param	onComplete_ Optional callback
+	 */
 	public function start(?onComplete_:Void->Void)
 	{
 		onComplete = onComplete_;
@@ -65,7 +77,7 @@ class TextBouncer extends FlxSpriteGroup
 		// Start tweens all at once?
 		
 		if (numberOfLetters < 1) {
-			trace("Error: Can't TextBouncer with 0 letters");
+			trace("Error: Can't TextBounce with no letters");
 			return;
 		}
 		
@@ -120,6 +132,7 @@ class TextBouncer extends FlxSpriteGroup
 	 *  sp2 : speed of each letter to go down
 	 *  height: height to fall from
 	 *  alignX:Bool
+	 *  snd: If set, it will play this sound effect every time a letter hits the ground
 	 * 
 	 */
 	public function setParameters(params:Dynamic)

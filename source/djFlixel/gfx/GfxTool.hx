@@ -21,7 +21,7 @@ class GfxTool
 {
 	
 	/**
-	 * Draws a map as an image to a BitmapData based from 2D array MapData
+	 * Draws a map as an image to a BitmapData based on 2D array MapData
 	 * 
 	 * @param	source BitmapTiles to draw tiles from
 	 * @param	tw Tile Width
