@@ -74,6 +74,8 @@ class RainbowBorder extends FlxSprite
 		scale.y = zoom;
 		origin.set(0, 0);
 		
+		updateHitbox(); /// NEW
+		
 		__rect = new Rectangle();
 		__rect.x = 0;
 		__rect.width = pixels.width;
@@ -83,13 +85,6 @@ class RainbowBorder extends FlxSprite
 		
 		setPredefined(3);
 		
-	}//---------------------------------------------------;
-	
-	// --
-	override public function destroy():Void 
-	{
-		super.destroy();
-		__rect = null;
 	}//---------------------------------------------------;
 	
 	/**

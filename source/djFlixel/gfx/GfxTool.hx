@@ -4,7 +4,7 @@ import flash.display.Bitmap;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
-import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.system.FlxAssets;
 import flixel.util.FlxSpriteUtil;
 import openfl.Assets;
 import openfl.geom.Rectangle;
@@ -60,7 +60,15 @@ class GfxTool
 	}//---------------------------------------------------;
 	
 		
-	
+	/**
+	 * Returns a rectangular portion of a bitmap
+	 * @param	source
+	 * @param	x
+	 * @param	y
+	 * @param	width
+	 * @param	height
+	 * @return
+	 */
 	public static function getBitmapPortion(source:FlxGraphicAsset, x:Int, y:Int, width:Int, height:Int):BitmapData
 	{
 		var r = new BitmapData(width, height);
@@ -68,19 +76,31 @@ class GfxTool
 		var point:Point = new Point(0, 0);
 		var sourceData:BitmapData;
 		
-		if (Std.is(source, BitmapData))
-		{
-			sourceData = cast source;
-		}else if (Std.is(source, String))
-		{
-			sourceData = Assets.getBitmapData(cast source);
-		}else {
-			sourceData = cast(source, FlxGraphic).bitmap;
-		}
+		sourceData = resolveBitmapData(source);
 		
 		r.copyPixels(sourceData, rect, point);
 
 		return r;
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Flixel offers FlxAssets.resolveBitmapData(FlxGraphicSource) but not with FlxGraphicAsset
+	 * @param	Graphic 
+	 * @return
+	 */
+	public static function resolveBitmapData(Graphic:FlxGraphicAsset):BitmapData
+	{
+		if (Std.is(Graphic, BitmapData)) {
+			return cast Graphic;
+		}
+		else if (Std.is(Graphic, FlxGraphic)) {
+			return cast (Graphic, FlxGraphic).bitmap;
+		}
+		else if (Std.is(Graphic, String)) {
+			return FlxAssets.getBitmapData(Graphic);
+		}
+		return null;
 	}//---------------------------------------------------;
 	
 	

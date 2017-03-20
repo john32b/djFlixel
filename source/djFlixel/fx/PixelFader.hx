@@ -26,6 +26,11 @@ import flixel.util.FlxColor;
  *  It will automatically get added to the state.
  *  check new() for parameters
  * 
+ * NOTE:
+ * --------
+ * 
+ * If there are glitches on the pixelfader after removing elements, try setting visibility to false instead
+ * 
  */
 
  
@@ -58,7 +63,14 @@ class PixelFader extends FlxSprite
 	/**
 	 * 
 	 * @param   action "toblack", "toscreen"
-	 * @param	params onComplete,pre,post,autoDestroy,stepTime
+	 * @param	params {
+	 * 					onComplete:Void->Void
+	 * 					pre:Float, time to wait before running
+	 * 					post:Float, time to wait after completing
+	 * 					autoDestroy:Bool, if true it will get removed from the stage after
+	 * 					stepTime:Float, Time to wait for each step
+	 * 					color:Int, recover from this color
+	 * 				 }
 	 */
 	public function new(action:String = "toblack", ?params:Dynamic)
 	{
@@ -93,7 +105,7 @@ class PixelFader extends FlxSprite
 		
 		if (flag_toBlack) {
 			FlxG.state.draw(); // It's ok to draw now
-			makeGraphic(camera.width, camera.height, camera.bgColor);
+			makeGraphic(camera.width, camera.height, params.color);
 			stamp(camera.screen);
 			flag_isInited = true;
 		}else {
@@ -169,7 +181,6 @@ class PixelFader extends FlxSprite
 		
 		if (flag_toBlack)
 		{
-	
 			for (xx in 0...pixels.width)
 			for (yy in 0...pixels.height)
 			{

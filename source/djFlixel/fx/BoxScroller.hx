@@ -5,7 +5,8 @@ import flash.display.PixelSnapping;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
-import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.system.FlxAssets;
+
 import openfl.Assets;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
@@ -51,8 +52,6 @@ class BoxScroller extends FlxSprite
 	
 	//====================================================;
 	
-	// --
-	
 	/**
 	 * 
 	 * @param	X World Placement
@@ -62,17 +61,11 @@ class BoxScroller extends FlxSprite
 	 * @param	source
 	 */
 	
-	public function new(source:FlxGraphicAsset, X:Float, Y:Float, W:Float, H:Float = 0) 
+	public function new(source:FlxGraphicSource, X:Float, Y:Float, W:Float, H:Float = 0) 
 	{
 		super(X, Y);
-
-		if (Std.is(source, FlxGraphic)) {
-			_tIm = cast(source, FlxGraphic).bitmap;
-		}else if (Std.is(source, BitmapData)) {
-			_tIm = cast(source, BitmapData);
-		}else{
-			_tIm = Assets.getBitmapData(source);
-		}
+		
+		_tIm = FlxAssets.resolveBitmapData(source);
 		
 		// -- Just use the X axis for tiling if no Height is set
 		if (H == 0) {
@@ -95,6 +88,14 @@ class BoxScroller extends FlxSprite
 		trace(' - TilingY:$flag_tileY -');
 		
 		_updateFunction(); // Force an initial update.
+	}//---------------------------------------------------;
+	
+	// --
+	override public function destroy():Void 
+	{
+		if (_tIm != null) { _tIm.dispose(); _tIm = null; }
+		graphic.destroy();
+		super.destroy();
 	}//---------------------------------------------------;
 	
 	

@@ -17,7 +17,7 @@ class Align
 	 * @param	Y top,center,bottom,none
 	 * @param   padding Apply this much padding in pixels
 	 */
-	public static function screen(obj:FlxObject, X:String, Y:String, padding:Int = 0):FlxObject
+	public static function screen(obj:FlxObject, X:String = "center", Y:String = "center", padding:Int = 0):FlxObject
 	{
 		switch(X)
 		{
