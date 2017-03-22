@@ -3,8 +3,9 @@ package djFlixel.tool;
 import flixel.FlxG;
 
 
+/// TODO: This class is a mess, remove it!
+
 /**
- * IN DEVELOPMENT!
  * TODO: Make it an FLXBasic so that it gets removed automatically
  * 
  * Counts and callback Numbers in a range

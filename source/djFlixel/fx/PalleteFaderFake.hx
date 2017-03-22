@@ -7,6 +7,9 @@ import flixel.FlxSprite;
 import flixel.util.FlxTimer;
 import openfl.display.BlendMode;
 
+
+/// TODO: This class is a mess, re-write it
+
 /**
  * An object simulating a pallete fade,
  * It works as an overlay solid rect, fading the alpha
@@ -34,14 +37,17 @@ class PalleteFaderFake extends FlxSprite
 	// FUNCTIONS
 	//====================================================;
 	// --
-	public function new(_width:Float, _height:Float)
+	public function new(_width:Int = 0, _height:Int = 0)
 	{
 		super();
+		
+		if (_width == 0) _width = FlxG.width;
+		if (_height == 0) _height = FlxG.height;
 		
 		setSize(_width, _height);
 		scrollFactor.set(0, 0);
 		
-		makeGraphic(Std.int(width), Std.int(height));
+		makeGraphic(_width, _height);
 		
 		visible = false;
 		active = false;

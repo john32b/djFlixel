@@ -18,11 +18,11 @@ class MaskedSprite extends FlxSprite
 	/**
 	 * 
 	 * @param	im Warning, if a tilesheet ,make sure it is a SINGLE ROW
-	 * @param	type hole,invert
+	 * @param	type  | hole | invert |
 	 * @param	color_ Color to apply on effects
 	 * @param	sheet { .tw .th .frame } Set this if you are loading a tilesheet
 	 */
-	public function new(im:FlxGraphicAsset, type:String = "hole", color_:Int = 0xFFFFFFFF, ?sheet:Dynamic) 
+	public function new(im:FlxGraphicAsset, ?sheet:Dynamic, type:String = "hole", color_:Int = 0xFFFFFFFF )
 	{
 		super();
 		

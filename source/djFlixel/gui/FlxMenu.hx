@@ -177,10 +177,24 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
+
+	/**
+	 * Apply a style node
+	 * @param	node An object containing 4 optional nodes { .option .list .base .header }
+	 */
+	public function applyMenuStyle(node:Dynamic)
+	{
+		Styles.applyStyleNodeTo(node.option, styleOption);
+		Styles.applyStyleNodeTo(node.list, styleList);
+		Styles.applyStyleNodeTo(node.base, styleBase);
+		Styles.applyStyleNodeTo(node.header, styleHeader);
+	}//---------------------------------------------------;
+	
 	/**
 	 * Apply a style that is set on the main PARAMS.JSON file
 	 * @param styleID Name of the style, Check the examples for formatting.
 	 */
+	@:deprecated("Use ApplyMenuStyle instead")
 	public function applyMenuStyleFromJSON(styleID:String)
 	{
 		var styleNode = Reflect.getProperty(FLS.JSON, styleID);
@@ -188,18 +202,17 @@ class FlxMenu extends FlxGroup
 			trace('Warning: Can\'t find style "$styleID" in the json file');
 			return;
 		}
-		Styles.applyStyleNodeTo(styleNode.option, styleOption);
-		Styles.applyStyleNodeTo(styleNode.list, styleList);
-		Styles.applyStyleNodeTo(styleNode.base, styleBase);
-		Styles.applyStyleNodeTo(styleNode.header, styleHeader);
+		applyMenuStyle(styleNode);
 	}//---------------------------------------------------;
 	
-	// Get a style node from the JSON file, and set it to a Page
-	// node.list, node.base, node option
-	public function applyPageStyleFromJson(styleID:String, page:PageData)
-	{
-		var styleNode = Reflect.getProperty(FLS.JSON, styleID);
 
+	/**
+	 * Apply a style to the page
+	 * @param	node An object containing {.list .base .option}
+	 * @param	page The page to apply the style to
+	 */
+	public function applyPageStyle(styleNode:Dynamic, page:PageData)
+	{
 		if (styleNode.option != null) {
 			page.custom.styleOption = Styles.newStyle_Option();
 			DataTool.applyFieldsInto(styleNode.option, page.custom.styleOption);

@@ -15,19 +15,18 @@
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
-    <class path="C:\HaxeToolkit\haxe\lib\flixel\git" />
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\3,6,1" />
-    <class path="C:\HaxeToolkit\haxe\lib\lime\2,9,1" />
     <class path="C:\HaxeToolkit\haxe\lib\hscript\2,0,7" />
-    <class path="C:\HaxeToolkit\haxe\lib\flixel-addons\git" />
+    <class path="C:\Code\djFlixel\source" />
+    <class path="C:\HaxeToolkit\haxe\lib\flixel\git" />
+    <class path="C:\HaxeToolkit\haxe\lib\lime\2,9,1" />
+    <class path="C:\HaxeToolkit\haxe\lib\openfl\3,6,1" />
     <class path="source" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\3,6,1\extern" />
-    <class path="..\..\source" />
     <class path="build\debug\flash\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel=4.2.0&#xA;openfl=3.6.1&#xA;lime=2.9.1&#xA;hscript=2.0.7&#xA;flixel-addons=2.2.0&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;tools=2.9.1&#xA;openfl_next&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;web&#xA;display" />
+    <option directives="hscript=2.0.7&#xA;djFlixel=0.2.0&#xA;flixel=4.2.0&#xA;lime=2.9.1&#xA;openfl=3.6.1&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;FLX_NO_FOCUS_LOST_SCREEN&#xA;tools=2.9.1&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;web&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />

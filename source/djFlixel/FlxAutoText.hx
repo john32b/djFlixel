@@ -13,23 +13,26 @@ import flixel.util.FlxColor;
  * -------------------------------------
  * 
  * NOTES:
- * 			+ Edit textObj if you want multilines or etc.
+ * 			+ Edit textObj if you want multiline or other
  * 			+ Supports a carrier text e.g.  "_" or "."
- * 			+
+ * 			
  * 
- * Special markup:
+ * Special markup : 
  * 
- * (s0) - (s10) // speeds, 0 is slowest
- * (w1) - (w99) // waits, 0 is wait shortest
- * (c1) - (c99) // characters per tick !NOTE! Be sure to set to (c1) before applying new ta
- * (q0),(q1) 	// carret on/off
+ * (s0) - (s10) - speeds, 0 is fastest
+ * (w1) - (w99) - waits, 0 is wait shortest amount 
+ * (c1) - (c99) - characters to display per tick. Be sure to use (c1) after other tags else it's going to skip them :-(
+ * (q0),(q1) 	- carret on/off
  *  
  * e.g.
- *		setDialog( "(c4)Hello(s1)...(w1) Is this thing on?(w3)(s4)...." );
+ *		start( "(c4)Hello(s1)...(w1) Is this thing on?(w3)(s4)...." );
  * 
+ * - You can use setCarrierSymbol("-"); To quickly add a carrier character
  * 
  * ------------
+ * 
  * TODO:
+ * 
  * 	. Replace times with a better customizable system
  * 
  */
@@ -49,7 +52,7 @@ class FlxAutoText extends FlxSpriteGroup
 	// How many characters per update
 	static inline var TIME_CPU_DEF:Int = 1;
 	static inline var TIME_SPD_DEF:Float = 0.1; // New char(s) every 0.1sec
-	static inline var TIME_STEP:Float = 0.1; // This is the slowest speed, you can set multiples
+	static inline var TIME_STEP:Float = 0.1;    // This is the slowest speed, you can set multiples
 	
 	// Current characters per update
 	var time_CPU:Int;

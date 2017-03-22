@@ -39,7 +39,7 @@ class TextBouncer extends FlxSpriteGroup
 	 * @param	fontSize_
 	 * @param	X
 	 * @param	Y
-	 * @param	params_
+	 * @param	params_ Check setParameters()
 	 */
 	public function new(text_:String, fontSize_:Int, X:Float = 0, Y:Float = 0, ?params_:Dynamic)
 	{

@@ -38,7 +38,7 @@ class RainbowBorder extends FlxSprite
 	private static inline var DEFAULT_SPEED:Int = 40;
 	
 	// * Pointer to the active color array
-	private static var COLORS:Array<Int>;
+	public var COLORS:Array<Int>;
 			
 	// Parameters, the max and min height of a border color.
 	private var param_max_height:Int;
@@ -52,11 +52,10 @@ class RainbowBorder extends FlxSprite
 	// helpers 
 	private var __rect:Rectangle;
 	private var _ch:Int = 0;
-	private var _arlength:Int; // Set the length of the COLORS array to save CPU
 	
 	//---------------------------------------------------;
 	// --
-	public function new(_width:Int = 0, _height:Int = 0, inZoom:Int = 2)
+	public function new(_width:Float = 0, _height:Float = 0, inZoom:Int = 2)
 	{
 		super();
 		
@@ -81,7 +80,6 @@ class RainbowBorder extends FlxSprite
 		__rect.width = pixels.width;
 		
 		COLORS = Palette_Amstrad.COL;	// FUTURE: Set custom colors
-		_arlength = COLORS.length;
 		
 		setPredefined(3);
 		
@@ -179,7 +177,7 @@ class RainbowBorder extends FlxSprite
 				__rect.height = Math.ceil( param_max_height - (Math.random() * param_min_height)) / zoom;
 				_ch += Std.int(__rect.height);
 				
-				pixels.fillRect(__rect, COLORS[Math.floor( Math.random() * _arlength)]);
+				pixels.fillRect(__rect, COLORS[Math.floor( Math.random() * COLORS.length)]);
 			}
 			
 			pixels.unlock();

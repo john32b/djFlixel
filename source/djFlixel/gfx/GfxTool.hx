@@ -213,4 +213,30 @@ class GfxTool
 	}//---------------------------------------------------;
 	
 	
+	//====================================================;
+	// Bitmap Generator
+	//====================================================;
+	
+	/**
+	 * Generate a bitmap with
+	 * @param	colors An array with the colors to draw
+	 * @param	width Width of the final bitmapdata
+	 * @param	height Height of the final bitapdata
+	 * @return
+	 */
+	static public function rainbowStripes(colors:Array<Int>, width:Int = 20, height:Int = 100 ):BitmapData
+	{
+		var b = new BitmapData(width, height, false);
+		var ch:Int = Std.int(height / colors.length);
+		var tr:Rectangle = new Rectangle();
+		b.lock();
+		for (i in 0...colors.length)
+		{
+			tr.setTo(0, i * ch, width, ch);
+			b.fillRect(tr, colors[i]);
+		}
+		b.unlock();
+		return b;
+	}//---------------------------------------------------;
+	
 }// -- end --//

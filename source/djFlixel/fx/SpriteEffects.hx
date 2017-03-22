@@ -91,9 +91,7 @@ class SpriteEffects extends FlxSprite
 		removeList = [];
 		callbackList = [];
 		
-		drawFirst();
-		
-		timer = FREQ + 1; // Force the first update to process the effects 
+		drawFirst(); 
 	}//---------------------------------------------------;
 	
 
@@ -117,7 +115,22 @@ class SpriteEffects extends FlxSprite
 		removeList.push(fx);
 	}//---------------------------------------------------;
 	
-	
+	/**
+	 * Remove an effect with target ID
+	 */
+	public function removeEffectID(id:String)
+	{
+		if (id == 'all'){
+			for (i in stack) removeEffect(i);
+			return;
+		}
+		
+		for (fx in stack){
+			if (fx.p.id != null && fx.p.id == id) {
+				removeEffect(fx); break;
+			}
+		}
+	}//---------------------------------------------------;
 	
 	// --
 	// Draw the original image, don't need to clear the buffer, as the alhpa pixels are copied as well
@@ -133,13 +146,14 @@ class SpriteEffects extends FlxSprite
 	
 	/**
 	 * 
-	 * @param	effect [split,noiseline,noisebox,mask,blink]
+	 * @param	effect split | noiseline | noisebox | mask | blink | dissolve | wave
 	 * @param	params check the function :-/
 	 * @param	callback Make sure this is a short callback as it will be called inside a traverse loop
 	 * @return	The FX object created, useful if you want to manually remove it later
 	 */
 	public function addEffect(effect:String, ?params:Dynamic, ?callback:Void->Void):SpriteFX
 	{
+		timer = FREQ + 1; // Force the first update to process the effects
 		var fx = new SpriteFX();
 		fx.onComplete = callback;
 		stack.push(fx);
@@ -151,25 +165,27 @@ class SpriteEffects extends FlxSprite
 			//====================================================;
 			case "dissolve":
 				fx.p = DataTool.defParams(params, {
+					open:false,		// if true effect will start reverse, building the image
 					time:2,			// Time to complete the effect
 					size:2,			// pixel size, it's faster when bigger
 					color:0x00000000, // Color to disolve to
-					run:-1,
-					ease: "quadOut",
+					run:1,
+					ease: "quintOut",
 					delay:0,
 					_f:0,			// current pointer
 				});
-				fx.p.run = -1;
 				fx.p._w = Math.ceil(pixels.width / fx.p.size);
 				fx.p._h = Math.ceil(pixels.height / fx.p.size);
 				fx.p._total = fx.p._w * fx.p._h; // total rects
-				fx.tween = FlxTween.tween(fx.p, {_f:fx.p._total}, fx.p.time, 
+				//-- 
+				var _end = fx.p.open?0:fx.p._total;
+				fx.p._f = fx.p._total - _end;
+				fx.tween = FlxTween.tween(fx.p, {_f:_end}, fx.p.time, 
 					{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease), startDelay:fx.p.delay});
 				fx.update = _fx_dissolve;
 				var ar:Array<Int> = [for (p in 0...(fx.p._total)) p];
 				FlxG.random.shuffle(ar);
 				fx.p.ar = ar;
-				flag_freeze_last = true; // It's the default
 			
 			//====================================================;
 			case "wave":
@@ -204,14 +220,14 @@ class SpriteEffects extends FlxSprite
 			case "noiseline":  
 				
 			fx.p = DataTool.defParams(params, {
-				w1:8,  	// max width of the Wave
 				w0:2, 	// min width <-- starting width
-				time:0.5,  // reach the max width in this much seconds
+				w1:8,  	// max width of the Wave
+				time:0.5,  // reach the max width in this much seconds. Set to 0 for no wave
 				delay:0,    // Delay of the timer to start
 				run: -1,   // Run forever (x>0 to run x times)
 				ease: "quadOut",
 				h0:1, 	//<-- starting line height
-				h1:16,	// applies on random and FX2
+				h1:16,	// applies if FX1 / FX2
 				// -- flags
 				fx1:false,  // RANDOM Height, from h0 to h1
 				fx2:false,	// MATCH height to the tweener, YOU MUST HAVE SET time>0 , h0 doesn't matter
@@ -248,10 +264,10 @@ class SpriteEffects extends FlxSprite
 			case "blink" :
 				fx.p = DataTool.defParams(params, {
 					open:false,		// If true the effect will reverse
-					time:0.30,		// Time to complete the effect
+					time:1,		// Time to complete the effect
 					run:1,
 					delay:0,
-					ease: "quadOut",
+					ease: "",
 					_l:0
 				});
 				fx.p._hl = Math.ceil(pixels.height / 2); // Half Height
@@ -261,6 +277,7 @@ class SpriteEffects extends FlxSprite
 					{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease),startDelay:fx.p.delay});
 				fx.update = _fx_blink;
 			default: // ::  --------------------
+				throw "Unsupported FX, check for typos";
 		}
 		
 		return fx;

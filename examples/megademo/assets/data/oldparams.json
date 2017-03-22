@@ -1,0 +1,97 @@
+{
+	"sys" : {
+		"NAME" : "DJFLIXEL tools",
+		"VERSION" : "0.3.0",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+
+	"menustyle" : {
+		
+		"option": {
+			"fontSize" : 8,
+			"useBorder" : true,
+			"border_color" : "0xFF334499",
+			"color_default" : "0xFFcbdbfc",
+			"color_accent"  : "0xFFd95763",
+			"color_focused" : "0xFFfbf236",
+			"color_disabled" : "0xFF595652",
+			"color_disabled_f" : "0xFF663931"
+		},
+		"header" : { 
+			"fontSize": 16,
+			"color_default" : "0xFFFF6082",
+			"border_color" : "0xFF441122",
+			"useBorder" : true
+		}
+	},
+	
+	"menustyle2" : {
+		"option": {
+			"font" : "assets/pixelarial.ttf",
+			"fontSize" : 16,
+			"useBorder" : false,
+			"color_default" : "0xffd77bba",
+			"color_focused" : "0xff99e550"
+		},
+		"base" : {
+			"anim_start_x" : 60,
+			"anim_end_x" : 0,
+			"anim_start_y" : 0,
+			"anim_end_y" : 0,
+			"anim_time_between_elements" : 0.12,
+			"anim_style" : "parallel"
+		},
+		"list" : {
+			"cursorSymbol" : "+",
+			"scrollPad" : 1
+		}
+
+	},
+	
+	"soundFiles" : [
+		{"id":"c_tick", "file":"cursor_tick", "fast":true },
+		{"id":"c_sel", "file":"cursor_high", "fast":true },
+		{"id":"c_back", "file":"cursor_low", "fast":true },
+		{"id":"c_err", "file":"cursor_error", "fast":true }
+	],
+
+	"tilesBG" : [		
+		"assets/bg02.png",
+		"assets/bg01.png",
+		"assets/bg03.png" ],
+	
+	"dialog" : [
+		"dialog box demo..",
+		"!np",
+ 		"(s3) Press (K) to progress",
+		"(s3) Press (J) to main menu",
+		"+ Uses simple markup",
+		"+ Supports 4 speeds", 
+		"(s1).slowest",
+		"(s2).slower ..",
+		"(s3).faster ...",
+		"(s4).fastest .........",
+		"+ Multiple sameline speeds",
+		"Variable speed(s1).......(s4).....",
+		"(s3)Variable speed(s2)...(s3)....(s1)..",
+		"",
+		"(s4)Line overflow test Line overflow test Line overflow test Line overflow test",
+		"release soon.." 
+	],
+	
+	"toastdemo" : [
+		"Press it again",
+		"#Style# one",
+		"$Style$ two",
+		"#BOTH# $STYLES$",
+		"The width is fixed",
+		"Long string that will fit just fine.",
+		"Short str",
+		"The height is \t \t \t \t \t \t \t \t \t \t \t \t \t auto-adjusted.",
+		"Game saved!",
+		"Formatting c:\\",
+		"JK"
+	]
+}

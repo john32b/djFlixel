@@ -95,7 +95,11 @@ class DataTool
 	}//---------------------------------------------------;
 	
 	
-	// Apply a dynamic's object fields into another field
+	/**
+	 * Apply a dynamic's object fields into another object. Basically overwrites the target object fields
+	 * @param	node
+	 * @param	into
+	 */
 	public static function applyFieldsInto(node:Dynamic, into:Dynamic)
 	{
 		for (field in Reflect.fields(node)) {
@@ -131,7 +135,7 @@ class DataTool
 	
 	/**
 	 * Pads a string to reach a certain length.
-	 * If string is longer it gets trimmed
+	 * If string is longer it gets trimmed with a ".." at the end
 	 * If string is shorter it gets padded with $char
 	 * LEFT PAD so "john" => ".....john"
 	 */

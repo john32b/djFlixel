@@ -202,8 +202,11 @@ class SND
 		return null;
 	}//---------------------------------------------------;
 	
-	// -- 
-	// Audio files must be in the PATH_MUSIC dir e.g."assets/music/XXXX.mp3"
+	/**
+	 * Audio files must be in the PATH_MUSIC dir e.g."assets/music/XXXX.mp3"
+	 * @param	filename
+	 * @param	customVolume
+	 */
 	public static function playMusic(filename:String, customVolume:Float = -1)
 	{
 		if (MUSIC_ENABLED == false) {

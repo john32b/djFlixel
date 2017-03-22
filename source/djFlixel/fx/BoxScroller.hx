@@ -16,8 +16,6 @@ import openfl.geom.Rectangle;
  * Tiles an image inside a box and scrolls it.
  * Useful for Paralax layers
  * ...
- * TODO:
- * 	- startAtRandom
  */ 
 class BoxScroller extends FlxSprite
 {
@@ -56,8 +54,8 @@ class BoxScroller extends FlxSprite
 	 * 
 	 * @param	X World Placement
 	 * @param	Y World Placement
-	 * @param	W Width of the scroller
-	 * @param	H If>0 then it will enable the Y axis tiling
+	 * @param	W Actual width of the scroller
+	 * @param	H If>0 then it will enable the Y axis tiling, else 0 for automatic height
 	 * @param	source
 	 */
 	
