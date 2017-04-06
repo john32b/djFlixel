@@ -16,7 +16,6 @@ import flixel.util.FlxTimer;
 
 /**
  * Overlay FX Transition, STRIPES
- * Version 0.2
  * -----
  * Usage:
  * 

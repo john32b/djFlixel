@@ -31,18 +31,14 @@ import flixel.util.FlxColor;
  * 
  * ------------
  * 
- * TODO:
- * 
- * 	. Replace times with a better customizable system
- * 
  */
 
  
 typedef AutoTextMeta = {
-	?c:Int,
-	?w:Int,
-	?s:Int,
-	?q:Int // Special
+	?c:Int,	// Characters per tick
+	?w:Int, // Wait
+	?s:Int, // Speed
+	?q:Int  // Specials, like buttonpress,erase,blink,etc. <-- TODO
 };//------------------------------------;
  
 class FlxAutoText extends FlxSpriteGroup

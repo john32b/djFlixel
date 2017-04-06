@@ -3,6 +3,7 @@ import djFlixel.FLS;
 import djFlixel.FlxAutoText;
 import djFlixel.fx.PalleteFaderFake;
 import djFlixel.fx.StaticNoise;
+import djFlixel.gfx.GfxTool;
 import djFlixel.gfx.Palette_Arne16;
 import flixel.FlxG;
 import flixel.FlxState;
@@ -24,23 +25,21 @@ class St_Boot extends FlxState
 		super.create();
 		P = FLS.JSON.st_boot;
 		
-		camera.bgColor = Palette_Arne16.COL[P.bgColor];
+		// -- Add a static noise background
+		var st = new StaticNoise(0,0,0,0,P.noise); add(st);
+		// --
 		
-		var st = new StaticNoise(0,0,0,0,P.noise);
-		add(st);
-		
-		var t = new FlxAutoText(0, 0, 320);
-		add(t);
-		t.start(P.text,next);
+		var t = new FlxAutoText(0, 0, 320); add(t);
+		t.start(P.text, next);
 	}//---------------------------------------------------;
 	
+	// --
 	function next()
 	{
-		var p = new PalleteFaderFake();
-			add(p);
-			p.fadeColor(Palette_Arne16.COL[FLS.JSON.st_intro.bgColor], function(){
-				FlxG.switchState(new St_Intro());
-			});	
+		var p = new PalleteFaderFake(); add(p);
+		p.fadeColor(Palette_Arne16.COL[FLS.JSON.st_intro.bgColor], function(){
+			FlxG.switchState(new St_Intro());
+		});	
 	}//---------------------------------------------------;
 	// --
 	override public function update(elapsed:Float):Void 

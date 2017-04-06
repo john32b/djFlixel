@@ -239,4 +239,40 @@ class GfxTool
 		return b;
 	}//---------------------------------------------------;
 	
+	
+	//====================================================;
+	// QUICK PALLETE
+	//====================================================;
+	
+	
+	/**
+	 * Return a palette color based on a string
+	 * Supported :
+	 * 
+	 * 	A16[0-15]  -> Arne 16
+	 *  DB32[0-31] -> DB32
+	 *  AMS[0-26]  -> Amstrad
+	 * 
+	 * e.g.
+	 * 
+	 * 	palCol("A16[3]") == 0xFFBE2633
+	 * 
+	 * @param	str A16[] | DB32[] | AMS[]
+	 * @return The Color
+	 */
+	static public function palCol(str:String):Int
+	{
+		var exp = ~/(.+)\[(\d+)\]/;
+		exp.match(str);
+		if (exp.matched(1) != null){
+			switch(exp.matched(1)){
+				case "A16" : return Palette_Arne16.COL[Std.parseInt(exp.matched(2))];
+				case "DB32" : return Palette_DB32.COL[Std.parseInt(exp.matched(2))];
+				case "AMS" :return Palette_Amstrad.COL[Std.parseInt(exp.matched(2))];
+				default : trace("ERROR - Unsupported pallete code", exp.matched(1)); return 0;
+			}
+		}
+		trace("ERROR - Error parsing Pallete String", str); return 0;
+	}//---------------------------------------------------;
+	
 }// -- end --//

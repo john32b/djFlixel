@@ -55,7 +55,7 @@ class BoxScroller extends FlxSprite
 	 * @param	X World Placement
 	 * @param	Y World Placement
 	 * @param	W Actual width of the scroller
-	 * @param	H If>0 then it will enable the Y axis tiling, else 0 for automatic height
+	 * @param	H If>0 then it will enable the Y axis tiling, else 0 for automatic height based on the image
 	 * @param	source
 	 */
 	
@@ -92,7 +92,6 @@ class BoxScroller extends FlxSprite
 	override public function destroy():Void 
 	{
 		if (_tIm != null) { _tIm.dispose(); _tIm = null; }
-		graphic.destroy();
 		super.destroy();
 	}//---------------------------------------------------;
 	
