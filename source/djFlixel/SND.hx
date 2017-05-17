@@ -198,7 +198,7 @@ class SND
 	{
 		_r2 = infos.get(soundID);
 		if (_r2 != null && _r2.fast) { return memorySounds.get(soundID); }
-		trace("Error: Could not get sound. It must exist and be cached");
+		trace("Error: Could not get sound. Did you load it? Is it fast/cached?");
 		return null;
 	}//---------------------------------------------------;
 	

@@ -1,320 +1,631 @@
 package djFlixel;
 
+import djFlixel.gui.Styles;
+import djFlixel.gui.Styles.TextStyle;
 import flash.display.Sprite;
+import flash.text.TextLineMetrics;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
+
 /**
- * 
+ * FlxAutoText
  * Simple Autotext / Autotype effect FlxText
  * -------------------------------------
  * 
- * NOTES:
- * 			+ Edit textObj if you want multiline or other
- * 			+ Supports a carrier text e.g.  "_" or "."
- * 			
+ * NOTES :
+ * 		+ AutoBakes linebreaks
+ * 		+ Access "textObj" if you want to manipulate aligning etc.
+ * 		+ Supports a carrier text e.g.  "_" or "."
+ * 		+ You can use setCarrierSymbol("-"); To quickly add a carrier character
+ *		+ wordWait mode , follows the currently set CPS
+ *      + You can set the maximum lines
+ *
+ * USAGE :
+ * 		new FlxAutoText(0,0,128,3); 128 width, 3 maximum lines
+ * 		.start("String With Markup tags",onComplete);
  * 
- * Special markup : 
+ * MARKUP :
+ * 		(c1) for CPS 	   / 1 is the slowest you can set. 0 for instant flow
+ * 		(w1) for waits     / 1-n, predefined speeds, 1 to 9 read from TABLE, 9.. is n/4
+ * 		(m1) for wordWait  / Enables word wait, where words fill normally and waits at " " and "-"
+ * 		(s..) for specials  / s1=enable carrier, s2=disable carrier
  * 
- * (s0) - (s10) - speeds, 0 is fastest
- * (w1) - (w99) - waits, 0 is wait shortest amount 
- * (c1) - (c99) - characters to display per tick. Be sure to use (c1) after other tags else it's going to skip them :-(
- * (q0),(q1) 	- carret on/off
- *  
- * e.g.
- *		start( "(c4)Hello(s1)...(w1) Is this thing on?(w3)(s4)...." );
+ * DEVNOTES:
+ * 		+ Is a SpriteGroup, because it may include a carrier sprite.
+ *		+ Waittimes are based on a table, check WAIT_TABLE, which you can change
+ * 		+ (w0) Will pause and await for resume()
+ * 		
  * 
- * - You can use setCarrierSymbol("-"); To quickly add a carrier character
- * 
- * ------------
- * 
- */
+ **/
 
- 
-typedef AutoTextMeta = {
-	?c:Int,	// Characters per tick
-	?w:Int, // Wait
-	?s:Int, // Speed
-	?q:Int  // Specials, like buttonpress,erase,blink,etc. <-- TODO
-};//------------------------------------;
- 
 class FlxAutoText extends FlxSpriteGroup
-{
-	// -- Defaults --
+{	
+	// -- Some defaults
+	static inline var DEFAULT_CPS:Int = 15;
+	static inline var DEFAULT_CARRIER_TICK:Float = 0.24;
+	static inline var DEFAULT_WIDTH:Int = 128;
 	
-	// How many characters per update
-	static inline var TIME_CPU_DEF:Int = 1;
-	static inline var TIME_SPD_DEF:Float = 0.1; // New char(s) every 0.1sec
-	static inline var TIME_STEP:Float = 0.1;    // This is the slowest speed, you can set multiples
+	// -- The markup tags
+	// - The chars go inside parenthesis + integer .e.g. (c3)
+	inline static var TAG_CPS:String 	= 'c';
+	inline static var TAG_WAIT:String 	= 'w';
+	inline static var TAG_SP:String 	= 's';
+	inline static var TAG_WORD:String 	= 'm';	
 	
-	// Current characters per update
-	var time_CPU:Int;
-	// Curent update every seconds.
-	var time_FREQ:Float;
+	// Minimum time to wait to update the text
+	public static var MIN_TICK:Float = 0.12;
 	
-	// Hold the last update time
-	var timer:Float;
+	// Wait times, affect the (w) and (m) tags, and the waitX() function
+	public static var WAIT_TABLE = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5];	
+	
+	// The actual flxText object
+	public var textObj(default, null):FlxText;
+	
 	// --
-	var currentLength:Int = 0;	// Currently displayed chars in len
-	var targetLength:Int = 0;	// TargetText length in chars
+	var currentLength:Int;	// Length displayed of the final string. Displays characters up until but not inclusive.
+	var targetLength:Int;	// Short for targetText.length
 	var targetText:String;
-	var nextCPUrestore:Int = 0;
-	// is it in the process of displaying the text or not
-	// var isWorking:Bool; // TO DELETE, replaced with active=true,false
+	var textOffset:Int;		// Used for multi-paging
 	
-	// Call this after the autotext ends.
-	public var onComplete:Void->Void = null;
-	// Called after a character is displayed
-	public var onTick:Void->Void = function() { };
+	// --
+	var TAGS:Array<AutoTextMeta>;	// Hold ALL the MetaData 
+	var nextTAGIndex:Int;			// Hold the next tag's string index, so it doesn't get jumped over
 	
-	// Store the string metadata here with key the index letter
-	var mapMetaData:Map<Int,AutoTextMeta>;
+	//--
+	var timer:Float;	// Hold the last update time
+	var cps:Int; 		// current CPS, use setCPS()
+	var tc:Int;			// Characters to push at next time update
+	var tw:Float;		// Current time wait time until next char update
+	var lastTW:Float;	// if >0 then it's waiting, after waiting, restore (tw) to this value
+	// --
+	var wordWait:Int;	// if >0 then word mode is enabled and value is the wait time after each word
+	var nextSpace:Int;  // hold the index of the next space, used if wordWait is enabled
 	
-	// -- CARRIER ::
-	var useCarrier:Bool = false;
+	// -- LINES
+	var lineBreaks:Array<Int>;	// Store the indexes of all line breaks
+	var linesMax:Int;			// If the textbox has a max number of lines
+	var lineCutFlag:Bool;		// If true it will cut the text to currentIndex at the next update cycle
+	public var lineCurrent(default, null):Int;	// Current line the text is being written to (1...n)
+	
+	// -- CARRIER 
+	var carrierEnabled:Bool = false;
 	var carrier:FlxSprite = null;
-	var carrierBlinkRate:Float = 0.2;
+	var carrierBlinkRate:Float;
 	var carrierOffsetX:Int = 0;
 	var carrierTimer:Float; // Carrier blink rate handled on the update();
 	
-	// -- TEXT :
-	public var textObj(default, null):FlxText;
+	// - Is it currently paused
+	public var isPaused(default, null):Bool;
 	
+	// -- USERSET --
+	// If set, then it will automatically play the soundID
+	public var sound:Dynamic = {
+		char:null,	// On character being typed
+		charRestart:false,	// force restart char sound
+		wait:null,	// On a Wait
+		pause:null, // On a pause
+		end:null	// On the string end
+	};
+
+	
+	
+	// If the lines reach MaxLines, how to behave
+	// "pause" - Pause the flow and await a resume()
+	// "waitx" - Wait for a bit,then auto resume. wait0.....wait9 according to the WAIT_TABLE
+	public var overflowRule:String = "pause";
+	
+	// If set then this textstyle will be applied to the text
+	public var style(default, set):TextStyle;
+	
+	// Get the number of lines that the final state will be at
+	public var numberOfLines(default, null):Int;
+	
+	//  - Called when the entire string is displayed
+	//  - same as onEvent("complete");
+	public var onComplete:Void->Void;
+	
+	// - Broadcast Events, usually set by a dialogBox
+	// pause 	- The flow is currently paused, requires a resume(); call to resume
+	// complete - Text has finished
+	// newline 	- A new line has been written
+	// newpage  - New page due to overflow 
+	// @......  - Custom callbacks
+	public var onEvent:String->Void;
 	//====================================================;
-	// --
-	public function new(X:Float = 0, Y:Float = 0,FieldWidth:Float = 0)
+	/**
+	 * 
+	 * @param	X Screen X
+	 * @param	Y Screen Y
+	 * @param	FieldWidth 
+	 * @param	maxLines 0 for infinite lines
+	 */
+	public function new(X:Float = 0, Y:Float = 0, FieldWidth:Float = DEFAULT_WIDTH, maxLines:Int = 0)
 	{
-		super(X,Y);
-		
+		super(X, Y);
 		// Create the text object
 		textObj = new FlxText(0, 0, FieldWidth, null);
-		// textObj.wordWrap = false;
+		textObj.wordWrap = true;
+		linesMax = maxLines;
 		add(textObj);
-		
 		active = false;
-		mapMetaData = null;
-		
-		// Set the default timings
-		time_FREQ = TIME_SPD_DEF;
-		time_CPU = TIME_CPU_DEF;
+		setCPS(DEFAULT_CPS); // default
 	}//---------------------------------------------------;
+	// --
+	override public function destroy():Void 
+	{
+		super.destroy();
+		TAGS = null; lineBreaks = null;
+	}//---------------------------------------------------;	
 		
-	// -- Set a symbol and activate the carrier
+	/**
+	 * Set the Characters Per Second
+	 * @param	cps 1 Is the slowest speed, 0 for instant
+	 */
+	public function setCPS(v:Int)
+	{		
+		cps = v;
+		timer = 0; // Reset the timer, so next update will happen in (tw) seconds
+		
+		if (cps == 0) // Special case,
+		{
+			tc = 9999; // I think it's big enough?
+			tw = 0; // No wait
+			return;
+		}
+		
+		var R = 1 / MIN_TICK; // How many ticks per seconds
+		var TC = cps / R; // TEMP, same as tc but FLOAT. What is the spread of characters per tick in a second
+		
+		if (TC >= 1) // More than 1 CharsPerTick
+		{
+			tc = Std.int(TC);
+			tw = MIN_TICK;
+		}
+		else
+		{
+			tc = 1;
+			tw = MIN_TICK * (1 / TC);
+		}
+		
+		//trace('SetCPS, cps=$cps | tc=$tc | tw=$tw');
+	}//---------------------------------------------------;
+	
+		
+	/**
+	 * Use a symbol for a carrier, e.g. "_"
+	 * NOTE: Set this after setting a style
+	 * @param	symbol
+	 */
 	public function setCarrierSymbol(symbol:String)
 	{
 		// Try to copy the style of the main text
 		var c = new FlxText(0, 0, 0, symbol, textObj.size);
 			c.font = textObj.font;
 			c.color = textObj.color;
+		if (style != null) Styles.applyTextStyle(c, style);
 		setCarrierSprite(cast c);
 	}//---------------------------------------------------;
 		
-	// -- Set a symbol and activate the carrier
+	/**
+	 * Use an FlxSprite as a carrier. AutoActivates the carrier
+	 * @param	symbol Any FlxSprite
+	 * @param	offsetX Custom offset the carrier X position, useful to tweaking 
+	 * @param	offsetY Custom offset the carrier Y position, useful to tweaking
+	 */
 	public function setCarrierSprite(symbol:FlxSprite, offsetX:Int = 0, offsetY:Int = 0 )
 	{
 		carrier = symbol;
+		carrierBlinkRate = DEFAULT_CARRIER_TICK;
 		carrier.visible = false;
-		useCarrier = true;
 		carrierTimer = 0;
 		add(carrier);
 		carrier.y += offsetY;
 		carrierOffsetX = offsetX;
+		carrierEnabled = true;
+		carrierUpdatePos();
+		carrier.visible = false; // Start off as not visible so it only start updating after the first start();
 	}//---------------------------------------------------;
 	
-	// -- 
-	private function updateCarrierPos()
-	{
-		if (useCarrier)
-		{
-			carrierTimer = 0;
-			carrier.visible = true;
-			carrier.x = this.x + (currentLength * textObj.size) + carrierOffsetX;
-		}
-	}//---------------------------------------------------;
-	
+
 	/**
-	 * Sometimes if you want to set custom text times
-	 * @param	UpdateFreq Update Frequency, 0.04 is the default,
-	 * @param	CharsPerUpdate How many chars per update, 1 is default
+	 * Update Position of the carrier sprite if any
 	 */
-	public function setSpeed(UpdateFreq:Float, CharsPerUpdate:Int = 1)
+	function carrierUpdatePos()
 	{
-		timer = 0;
-		time_FREQ = UpdateFreq;
-		time_CPU = CharsPerUpdate;
+		if (!carrierEnabled) return;
+		var tm:TextLineMetrics = textObj.textField.getLineMetrics(textObj.textField.numLines - 1);
+		// Update Position
+		carrier.visible = true;
+		carrier.x = this.x + tm.width + carrierOffsetX;
+		carrier.y = this.y + (textObj.textField.numLines - 1) * (tm.height + tm.leading);
+		if (carrier.x >= this.x + textObj.width) {
+			carrier.x = this.x;
+			carrier.y += (tm.height + tm.leading);
+		}
+		carrierTimer = 0;
 	}//---------------------------------------------------;
+	
+	// -- Quickly turn the carrier off
+	function carrierOff()
+	{
+		if (carrier == null) return;
+		carrier.visible = false;
+		carrierEnabled = false;
+	}//---------------------------------------------------;
+	
 	
 	/**
 	 * Start animating the FlxText to a target String.
-	 * # USES MARKUP FOR TEXT SPEED #
 	 * @param Text The text to animate to. USES MARKUP for speed settings.
 	 * @param onComplete Void callback called on completion.
 	 */
 	public function start(_text:String, ?_onComplete:Void->Void)
 	{
-		textObj.text = "";
-		currentLength = 0;
-		timer = 0;
-		active = true;
 		onComplete = _onComplete;
+		currentLength = 0;
+		textOffset = 0;
+		timer = 0;
+		lastTW = 0;
+		nextSpace = 0;
+		wordWait = 0;
+		lineCurrent = 1;
+		TAGS = [];
+		active = true;
+		isPaused = false;
 		
-		/* Capture (s1) for speeds
-		 * Capture (w1) for waits
-		 * Capture (c1) for chars per tick
-		 */
-		var regSpeeds:EReg = ~/(\([s|w|c|q]\d+\))/g;
-	
-		if (regSpeeds.match(_text))
+		// ::: READ TAGS :::
+		
+		// Capture all the possible tags at once
+		// reg =  \(([c|w|s|m]\d+|f=\w+)\)/g
+		var reg = new EReg('\\(([$TAG_CPS|$TAG_SP|$TAG_WAIT|$TAG_WORD]\\d+|f=\\w+)\\)', 'g');
+		
+		// -- Store the processed INDEX of each TAG into the hash
+		if (reg.match(_text))
 		{
-			// trace("+ Reg Exp found.");
-			mapMetaData = new Map();
-			var indAcc = 0;
+			var indAcc:Int = 0;
 			
-			_text = regSpeeds.map(_text, function(reg:EReg) {
+			_text = reg.map(_text, function(reg:EReg) {
 				var match = reg.matched(0);
 				var trueIndex = reg.matchedPos().pos - indAcc;
-				// trace(' + REG MATCH $match at $trueIndex');
-				// trace("Index Accumulator", indAcc);
+				 //trace(' + REG MATCH $match at $trueIndex');
+				 //trace('  Index Accumulator = $indAcc');
 				
 				var data:AutoTextMeta;
-				if (mapMetaData.exists(trueIndex)) {
-					data = mapMetaData.get(trueIndex);
-				}else {
-					data = { };
+				if (TAGS.length == 0 || TAGS[TAGS.length - 1].index != trueIndex){
+					data = {index:trueIndex};
+					TAGS.push(data);
+				}else{
+					data = TAGS[TAGS.length - 1];
 				}
-				
-				var number:Int = Std.parseInt(match.substr(2, reg.matchedPos().len - 3));
-				// trace(' Number GOT $number');
-				switch(match.charAt(1))
+				// 2 types of tags, (c0) or (f=hello)
+				if (match.charAt(1) == "f")
 				{
-					case "s" : data.s = number;
-					case "w" : data.w = number;
-					case "c" : data.c = number;
-					case "q" : data.q = number;
-					default : trace("Error: Parse Error");
+					data.call = match.substr(3, match.length - 4);
+				}else
+				{
+					var number:Int = Std.parseInt(match.substr(2));
+					switch(match.charAt(1)) {
+						case TAG_CPS : data.cps = number;
+						case TAG_WAIT : data.wait = number;
+						case TAG_WORD : data.word = number;
+						case TAG_SP : data.sp = number;
+						case _: trace("Error: Unsupported TAG");
+					}
 				}
-				
-				mapMetaData.set(trueIndex, data);
-				// trace('Setting DATA at $trueIndex with data', data);
+			
+				//trace('  Setting DATA at index:$trueIndex with data', data);
 				indAcc += reg.matchedPos().len;
 				return "";
 				// Note: It all works OK, I checked.
 			});
-		}
+						
+		}// -- end reg matched
 
-		targetText = _text;
-		targetLength = targetText.length;
+		// -- Fix Line Brakes
+		textObj.visible = false;
+		textObj.text = _text; // _text is without any tags now.
 		
-		// Check for any times set at the first index.
-		checkAndSetTime();
-	}//---------------------------------------------------;
-	
-	// Text has been updated, check the next times
-	private function checkAndSetTime()
-	{
-		if (mapMetaData != null && mapMetaData.exists(currentLength))
-		{
-			// I need to apply new variables
-			var data = mapMetaData.get(currentLength);
-			if (data.s != null) time_FREQ = data.s * TIME_STEP; // What about slower?
-			if (data.w != null) timer -= data.w * TIME_STEP;
-			if (data.q != null) useCarrier = data.q == 1;
-			if (data.c != null) {
-				time_CPU = data.c;
-				if (time_CPU > 1) checknextCPUrestore(currentLength + 1);
+		// -- Prebake linebreakes
+		targetText = getBakedLineBrakes();
+		targetLength = targetText.length;
+		textObj.text = ""; textObj.visible = true;
+		
+		// -- Calculate Linebreaks
+		numberOfLines = 1;
+		lineBreaks = [];
+		for (i in 0...targetLength){
+			var c = targetText.charAt(i);
+			if (c == "\r" || c == "\n"){
+				numberOfLines++;
+				lineBreaks.push(i);
 			}
-			
-			//trace("Setting new vars to ", data);
 		}
+		
+		// --
+		if (TAGS.length > 0) nextTAGIndex = TAGS[0].index; else nextTAGIndex = -1;
 
-		updateCarrierPos();
+		// Check for any times set at the first index.
+		checkTagsAtCurrentLen();
+	}//---------------------------------------------------;
+	
+	// Text has been updated, check new TAGS
+	function checkTagsAtCurrentLen()
+	{
+		if (TAGS.length>0 && nextTAGIndex == currentLength)
+		{
+			var data = TAGS.shift();
+			
+			if (TAGS.length > 0) nextTAGIndex = TAGS[0].index; else nextTAGIndex = -1;
+
+			// Order is important, check for CPS first
+			if (data.cps  != null) setCPS(data.cps);
+			if (data.wait != null) {
+				if (data.wait == 0) pause(); else waitX(data.wait);
+			}
+			if (data.word != null) {
+				wordWait = data.word;
+				searchNextSpace();
+			}
+			if (data.sp != null)
+			{
+				switch(data.sp)
+				{
+					case 1: // Enable Carrier
+						carrierEnabled = true;
+					case 2: // Diable Carrier
+						carrierOff();
+					default:
+				}
+			}
+			if (data.call != null)
+			{
+				// Check for the first char and then use .substr(1) to get the string
+				if (onEvent != null) onEvent("@" + data.call);
+			}
+		}
 	}//---------------------------------------------------;
 	
 
-	
-	// Call this when setting the CPU over 1,
-	// I need to know where the next CPU change occurs so
-	// I can stop the text before going over another change!
-	private function checknextCPUrestore(startIndex:Int)
+	/**
+	 * Find where the next space occurs
+	 * :: Called when word mode is actived
+	 * 	  stops flow at the index of the next space
+	 */
+	function searchNextSpace()
 	{
-		for (i in startIndex...targetLength)
+		for (i in (currentLength + 1)...targetLength)
 		{
-			if (mapMetaData.exists(i) && mapMetaData.get(i).c != null) {
-				nextCPUrestore = i;
-				// trace("NEXT CPU CHANGE INDEX AT", nextCPUrestore);
+			if (targetText.charAt(i) == " ")
+			{
+				nextSpace = i;
 				return;
 			}
 		}
-		nextCPUrestore = 0;
+		// Didn't find and space
+		nextSpace = 0;
 	}//---------------------------------------------------;
+	
 	
 	// --
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
 		
-		// -- Update Carrier
-		if (useCarrier)
-		{
-			carrierTimer += FlxG.elapsed;
-			if (carrierTimer >= carrierBlinkRate) {
-				carrierTimer = 0;
-				carrier.visible = !carrier.visible;
-			}
+		// -- Blink the carrier
+		if (carrierEnabled && ((carrierTimer += elapsed) >= carrierBlinkRate)) {
+			carrier.visible = !carrier.visible;
+			carrierTimer = 0;
 		}
 		
-		// -- Update Character
-		timer += elapsed;
-		if (timer >= time_FREQ)
+		// --Update Character
+		if (!isPaused && (timer += elapsed) >= tw)
 		{
-			timer = 0;
-			currentLength += time_CPU;
 			
-			// It is going to be>0 only when 2CPU and up
-			if (nextCPUrestore > 0 && currentLength > nextCPUrestore)
-			{
-				currentLength = nextCPUrestore;
-				nextCPUrestore = 0;
+			// First thing first, check for linecuts
+			if (lineCutFlag)
+			{	
+				currentLength++; // Skip the "\n"
+				lineCutFlag = false;
+				lineCurrent = 1;
+				textOffset = currentLength;
+				if (onEvent != null) onEvent("newpage");
 			}
 			
+			// ::
+			
+			timer = 0;
+			currentLength += tc;
+			
+			if (lastTW > 0) // Done Waiting
+			{
+				tw = lastTW;
+				lastTW = 0;
+			}
+			
+			// WordMode is enabled
+			if (wordWait > 0) // devnote: Assumes that nextSpace is checked
+			{
+				if (nextSpace > 0 && currentLength >= nextSpace) // Reached or just passed a space.
+				{
+					currentLength = nextSpace + 1;
+					searchNextSpace();
+					waitX(wordWait);
+				}
+			}
+			
+			if (nextTAGIndex > 0 && currentLength > nextTAGIndex)
+			{
+				// Stop here so that next check will check for the current tag;
+				currentLength = nextTAGIndex;
+			}			
+			
+			// :: LineCheck
+			if (lineBreaks.length > 0)
+			{
+				while (currentLength >= lineBreaks[0]) // In case it jumps more than one LINE
+				{
+					var lineindex = lineBreaks.shift();
+
+					if (linesMax > 0 && lineCurrent >= linesMax) //-- OVERFLOW --
+					{
+						currentLength = lineindex; // Go back to the line cut
+						lineCutFlag = true;
+						// :: OVERFLOW CHECK
+						if (overflowRule.substr(0, 4) == "wait"){
+							waitX(Std.parseInt(overflowRule.substr(4))); // get the number portion of "waitx"
+						}else{ // It's going to be pause or other
+							pause(); 
+						}
+						
+						break;
+					}else{
+						lineCurrent++;
+						if (onEvent != null) onEvent("newline");
+					}
+					
+					if (lineBreaks.length == 0) break;
+				}
+			}
+			
+			
+			// :: Keep this check for the end
 			if (currentLength >= targetLength)
 			{
 				stop(true);
-				
-				if (onComplete != null) {
-					onComplete();
-				}
-				
-			}else {	
-				textObj.text = targetText.substr(0, currentLength);
-				checkAndSetTime();
-				onTick();
+				if (onComplete != null) onComplete();
+				if (onEvent != null) onEvent("complete");
 			}
-		}
+			else 
+			{	
+				textObj.text = targetText.substr(textOffset, currentLength - textOffset);
+				carrierUpdatePos();
+				if (sound.char != null) SND.play(sound.char, sound.charRestart);
+				checkTagsAtCurrentLen();
+			}
+			
+		}// -- end timer
 		
-
 	}//---------------------------------------------------;
-	// --
+	
+	
+	/**
+	 * Hold the flow for a predefined set of time.
+	 * @param	value 1-9 Check the WAIT_TABLES var, 
+	 */
+	public function waitX(value:Int)
+	{
+		#if debug if(value==0) {trace("ERROR: Can't use 0 for a wait"); value=1;} #end
+		if (lastTW == 0) lastTW = tw; // tw will be restored to this after done counting down
+		if (sound.wait != null) SND.play(sound.wait);
+		if (value > 0 && value < 11)
+			tw = WAIT_TABLE[value-1]; // index 0...9
+		else
+			tw = value / 4; // 0.25 increments
+	}//---------------------------------------------------;
+	
+	/**
+	 * Stop the text build up.
+	 * @param	showFinal If true will set to the target text
+	 */
 	public function stop(showFinal:Bool = false)
 	{
 		if (showFinal && targetText != null)
 		{
 			currentLength = targetLength;
-			textObj.text = targetText;
-			if (useCarrier) carrier.visible = false;
+			textObj.text = targetText.substr(textOffset, currentLength - textOffset);
+			carrierUpdatePos(); // I don't really need this one, carrier to be turned off later
+			if (sound.end != null) SND.play(sound.end);
 		}
 		
+		carrierOff();
 		timer = 0;
 		active = false;
 	}//---------------------------------------------------;
-	// --
-	override public function destroy():Void 
+
+	
+	/**
+	 * Pause the flow, await a resume()
+	 */
+	public function pause()
 	{
-		super.destroy();
-		mapMetaData = null;
-	}//---------------------------------------------------;	
+		if (isPaused) return;
+		isPaused = true;
+		if (sound.pause != null) SND.play(sound.pause);
+		if (onEvent != null) onEvent("pause");
+	}//---------------------------------------------------;
+	
+	/**
+	 * Resume the flow if paused
+	 */
+	public function resume()
+	{
+		if (!isPaused) return;
+		isPaused = false;
+		if (wordWait>0) searchNextSpace();
+		timer = tw; // Force next update now
+		// DEV: sound on resume??
+	}//---------------------------------------------------;
+	
+	// --
+	function set_style(val:TextStyle):TextStyle
+	{
+		style = val;
+		Styles.applyTextStyle(textObj, style);
+		return style;
+	}//---------------------------------------------------;
+	
+	/**
+	 * Reads the textfield, bakes the linebreaks and returns a string with linebreaks (\n) in it.
+	 * PRE: TextField MUST be set to the final text
+	 * NOTE: Also shifts the TAGS indexes
+	 * This is really useful to not have words jump on the line below if they get out of width.
+	 * ----
+	 * http://troyworks.com/blog/2011/06/09/flash-as3-detect-undesired-line-break-in-textfield-wordwrap-is-true/
+	 */
+	function getBakedLineBrakes():String
+	{
+		var t = ""; // Final String with linebreaks
+		var lii:Int = 0;
+		var lcc = "";
+		for (ci in 0...textObj.textField.length)
+		{ 
+			var cc:String = textObj.textField.text.charAt(ci); 
+			var li:Int = textObj.textField.getLineIndexOfChar(ci); 
+			if (li != lii) { // NEW LINE
+				if (lcc != "\r" && lcc != "\n")
+				{
+					t += "\n"; // BROKEN WORD
+					// - Shift the tags from index (ci) because I just added '\n' to the final string
+					for (t in TAGS) {
+						if (t.index >= ci) t.index++;
+					}
+				}
+			}
+			t +=  cc;
+			lii = li;
+			lcc = cc;
+		}
+		//trace(' number of lines = $numberOfLines');
+		return t;
+	}//---------------------------------------------------;
+
 	
 }// -- end -- //
+
+
+
+
+// -- Stores a text MARKUP tag
+typedef AutoTextMeta = {
+	?cps:Int,	// Characters per second
+	?wait:Int, 	// Wait Time
+	?word:Int, 	// Word mode, store the wait time after each word
+	?sp:Int, 	// Special codes, like buttonpress,erase,blink,etc. <-- TODO
+	?call:String,	// User String attached, Currently used for callbacks
+	index:Int   // The index of the TAG in the finalstring
+};//------------------------------------;
+

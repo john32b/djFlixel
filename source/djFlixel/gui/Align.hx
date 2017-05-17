@@ -6,6 +6,7 @@ import flixel.FlxObject;
 import flixel.FlxSprite;
 
 /**
+ * STATIC CLASS HELPER
  * Quick and Easy align sprites
  * ...
  */
@@ -148,7 +149,7 @@ class Align
 	
 	
 	/**
-	 * 
+	 * Align a bunch of elements centered below a target sprite
 	 * @param	elements Array of elements to align on the line
 	 * @param	source The element to put the line below
 	 * @param	padX X padding of line elements
