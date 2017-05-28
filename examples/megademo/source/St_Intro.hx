@@ -22,17 +22,21 @@ import flixel.FlxState;
 class St_Intro extends FlxState
 {
 	// -- Helpers
-	var logoWidth = 200; // Other elements need to know this
+	var logoWidth = 200; // Size of the image logo, some objects need to know this
 	var logoHeight = 160;
 	// --
 	var seq:Sequencer;
-	// Json parameters node
+	
+	// Point to the JSON node parameters for quick accessing
 	var P:Dynamic;
+	
 	// --
 	override public function create():Void 
 	{
 		super.create();
+		
 		P = FLS.JSON.st_intro;
+		
 		camera.bgColor = Palette_Arne16.COL[P.bgColor];
 		
 		// Rainbow
@@ -45,6 +49,7 @@ class St_Intro extends FlxState
 		var logo1 = new SpriteEffects("assets/DJLOGO.png", {tw:logoWidth, th:logoHeight, frame:1});
 		Align.screen(logo1);
 		
+		// --
 		seq = new Sequencer(function(step:Int){
 		switch(step){
 			case 1:
@@ -102,13 +107,19 @@ class St_Intro extends FlxState
 				seq.next(4);
 			case 11:
 				persistentUpdate = true;
-				openSubState(new Stripes("on-right", {color:0xFFFFFFFF, soundID:"short2"},
-					function(){FlxG.resetState();}));
+				openSubState(new Stripes("on-right", {color:0xFFFFFFFF, soundID:"short2"}, complete));
 			default:
 		}
 		});
 		seq.next(P.delay1);
 		SND.playMusic("track1");
+	}//---------------------------------------------------;
+	
+
+	// -- The sequence is complete
+	function complete()
+	{
+		FlxG.switchState(new St_Intro2());
 	}//---------------------------------------------------;
 	
 	// --

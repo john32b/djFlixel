@@ -455,15 +455,16 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		var betweenTime:Float = styleBase.anim_time_between_elements;
 			if (betweenTime < 0) betweenTime = elementTime * 0.9;
 			
-		var easeFn:EaseFunction;
+		var easeFn:EaseFunction = Reflect.field(FlxEase, styleBase.anim_tween_ease);
 		
+		/* OLD WAY::
 		switch(styleBase.anim_tween_ease) {
 			case "bounce": easeFn = FlxEase.bounceOut;
 			case "elastic": easeFn = FlxEase.elasticOut;
 			case "back": easeFn = FlxEase.backOut;
 			case "circ": easeFn = FlxEase.circOut;
 			default: easeFn = null; // linear
-		}
+		} */
 		
 		var i:Int = 0;
 		while (elementSlots[i] != null)

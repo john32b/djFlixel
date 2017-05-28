@@ -4,7 +4,8 @@
 		"VERSION" : "0.3.0",
 		"ANTIALIASING" : true,
 		"FULLSCREEN" : false,
-		"VOLUME" : 0.7
+		"VOLUME" : 0.7,
+		"START_STATE1" : "St_Intro2"
 	},
 	
 	"soundFiles" : [
@@ -18,7 +19,7 @@
 	
 	"st_boot" : 
 	{
-		"bgColor" : 0,
+		"bgColor" : "_A16[14]",
 		"text" : "(w3)(s1)(c1)DjFlixel Tools V0.3(w5)(s2)(c20) Initializing (c1)(w4) ...(w5)...(w6)...(w4)",
 		"noise" : { "color1" : "0xFF111111", "color2" : "0xFF222222" }
 	},
@@ -33,6 +34,16 @@
 		"l2_line" :  { "fx2":true, "time":2, "w1":4, "run":2 },		
 		"l2_diss" :  { "time":1, "size":12 },
 		"l3_wave" :  { "time" : 0.4, "width" : 2, "height" : 0.5}
+	},
+	
+	
+	"st_intro2" : 
+	{
+		"emitter": { 
+			"x" : -12, "y" : 48, "h" : 64, "freq":0.2, "size": 64,
+			"vx0" : 40,
+			"vx1" : 80
+		}
 	}
 
 }

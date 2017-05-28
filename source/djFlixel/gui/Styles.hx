@@ -1,23 +1,20 @@
 package djFlixel.gui;
 
 import djFlixel.gfx.Palette_DB32;
-import djFlixel.gui.Styles.VBaseStyle;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
 
-
 /**
- * Various objects that hold styles for gui elements
- * =================================================
- * - BaseMenu
- * - ListMenu
- * - MenuOption
+ * Static class 
+ * Styling functions for FlxTexts and FlxMenu MenuOptions
+ * -------------------------------------------------------------
+ * 
  */
 
 
 //====================================================;
-// Visual parameters for a <VListBase>
+// Parameters for a <VListBase>
 //====================================================;
 
 	typedef VBaseStyle = {
@@ -65,7 +62,7 @@ import flixel.util.FlxColor;
 	 
 
 //====================================================;
-//  Visual parameters for a <VListMenu>.
+//  Parameters for a <VListMenu>.
 //====================================================;
 
 	typedef VListStyle = {	 
@@ -84,35 +81,49 @@ import flixel.util.FlxColor;
 	 
 	 
 //====================================================;
-// Visual parameters for a <MenuOptionBase>
+// Parameters for a <FlxText> that goes inside Lists
 //====================================================;
  
-	typedef OptionStyle = {
-		
-		// Custom embedded font, null for flixel default
-		var font:String; 
-		var fontSize:Int;
+	typedef OptionStyle = {		
+		var font:String;  // Custom embedded font, null for flixel default
+		var size:Int;
 		var alignment:String;
 		var color_default:Int;
 		var color_focused:Int;
 		var color_accent:Int;
 		var color_disabled:Int;		// Note: Labels will not be of this color, but a diff one
-		var color_disabled_f:Int;	// Focused color for a disabled element
-		var useBorder:Bool;
-		var border_color:Int;
+		var color_disabled_f:Int;	// Focused color of  disabled element
+		@:optional var borderColor:Int;	// If set, then 
 	}// :: -- ::
 	 
 	
-
+	
 //====================================================;
-// Various MenuStyle Helpers
+// Parameters for a <FlxText>
+//====================================================;
+
+	typedef TextStyle = {
+		// Custom embedded font, null for flixel default
+		var size:Int;
+		var color:Int;
+		@:optional var font:String;
+		@:optional var borderColor:Int;
+	}// :: -- ::
+
+	
+//====================================================;
+// Styling helpers for gui.lists and flxTexts
 //====================================================;
 
 class Styles
 {
 
-	// Create the default styles here,
-	// those can be overriden.
+	// --
+	public inline static var DEF_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
+	public inline static var DEF_BORDER_COLOR:FlxColor = 0xFF111111;
+	
+	
+	// -- Default FlxMenu styles::
 	
 	public static var default_ListStyle(default, never):VListStyle = {
 		focus_nudge : 5,
@@ -138,15 +149,14 @@ class Styles
 	
 	public static var default_OptionStyle(default, never):OptionStyle = {
 		font:null,
-		fontSize:8,
+		size:8,
 		alignment:"left",
 		color_default:Palette_DB32.COL_21,
 		color_focused:Palette_DB32.COL_09,
 		color_accent:Palette_DB32.COL_06,
 		color_disabled:Palette_DB32.COL_26,
 		color_disabled_f:Palette_DB32.COL_24,
-		useBorder:true,
-		border_color:Palette_DB32.COL_02
+		borderColor:Palette_DB32.COL_02
 	}; // --
 	
 	
@@ -154,21 +164,6 @@ class Styles
 	// FUNCTIONS
 	//====================================================;
 
-	// Convert a text objet style to this style
-	public static function styleOptionText(t:FlxText, style:OptionStyle)
-	{
-		t.size = style.fontSize;
-		t.wordWrap = false;
-		t.alignment = style.alignment;
-		if (style.font != null) 
-			t.font = style.font;
-		if (style.useBorder) {
-			t.borderSize = Math.ceil(style.fontSize / 8);
-			t.borderColor = style.border_color;
-			t.borderQuality = 2;
-			t.borderStyle = FlxTextBorderStyle.SHADOW;
-		}
-	}//---------------------------------------------------;
 	
 	// NEW STYLES
 	// ----------
@@ -193,7 +188,7 @@ class Styles
 	
 	/**
 	 * Applies a Dynamic Object with styles to a style target
-	 * It will convert colors from "0xffffff" or "blue" to proper INTS
+	 * It will convert colors from "0xffffff" or "blue" to proper INT
 	 * @param	node The object with the styles.
 	 * @param	target Must exist
 	 */
@@ -206,26 +201,59 @@ class Styles
 				Reflect.setField(target, i, FlxColor.fromString(Reflect.field(node, i)));
 				continue;
 			}
-			
+	
 			// Just copy everything else.
 			Reflect.setField(target, i, Reflect.field(node, i));
 		}
 		
-		// Useful sometimes for inlines
 		return target;
 	}//---------------------------------------------------;
 	
 	
-	// --
-	// Quickly apply border to an FlxText object
-	public static function quickTextBorder(textObj:FlxText, color:Int = 0xFF222222):FlxText
+	/**
+	 * Quickly apply border to an FlxText object
+	 */
+	public static function quickTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR):FlxText
 	{
-		textObj.borderStyle = FlxTextBorderStyle.SHADOW;
-		textObj.borderSize = Math.ceil(textObj.size / 8);
-		textObj.borderColor = color;
-		textObj.borderQuality = 2;
-		return textObj;
+		t.borderStyle = FlxTextBorderStyle.SHADOW;
+		t.borderSize = Math.ceil(t.size / 8);
+		t.borderColor = c;
+		t.borderQuality = 2;
+		return t; // for chaining
 	}//---------------------------------------------------;
 	
-
+	
+	/**
+	 * Quickly add a predefined style to an FlxText
+	 * @param	t The flxText
+	 * @param	style the style, check the TextStyle typedef
+	 * @return
+	 */
+	public static function applyTextStyle(t:FlxText, style:TextStyle):FlxText
+	{
+		if (t.font != null) t.font = style.font;
+		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
+		t.size = style.size;
+		t.color = style.color;
+		return t; // for chaining
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Style FlxTexts that are used in FlxMenus.
+	 * @param	t
+	 * @param	style
+	 */
+	public static function styleOptionText(t:FlxText, style:OptionStyle)
+	{
+		if (style.font != null) t.font = style.font;
+		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
+		t.size = style.size;
+		t.alignment = style.alignment;
+		t.wordWrap = false;
+	}//---------------------------------------------------;
+	
+	// -- format pairs --
+	
+	
 }// -- 

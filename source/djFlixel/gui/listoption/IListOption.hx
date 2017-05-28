@@ -1,6 +1,9 @@
 package djFlixel.gui.listoption;
 
 
+/**
+ * Interface for a sprite that will go inside a ( VListBase | VListNav )
+ */
 interface IListOption<T>
 {
 	// -- Set by parent, fire input events.

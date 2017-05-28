@@ -22,14 +22,12 @@ import flixel.util.FlxColor;
  */
 class Gui
 {
-	public static var DEFAULT_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
-	public static var DEFAULT_BORDER_COLOR:FlxColor = 0xFF111111;
+
 	
 	//====================================================;
 	// Custom Global Text Formatting
 	//====================================================;
 	
-
 	// --
 	public static var formatPairs(default, null):Array<FlxTextFormatMarkerPair>;
 	
@@ -64,13 +62,8 @@ class Gui
 	{
 		var t = new FlxText(X, Y, 0, "", size);
 		t.scrollFactor.set(0, 0);
-		if (textC !=-1) t.color = textC; else t.color = DEFAULT_TEXT_COLOR;
-		if(useBorder) {
-			t.borderStyle = FlxTextBorderStyle.SHADOW;
-			t.borderSize = Math.ceil(size / 8);
-			t.borderColor = DEFAULT_BORDER_COLOR;
-			t.borderQuality = 1;
-		}
+		if (textC !=-1) t.color = textC; else t.color = Styles.DEF_TEXT_COLOR;
+		if (useBorder) Styles.quickTextBorder(t, t.borderColor);
 		t.applyMarkup(text, formatPairs);
 		return t;
 	}//---------------------------------------------------;
@@ -89,13 +82,8 @@ class Gui
 	{
 		var t = new FlxText(X, Y, 0, text, size);
 		t.scrollFactor.set(0, 0);
-		if (textC !=-1) t.color = textC; else t.color = DEFAULT_TEXT_COLOR;
-		if (borderC !=-1) {
-			t.borderStyle = FlxTextBorderStyle.SHADOW;
-			t.borderSize = Math.ceil(size / 8);
-			t.borderColor = borderC;
-			t.borderQuality = 1;
-		}
+		if (textC !=-1) t.color = textC; else t.color = Styles.DEF_TEXT_COLOR;
+		if (borderC !=-1) Styles.quickTextBorder(t, t.borderColor);
 		return t;
 	}//---------------------------------------------------;
 	
