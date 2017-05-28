@@ -23,7 +23,7 @@ class MenuOptionToggle extends MenuOptionBase
 		box = GfxTool.getSpriteFrame(MenuOptionBase.GFX_ICONS, 8, 16, 16);
 
 
-		box.scale.set((style.fontSize/12), (style.fontSize/12));
+		box.scale.set((style.size/12), (style.size/12));
 		box.updateHitbox();
 		box.offset.add(-3*box.scale.x, -3*box.scale.y);
 		frameStart = 8;

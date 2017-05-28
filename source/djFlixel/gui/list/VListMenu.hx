@@ -75,13 +75,13 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// -- HACK FIX --
 		// Since the child elements are all going to be FLXTEXT
 		// I am going to set the cursor_nudge_now
-		hack_bottom_scroll_indicator_nudge = Std.int(2 * (styleOption.fontSize / 8));
+		hack_bottom_scroll_indicator_nudge = Std.int(2 * (styleOption.size / 8));
 		
 		
 		// HACK: Specific for menuoption elements
 		//       why? because "text.height" fields report longer than they actually are
 		// Try to fix the padding between elements.
-		// styleBase.element_padding = -Std.int(styleOption.fontSize * 0.4);
+		// styleBase.element_padding = -Std.int(styleOption.size * 0.4);
 		
 		// NOTE V0.3: Conditionals are scrapped.
 		
