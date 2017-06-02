@@ -33,33 +33,35 @@ class PanelPop extends FlxSprite
 	// Helper store the drawing rect
 	var rect:Rectangle; 
 	// Current step in the tables
-	var step:Int = 0; 
+	var step:Int; 
 	// Ratios to final height
 	var heightSteps:Array<Float>;
 	// Ratios to final width
 	var widthSteps:Array<Float>;
 	// --
 	var bgColor:Int;
-	// Draw the background this much pixels inside of the area
-	var inset:Int = 0;
 	// --
 	var onComplete:Void->Void = null;
 	
-	// -- Border paramers
-	var border:Dynamic;
+	// -- BORDER ::	
 	var borderIm:BitmapData;
-	var bsize:Int; // Border Size
-	//---------------------------------------------------;
+	var bs:Int; // Same as border.size, used for readability
+	// Border Parameters : DEFAULTS
+	public var border(default, null):Dynamic = {
+		sheet:null, // FlxGraphic: 8 square tiles, check the assets for examples
+		size:8,		// int: Square size of the spritesheet
+		inset:0		// int: Draw the background this much pixels inside of the area
+	};
 	
-	
-	/**
-	 * Declare the ID of the sounds you want to be played
-	 */
+	// Declare the ID of the sounds you want to be played
+	// # USER SET 
 	public var sound:Dynamic = {
 		start:null,	// at first step
 		step:null,	// at every step
 		end:null    // at last step
 	};
+	
+	//---------------------------------------------------;
 	
 	/**
 	 * 
@@ -68,9 +70,13 @@ class PanelPop extends FlxSprite
 	 * @param bgColor Color of the panel
 	 * @param _border { size:Int, sheet:FlxGraphicAsset, inset:Int }
 	 */
-	public function new(width:Int, height:Int, _bgColor:Int = 0xFF000000, ?_border:Dynamic)
+	public function new(width:Float, height:Float, _bgColor:Int = 0xFF000000, ?_border:Dynamic)
 	{
 		super();
+		
+		#if debug
+			if (width <= 0 || height <= 0) throw "ERROR : Panel Size can't be 0";
+		#end
 		
 		scrollFactor.set(0, 0);
 		bgColor = _bgColor;
@@ -80,21 +86,17 @@ class PanelPop extends FlxSprite
 		heightSteps = [0.25, 0.5, 0.7, 1];
 		
 		// --
-		border = DataTool.defParams(_border, {
-			size:8,
-			im:null,
-			inset:2
-		});
+		border = DataTool.defParams(_border, border);
+		bs = border.size;
 		
 		// --
 		if (border.sheet != null) {
 			borderIm = GfxTool.resolveBitmapData(border.sheet);
-			bsize = border.size;
-			inset = border.inset;
 		}
 		
 		// Make the graphic transparent
-		makeGraphic(width, height, 0x00000000);
+		makeGraphic(cast width, cast height, 0x00000000);
+		
 	}//---------------------------------------------------;
 	
 	/**
@@ -126,7 +128,7 @@ class PanelPop extends FlxSprite
 		var xx:Int = Std.int((width - ww) / 2); 
 		var yy:Int = Std.int((height - hh) / 2);
 		
-		var rr = new Rectangle(xx + inset, yy + inset, ww - inset * 2, hh - inset * 2);
+		var rr = new Rectangle(xx + border.inset, yy + border.inset, ww - border.inset * 2, hh - border.inset * 2);
 		
 		pixels.lock();
 		pixels.fillRect(rr, bgColor);
@@ -141,45 +143,45 @@ class PanelPop extends FlxSprite
 			}
 						
 			// -- top line
-			l = 0; rr.setTo(bsize * 4, 0, bsize, bsize);
-			while ((l += bsize) < (ww - bsize)) {
+			l = 0; rr.setTo(bs * 4, 0, bs, bs);
+			while ((l += bs) < (ww - bs)) {
 				p.setTo(xx + l, yy);
 				cp();
 			}
 			// -- bottom line
-			l = 0; rr.setTo(bsize * 5, 0, bsize, bsize);
-			while ((l += bsize) < (ww - bsize)) {
-				p.setTo(xx + l, yy + hh - bsize);
+			l = 0; rr.setTo(bs * 5, 0, bs, bs);
+			while ((l += bs) < (ww - bs)) {
+				p.setTo(xx + l, yy + hh - bs);
 				cp();
 			}
 			// -- left stripe
-			l = 0; rr.setTo(bsize * 6, 0, bsize, bsize);
-			while ((l += bsize) < (hh - bsize)) {
+			l = 0; rr.setTo(bs * 6, 0, bs, bs);
+			while ((l += bs) < (hh - bs)) {
 				p.setTo(xx , yy + l);
 				cp();
 			}
 			// -- right stripe
-			l = 0; rr.setTo(bsize * 7, 0, bsize, bsize);
-			while ((l += bsize) < (hh - bsize)) {
-				p.setTo(xx + ww - bsize, yy + l);
+			l = 0; rr.setTo(bs * 7, 0, bs, bs);
+			while ((l += bs) < (hh - bs)) {
+				p.setTo(xx + ww - bs, yy + l);
 				cp();
 			}
 			
 			// -- topleft corner
-			rr.setTo(0, 0, bsize, bsize);
+			rr.setTo(0, 0, bs, bs);
 			p.setTo(xx, yy);
 			cp();
 			// -- topright corner
 			rr.x += border.size; // go to the next tile
-			p.setTo(xx + ww - bsize, yy);
+			p.setTo(xx + ww - bs, yy);
 			cp();
 			// -- bottom left corner
 			rr.x += border.size;
-			p.setTo(xx, yy + hh - bsize);
+			p.setTo(xx, yy + hh - bs);
 			cp();
 			// -- bottom right corner
 			rr.x += border.size;
-			p.setTo(xx + ww - bsize, yy + hh - bsize);
+			p.setTo(xx + ww - bs, yy + hh - bs);
 			cp();
 			
 		}
@@ -190,7 +192,8 @@ class PanelPop extends FlxSprite
 		pixels.unlock();
 		dirty = true;
 		if ((++step) == widthSteps.length) {
-			FlxDestroyUtil.destroy(timer);
+			timer.cancel();
+			timer = FlxDestroyUtil.destroy(timer);
 			if (onComplete != null) onComplete();
 			if (sound.end != null) SND.play(sound.end);
 		}
@@ -212,15 +215,42 @@ class PanelPop extends FlxSprite
 			step = widthSteps.length - 1;
 			updateBorder(null);
 		}else{
+			step = 0;
 			timer = new FlxTimer().start(speed, updateBorder, 0);
 		}
 	}//---------------------------------------------------;
 	
 	
+	/**
+	 * Close/Clear the graphic, without removing it from the stage
+	 * INDEV: Do it with an animation
+	 */
+	public function clear()
+	{
+		// -- Clear the bitmap
+		var rr = new Rectangle(0, 0, width, height);
+		pixels.fillRect(rr, 0x00000000);
+		dirty = true;
+		if (timer != null) timer.cancel();
+		timer = FlxDestroyUtil.destroy(timer);
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Change the background Color
+	 * @param	col
+	 */
+	public function setBGColor(col:Int)
+	{
+		bgColor = col;
+		updateBorder();
+	}//---------------------------------------------------;
+	
 	// --
 	override public function destroy():Void 
 	{
 		super.destroy();
+		if(timer!=null) timer.cancel();
 		timer = FlxDestroyUtil.destroy(timer);
 	}//---------------------------------------------------;
 	

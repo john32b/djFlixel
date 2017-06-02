@@ -157,7 +157,7 @@ class FlxMenu extends FlxGroup
 		styleHeader = Styles.newStyle_Option();
 		
 		// - Tweak the font size
-		styleHeader.fontSize = 16;
+		styleHeader.size = 16;
 		
 		// Default to not visible at start,
 		// calling the showpage will autovisible this.
@@ -779,7 +779,7 @@ class FlxMenu extends FlxGroup
 			list.styleBase.anim_tween_ease = "elastic";
 			list.styleBase.anim_total_time = 0.2;
 			list.styleOption = Reflect.copy(styleOption);
-			list.styleOption.fontSize = Std.int(list.styleOption.fontSize / 2);
+			list.styleOption.size = Std.int(list.styleOption.size / 2);
 			
 		var p:PageData = new PageData("question");
 			if (question != null) p.add(question, { type:"label" } );
@@ -794,9 +794,9 @@ class FlxMenu extends FlxGroup
 		var bg:FlxSprite = new FlxSprite(X - 2, Y - 2);
 		#if neko
 			trace("Warning, Neko throws error when puting vars to makeGraphic");
-			bg.makeGraphic(100, 40, list.styleOption.border_color);
+			bg.makeGraphic(100, 40, list.styleOption.borderColor);
 		#else
-			bg.makeGraphic(list.width + 4, list.height + 8, list.styleOption.border_color);
+			bg.makeGraphic(list.width + 4, list.height + 8, list.styleOption.borderColor);
 		#end
 			bg.scrollFactor.set(0, 0);
 		add(bg);

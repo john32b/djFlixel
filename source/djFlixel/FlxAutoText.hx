@@ -28,17 +28,21 @@ import flixel.util.FlxColor;
  * 		new FlxAutoText(0,0,128,3); 128 width, 3 maximum lines
  * 		.start("String With Markup tags",onComplete);
  * 
- * MARKUP :
- * 		(c1) for CPS 	   / 1 is the slowest you can set. 0 for instant flow
- * 		(w1) for waits     / 1-n, predefined speeds, 1 to 9 read from TABLE, 9.. is n/4
- * 		(m1) for wordWait  / Enables word wait, where words fill normally and waits at " " and "-"
- * 		(s..) for specials  / s1=enable carrier, s2=disable carrier
+ * MARKUP TAGS:
+ * 
+ * 		(cN) for CPS 	   		 / 1 is the slowest you can set. 0 for instant flow
+ * 		(w1...n) for waits     	 / 1 to 9 read from TABLE, 9.. is n/4
+ * 		(w0) pause			  	 / Pause and await a resume() call
+ * 		(mN) for wordWait		 / Enables word wait, where words fill normally and waits at " " and "-"
+ * 		(p0),(p1)				 / New Page, p0 = no wait, p1 = pause
+ * 		(s1),(s2)				 / s1=enable carrier, s2=disable carrier
+ * 		(f=hello) for callbacks  / Will call onEvent("@hello");
+ * 		
+ * 			N = Number. e.g. "(c3)Hello (w4)World"
  * 
  * DEVNOTES:
  * 		+ Is a SpriteGroup, because it may include a carrier sprite.
  *		+ Waittimes are based on a table, check WAIT_TABLE, which you can change
- * 		+ (w0) Will pause and await for resume()
- * 		
  * 
  **/
 
@@ -54,9 +58,10 @@ class FlxAutoText extends FlxSpriteGroup
 	inline static var TAG_CPS:String 	= 'c';
 	inline static var TAG_WAIT:String 	= 'w';
 	inline static var TAG_SP:String 	= 's';
-	inline static var TAG_WORD:String 	= 'm';	
+	inline static var TAG_WORD:String 	= 'm';
+	inline static var TAG_NP:String 	= 'p';
 	
-	// Minimum time to wait to update the text
+	// Minimum text update frequency
 	public static var MIN_TICK:Float = 0.12;
 	
 	// Wait times, affect the (w) and (m) tags, and the waitX() function
@@ -88,14 +93,17 @@ class FlxAutoText extends FlxSpriteGroup
 	// -- LINES
 	var lineBreaks:Array<Int>;	// Store the indexes of all line breaks
 	var linesMax:Int;			// If the textbox has a max number of lines
-	var lineCutFlag:Bool;		// If true it will cut the text to currentIndex at the next update cycle
+	var newpageFlag:Bool;		// If true it will cut the text to currentIndex at the next update cycle, newpage
+	
 	public var lineCurrent(default, null):Int;	// Current line the text is being written to (1...n)
+	public var lineHeight(default, null):Int;	// Line height in pixels
 	
 	// -- CARRIER 
 	var carrierEnabled:Bool = false;
 	var carrier:FlxSprite = null;
 	var carrierBlinkRate:Float;
-	var carrierOffsetX:Int = 0;
+	var carrierOffsetX:Int;
+	var carrierOffsetY:Int;
 	var carrierTimer:Float; // Carrier blink rate handled on the update();
 	
 	// - Is it currently paused
@@ -107,11 +115,9 @@ class FlxAutoText extends FlxSpriteGroup
 		char:null,	// On character being typed
 		charRestart:false,	// force restart char sound
 		wait:null,	// On a Wait
-		pause:null, // On a pause
-		end:null	// On the string end
+		pause:null  // On a pause
 	};
 
-	
 	
 	// If the lines reach MaxLines, how to behave
 	// "pause" - Pause the flow and await a resume()
@@ -130,6 +136,7 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	// - Broadcast Events, usually set by a dialogBox
 	// pause 	- The flow is currently paused, requires a resume(); call to resume
+	// resume 	- resume() was just called
 	// complete - Text has finished
 	// newline 	- A new line has been written
 	// newpage  - New page due to overflow 
@@ -152,6 +159,7 @@ class FlxAutoText extends FlxSpriteGroup
 		linesMax = maxLines;
 		add(textObj);
 		active = false;
+		lineHeight = 10; // precalculated value if default text style is used.
 		setCPS(DEFAULT_CPS); // default
 	}//---------------------------------------------------;
 	// --
@@ -218,13 +226,11 @@ class FlxAutoText extends FlxSpriteGroup
 	 */
 	public function setCarrierSprite(symbol:FlxSprite, offsetX:Int = 0, offsetY:Int = 0 )
 	{
-		carrier = symbol;
 		carrierBlinkRate = DEFAULT_CARRIER_TICK;
-		carrier.visible = false;
+		carrier = symbol;
 		carrierTimer = 0;
 		add(carrier);
-		carrier.y += offsetY;
-		carrierOffsetX = offsetX;
+		carrierOffsetX = offsetX; carrierOffsetY = offsetY;
 		carrierEnabled = true;
 		carrierUpdatePos();
 		carrier.visible = false; // Start off as not visible so it only start updating after the first start();
@@ -241,7 +247,7 @@ class FlxAutoText extends FlxSpriteGroup
 		// Update Position
 		carrier.visible = true;
 		carrier.x = this.x + tm.width + carrierOffsetX;
-		carrier.y = this.y + (textObj.textField.numLines - 1) * (tm.height + tm.leading);
+		carrier.y = this.y + carrierOffsetY + (textObj.textField.numLines - 1) * (tm.height + tm.leading);
 		if (carrier.x >= this.x + textObj.width) {
 			carrier.x = this.x;
 			carrier.y += (tm.height + tm.leading);
@@ -258,6 +264,14 @@ class FlxAutoText extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	
+	// -- Useful when you want to hide the text for a bit, before feeding new data to it.
+	public function clearAndWait()
+	{
+		active = false;
+		textObj.text = "";
+	}//---------------------------------------------------;
+	
+	
 	/**
 	 * Start animating the FlxText to a target String.
 	 * @param Text The text to animate to. USES MARKUP for speed settings.
@@ -265,7 +279,6 @@ class FlxAutoText extends FlxSpriteGroup
 	 */
 	public function start(_text:String, ?_onComplete:Void->Void)
 	{
-		onComplete = _onComplete;
 		currentLength = 0;
 		textOffset = 0;
 		timer = 0;
@@ -274,14 +287,15 @@ class FlxAutoText extends FlxSpriteGroup
 		wordWait = 0;
 		lineCurrent = 1;
 		TAGS = [];
+		onComplete = _onComplete;
 		active = true;
 		isPaused = false;
 		
 		// ::: READ TAGS :::
 		
 		// Capture all the possible tags at once
-		// reg =  \(([c|w|s|m]\d+|f=\w+)\)/g
-		var reg = new EReg('\\(([$TAG_CPS|$TAG_SP|$TAG_WAIT|$TAG_WORD]\\d+|f=\\w+)\\)', 'g');
+		// reg =  \(([c|w|s|m]\d+|f=\w+)\)
+		var reg = new EReg('\\((\\w\\d+|f=\\w+)\\)', 'g');
 		
 		// -- Store the processed INDEX of each TAG into the hash
 		if (reg.match(_text))
@@ -312,7 +326,8 @@ class FlxAutoText extends FlxSpriteGroup
 						case TAG_CPS : data.cps = number;
 						case TAG_WAIT : data.wait = number;
 						case TAG_WORD : data.word = number;
-						case TAG_SP : data.sp = number;
+						case TAG_SP   : data.sp = number;
+						case TAG_NP   : data.np = true; if (number == 1) data.wait = 0; // (p1) will pause();
 						case _: trace("Error: Unsupported TAG");
 					}
 				}
@@ -352,10 +367,12 @@ class FlxAutoText extends FlxSpriteGroup
 		checkTagsAtCurrentLen();
 	}//---------------------------------------------------;
 	
-	// Text has been updated, check new TAGS
+	/**
+	 * Checks and processes tags at current string index
+	 */
 	function checkTagsAtCurrentLen()
 	{
-		if (TAGS.length>0 && nextTAGIndex == currentLength)
+		if (TAGS.length > 0 && nextTAGIndex == currentLength)
 		{
 			var data = TAGS.shift();
 			
@@ -374,10 +391,10 @@ class FlxAutoText extends FlxSpriteGroup
 			{
 				switch(data.sp)
 				{
+					case 0: // Disable Carrier
+						carrierOff();
 					case 1: // Enable Carrier
 						carrierEnabled = true;
-					case 2: // Diable Carrier
-						carrierOff();
 					default:
 				}
 			}
@@ -385,6 +402,11 @@ class FlxAutoText extends FlxSpriteGroup
 			{
 				// Check for the first char and then use .substr(1) to get the string
 				if (onEvent != null) onEvent("@" + data.call);
+			}
+			if (data.np != null)
+			{
+				// It has to be true, will never be false
+				newpageFlag = true;
 			}
 		}
 	}//---------------------------------------------------;
@@ -426,10 +448,13 @@ class FlxAutoText extends FlxSpriteGroup
 		{
 			
 			// First thing first, check for linecuts
-			if (lineCutFlag)
+			if (newpageFlag)
 			{	
-				currentLength++; // Skip the "\n"
-				lineCutFlag = false;
+				if (["\n", "\r"].indexOf(targetText.charAt(currentLength)) >= 0) {
+					currentLength++;
+					// DEV: Skip newlines, I check because it might be a custom newpage and not from a newline
+				}
+				newpageFlag = false;
 				lineCurrent = 1;
 				textOffset = currentLength;
 				if (onEvent != null) onEvent("newpage");
@@ -473,7 +498,7 @@ class FlxAutoText extends FlxSpriteGroup
 					if (linesMax > 0 && lineCurrent >= linesMax) //-- OVERFLOW --
 					{
 						currentLength = lineindex; // Go back to the line cut
-						lineCutFlag = true;
+						newpageFlag = true;
 						// :: OVERFLOW CHECK
 						if (overflowRule.substr(0, 4) == "wait"){
 							waitX(Std.parseInt(overflowRule.substr(4))); // get the number portion of "waitx"
@@ -493,7 +518,7 @@ class FlxAutoText extends FlxSpriteGroup
 			
 			
 			// :: Keep this check for the end
-			if (currentLength >= targetLength)
+			if (currentLength >= targetLength && TAGS.length == 0)
 			{
 				stop(true);
 				if (onComplete != null) onComplete();
@@ -538,7 +563,6 @@ class FlxAutoText extends FlxSpriteGroup
 			currentLength = targetLength;
 			textObj.text = targetText.substr(textOffset, currentLength - textOffset);
 			carrierUpdatePos(); // I don't really need this one, carrier to be turned off later
-			if (sound.end != null) SND.play(sound.end);
 		}
 		
 		carrierOff();
@@ -567,6 +591,7 @@ class FlxAutoText extends FlxSpriteGroup
 		isPaused = false;
 		if (wordWait>0) searchNextSpace();
 		timer = tw; // Force next update now
+		if (onEvent != null) onEvent("resume");
 		// DEV: sound on resume??
 	}//---------------------------------------------------;
 	
@@ -575,6 +600,8 @@ class FlxAutoText extends FlxSpriteGroup
 	{
 		style = val;
 		Styles.applyTextStyle(textObj, style);
+		// -- Now it's a good time to calculate the lineHeight
+		lineHeight = Std.int(textObj.textField.getLineMetrics(0).height);
 		return style;
 	}//---------------------------------------------------;
 	
@@ -621,11 +648,12 @@ class FlxAutoText extends FlxSpriteGroup
 
 // -- Stores a text MARKUP tag
 typedef AutoTextMeta = {
-	?cps:Int,	// Characters per second
-	?wait:Int, 	// Wait Time
-	?word:Int, 	// Word mode, store the wait time after each word
-	?sp:Int, 	// Special codes, like buttonpress,erase,blink,etc. <-- TODO
+	?cps:Int,		// Characters per second
+	?wait:Int, 		// Wait Time
+	?word:Int, 		// Word mode, store the wait time after each word
 	?call:String,	// User String attached, Currently used for callbacks
-	index:Int   // The index of the TAG in the finalstring
+	?sp:Int, 		// Special codes, like buttonpress,erase,blink,etc. <-- TODO
+	?np:Bool,		// NewPage,
+	index:Int   	// The index of the TAG in the finalstring
 };//------------------------------------;
 

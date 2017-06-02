@@ -22,7 +22,7 @@ class MenuOptionToggle extends MenuOptionBase
 		
 		box = GfxTool.getSpriteFrame(MenuOptionBase.GFX_ICONS, 6, 16, 16);
 		// Depending on the font size, set the small or big box.
-		if (style.fontSize < 12) {
+		if (style.size < 12) {
 			box.setSize(8, 8);
 			frameStart = 6;
 		}else {

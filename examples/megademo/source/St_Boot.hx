@@ -5,6 +5,7 @@ import djFlixel.fx.PalleteFaderFake;
 import djFlixel.fx.StaticNoise;
 import djFlixel.gfx.GfxTool;
 import djFlixel.gfx.Palette_Arne16;
+import djFlixel.gui.Gui;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.util.FlxTimer;
@@ -29,8 +30,19 @@ class St_Boot extends FlxState
 		var st = new StaticNoise(0,0,0,0,P.noise); add(st);
 		// --
 		
-		var t = new FlxAutoText(0, 0, 320); add(t);
+		//Gui.d_color = 0xFF333333;
+		//Gui.d_box(30, 30, 200, 64);
+		
+		var t = new FlxAutoText(2, 2, 230); add(t);
+		
+		t.style = cast { size:8, color:0xFFFFFFFF, borderColor:0xFF447722 };
+		//t.sound.char = "short1";
+		//t.sound.wait = "short2";
+		//t.sound.end = "c_back";
+		t.setCarrierSymbol(P.carrier);
 		t.start(P.text, next);
+		
+		// --
 	}//---------------------------------------------------;
 	
 	// --

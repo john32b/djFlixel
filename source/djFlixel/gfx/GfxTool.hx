@@ -29,14 +29,15 @@ class GfxTool
 	 * @param	mapdata 2D Array of Mapdata
 	 * @return  Composited Image
 	 */
-	public static function drawTilesToBitmap(source:BitmapData, tw:Int, th:Int, mapdata:Array<Array<Int>>):BitmapData
+	public static function drawTilesToBitmap(source:FlxGraphicAsset, tw:Int, th:Int, mapdata:Array<Array<Int>>):BitmapData
 	{
+		var bsrc = resolveBitmapData(source);
 		var mapwidth:Int = mapdata[0].length;
 		var mapheight:Int = mapdata.length;
 		var bit = new BitmapData(mapwidth * tw, mapheight * th, true, 0);
 		var rect:Rectangle = new Rectangle();
 		var point:Point = new Point();
-		var sTilesInW = Std.int(source.width / tw);
+		var sTilesInW = Std.int(bsrc.width / tw);
 		var tile:Int;
 		
 		bit.lock();
@@ -51,7 +52,7 @@ class GfxTool
 				rect.setTo( (tile % sTilesInW) * tw, 
 							Std.int(tile / sTilesInW) * th, tw, th);
 				point.setTo(xx * tw, yy * th);
-				bit.copyPixels(source, rect, point);
+				bit.copyPixels(bsrc, rect, point);
 			}
 		}
 		

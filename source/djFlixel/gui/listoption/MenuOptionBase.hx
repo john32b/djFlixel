@@ -67,7 +67,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		Styles.styleOptionText(label, style);
 		add(label);
 		
-		PADDING_FROM_LABEL = style.fontSize;
+		PADDING_FROM_LABEL = style.size;
 	}//---------------------------------------------------;
 	
 	// --

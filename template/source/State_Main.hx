@@ -1,5 +1,6 @@
 package ;
 
+import djFlixel.FLS;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.text.FlxText;
@@ -10,7 +11,7 @@ class State_Main extends FlxState
 	override public function create():Void
 	{
 		super.create();
-		add(new FlxText(32, 32, 0, "djFlixel " + Reg.VERSION, 16));
+		add(new FlxText(32, 32, 0, "djFlixel " + FLS.VERSION, 16));
 	}//---------------------------------------------------;
 	
 	// --
@@ -20,7 +21,7 @@ class State_Main extends FlxState
 		
 		// On keypress "f12" reload JSON parameters and reset game
 		// So I can quickly make changes to the json file and see them in action
-		Reg.debug_keys();
+		FLS.debug_keys();
 	
 	}//---------------------------------------------------;
 	

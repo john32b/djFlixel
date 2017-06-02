@@ -7,7 +7,6 @@ class Main extends djFlixel.MainTemplate
 {
 	public function new()
 	{
-		DynAssets.FILE_LOAD_LIST = [Reg.PARAMS_FILE];
 		super(State_Main);
 	}//---------------------------------------------------;
 	// --

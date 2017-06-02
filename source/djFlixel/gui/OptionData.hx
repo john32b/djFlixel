@@ -114,8 +114,8 @@ class OptionData
 			trace("Error: Forgot to set a type",this);
 		}
 		if ((type != "label") && (SID == null || SID.length == 0)) {
-			// It should be filled with something.
-			trace("Error: SID is NULL",this);
+			// It should be filled with something in most cases.
+			trace("Warning: SID is NULL",this);
 			SID = "null";
 		}
 		if (label == null) {

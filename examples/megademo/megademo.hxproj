@@ -26,7 +26,7 @@
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="hscript=2.0.7&#xA;djFlixel=0.2.0&#xA;flixel=4.2.0&#xA;lime=2.9.1&#xA;openfl=3.6.1&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;FLX_NO_FOCUS_LOST_SCREEN&#xA;tools=2.9.1&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;web&#xA;display" />
+    <option directives="hscript=2.0.7&#xA;djFlixel=0.2.0&#xA;flixel=4.2.1&#xA;lime=2.9.1&#xA;openfl=3.6.1&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;FLX_NO_FOCUS_LOST_SCREEN&#xA;tools=2.9.1&#xA;EXTERNAL_LOAD&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;web&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />

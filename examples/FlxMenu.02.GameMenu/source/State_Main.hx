@@ -1,5 +1,6 @@
 package ;
 
+import djFlixel.FLS;
 import djFlixel.SND;
 import djFlixel.fx.StarfieldSimple;
 import djFlixel.gui.FlxMenu;
@@ -47,9 +48,6 @@ class State_Main extends FlxState
 		super.create();
 		
 		
-		trace("TEST , is REG JSON LOADED");
-		trace(Reg.JSON);
-		
 		// -- Add a basic default starfield FX ::
 		var stars = new StarfieldSimple();
 		add(stars);
@@ -58,12 +56,12 @@ class State_Main extends FlxState
 		// -- Create the info box It will display some info about the selected option
 		// NOTE: some parameters are stored in "params.json" file
 		var box = new FlxSprite(0, 220);
-		box.makeGraphic(320, 20, FlxColor.fromString(Reg.JSON.box.bg));
+		box.makeGraphic(320, 20, FlxColor.fromString(FLS.JSON.box.bg));
 		add(box);
 			
 
 		var infoText = new FlxText(box.x + 8, box.y + 4, box.width - 16, "Test info box text");
-		infoText.color = FlxColor.fromString(Reg.JSON.box.textColor);
+		infoText.color = FlxColor.fromString(FLS.JSON.box.textColor);
 		add(infoText);
 		// --
 		
@@ -199,7 +197,7 @@ class State_Main extends FlxState
 							// (opt.data.current) is the toggled state, true or false
 				
 							// Just set the AA to the new value;
-							Reg.ANTIALIASING = cast opt.data.current;
+							FLS.ANTIALIASING = cast opt.data.current;
 							
 							infoText.text = "Antialiasing " + ((opt.data.current)?"ON":"OFF");
 							

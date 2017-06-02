@@ -1,7 +1,7 @@
 {
-	"reg" : {
+	"sys" : {
 		"NAME" : "FlxMenu demo",
-		"VERSION" : "0.1",
+		"VERSION" : "0.3",
 		"ANTIALIASING" : true,
 		"FULLSCREEN" : false,
 		"VOLUME" : 0.6

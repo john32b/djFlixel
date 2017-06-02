@@ -47,7 +47,7 @@ class MenuOptionOneof extends MenuOptionBase
 		add(arrows[1]);
 		// --
 		arrowStat = [];		
-		arrow_maxNudge = Std.int(style.fontSize / 3);
+		arrow_maxNudge = Std.int(style.size / 3);
 		arrows_flag = false;
 		
 	}//---------------------------------------------------;

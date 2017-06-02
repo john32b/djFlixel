@@ -20,9 +20,10 @@
 	<haxelib name="djFlixel"/>
 
 	<!--------------------------------HAXEDEFINES----------------------------------->
-	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 
 	<haxedef name="EXTERNAL_LOAD"/> 
+	
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 	<haxedef name="FLX_NO_TOUCH"/> 
 	<haxedef name="FLX_NO_MOUSE_ADVANCED" unless="debug" /> 
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/> 

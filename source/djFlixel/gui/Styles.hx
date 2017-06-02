@@ -122,7 +122,6 @@ class Styles
 	public inline static var DEF_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
 	public inline static var DEF_BORDER_COLOR:FlxColor = 0xFF111111;
 	
-	
 	// -- Default FlxMenu styles::
 	
 	public static var default_ListStyle(default, never):VListStyle = {
@@ -231,6 +230,11 @@ class Styles
 	 */
 	public static function applyTextStyle(t:FlxText, style:TextStyle):FlxText
 	{
+		if (style == null) style = {
+			font:null,
+			size:8,
+			color:DEF_TEXT_COLOR
+		};
 		if (t.font != null) t.font = style.font;
 		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
 		t.size = style.size;

@@ -1,5 +1,5 @@
 {
-	"reg" : {
+	"sys" : {
 		"NAME" : "FlxMenu demo",
 		"VERSION" : "0.1",
 		"ANTIALIASING" : true,
