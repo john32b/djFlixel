@@ -4,8 +4,7 @@
 		"VERSION" : "0.3.0",
 		"ANTIALIASING" : true,
 		"FULLSCREEN" : false,
-		"VOLUME" : 0.7,
-		"START_STATE1" : "St_Intro2"
+		"VOLUME" : 0.7
 	},
 	
 	"soundFiles" : [
@@ -20,7 +19,8 @@
 	"st_boot" : 
 	{
 		"bgColor" : "_A16[14]",
-		"text" : "(w3)(s1)(c1)DjFlixel Tools V0.3(w5)(s2)(c20) Initializing (c1)(w4) ...(w5)...(w6)...(w4)",
+		"text" : "(c20)Initializing djFlixel 0.3(c2)...",
+		"carrier" : "_",
 		"noise" : { "color1" : "0xFF111111", "color2" : "0xFF222222" }
 	},
 	

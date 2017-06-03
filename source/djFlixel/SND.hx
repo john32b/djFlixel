@@ -173,6 +173,12 @@ class SND
 	{
 		// Lookup the table only once
 		_r2 = infos.get(soundID);
+		#if debug
+		if (_r2 == null) {
+			trace('ERROR: Can\'t get sound with id $soundID');
+			return;
+		}
+		#end
 		if (_r2.fast) {
 			memorySounds.get(soundID).play(restart);
 		}else {

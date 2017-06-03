@@ -19,7 +19,7 @@
 	<!--------------------------------PATHS SETTINGS-------------------------------->
 	<classpath name="source" />
 	<assets path="assets" rename="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
-	<set name="BUILD_DIR" value="builds/debug/" />
+	<set name="BUILD_DIR" value="build/debug/" />
 	<!--------------------------------LIBRARIES------------------------------------->
 	<haxelib name="flixel"/>
 	<haxelib name="djFlixel" />

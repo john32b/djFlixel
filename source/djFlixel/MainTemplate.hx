@@ -76,8 +76,8 @@ class MainTemplate extends Sprite
 		
 		try {
 			if (FLS.JSON.sys.START_STATE != null) {
-				trace("Forced Initial State :: ", initialState);
 				initialState = cast Type.resolveClass(FLS.JSON.sys.START_STATE);
+				trace("Forced Initial State :: ", initialState);
 			}
 		}
 		

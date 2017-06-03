@@ -27,6 +27,7 @@ class MenuOptionToggle extends MenuOptionBase
 		box.updateHitbox();
 		box.offset.add(-3*box.scale.x, -3*box.scale.y);
 		frameStart = 8;
+
 		
 		add(box);	
 	}//---------------------------------------------------;
