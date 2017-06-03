@@ -297,7 +297,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		}// end switch--
 		
 		// =============================== CONTROLS SELECT   =======;
-		if (Controls.CURSOR_OK())
+		if (Controls.CURSOR_START())
 		{
 			currentElement.sendInput("fire");
 		}else
