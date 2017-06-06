@@ -1,10 +1,49 @@
 
 DJFLIXEL CHANGE LOG
 ====================
+Newest at top
 
 
+	
+	+ Code comments in some places
+	+ MenuOptionOneOf.hx, store the previous index
+	+ PageData will always get an autoincrement UID
+	+ FlxMenu.showPage(..) now supports on-the-fly dynamic pages
+	+ FlxMenu.POOLED_MENUS_MAX is now public
+	-------
+	## Many changes over the months, preparing for a solid 0.3 release ::
+	+ BGPOP, renamed to PanelPop, supports borders and sounds
+	+ flxAutotext, linecuts, maximum lines, callback tags
+	+ flxAutotext, better code, baked linejumps, better carrier
+	+ Styles.applyTextStyle(..)
+	+ GfxTool.palCol(..) // Quickly get palette color from a string 
+	+ fx.substate.Stripes.hx // Overlayes animated stripes, useful for transitioning
+	+ Gfx.rainbowStripes();
+	+ GFX.resolveBitmapData()
+	+ MaskedSprite.hx
+	+ SpriteEffects.hx
+	+ UIButton.hx
+	- Removed BGScroller, replaced with boxScroller
+	+ BoxScroller // tiles an image inside a box and scrolls it
+	+ Gui.d_box(..), draws a box
+	+ Gui.d_line(..), draw a debug line
+	+ Align.inLine(..), align multiple elements in a line with options of alignment
+	+ Align.inLineCenterBelow(..), depracates Align.downCenterMA()
+	- GameJolt class fixes
+	+ UI Button class
+	! Can now set custom SND and MUSIC volumes from the JSON file
+	+ OLD Reg.hx functionality is now replaced with a more global FLS static class with the ability to extend it
+	! HTML5 bugfix, not color setting in gui.getFtext, I can't have a private var with the name "color"
+	+ TrophyBox variable sizes
+	+ FlxMenu options, added click and wheel support
+	+ PopupTrophy autoposition, do not obstuct an flxobject
+	+ PopupTrophy aligned to screen, top,left,center,etc.
+	+ PopupTrophy variable sizes
+	! FlxMenu nudge tweens, They now get cancelled
+	+ FlxMenu Can now click on the cursors
 
-# 11-2016
+
+# 11-2016 - dev branch
 ============================================================
 . PixelFader.hx , fade the screen on or off by perpixel operations
 . TextBouncer.hx, Simple bouncy text
@@ -13,7 +52,7 @@ DJFLIXEL CHANGE LOG
 . FlxMenu pages can override parent styles without having to declare a new style 
 . Sound Loading and sound groups
 
-# 06-2016
+# 06-2016 - dev branch
 ============================================================
 . FlxMenu.option_updateData(...); Will update the data of an option on the fly.
 . FlxMenu, BUGFIX, pageOn callback now reports at the correct time

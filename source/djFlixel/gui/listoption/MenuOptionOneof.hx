@@ -122,6 +122,7 @@ class MenuOptionOneof extends MenuOptionBase
 			
 			case "right":
 				if (opt.data.current < opt.data.pool.length - 1) {
+					opt.data.previous = opt.data.current;
 					opt.data.current ++;
 					updateOptionData();
 					cb("optChange");
@@ -129,6 +130,7 @@ class MenuOptionOneof extends MenuOptionBase
 				
 			case "left":
 				if (opt.data.current > 0) {
+					opt.data.previous = opt.data.current;
 					opt.data.current--;
 					updateOptionData();
 					cb("optChange");

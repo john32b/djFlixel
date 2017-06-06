@@ -62,28 +62,14 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 			DataTool.applyFieldsInto(page.custom.styleBase, styleBase);
 		}
 		
-		// -- HACK FIX --
-		//  MenuBaseOptions report a height longer than the textfield itself		
-		//  FlxMenu pushes a new Style, but creating a listMenu by itself doesn't
-		//  Important: get a new style because I'm going to change it
+		// If creating a listMenu outside of the FlxMenu:
 		if (styleBase == null) {
 			styleBase = Styles.newStyle_Base();
 		}
 		
-		
-		
 		// -- HACK FIX --
-		// Since the child elements are all going to be FLXTEXT
-		// I am going to set the cursor_nudge_now
+		// Put push the bottom scroll indicator a little further
 		hack_bottom_scroll_indicator_nudge = Std.int(2 * (styleOption.size / 8));
-		
-		
-		// HACK: Specific for menuoption elements
-		//       why? because "text.height" fields report longer than they actually are
-		// Try to fix the padding between elements.
-		// styleBase.element_padding = -Std.int(styleOption.fontSize * 0.4);
-		
-		// NOTE V0.3: Conditionals are scrapped.
 		
 		super.setDataSource(page.collection);
 		
@@ -117,8 +103,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	
 	
 
-	// -- Update data fields of an option
-	// Both DATA + VISUAL,
+	// Update data fields of an optionm, both DATA + VISUAL,
 	// Will search in the pool as well.
 	public function option_updateData(sid:String, params:Dynamic)
 	{

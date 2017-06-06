@@ -2,19 +2,23 @@ package djFlixel.gui;
 
 // PageData
 // --------
-// Holds a single page data for use in flxMenu
+// Holds a single page data for use in FlxMenu
 // Some parameters about the page like title, custom styles
 // and an array with all the menuoptions it contains.
 // --
 class PageData
 {
+	public static var UID_GENERATOR:Int = 0;
+	
 	// Unique String ID of the page
 	public var SID:String;
+	
 	// Unique Int ID of the page
 	public var UID:Int;		
 	
 	// Optional Menu Header Titler
 	public var header:String;
+	
 	// Optional Menu Description
 	public var description:String;
 	
@@ -46,6 +50,7 @@ class PageData
 	// -----------------------------------------------
 	// 
 	// _cursorLastPos   Int, Store the latest cursor position if it's needed later
+	// _dynamic			Bool, Dynamic page flag
 	
 	
 	//====================================================;
@@ -58,11 +63,12 @@ class PageData
 	 * @param	SID Identifier for the page
 	 * @param	params [ header, description ]
 	 */
-	public function new(SID:String, ?params:Dynamic)
+	public function new(?SID:String, ?params:Dynamic)
 	{
 		collection = [];
 		custom = { };
 		
+		this.UID = UID_GENERATOR++;
 		this.SID = SID;
 		
 		if (params == null) return; // no need to read params if null	

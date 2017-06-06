@@ -46,17 +46,14 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	//====================================================;
 	
 	/**
-	 * @param	Width Needs to fit inside this target Width, it's the parent list width
-	 * @param	Style A pointer to a custom coloring style
 	 */
 	public function new(_style:OptionStyle)
 	{
 		super();
 		
-		// Note to self:
+		// Note:
 		// ---------------
-		// Never get a group's Width, so don't do something like this.width = X;
-		// It WILL report bad values. Use parent.width instead
+		// Don't get this.width, It WILL report bad values.
 		
 		// - Init
 		isFocused = false;
@@ -151,7 +148,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		state_focused();
 	}//---------------------------------------------------;
 	// --
-	// Note: All elements are added to a list are 
+	// Note: All elements that are added to a list are 
 	//       auto-unfocused by parent
 	public function unfocus() 
 	{
@@ -173,7 +170,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	}//---------------------------------------------------;
 	
 	// -- 
-	// - GroupAlpha is broken, so do it manually... :/
+	// - GroupAlpha is broken, so do it manually
 	override private function set_alpha(Value:Float):Float 
 	{
 		if (Value < 0) Value = 0;
@@ -184,7 +181,8 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// --
 	public inline function getOptionHeight():Int
 	{
-		return Std.int(label.size); 
+		return Std.int(label.size);
+		//return Std.int(label.textField.textHeight);
 	}//---------------------------------------------------;
 	
 }// --

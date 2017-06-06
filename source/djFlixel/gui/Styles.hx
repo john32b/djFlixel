@@ -6,10 +6,8 @@ import flixel.util.FlxColor;
 
 
 /**
- * Static class 
  * Styling functions for FlxTexts and FlxMenu MenuOptions
- * -------------------------------------------------------------
- * 
+ * -------------------------------------------------------
  */
 
 
@@ -85,15 +83,15 @@ import flixel.util.FlxColor;
 //====================================================;
  
 	typedef OptionStyle = {		
-		var font:String;  // Custom embedded font, null for flixel default
-		var size:Int;
-		var alignment:String;
+		var font:String; 		// Custom embedded font, null for flixel default
+		var size:Int;     		// Font Size
+		var alignment:String;	// left | center | right | justify
 		var color_default:Int;
 		var color_focused:Int;
-		var color_accent:Int;
-		var color_disabled:Int;		// Note: Labels will not be of this color, but a diff one
-		var color_disabled_f:Int;	// Focused color of  disabled element
-		@:optional var borderColor:Int;	// If set, then 
+		var color_accent:Int;		// Special Accent color, used in labels and icons
+		var color_disabled:Int;		// Color for all disabled elements, (excluding labels)
+		var color_disabled_f:Int;	// Focused color of disabled element
+		@:optional var borderColor:Int;	// If set, then it will apply a border of this color
 	}// :: -- ::
 	 
 	
@@ -245,8 +243,6 @@ class Styles
 	
 	/**
 	 * Style FlxTexts that are used in FlxMenus.
-	 * @param	t
-	 * @param	style
 	 */
 	public static function styleOptionText(t:FlxText, style:OptionStyle)
 	{
@@ -256,8 +252,5 @@ class Styles
 		t.alignment = style.alignment;
 		t.wordWrap = false;
 	}//---------------------------------------------------;
-	
-	// -- format pairs --
-	
 	
 }// -- 

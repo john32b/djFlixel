@@ -12,14 +12,12 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
+import flixel.util.typeLimit.OneOfTwo;
 
 /**
- * FLXMenu
- * ...
- * =- Notes
- * =---------
- * . New version uses VListBase
- * . The height can be variable.
+ * FlxMenu
+ * A multi-page customizable menu system that can hold various element types
+ * -------
  * 
  */
 class FlxMenu extends FlxGroup
@@ -45,16 +43,35 @@ class FlxMenu extends FlxGroup
 	// *Pointer to the previous page, useful for animating
 	var previousMenu:VListMenu;
 	
-	// Hold all the pages data this menu is going to use
+	// Hold all the page data this menu is going to use
 	public var pages(default, null):Map<String,PageData>;
 	
 	// Pointer to the current loaded page.
 	var currentPage:PageData;
 	
+	// --
 	public var currentPageName(get, null):String;
 	
 	// A queue of page IDs
 	var history:Array<String>;
+	
+	// Popup close fn, useful to have as global, in case the menu needs to close
+	var popupCloseFunction:Void->Void;
+	
+	// Keep a small pool of Pages so it doesn't have to recreate them
+	var _pool:Array<VListMenu>;
+	
+	// -- Header text displayed on top of the list (optional)
+	var headerText:FlxText;
+	
+	// -- Animation helper
+	var animQ:ArrayExecSync < (Void->Void)->Void > ;
+	
+	// Hold the latest dynamic pages in case it needs to go back to them
+	var dynPages:Array<PageData>;
+	
+	// Hold this many dynamic pages in the buffer.
+	public var dynPagesMax:Int = 3;
 	
 	// ===---- USER ----===
 	// =------------------=
@@ -71,7 +88,7 @@ class FlxMenu extends FlxGroup
 	// NULL to use the default style, Set right after creating
 	public var styleBase:VBaseStyle;
 	
-	// The Header will have the same style as an option
+	// The Header defaults to the style as an option
 	public var styleHeader:OptionStyle;
 
 	// When you are going back to menus, remember the position it came from
@@ -82,19 +99,16 @@ class FlxMenu extends FlxGroup
 	
 	// Allow mouse interaction with the menu options
 	public var flag_use_mouse:Bool = true;
-		
+	
+	// Keep X maximum menus in the pool. !! SET THIS RIGHT AFTER NEW() !!
+	public var POOLED_MENUS_MAX:Int = 4;
+	
 	//---------------------------------------------------;
 	
-	// -- PAGE STATES --
-	
-	// Call a function when a page is on/off
-	/// TODO:
-	// var pageStates:Map<String,Bool->Void> = null;
-
 	
 	// ==  User callbacks
 	// -------------------==
-
+	
 	// optBlur   - This option was just unfocused // Unimplemented. need to add it. VListNav
 	// optFocus  - A new option has been focused <sends option>
 	// optChange - When an option changed value, <sends option>
@@ -116,32 +130,15 @@ class FlxMenu extends FlxGroup
 	// tick_fire   - An option was selected. ( button )
 	// tick_error  - An option that cant be selected or changed
 	public var callbacks_menu:String->String->Void;
-	
-	//---------------------------------------------------;
-	
-	// Popup close fn, useful to have as global, in case the menu needs to close
-	var popupCloseFunction:Void->Void;
-	
-	
-	// Keep maximum 4 menus in the pool
-	var POOLED_MENUS_MAX:Int = 4;
-	// --
-	var _pool:Array<VListMenu>;
-	
-	// -- Header text displayed on top of the list (optional)
-	var headerText:FlxText;
-	
-	// -- Animation helper
-	var animQ:ArrayExecSync < (Void->Void)->Void > ;
 
 	//====================================================;
 
 	/**
 	 * Constructor
-	 * @param	X
-	 * @param	Y
+	 * @param	X Screen X position, You cannot change this later
+	 * @param	Y Screen Y position, You cannot change this later
 	 * @param	WIDTH 0 for auto width
-	 * @param	SlotsTotal
+	 * @param	SlotsTotal Maximum slots for pages, unless overrided by a page
 	 */
 	public function new(X:Float, Y:Float, WIDTH:Int, SlotsTotal:Int = 4)
 	{
@@ -156,11 +153,11 @@ class FlxMenu extends FlxGroup
 		styleBase   = Styles.newStyle_Base();
 		styleHeader = Styles.newStyle_Option();
 		
-		// - Tweak the font size
+		// - Tweak the font size, User can change it later
 		styleHeader.size = 16;
 		
 		// Default to not visible at start,
-		// calling the showpage will autovisible this.
+		// calling the showpage will make it visible
 		visible = false;
 		
 		// --
@@ -174,12 +171,11 @@ class FlxMenu extends FlxGroup
 		animQ.queue_complete = animQ_onComplete;
 		animQ.queue_action = function(fn:(Void->Void)->Void) { fn(animQ.next); };
 		popupCloseFunction = null;
-		
 	}//---------------------------------------------------;
 	
 
 	/**
-	 * Apply a style node
+	 * Apply a style to the menu
 	 * @param	node An object containing 4 optional nodes { .option .list .base .header }
 	 */
 	public function applyMenuStyle(node:Dynamic)
@@ -207,8 +203,9 @@ class FlxMenu extends FlxGroup
 	
 
 	/**
-	 * Apply a style to the page
-	 * @param	node An object containing {.list .base .option}
+	 * Apply a custom style to a page
+	 * TODO: Move this function inside the PageData class
+	 * @param	node An object containing {.list .base .option} styles
 	 * @param	page The page to apply the style to
 	 */
 	public function applyPageStyle(styleNode:Dynamic, page:PageData)
@@ -256,11 +253,13 @@ class FlxMenu extends FlxGroup
 			i = null;
 		}
 		pages = null;
+		
+		for (p in dynPages) p.destroy();
 	}//---------------------------------------------------;
 	
 	// --
 	// Quick way to create and add a page to the menu
-	public function newPage(pageSID:String,?params:Dynamic)
+	public function newPage(pageSID:String, ?params:Dynamic):PageData
 	{
 		var p = new PageData(pageSID, params);
 		pages.set(pageSID, p);
@@ -276,7 +275,7 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/**
-	 * Update the data on an option,
+	 * Update the data on an option, alters Data and updates Visual
 	 * 
 	 * @param	pageSID You must provide the pageSID the option is in
 	 * @param	SID SID of the option
@@ -315,29 +314,53 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/**
-	 * Automatically OPEN the menu as well.
-	 * Sends 
-	 * 		"open" 
-	 * 		"pageOn",currentpage.SID
-	 * 		"pageOn",currentpage.SID
-	 * @param	pageSID
-	 * @param	autofocus
+	 * Shows a page that is already on the page map.
+	 * Automatically opens the menu if it's closed.
+	 * @param	page The SID of the page to open
+	 * @param	autofocus If true the menu will acquire input focus
 	 */
-	public function showPage(pageSID:String, autofocus:Bool = true)
-	{
-		if (isAnimating) return;
-		
-		// trace('Request to show page [$pageSID]');
-		
-		// Don't show the same page I am currently in
-		if (history[history.length - 1] == pageSID) {
-			trace("Warning: Can't go to the same page");
-			return;
-		}
-		
-		if (pages.exists(pageSID) == false) {
-			trace('Error: Page with ($pageSID) does not exist');
-			return;
+	public function showPage(Page:OneOfTwo<String,PageData>, autofocus:Bool = true)
+	{	
+		if (Std.is(Page, String))
+		{
+			var pageSID:String = Page;
+			
+			// Don't show the same page I am currently in
+			if (history[history.length - 1] == pageSID) {
+				trace("Warning: Can't go to the same page");
+				return;
+			}
+			
+			if (!pages.exists(pageSID)) 
+			{
+				var cp:PageData = null;
+				// Check if its a dynamic page
+				if (pageSID.substr(0, 4) == "dyn_" && dynPages != null)
+				{
+					dynPages.map(function(pg){if (pg.SID == pageSID) cp = pg; });
+				}
+				
+				if (cp == null) {
+					trace('Error: Page with SID:"$pageSID" does not exist');
+					return;
+				}
+				
+				currentPage = cp;
+				
+			}else
+			{
+				currentPage = pages.get(pageSID);
+			}
+			
+		}else{ // It must be PageData
+			
+			currentPage = Page;
+			currentPage.custom._dynamic = true;
+			currentPage.SID = 'dyn_${currentPage.UID}';
+			
+			if (dynPages == null) dynPages = [];
+			dynPages.push(currentPage);
+			if (dynPages.length > dynPagesMax) dynPages.shift();
 		}
 
 		// -- ORDERING IS IMPORTANT
@@ -361,7 +384,6 @@ class FlxMenu extends FlxGroup
 			// It's going to be removed later, when the transition ends.
 		}
 
-		currentPage = pages.get(pageSID);
 		history.push(currentPage.SID);	// Last history entry is always the current page
 
 		// 4. Get the new menu
@@ -378,7 +400,7 @@ class FlxMenu extends FlxGroup
 		// :: Animating pages in and out
 		//    Figure out the animation type
 		//	  If the FlxMenu is focused, then the new menu 
-		//	  is going to be autofocused at he end of the animation.
+		//	  is going to be autofocused at the end of the animation.
 		animQ.reset();
 		
 		switch(currentMenu.styleBase.anim_style)
@@ -408,15 +430,15 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/**
-	 * 
+	 * Closes the menu and loses input focus
 	 * @param	flagRememberPos If true, then when you call open() the current selected menu will be selected
 	 */
 	public function close(flagRememberPos:Bool = false)
 	{
 		if (visible) {
 			visible = false;
-			_mcallback("close", currentPage!=null?currentPage.SID:null);
-		}
+			_mcallback("close", currentPage != null?currentPage.SID:null);
+		}else return; // Already closed
 		
 		if (flagRememberPos && currentPage!=null)
 		{
@@ -438,7 +460,9 @@ class FlxMenu extends FlxGroup
 		history = [];
 	}//---------------------------------------------------;
 
-	// --
+	/**
+	 * Input focus
+	 */
 	public function focus()
 	{
 		if (isFocused) return;
@@ -458,7 +482,9 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * Lose input focus
+	 */
 	public function unfocus()
 	{
 		if (!isFocused) return;
@@ -470,8 +496,9 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	
-	// --
+	/**
+	 * Displays the previous page on history
+	 */
 	public function goBack()
 	{
 		// Goes back one page
@@ -488,8 +515,9 @@ class FlxMenu extends FlxGroup
 		showPage(history.pop());
 	}//---------------------------------------------------;
 	
-	// --
-	// Go to the first page of the history queue
+	/**
+	 * Go to the first page of the history queue
+	 */
 	public function goHome()
 	{
 		if (history.length <= 1) {
@@ -512,29 +540,17 @@ class FlxMenu extends FlxGroup
 	// Store the menu in the pool for future use
 	function poolStore(el:VListMenu)
 	{
-		//trace("Pushing Element in the pool");
 		_pool.push(el);
 		
 		if (_pool.length > POOLED_MENUS_MAX) {
 			_pool.shift().destroy();
 			trace("Info: Destroyed last page element");
 		}
-		
-		// Quick pool check
-		// #if debug
-			// trace('Pool Length = ${_pool.length}');
-			// var d_pages:String = "";
-			// for (i in _pool) {
-			// 	d_pages += '${i.page.SID} ,';
-			// }
-			// trace("Pool contents: " , d_pages);
-		// #end
 	}//---------------------------------------------------;
 	
 	// --
 	// Get a ListMenu object,
-	// Search the pool first and get if from there
-	// , else create it
+	// Search the pool first and get if from there, else create it
 	function poolGetOrNew(P:PageData):VListMenu
 	{		
 		for (i in _pool) {
@@ -544,11 +560,8 @@ class FlxMenu extends FlxGroup
 			}
 		}
 		
-		// -----
-		
-		// Creating the new page
 		// trace('Info: [${P.SID}] does not exist in the pool, creating...');
-		// #Style
+		
 		var m = new VListMenu(x, y, 
 					P.custom.width != null ? P.custom.width : width,
 					P.custom.slots != null ? P.custom.slots : slotsTotal);
@@ -661,14 +674,11 @@ class FlxMenu extends FlxGroup
 	// --
 	function _sub_InitCursorPos()
 	{
-		// trace('== Initializing Cursor pos for menu [${currentPage.SID}]');
-		
 		var r1:Int; // Temp INT holder
 		
 		// If the page needs the cursor to always point to a specific option:
 		// This gets priority
 		if (currentPage.custom.cursorStart != null) {
-			// trace('Cursor, custom start');
 			r1 = currentMenu.getOptionIndexWithField("SID", currentPage.custom.cursorStart);
 			_sub_SetCursToPos(r1); // will check for -1 there
 			return;
@@ -676,13 +686,11 @@ class FlxMenu extends FlxGroup
 		
 		// If the cursor needs to go back to where it was
 		if (currentPage.custom._cursorLastUID != null) {
-			// trace('Cursor, get last position');
 			r1 = currentMenu.getOptionIndexWithField("UID", currentPage.custom._cursorLastUID);
 			// Reset the cursorLastUID, because I used it.
 			currentPage.custom._cursorLastUID = null;
 			_sub_SetCursToPos(r1); // will check for -1 there
 		}else {
-			// trace('Cursor, from the top');
 			currentMenu.setViewIndex(currentMenu.findNextSelectableIndex(0));
 		}
 		
@@ -738,7 +746,6 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	
 	// --
 	// Create a popup YESNO question, getting data from the optionData
 	function _sub_confirmCurrentOption()
@@ -758,7 +765,7 @@ class FlxMenu extends FlxGroup
 	
 
 	/**
-	 *  Confirm action for currently selected option
+	 * Confirm action for currently selected option
 	 * 
 	 * @param	qcallback Callback to this function with a result
 	 * @param	question If set it will display this text
@@ -835,9 +842,8 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	//====================================================;
-	//  Small API
+	// Getters Setters
 	//====================================================;
-	
 	
 	//--
 	// Can return NULL
@@ -854,7 +860,6 @@ class FlxMenu extends FlxGroup
 	{
 		if (currentPage != null) return currentPage.SID; else return "";
 	}//---------------------------------------------------;
-	
 	
 	
 	//====================================================;
@@ -893,7 +898,7 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	// --
+	// -- Quickly check for null and call
 	inline function _mcallback(msg:String, ?data:String) 
 	{
 		if (callbacks_menu != null) {

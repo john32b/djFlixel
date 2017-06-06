@@ -2,11 +2,11 @@ package djFlixel.gui;
 
 import flixel.FlxSprite;
 
-/// I DON'T REMEMBER WHY I WROTE THIS OR HOW THIS DIFFERS TO FLIXEL FLICKER
+
 
 /**
- * ...
- * @author JohnDimi
+ * A Sprite that blinks forever,
+ * Used in GUI elements
  */
 class BlinkSprite extends FlxSprite
 {

@@ -1,8 +1,8 @@
 package djFlixel.gui;
 
-// A Menu option holds a label + menu functionality,
-// Just the data.
-// --
+/**
+ * Just the data of menu element
+ */
 class OptionData
 {
 	// A simple incremental UID Generator
@@ -39,7 +39,7 @@ class OptionData
 	public var type:String;
 	
 	// Hold all the internal data
-	// Also can put custom user data in this object
+	// Also can include custom user data in this object
 	public var data:Dynamic;
 	
 	//====================================================;
@@ -105,7 +105,7 @@ class OptionData
 	
 	// --
 	// Call this after setting data to initialize it
-	 function initData()
+	function initData()
 	{
 		// -- Some Safeguards
 		if (type == null) {
