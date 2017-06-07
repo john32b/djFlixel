@@ -70,7 +70,7 @@ class FlxMenuPages extends FlxGroup
 		
 		// -- Add the cursors
 		cursor_left = new FlxSprite(0, 0);
-		cursor_left.loadGraphic("assets/hud_icons.png", true, 16, 16);
+		cursor_left.loadGraphic(Gui.DEF_GUI_ICONS, true, 16, 16);
 		cursor_left.animation.frameIndex = 4;
 		cursor_left.setSize(4, 4);
 		cursor_left.centerOffsets();

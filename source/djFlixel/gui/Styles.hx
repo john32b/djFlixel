@@ -83,16 +83,25 @@ import flixel.util.FlxColor;
 //====================================================;
  
 	typedef OptionStyle = {		
-		var font:String; 		// Custom embedded font, null for flixel default
-		var size:Int;     		// Font Size
-		var alignment:String;	// left | center | right | justify
-		var color_default:Int;
-		var color_focused:Int;
+		var font:String; 			// Custom embedded font, null for flixel default
+		var size:Int;     			// Font Size
+		var alignment:String;		// left | center | right | justify
+		var color_default:Int;		// --
+		var color_focused:Int;		// --
 		var color_accent:Int;		// Special Accent color, used in labels and icons
 		var color_disabled:Int;		// Color for all disabled elements, (excluding labels)
 		var color_disabled_f:Int;	// Focused color of disabled element
-		@:optional var borderColor:Int;	// If set, then it will apply a border of this color
-	}// :: -- ::
+		@:optional 
+		var borderColor:Int;		// If set, then it will apply a border of this color
+		// --
+		@:optional
+		var icons:Dynamic;			// Object holding icon parameters : {
+									//	tileSheet:String ; assetname of the tileset of the icons
+									//	tileSize:Int	 ; size of the tiles must be square
+									//	ind_checkbox:Int ; index of the checkbox, 2 tiles, open,close
+									//  ind_arrows:Int	 ; index of the arrows, 2 tiles, left,right
+									// };
+	}// :: 
 	 
 	
 	

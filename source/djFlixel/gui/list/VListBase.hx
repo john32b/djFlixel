@@ -188,7 +188,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			}
 			scrollInd = [];	
 			for (i in 0...2) {
-				scrollInd[i] = new BlinkSprite(0, 0, "assets/hud_icons.png", 16, 14 + i);
+				scrollInd[i] = new BlinkSprite(0, 0, Gui.DEF_GUI_ICONS, 16, 14 + i);
 				scrollInd[i].scrollFactor.set(0, 0);
 				add(scrollInd[i]);
 			}

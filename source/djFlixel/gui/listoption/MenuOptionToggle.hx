@@ -12,6 +12,7 @@ class MenuOptionToggle extends MenuOptionBase
 {	
 	// Checkbox sprite
 	var box:FlxSprite;
+	
 	// Checkbox frame helper
 	var frameStart:Int;
 	
@@ -20,14 +21,31 @@ class MenuOptionToggle extends MenuOptionBase
 	{
 		super(_style);
 		
-		box = GfxTool.getSpriteFrame(MenuOptionBase.GFX_ICONS, 6, 16, 16);
-		// Depending on the font size, set the small or big box.
-		if (style.size < 12) {
-			box.setSize(8, 8);
-			frameStart = 6;
-		}else {
-			box.setSize(12, 12);
-			frameStart = 8;
+		if (style.icons == null || style.icons.ind_checkbox == null)
+		{
+			// Get a checkbox from the default GUI icons
+			box = GfxTool.getSpriteFrame(Gui.DEF_GUI_ICONS, 0, 16, 16);
+			
+			if (style.size <= 12) {
+				frameStart = 6; // Small
+				box.setSize(8, 8);
+				box.offset.set( -1, -1); // It looks better 1 pixel further down
+			}else if (style.size <= 16) {
+				frameStart = 8; // Larger
+				box.setSize(12, 12);
+			}else{
+				// NOTE : If you are using AntiAliasing, the box will appear overly blurred
+				// Temp Solution.
+				frameStart = 8;
+				box.scale.set((style.size / 12), (style.size / 12));
+				box.updateHitbox();
+				box.setSize(style.size, style.size);
+			}
+			
+		}else
+		{
+			box = GfxTool.getSpriteFrame(style.icons.tileSheet, 0, style.icons.tileSize, style.icons.tileSize);
+			frameStart = style.icons.ind_checkbox;
 		}
 		
 		add(box);	
@@ -40,7 +58,7 @@ class MenuOptionToggle extends MenuOptionBase
 	{
 		super.initElements();
 				
-		box.y = y + 1 + (label.height / 2) - box.height / 2;
+		box.y = y + (label.height / 2) - (box.height / 2);
 		box.x = x + label.fieldWidth + PADDING_FROM_LABEL;
 		
 		updateOptionData();

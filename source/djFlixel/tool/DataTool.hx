@@ -96,16 +96,16 @@ class DataTool
 	
 	
 	/**
-	 * Apply a dynamic's object fields into another object. Basically overwrites the target object fields
-	 * @param	node
-	 * @param	into
+	 * Apply an object's fields into another object. Overwrites the target object's fields. 
+	 * @param	node The Master object to copy fields from
+	 * @param	into The Target object to copy fields to
 	 */
-	public static function applyFieldsInto(node:Dynamic, into:Dynamic)
+	public static function applyFieldsInto(node:Dynamic, into:Dynamic):Dynamic
 	{
 		for (field in Reflect.fields(node)) {
 			Reflect.setField(into, field, Reflect.field(node, field));
 		}
-		// TODO: add a try catch ?
+		return into;
 	}//---------------------------------------------------;
 	
 	/**

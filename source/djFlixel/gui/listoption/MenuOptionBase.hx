@@ -19,14 +19,10 @@ import flixel.text.FlxText;
 // --
 class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 {
-	// Shortener for the icon location
-	static var GFX_ICONS:String = "assets/hud_icons.png";
-	
 	// Pointer to the OptionData. Deal with this when handling data
 	public var opt(default, null):OptionData;
 	
-	// Pointer to a color style
-	// Parent sets this
+	// Pointer to a style, parent sets this.
 	public var style:OptionStyle;
 	
 	// Whether or not this optionelement is keyboard focused right now
@@ -35,6 +31,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// -- Set by parent, fire input events.
 	//    The ID is handled by parent.
 	public var callbacks:String->Void;
+	// -- Helper
 	function cb(a:String) { if (callbacks != null) callbacks(a); }	
 	
 	// This is part 1, the label

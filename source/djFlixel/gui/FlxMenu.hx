@@ -203,7 +203,7 @@ class FlxMenu extends FlxGroup
 	
 
 	/**
-	 * Apply a custom style to a page
+	 * Apply a custom style to a page, nodes will overwrite the default style
 	 * TODO: Move this function inside the PageData class
 	 * @param	node An object containing {.list .base .option} styles
 	 * @param	page The page to apply the style to

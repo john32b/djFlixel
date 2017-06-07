@@ -23,6 +23,7 @@ import flixel.util.FlxColor;
 class Gui
 {
 
+	public inline static var DEF_GUI_ICONS:String = "assets/hud_icons.png";
 	
 	//====================================================;
 	// Custom Global Text Formatting

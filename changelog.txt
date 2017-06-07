@@ -4,13 +4,13 @@ DJFLIXEL CHANGE LOG
 Newest at top
 
 
-	
+	+ MenuOptionToggle checkbox, customizable graphic icon and some dynamic resizing on the default icons
+	-------
 	+ Code comments in some places
 	+ MenuOptionOneOf.hx, store the previous index
 	+ PageData will always get an autoincrement UID
 	+ FlxMenu.showPage(..) now supports on-the-fly dynamic pages
 	+ FlxMenu.POOLED_MENUS_MAX is now public
-	-------
 	## Many changes over the months, preparing for a solid 0.3 release ::
 	+ BGPOP, renamed to PanelPop, supports borders and sounds
 	+ flxAutotext, linecuts, maximum lines, callback tags

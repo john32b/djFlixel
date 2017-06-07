@@ -42,29 +42,26 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		// 1. If a style exists on the page, apply it ELSE
 		// 2. If FLXMenu has set a style, apply that ELSE
 		// 3. Get the default style
+		
 		// List style
 		if (page.custom.styleList != null) {
-			styleList = Reflect.copy(styleList);
-			DataTool.applyFieldsInto(page.custom.styleList, styleList);
+			styleList = DataTool.applyFieldsInto(page.custom.styleList, Reflect.copy(styleList));
 		}
 		
 		// Option Style from page
 		if (page.custom.styleOption != null) {
-			styleOption = Reflect.copy(styleOption);
-			DataTool.applyFieldsInto(page.custom.styleOption, styleOption);
+			styleOption = DataTool.applyFieldsInto(page.custom.styleOption, Reflect.copy(styleOption));
 		}else {
-			if (styleOption == null) 
-				styleOption = Styles.default_OptionStyle;
+			if (styleOption == null) styleOption = Styles.default_OptionStyle;
 		}
 		// Base Style from page
 		if (page.custom.styleBase != null) {
-			styleBase = Reflect.copy(styleBase);
-			DataTool.applyFieldsInto(page.custom.styleBase, styleBase);
+			styleBase = DataTool.applyFieldsInto(page.custom.styleBase, Reflect.copy(styleBase));
 		}
 		
 		// If creating a listMenu outside of the FlxMenu:
 		if (styleBase == null) {
-			styleBase = Styles.newStyle_Base();
+			styleBase = Styles.newStyle_Base(); // NOTE: I might not need this, since it's being checked again later?
 		}
 		
 		// -- HACK FIX --
@@ -73,7 +70,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		
 		super.setDataSource(page.collection);
 		
-		// -- Add a cursor --
+		// -- Add a cursor, it's mandatory as of yet.
 		if (!hasCursor) 
 		{
 			var cur:FlxSprite;
@@ -135,9 +132,12 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 
 	
-	// --
-	// Returns the index of the option with target SID,
-	// Returns -1 if nothing found
+	/**
+	 * Returns the index of an option with a target field, Returns -1 if nothing found
+	 * @param	field String Name of the field to check. (e.g. "SID", "UID .. )
+	 * @param	check The value of the field will be checked against this
+	 * @return 
+	 */
 	public function getOptionIndexWithField(field:String, check:Dynamic):Int
 	{
 		var i = 0;
@@ -146,12 +146,13 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 				return i;
 			}
 		}
-		// Not found
-		return -1;
+		return -1; // Not found
 	}//---------------------------------------------------;
 	
-	// Get the current active option data, the cursor is pointing
-	// --
+	/**
+	 * Get the current active option data the cursor is pointing
+	 * @return
+	 */
 	public function getCurrentOptionData():OptionData
 	{
 		if (_index_data < 0) return null;
@@ -161,7 +162,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	
 	// --
 	// Vertical List NAVS don't have selectable elements.
-	// This is only for mouse rolover checks
+	// This is only for mouse rollover checks
 	override function requestRollOver(newSlot:Int) 
 	{
 		if (elementSlots[newSlot].opt.selectable)
