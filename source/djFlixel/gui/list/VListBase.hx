@@ -128,15 +128,26 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	// Store the starting Y position of each slot, used later in the animation
 	var elementYPositions:Array<Int>;
 	
+	// -- Scrolling Indicators when there are more elements above or below.
+	// -- Can be overriden later
+	var moreArrow:Dynamic = {
+		inited:false,
+		padding:4,
+		paddingDown:0,	// Extra padding applied on the bottom arrow
+		iconSize:0,		// Icon size to get from the ICON lib (0-2)
+		color:null,		// If set it will tint it to this color // Copied from optionstyle.defaultColor
+		shadowColor:0xFF222222 // Copied from optionstyle.borderColor
+	};
 	
-	// -- Scrolling Indicators
-	var scrollInd:Array<BlinkSprite>; //Index0 is up, Index1 is down
+	var arrUp:BlinkSprite;
+	var arrDown:BlinkSprite;
 	
 	
-	// -- HACKS --------------------------------------
+	#if debug
+		// -- Draws a rectangle with the menu dimensions behind the menu
+		public static var flag_draw_bg_area:Bool = true;
+	#end
 	
-	// Useful when the optionelement heights is not the same as the display size
-	public var hack_bottom_scroll_indicator_nudge:Int = 0;
 	
 	// ===================================================;
 	// ===================================================;
@@ -177,27 +188,41 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/**
-	 * call this after any scroll change
+	 * Call this after any scroll change. Creates and updates the more arrows
 	 */
 	function updateScrollIndicator()
 	{
-		if (scrollInd == null) {
+		if (moreArrow.inited == false) {
 			if (width == 0 || height == 0) {
-				trace("Error: Must have width and height set");
+				trace("Error: Needs width and height to be set.");
 				return;
 			}
-			scrollInd = [];	
-			for (i in 0...2) {
-				scrollInd[i] = new BlinkSprite(0, 0, Gui.DEF_GUI_ICONS, 16, 14 + i);
-				scrollInd[i].scrollFactor.set(0, 0);
-				add(scrollInd[i]);
+			
+			// Create the arrows
+			arrUp = new BlinkSprite();
+			arrDown = new BlinkSprite();
+			arrUp.loadGraphic(Gui.getIcon("ar_up", moreArrow.iconSize, moreArrow.shadowColor, 0, moreArrow.iconSize + 1));
+			arrDown.loadGraphic(Gui.getIcon("ar_down", moreArrow.iconSize, moreArrow.shadowColor, 0, moreArrow.iconSize + 1));
+			arrUp.offset.set(5, 2);
+			arrDown.offset.set(5, 2);
+			arrUp.scrollFactor.set(0, 0);
+			arrDown.scrollFactor.set(0, 0);
+			
+			if (moreArrow.color != null) {
+				arrUp.color = moreArrow.color;
+				arrDown.color = moreArrow.color;
 			}
-			scrollInd[0].setPosition(this.x + (this.width / 2) - 8, this.y - 8);
-			scrollInd[1].setPosition(this.x + (this.width / 2) - 8, this.y + this.height + 2 + hack_bottom_scroll_indicator_nudge);
+			
+			arrUp.setPosition(this.x + (this.width / 2), this.y - moreArrow.padding);
+			arrDown.setPosition(arrUp.x, this.y + this.height + moreArrow.padding + moreArrow.paddingDown);
+			add(arrUp);
+			add(arrDown);
+			moreArrow.inited = true;
 		} // --
 		
-		scrollInd[0].set(hasMoreAbove());
-		scrollInd[1].set(hasMoreBelow());
+		arrUp.set(hasMoreAbove());
+		arrDown.set(hasMoreBelow());
+		arrUp.sync(); arrDown.sync();
 	}//---------------------------------------------------;
 	
 	
@@ -251,6 +276,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 			_scrollOffset = -1;
 			setViewIndex(0);
 		}
+		
 	}//---------------------------------------------------;
 	
 	
@@ -535,8 +561,8 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	public function setViewIndex(ind:Int = 0)
 	{
 		if (isScrolling) {
-			trace('Warning: Setting new scrollview while animating could cause visual glitches. Clearing Tweens.');
-			clearTweens();
+			trace('Warning: Setting new scrollview will cause trouble, returning.');
+			return;
 		}	
 		
 		if (ind == _scrollOffset) {

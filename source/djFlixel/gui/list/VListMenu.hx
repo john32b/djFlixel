@@ -64,9 +64,10 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 			styleBase = Styles.newStyle_Base(); // NOTE: I might not need this, since it's being checked again later?
 		}
 		
-		// -- HACK FIX --
 		// Put push the bottom scroll indicator a little further
-		hack_bottom_scroll_indicator_nudge = Std.int(2 * (styleOption.size / 8));
+		moreArrow.paddingDown = Std.int(2 * (styleOption.size / 8));
+		moreArrow.shadowColor = styleOption.borderColor;
+		moreArrow.color = styleOption.color_default;
 		
 		super.setDataSource(page.collection);
 		

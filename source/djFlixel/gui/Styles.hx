@@ -93,7 +93,7 @@ import flixel.util.FlxColor;
 		@:optional 
 		var borderColor:Int;		// If set, then it will apply a border of this color
 		@:optional
-		var borderSize:Int;			// The depth of the shadow/border in pixels. 0/null for autocalculate
+		var borderSize:Int;			// The depth of the shadow/border in pixels. 0/null to autocalculate
 		@:optional
 		var borderIcon:Int;			// If set the icons like checkboxes and arrows, will generate this shadow
 		// --

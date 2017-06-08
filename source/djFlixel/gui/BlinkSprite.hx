@@ -3,38 +3,34 @@ package djFlixel.gui;
 import flixel.FlxSprite;
 
 
-
 /**
- * A Sprite that blinks forever,
+ * A Sprite that blinks forever
  * Used in GUI elements
  */
 class BlinkSprite extends FlxSprite
 {
-	
+	// Blink every X seconds
 	public var blinkRate:Float = 0.25;
 	
-	// I want a synced timer
+	// Keep the time
 	var timer:Float = 0;
 	
+	// If a sprite has linked sprites, they will blink in sync with this one
+	var linked:Array<FlxSprite>;
+	
+	//====================================================;
+	// -- No constructor --
+	// -- Just call .loadGraphic() yourself, it's more versatile this way
+	//====================================================;
+	
 	/**
-	 * If size_ is set then it will assume that the image is a spritesheet,
-	 * @param	X
-	 * @param	Y
-	 * @param	image_ Path of the image
-	 * @param	size_ Set this to force a sprite sheet. BOX sized for now
-	 * @param	frame_ Only set if spritesheet
+	 * Link a blinkSprite to this one.
+	 * @param	s A child/linked sprite that will copy the blink from this one
 	 */
-	public function new(?X:Float = 0, ?Y:Float = 0, image_:String, size_:Int=0, frame_:Int = 0) 
+	public function addLinked(s:FlxSprite)
 	{
-		super(X, Y);
-		if (size_ > 0)
-		{
-			loadGraphic(image_, true, size_, size_);
-			animation.frameIndex = frame_;
-		}else {
-			loadGraphic(image_);
-		}
-		
+		if (linked == null) linked = []; 
+		linked.push(s);
 	}//---------------------------------------------------;
 	
 	override public function update(elapsed:Float):Void 
@@ -44,14 +40,29 @@ class BlinkSprite extends FlxSprite
 		if (timer > blinkRate) {
 			timer = 0;
 			visible = !visible;
+			if (linked != null) for (i in linked) i.visible = this.visible;
 		}
 	}//---------------------------------------------------;
 	
-	public function set(bool:Bool)
+	/**
+	 * Resets the timer, useful when you want to sync the blink rate of multiple blinksprites,
+	 * call sync() on all of them
+	 */
+	public function sync()
 	{
-		if (active == bool) return;
-		active = bool;
-		visible = bool;
+		timer = 0;
 	}//---------------------------------------------------;
 	
-}
+	/**
+	 * Enable or Disable the blinking
+	 * @param	bool If False it will automatically hide it
+	 */
+	public function set(state:Bool)
+	{
+		if (active == state) return;
+		active = state;
+		visible = state;
+		if (linked != null) for (i in linked) {i.visible = visible; }	
+	}//---------------------------------------------------;
+
+}// --

@@ -114,6 +114,11 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// Takes cursor padding into consideration.
 	override public function setViewIndex(R:Int = 0) 
 	{
+		if (isScrolling) {
+			trace('Warning: Setting new scrollview will cause trouble, returning.');
+			return;
+		}	
+		
 		// # Safeguard #
 		// - Nothing is selected, Check for just in case
 		if (_data_length == 0) {
@@ -231,7 +236,6 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 				_camCheckOffset = new SimpleCoords();
 				_camCheckOffset.x = -Std.int( (camera.x / camera.zoom) );
 				_camCheckOffset.y = -Std.int( (camera.y / camera.zoom) );
-				// trace("Camera CheckOffset = ", _camCheckOffset);
 			}
 		}
 	}//---------------------------------------------------;

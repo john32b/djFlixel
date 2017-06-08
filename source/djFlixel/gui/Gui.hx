@@ -180,7 +180,7 @@ class Gui
 	
 	/**
 	 * Returns a new bitmap with an icon from the default gui lib
-	 * @param	type check, ar_left, ar_right, ar_top, ar_bottom, dot, plus
+	 * @param	type check, ar_left, ar_right, ar_up, ar_down, dot, plus
 	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
 	 * @return Note Bitmap returned is of size 16x16
 	 */
@@ -215,13 +215,12 @@ class Gui
 			case "plus": 19;
 			default: 19;
 		};		
-		
 		return GfxTool.getBitmapPortion(DEF_GUI_ICONS, frame * 16, 0, 16, 16);
 	}//---------------------------------------------------;
 	
 	/**
 	 * Get a library icon with a border color applied to it
-	 * @param	type check , ar_left, ar_right, ar_top, ar_bottom, dot, plus
+	 * @param	type check , ar_left, ar_right, ar_up, ar_down, dot, plus
 	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
 	 * @param	shadowCol If set, will apply this shadow color at a default 1 pixel offset at bottom right
 	 * @param	offX Shadow offset X
@@ -231,7 +230,7 @@ class Gui
 	public static function getIcon(type:String, size:Int = 0, ?shadowCol:FlxColor, offX:Int = 2, offY:Int = 1):BitmapData
 	{
 		if (icons == null) icons = new Map();
-		var uid = 'type$size$shadowCol$offX$offY';
+		var uid = '$type$size$shadowCol$offX$offY';
 		var b:BitmapData;
 		if (icons.exists(uid)) {
 			b = icons.get(uid);

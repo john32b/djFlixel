@@ -204,10 +204,10 @@ class FlxMenu extends FlxGroup
 
 	/**
 	 * Apply a custom style to a page, nodes will overwrite the default style
-	 * TODO: Move this function inside the PageData class
 	 * @param	node An object containing {.list .base .option} styles
 	 * @param	page The page to apply the style to
 	 */
+	@:deprecated("This function is useless, Just set the overrides directly in the page.custom object")
 	public function applyPageStyle(styleNode:Dynamic, page:PageData)
 	{
 		if (styleNode.option != null) {
