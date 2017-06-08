@@ -11,10 +11,7 @@ import flixel.util.FlxTimer;
 import openfl.display.BitmapData;
 
 
-// Graphic for the arrows
-// @:bitmap("assets/hud_icons.png")
-// private class GfxHudIcons extends BitmapData { }
-
+/// THIS NEEDS UPDATING -- DO NOT USE --
 
 /**
  * Display sprites in pages,

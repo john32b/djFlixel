@@ -3,9 +3,13 @@ DJFLIXEL CHANGE LOG
 ====================
 Newest at top
 
-
-	+ MenuOptionToggle checkbox, customizable graphic icon and some dynamic resizing on the default icons
+	! BUGFIX, Styles.hx, styled text will now autocalculate the shadow depth in relation to fontsize, previously was always 1.
+	+ OptionStyle, customizable borderIcon Color and borderSize,
+	+ GfxTools.stitchBitmaps(..) will take a series of bitmaps and put them together in a strip
+	+ GfxTools.applyShadow(..) will take a bitmap and apply a custom shadow to it
+	+ Gui.getIcon(..) will get some standard icons like checkboxes and arrows along with customizable shadows
 	-------
+	+ MenuOptionToggle checkbox, customizable graphic icon and some dynamic resizing on the default icons
 	+ Code comments in some places
 	+ MenuOptionOneOf.hx, store the previous index
 	+ PageData will always get an autoincrement UID

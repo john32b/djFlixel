@@ -2,6 +2,8 @@ package djFlixel.gui;
 
 
 import djFlixel.SimpleVector;
+import djFlixel.gfx.GfxTool;
+import flash.display.BitmapData;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -165,7 +167,93 @@ class Gui
 		return cast(FlxG.state.add(t));
 	}//---------------------------------------------------;
 	
+	//====================================================;
+	// ICONS
+	//====================================================;
+	// Provide some dynamic icon generation
+	// + Customizable border color
+	// + Customizable size on some
+	// + Pooling with unique IDs
 	
+	// - Store the generated icons
+	static var icons:Map<String,BitmapData>;
+	
+	/**
+	 * Returns a new bitmap with an icon from the default gui lib
+	 * @param	type check, ar_left, ar_right, ar_top, ar_bottom, dot, plus
+	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
+	 * @return Note Bitmap returned is of size 16x16
+	 */
+	static function getLibIcon(type:String, size:Int = 0):BitmapData
+	{
+		var frame:Int;
+		
+		// Checkbox is the only icon that will return a strip of 2 consecutive frames, open/close
+		if (type == "check")
+		{
+			if (size == 0) frame = 12; else
+			if (size == 1) frame = 14; else frame = 16;
+			return GfxTool.getBitmapPortion(DEF_GUI_ICONS, frame * 16, 0, 32, 16);
+		}
+		
+		// Arrows and other icons are singles
+		frame = switch(type)
+		{
+			case "ar_left": 
+				if (size == 0) 0; else
+				if (size == 1) 2; else 4;
+			case "ar_right":
+				if (size == 0) 1; else
+				if (size == 1) 3; else 5;
+			case "ar_up":
+				if (size == 0) 6; else
+				if (size == 1) 8; else 10;
+			case "ar_down":
+				if (size == 0) 7; else
+				if (size == 1) 9; else 11;
+			case "dot":  18;
+			case "plus": 19;
+			default: 19;
+		};		
+		
+		return GfxTool.getBitmapPortion(DEF_GUI_ICONS, frame * 16, 0, 16, 16);
+	}//---------------------------------------------------;
+	
+	/**
+	 * Get a library icon with a border color applied to it
+	 * @param	type check , ar_left, ar_right, ar_top, ar_bottom, dot, plus
+	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
+	 * @param	shadowCol If set, will apply this shadow color at a default 1 pixel offset at bottom right
+	 * @param	offX Shadow offset X
+	 * @param	offY Shadow offset Y
+	 * @return
+	 */
+	public static function getIcon(type:String, size:Int = 0, ?shadowCol:FlxColor, offX:Int = 2, offY:Int = 1):BitmapData
+	{
+		if (icons == null) icons = new Map();
+		var uid = 'type$size$shadowCol$offX$offY';
+		var b:BitmapData;
+		if (icons.exists(uid)) {
+			b = icons.get(uid);
+		}else{
+			b = getLibIcon(type, size);
+			if (shadowCol != null) b = GfxTool.applyShadow(b, shadowCol, offX, offY);
+			icons.set(uid, b);
+		}
+		return b.clone(); 
+		// Important to return a clone, because if it's a pointer it could be destroyed when a sprite is destroyed
+	}//---------------------------------------------------;
+	
+	
+	// --
+	public static function destroy()
+	{
+		for (i in icons){
+			i.dispose();
+		}
+		icons = null;
+	}//---------------------------------------------------;
+		
 	
 	//====================================================;
 	// Debugging

@@ -100,7 +100,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	
 	
 
-	// Update data fields of an optionm, both DATA + VISUAL,
+	// Update data fields of an option, both DATA + VISUAL,
 	// Will search in the pool as well.
 	public function option_updateData(sid:String, params:Dynamic)
 	{

@@ -5,6 +5,7 @@ import djFlixel.gfx.Palette_DB32;
 import djFlixel.gui.Styles.OptionStyle;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.OptionData;
+import flash.display.BitmapData;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
@@ -16,50 +17,61 @@ class MenuOptionToggle extends MenuOptionBase
 	// Checkbox frame helper
 	var frameStart:Int;
 	
-	//---------------------------------------------------;
-	public function new(_style:OptionStyle)
-	{
-		super(_style);
-		
-		if (style.icons == null || style.icons.ind_checkbox == null)
-		{
-			// Get a checkbox from the default GUI icons
-			box = GfxTool.getSpriteFrame(Gui.DEF_GUI_ICONS, 0, 16, 16);
-			
-			if (style.size <= 12) {
-				frameStart = 6; // Small
-				box.setSize(8, 8);
-				box.offset.set( -1, -1); // It looks better 1 pixel further down
-			}else if (style.size <= 16) {
-				frameStart = 8; // Larger
-				box.setSize(12, 12);
-			}else{
-				// NOTE : If you are using AntiAliasing, the box will appear overly blurred
-				// Temp Solution.
-				frameStart = 8;
-				box.scale.set((style.size / 12), (style.size / 12));
-				box.updateHitbox();
-				box.setSize(style.size, style.size);
-			}
-			
-		}else
-		{
-			box = GfxTool.getSpriteFrame(style.icons.tileSheet, 0, style.icons.tileSize, style.icons.tileSize);
-			frameStart = style.icons.ind_checkbox;
-		}
-		
-		add(box);	
-	}//---------------------------------------------------;
-	
+	// -- No need for constuctor --
 	
 	// --
 	// Position the checkbox.
 	override function initElements() 
 	{
 		super.initElements();
-				
+		
+		// -- Reset the box, since this could be a recycled object
+		if (box != null) {
+			remove(box);
+			box.destroy();
+		}
+		
+		if (style.icons == null || style.icons.ind_checkbox == null)
+		{
+			frameStart = 0;
+			
+			// shortcut this call
+			function ld(ss){
+				box = new FlxSprite();
+				box.loadGraphic(Gui.getIcon("check", ss , style.borderIcon, Std.int(label.borderSize), Std.int(label.borderSize)), true, 16, 16);
+			};
+			
+			// I checked those hardcoded size values against the default font, and they look ok
+			// Should work for other fonts just fine
+			if (style.size < 12) {
+				ld(0);
+				box.setSize(7, 7);
+			}else if (style.size < 17) {
+				ld(1);
+				box.setSize(10, 10);
+			}else if (style.size < 26) {
+				ld(2);
+				box.setSize(14, 14);
+			}else { 
+				// Anything bigger, just in case
+				// NOTE : If you are using AntiAliasing, the box will be overly blurred
+				ld(2);
+				box.scale.set((style.size / 15), (style.size / 15));
+				box.updateHitbox();
+				box.setSize(style.size, style.size);
+			}
+			
+		}else
+		{
+			// :: Use a custom checkbox image
+			box = GfxTool.getSpriteFrame(style.icons.tileSheet, 0, style.icons.tileSize, style.icons.tileSize);
+			// TODO: Custom size in case the checkbox is smaller than the image?
+			frameStart = style.icons.ind_checkbox;
+		}
+		
 		box.y = y + (label.height / 2) - (box.height / 2);
 		box.x = x + label.fieldWidth + PADDING_FROM_LABEL;
+		add(box);
 		
 		updateOptionData();
 		
@@ -79,11 +91,9 @@ class MenuOptionToggle extends MenuOptionBase
 	// --
 	function updateOptionData()
 	{
-		if (opt.data.current)
-		{
+		if (opt.data.current) {
 			box.animation.frameIndex = frameStart + 1;
-		}else
-		{
+		}else {
 			box.animation.frameIndex = frameStart;
 		}
 	}//---------------------------------------------------;

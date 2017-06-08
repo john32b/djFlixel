@@ -49,7 +49,6 @@ import flixel.util.FlxColor;
 		
 		// Page in and out transition type:
 		// "sequential", "parallel", "none"
-		// sequential, parallel BUG when hiding cursor
 		var anim_style:String;
 		
 		// Easy type of the elements:
@@ -93,9 +92,13 @@ import flixel.util.FlxColor;
 		var color_disabled_f:Int;	// Focused color of disabled element
 		@:optional 
 		var borderColor:Int;		// If set, then it will apply a border of this color
+		@:optional
+		var borderSize:Int;			// The depth of the shadow/border in pixels. 0/null for autocalculate
+		@:optional
+		var borderIcon:Int;			// If set the icons like checkboxes and arrows, will generate this shadow
 		// --
 		@:optional
-		var icons:Dynamic;			// Object holding icon parameters : {
+		var icons:Dynamic;			// Object holding custom icon parameters : {
 									//	tileSheet:String ; assetname of the tileset of the icons
 									//	tileSize:Int	 ; size of the tiles must be square
 									//	ind_checkbox:Int ; index of the checkbox, 2 tiles, open,close
@@ -110,8 +113,7 @@ import flixel.util.FlxColor;
 //====================================================;
 
 	typedef TextStyle = {
-		// Custom embedded font, null for flixel default
-		var size:Int;
+		var size:Int;		// Custom embedded font, null for flixel default
 		var color:Int;
 		@:optional var font:String;
 		@:optional var borderColor:Int;
@@ -162,7 +164,8 @@ class Styles
 		color_accent:Palette_DB32.COL_06,
 		color_disabled:Palette_DB32.COL_26,
 		color_disabled_f:Palette_DB32.COL_24,
-		borderColor:Palette_DB32.COL_02
+		borderColor:Palette_DB32.COL_02,
+		borderIcon:Palette_DB32.COL_25
 	}; // --
 	
 	
@@ -219,12 +222,12 @@ class Styles
 	/**
 	 * Quickly apply border to an FlxText object
 	 */
-	public static function quickTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR):FlxText
+	public static function quickTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR, size:Int = 0 ):FlxText
 	{
 		t.borderStyle = FlxTextBorderStyle.SHADOW;
-		t.borderSize = Math.ceil(t.size / 8);
+		t.borderSize = (size == 0)?Math.ceil(t.size / 8):size;
 		t.borderColor = c;
-		t.borderQuality = 2;
+		t.borderQuality = 1;
 		return t; // for chaining
 	}//---------------------------------------------------;
 	
@@ -243,8 +246,8 @@ class Styles
 			color:DEF_TEXT_COLOR
 		};
 		if (t.font != null) t.font = style.font;
+		t.size = style.size; // Size first, don't move this.
 		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
-		t.size = style.size;
 		t.color = style.color;
 		return t; // for chaining
 	}//---------------------------------------------------;
@@ -256,8 +259,8 @@ class Styles
 	public static function styleOptionText(t:FlxText, style:OptionStyle)
 	{
 		if (style.font != null) t.font = style.font;
+		t.size = style.size; // Size first, don't move this.
 		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
-		t.size = style.size;
 		t.alignment = style.alignment;
 		t.wordWrap = false;
 	}//---------------------------------------------------;

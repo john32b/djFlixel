@@ -1,6 +1,8 @@
 package djFlixel.gfx;
 
 import flash.display.Bitmap;
+import flash.geom.ColorTransform;
+import flash.geom.Matrix;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
@@ -60,6 +62,30 @@ class GfxTool
 		return bit;
 	}//---------------------------------------------------;
 	
+	
+	/**
+	 * Adds a simple shadow effect to target Bitmap and returns new bitmap
+	 * @param	im The bitmap to apply shadow to, needs to be transparent!
+	 * @param	color The color of the shadow
+	 * @param	offx offset X of the shadow 
+	 * @param	offy offset Y of the shadow
+	 * @return
+	 */
+	public static function applyShadow(im:BitmapData, color:Int = 0xFF111111, offx:Int = 1, offy:Int = 1):BitmapData
+	{
+		var _tr = new Rectangle(0, 0, im.width, im.height);
+		var _tc = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+		var _ma = new Matrix();
+		var _tp = new Point();
+		var n = new BitmapData(im.width, im.height, true, 0x00000000);
+
+		_ma.tx = offx; _ma.ty = offy;  _tc.color = color;
+		n.draw(im, _ma, _tc); // The shadow
+		_ma.identity();
+		n.draw(im, _ma); // Overlay, normal
+		
+		return n;
+	}//---------------------------------------------------;
 		
 	/**
 	 * Returns a rectangular portion of a bitmap
@@ -112,7 +138,7 @@ class GfxTool
 	 * @param	x
 	 * @param	y
 	 */
-	public static function drawBitmapOn(bit:BitmapData, dest:BitmapData, x:Int, y:Int)
+	public static function drawBitmapOn(bit:BitmapData, dest:BitmapData, x:Int = 0, y:Int = 0)
 	{
 		var rect:Rectangle = new Rectangle(0, 0, bit.width, bit.height );
 		var point:Point = new Point(x, y);
@@ -120,6 +146,22 @@ class GfxTool
 	}//---------------------------------------------------;
 	
 	
+	/**
+	 * Takes a bunch of bitmaps and stiches them to a long stripe
+	 * @param	ar Array of bitmaps NOTE: They must be of the same size!
+	 * @return
+	 */
+	public static function stitchBitmaps(ar:Array<BitmapData>):BitmapData
+	{
+		var final:BitmapData = new BitmapData((ar.length * ar[0].width), ar[0].height, true, 0x00000000);
+		var rect = new Rectangle(0, 0, ar[0].width, ar[0].height);
+		var p = new Point(0, 0);
+		for (i in 0...ar.length) {
+			final.copyPixels(ar[i], rect, p);
+			p.x += ar[i].width;
+		}
+		return final;
+	}//---------------------------------------------------;
 		
 	/**
 	 * Return an animated flxSprite loaded with the "img" tilesheet
