@@ -1,8 +1,8 @@
 package djFlixel.gui.list;
 
+import djFlixel.gui.list.IListItem;
 import djFlixel.gui.BlinkSprite;
 import djFlixel.gui.Styles;
-import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
@@ -10,8 +10,6 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
 import flixel.util.FlxTimer;
-import djFlixel.gui.listoption.IListOption;
-import haxe.Constraints.Function;
 	
 
 /**
@@ -22,7 +20,7 @@ import haxe.Constraints.Function;
  * # Purpose is to be extended into a more specific class
  *   or you can use it as a bare element scroller
  * 
- * # Children must have a standard Height and implement <IListOption>
+ * # Children must have a standard Height and implement <IListItem>
  * 
  * T: Type Element of Child
  * K: Type of Child Data
@@ -35,7 +33,7 @@ import haxe.Constraints.Function;
  */
 
 
-class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
+class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 {	
 	
 	// -- Some Defaults ::
@@ -107,7 +105,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	
 	// -- Data ::
 	// --
-	var _data:Array<K>;		// This holds the data in an array (e.g. OptionData)
+	var _data:Array<K>;		// This holds the data in an array (e.g. MItemData)
 	var _data_length:Int;	// Total data elements
 	var _scrollOffset:Int;	// What data Index is on the top slot
 	var _slotsTotal:Int;	// Or Total slots that fit on the menu
@@ -135,8 +133,8 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		padding:4,
 		paddingDown:0,	// Extra padding applied on the bottom arrow
 		iconSize:0,		// Icon size to get from the ICON lib (0-2)
-		color:null,		// If set it will tint it to this color // Copied from optionstyle.defaultColor
-		shadowColor:0xFF222222 // Copied from optionstyle.borderColor
+		color:null,		// If set it will tint it to this color // Copied from MItemStyle.defaultColor
+		shadowColor:0xFF222222 // Copied from MItemStyle.borderColor
 	};
 	
 	var arrUp:BlinkSprite;
@@ -254,7 +252,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 		// Also :: Set the starting positions of all the slots ::
 		if (elementHeight < 0) {
 			r_el = factory_getElement(0);
-			elementHeight = r_el.getOptionHeight() + styleBase.element_padding;
+			elementHeight = r_el.getItemHeight() + styleBase.element_padding;
 			r_el.destroy();
 			height = (_slotsTotal * elementHeight) - styleBase.element_padding;
 			
@@ -660,7 +658,7 @@ class VListBase<T:(IListOption<K>,FlxSprite),K> extends FlxGroup
 	
 	
    /**
-	* Get a Recycled or New Option Element
+	* Get a Recycled or New Item Element
 	* put it into a screen slot, and set it with data
 	* # Adds it to the stage
 	* @param	ySlot 		, 0 is the first slot. -1 is valid

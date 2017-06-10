@@ -1,6 +1,6 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.menu;
 
-class MenuOptionSlider extends MenuOptionOneof
+class MItemSlider extends MItemOneof
 {
 	/* 
 	 * NOTE:
@@ -16,14 +16,14 @@ class MenuOptionSlider extends MenuOptionOneof
 			case "left":
 				if (Std.int(opt.data.current) > Std.int(opt.data.pool[0])) {
 					opt.data.current--;
-					updateOptionData();
-					cb("optChange");
+					updateItemData();
+					cb("change");
 				}
 			case "right":
 				if (Std.int(opt.data.current) < Std.int(opt.data.pool[1])) {
 					opt.data.current++;
-					updateOptionData();
-					cb("optChange");
+					updateItemData();
+					cb("change");
 				}
 				
 			case "click":
@@ -31,8 +31,9 @@ class MenuOptionSlider extends MenuOptionOneof
 				if (r < 0) handleInput("left"); else if (r > 0) handleInput("right");
 		}
 	}//---------------------------------------------------;
+
 	// --
-	override function updateOptionData() 
+	override function updateItemData() 
 	{
 		arrowStat[0] = (opt.data.current > Std.int(opt.data.pool[0]));
 		arrowStat[1] = (opt.data.current < Std.int(opt.data.pool[1]));

@@ -1,4 +1,5 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.list;
+import djFlixel.gui.list.IListItem;
 import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 
 /**
@@ -7,7 +8,7 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
  * ...
  */
 @:generic
-class ListOption<T> extends FlxTypedSpriteGroup implements IListOption<T>
+class ListItem<T> extends FlxTypedSpriteGroup implements IListItem<T>
 {
 	
 	// Store the focus state
@@ -32,7 +33,7 @@ class ListOption<T> extends FlxTypedSpriteGroup implements IListOption<T>
 	public function unfocus():Void
 	{
 	}//---------------------------------------------------;
-	public function getOptionHeight():Int
+	public function getItemHeight():Int
 	{
 		return 0;
 	}//---------------------------------------------------;

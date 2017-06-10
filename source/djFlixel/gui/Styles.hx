@@ -5,17 +5,12 @@ import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
 
-/**
- * Styling functions for FlxTexts and FlxMenu MenuOptions
- * -------------------------------------------------------
- */
-
-
 //====================================================;
 // Parameters for a <VListBase>
 //====================================================;
 
 	typedef VBaseStyle = {
+		
 		// Time it takes to scroll the elements in and out of the list.
 		var element_scroll_time:Float;
 		
@@ -55,7 +50,7 @@ import flixel.util.FlxColor;
 		// "bounce", "elastic", "linear", "back", "circ"
 		var anim_tween_ease:String;
 		
-	}// :: -- ::
+	}
 	 
 
 //====================================================;
@@ -73,7 +68,7 @@ import flixel.util.FlxColor;
 		 var cursor_image:String;
 		 // Loop at edges
 		 var loop_edge:Bool;
-	 }// :: -- ::
+	 }
  
 	 
 	 
@@ -81,7 +76,7 @@ import flixel.util.FlxColor;
 // Parameters for a <FlxText> that goes inside Lists
 //====================================================;
  
-	typedef OptionStyle = {		
+	typedef MItemStyle = {		
 		var font:String; 			// Custom embedded font, null for flixel default
 		var size:Int;     			// Font Size
 		var alignment:String;		// left | center | right | justify
@@ -104,12 +99,12 @@ import flixel.util.FlxColor;
 									//	ind_checkbox:Int ; index of the checkbox, 2 tiles, open,close
 									//  ind_arrows:Int	 ; index of the arrows, 2 tiles, left,right
 									// };
-	}// :: 
-	 
-	
+	}
+
 	
 //====================================================;
-// Parameters for a <FlxText>
+// Parameters for a <FlxText>, 
+// can by set with applyTextStyle()
 //====================================================;
 
 	typedef TextStyle = {
@@ -117,16 +112,15 @@ import flixel.util.FlxColor;
 		var color:Int;
 		@:optional var font:String;
 		@:optional var borderColor:Int;
-	}// :: -- ::
+	}
 
-	
 //====================================================;
-// Styling helpers for gui.lists and flxTexts
+// Static class with Styling helpers 
+// for gui.lists and flxTexts
 //====================================================;
 
 class Styles
 {
-
 	// --
 	public inline static var DEF_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
 	public inline static var DEF_BORDER_COLOR:FlxColor = 0xFF111111;
@@ -155,7 +149,7 @@ class Styles
 		anim_style:"none"
 	}; // --
 	
-	public static var default_OptionStyle(default, never):OptionStyle = {
+	public static var default_MItemStyle(default, never):MItemStyle = {
 		font:null,
 		size:8,
 		alignment:"left",
@@ -185,9 +179,9 @@ class Styles
 		return applyStyleNodeTo(styleNode, Reflect.copy(default_BaseStyle));
 	}//---------------------------------------------------;
 	// --
-	public static function newStyle_Option(?styleNode:Dynamic):OptionStyle
+	public static function newStyle_MItem(?styleNode:Dynamic):MItemStyle
 	{
-		return applyStyleNodeTo(styleNode, Reflect.copy(default_OptionStyle));
+		return applyStyleNodeTo(styleNode, Reflect.copy(default_MItemStyle));
 	}//---------------------------------------------------;
 	// --
 	public static function newStyle_List(?styleNode:Dynamic):VListStyle
@@ -256,7 +250,7 @@ class Styles
 	/**
 	 * Style FlxTexts that are used in FlxMenus.
 	 */
-	public static function styleOptionText(t:FlxText, style:OptionStyle)
+	public static function styleMItemText(t:FlxText, style:MItemStyle)
 	{
 		if (style.font != null) t.font = style.font;
 		t.size = style.size; // Size first, don't move this.

@@ -1,24 +1,23 @@
 package djFlixel.gui;
 import djFlixel.SimpleCoords;
 import djFlixel.gui.Styles;
-import djFlixel.gui.Styles.OptionStyle;
+import djFlixel.gui.Styles.MItemStyle;
 import djFlixel.gui.Styles.VListStyle;
 import djFlixel.gui.list.VListMenu;
-import djFlixel.gui.listoption.MenuOptionBase;
+import djFlixel.gui.menu.MItemBase;
+import djFlixel.gui.menu.MItemData;
+import djFlixel.gui.menu.PageData;
 import djFlixel.tool.ArrayExecSync;
 import djFlixel.tool.DataTool;
-import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
-import flixel.tweens.FlxTween;
 import flixel.util.typeLimit.OneOfTwo;
 
 /**
  * FlxMenu
- * A multi-page customizable menu system that can hold various element types
- * -------
- * 
+ * A multi-page customizable menu system that can hold various item types
+ * ----------------------------------------------------------------------------
  */
 class FlxMenu extends FlxGroup
 {
@@ -80,24 +79,24 @@ class FlxMenu extends FlxGroup
 	// NULL to use the default style, Set right after creating
 	public var styleList:VListStyle;
 	
-	// Global option list style for all optionMenus, unless a page overrides this
+	// Global item list style for all item Menus, unless a page overrides this
 	// NULL to use the default style, Set right after creating
-	public var styleOption:OptionStyle;
+	public var styleMItem:MItemStyle;
 	
-	// Global option list style for all optionMenus, unless a page overrides this
+	// Global item list style for all item Menus, unless a page overrides this
 	// NULL to use the default style, Set right after creating
 	public var styleBase:VBaseStyle;
 	
-	// The Header defaults to the style as an option
-	public var styleHeader:OptionStyle;
+	// The Header defaults to the style as an item
+	public var styleHeader:MItemStyle;
 
 	// When you are going back to menus, remember the position it came from
 	public var flag_remember_cursor_position:Bool = true;
 	
-	// If true, then the start button will fire the selected option
+	// If true, then the start button will fire the selected item
 	public var flag_start_button_ok:Bool = false;
 	
-	// Allow mouse interaction with the menu options
+	// Allow mouse interaction with the menu items
 	public var flag_use_mouse:Bool = true;
 	
 	// Keep X maximum menus in the pool. !! SET THIS RIGHT AFTER NEW() !!
@@ -105,15 +104,14 @@ class FlxMenu extends FlxGroup
 	
 	//---------------------------------------------------;
 	
-	
 	// ==  User callbacks
 	// -------------------==
 	
-	// optBlur   - This option was just unfocused // Unimplemented. need to add it. VListNav
-	// optFocus  - A new option has been focused <sends option>
-	// optChange - When an option changed value, <sends option>
-	// optFire   - An option recieved an action command
-	public var callbacks_option:String->OptionData->Void;
+	// blur   - This item was just unfocused // Unimplemented. need to add it. VListNav
+	// focus  - A new item has been focused <sends item>
+	// change - When an item changed value, <sends item>
+	// fire   - An item recieved an action command
+	public var callbacks_item:String->MItemData->Void;
 	
 	// start    - Start button was pressed ( useful in pause menus, to close the menu )
 	// back  	- The menu went back a page
@@ -125,10 +123,10 @@ class FlxMenu extends FlxGroup
 	
 	// The following types are mainly for sound effect handling from the user
 	// ------
-	// tick		   - An option was focused, The cursor moved.
-	// tick_change - An option value has changed.
-	// tick_fire   - An option was selected. ( button )
-	// tick_error  - An option that cant be selected or changed
+	// tick		   - An item was focused, The cursor moved.
+	// tick_change - An item value has changed.
+	// tick_fire   - An item was selected. ( button )
+	// tick_error  - An item that cant be selected or changed
 	public var callbacks_menu:String->String->Void;
 
 	//====================================================;
@@ -148,10 +146,10 @@ class FlxMenu extends FlxGroup
 		pages = new Map();
 		
 		// Default styles, can be overriden later
-		styleOption = Styles.newStyle_Option();
+		styleMItem = Styles.newStyle_MItem();
 		styleList   = Styles.newStyle_List();
 		styleBase   = Styles.newStyle_Base();
-		styleHeader = Styles.newStyle_Option();
+		styleHeader = Styles.newStyle_MItem();
 		
 		// - Tweak the font size, User can change it later
 		styleHeader.size = 16;
@@ -176,11 +174,11 @@ class FlxMenu extends FlxGroup
 
 	/**
 	 * Apply a style to the menu
-	 * @param	node An object containing 4 optional nodes { .option .list .base .header }
+	 * @param	node An object containing 4 optional nodes { .item .list .base .header }
 	 */
 	public function applyMenuStyle(node:Dynamic)
 	{
-		Styles.applyStyleNodeTo(node.option, styleOption);
+		Styles.applyStyleNodeTo(node.item, styleMItem);
 		Styles.applyStyleNodeTo(node.list, styleList);
 		Styles.applyStyleNodeTo(node.base, styleBase);
 		Styles.applyStyleNodeTo(node.header, styleHeader);
@@ -204,15 +202,15 @@ class FlxMenu extends FlxGroup
 
 	/**
 	 * Apply a custom style to a page, nodes will overwrite the default style
-	 * @param	node An object containing {.list .base .option} styles
+	 * @param	node An object containing {.list .base .MItem} styles
 	 * @param	page The page to apply the style to
 	 */
 	@:deprecated("This function is useless, Just set the overrides directly in the page.custom object")
 	public function applyPageStyle(styleNode:Dynamic, page:PageData)
 	{
-		if (styleNode.option != null) {
-			page.custom.styleOption = Styles.newStyle_Option();
-			DataTool.applyFieldsInto(styleNode.option, page.custom.styleOption);
+		if (styleNode.MItem != null) {
+			page.custom.styleMItem = Styles.newStyle_MItem();
+			DataTool.applyFieldsInto(styleNode.MItem, page.custom.styleMItem);
 		}
 		
 		if (styleNode.list != null) {
@@ -240,7 +238,7 @@ class FlxMenu extends FlxGroup
 		styleBase = null;
 		styleHeader = null;
 		styleList = null;
-		styleOption = null;
+		styleMItem = null;
 		
 		for (e in _pool) {
 			e.destroy();
@@ -267,22 +265,22 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	// --
-	// Highlight an option of a target SID
-	public function option_highlight(sid:String)
+	// Highlight an item of a target SID
+	public function item_highlight(sid:String)
 	{
 		if (currentMenu == null) return;
-		currentMenu.option_highlight(sid);
+		currentMenu.item_highlight(sid);
 	}//---------------------------------------------------;
 	
 	/**
-	 * Update the data on an option, alters Data and updates Visual
+	 * Update the data on an item, alters Data and updates Visual
 	 * 
-	 * @param	pageSID You must provide the pageSID the option is in
-	 * @param	SID SID of the option
+	 * @param	pageSID You must provide the pageSID the item is in
+	 * @param	SID SID of the item
 	 * @param	param New Data, e.g. { label:"NewLabel", disabled:false, current: }
-	 * 			note: will work with fields inside the option.data as well
+	 * 			note: will work with fields inside the item.data as well
 	 */
-	public function option_updateData(pageSID:String, SID:String, param:Dynamic)
+	public function item_updateData(pageSID:String, SID:String, param:Dynamic)
 	{
 		var a:VListMenu = null; // pointer
 		
@@ -296,12 +294,12 @@ class FlxMenu extends FlxGroup
 		}
 		
 		if (a != null) { // If it actually found the menu somewhere
-			a.option_updateData(SID, param);
+			a.item_updateData(SID, param);
 		}else {
 			// It is not in the pool,
-			// Alter the option data
+			// Alter the item data
 			if (pages.exists(pageSID)) {
-				var o:OptionData = pages.get(pageSID).get(SID);
+				var o:MItemData = pages.get(pageSID).get(SID);
 				if (o != null) {
 					o.setNewParameters(param);
 				}else {
@@ -377,7 +375,7 @@ class FlxMenu extends FlxGroup
 		if (previousMenu != null) {
 			// Store the cursor position
 			if (flag_remember_cursor_position) {
-				previousMenu.page.custom._cursorLastUID = previousMenu.getCurrentOptionData().UID;
+				previousMenu.page.custom._cursorLastUID = previousMenu.getCurrentItemData().UID;
 			}
 			poolStore(previousMenu);
 			_mcallback("pageOff", previousMenu.page.SID);
@@ -442,7 +440,7 @@ class FlxMenu extends FlxGroup
 		
 		if (flagRememberPos && currentPage!=null)
 		{
-			var d1 = currentMenu.getCurrentOptionData();
+			var d1 = currentMenu.getCurrentItemData();
 			if (d1 != null) currentPage.custom._cursorLastUID =	d1.UID;
 		}
 		
@@ -569,7 +567,7 @@ class FlxMenu extends FlxGroup
 			m.flag_InitViewAfterDataSet = false;
 			m.flag_use_mouse = flag_use_mouse;
 			m.styleList = styleList;
-			m.styleOption = styleOption;
+			m.styleMItem = styleMItem;
 			m.styleBase = styleBase;
 			m.cameras = [camera];
 			m.setPageData(P);
@@ -584,13 +582,13 @@ class FlxMenu extends FlxGroup
 	//====================================================;
 	
 	// --
-	// This optiondata triggered a select
-	function _listCallbacks(status:String, o:OptionData)
+	// This MItemData triggered a select
+	function _listCallbacks(status:String, o:MItemData)
 	{	
 		// Before sending to the user, filter some calls
 		
 		// Check the links for internal calls
-		if (status == "optFire" && o.type == "link")
+		if (status == "fire" && o.type == "link")
 		{
 			if (o.data.fn == "page") 
 			{
@@ -612,7 +610,7 @@ class FlxMenu extends FlxGroup
 						_sub_confirmCurrentOption();
 					
 				}else {
-					_ocallback("optFire", o);
+					_ocallback("fire", o);
 				}
 				return;
 			}
@@ -651,7 +649,7 @@ class FlxMenu extends FlxGroup
 	// --
 	// Called when a link requires confirmation, it creates
 	// or retrieves the pagedata to call
-	function _sub_confirmFullPage(o:OptionData)
+	function _sub_confirmFullPage(o:MItemData)
 	{
 		var questionPageID:String = "_conf_" + o.SID;
 		if (!pages.exists(questionPageID)) {
@@ -660,7 +658,7 @@ class FlxMenu extends FlxGroup
 				p.link(o.data.conf_options[0], o.SID);
 				p.link(o.data.conf_options[1], "@back");
 				p.custom.cursorStart = 'back'; // Highlight BACK first
-				if (o.data.styleOption != null) p.custom.styleOption = o.data.styleOption;
+				if (o.data.styleMItem != null) p.custom.styleMItem = o.data.styleMItem;
 			pages.set(questionPageID, p);
 		}
 		showPage(questionPageID);
@@ -676,17 +674,17 @@ class FlxMenu extends FlxGroup
 	{
 		var r1:Int; // Temp INT holder
 		
-		// If the page needs the cursor to always point to a specific option:
+		// If the page needs the cursor to always point to a specific item:
 		// This gets priority
 		if (currentPage.custom.cursorStart != null) {
-			r1 = currentMenu.getOptionIndexWithField("SID", currentPage.custom.cursorStart);
+			r1 = currentMenu.getItemIndexWithField("SID", currentPage.custom.cursorStart);
 			_sub_SetCursToPos(r1); // will check for -1 there
 			return;
 		}
 		
 		// If the cursor needs to go back to where it was
 		if (currentPage.custom._cursorLastUID != null) {
-			r1 = currentMenu.getOptionIndexWithField("UID", currentPage.custom._cursorLastUID);
+			r1 = currentMenu.getItemIndexWithField("UID", currentPage.custom._cursorLastUID);
 			// Reset the cursorLastUID, because I used it.
 			currentPage.custom._cursorLastUID = null;
 			_sub_SetCursToPos(r1); // will check for -1 there
@@ -696,7 +694,7 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	// Quick point cursor to an option with SID
+	// Quick point cursor to an item with SID
 	// --
 	function _sub_SetCursToPos(pos:Int)
 	{
@@ -714,7 +712,7 @@ class FlxMenu extends FlxGroup
 	// --
 	function _sub_CheckAndSetHeader()
 	{
-		if (currentPage.header != null) {
+		if (currentPage.title != null) {
 			
 			// Create the header if it's not already
 			if (headerText == null)
@@ -723,7 +721,7 @@ class FlxMenu extends FlxGroup
 				headerText.x = x;
 				headerText.cameras = [camera];
 				headerText.scrollFactor.set(0, 0);
-				Styles.styleOptionText(headerText, styleHeader);
+				Styles.styleMItemText(headerText, styleHeader);
 				// Header styling is a WIP
 				headerText.color = styleHeader.color_default;
 				add(headerText);
@@ -731,7 +729,7 @@ class FlxMenu extends FlxGroup
 			
 			// Set this now because it could be autogenerated
 			// headerText.fieldWidth = currentMenu.width;	// Remove width restriction?
-			headerText.text = currentPage.header;
+			headerText.text = currentPage.title;
 			headerText.y = this.y - headerText.height;
 			headerText.visible = true;
 		}else
@@ -747,25 +745,25 @@ class FlxMenu extends FlxGroup
 	
 	
 	// --
-	// Create a popup YESNO question, getting data from the optionData
+	// Create a popup YESNO question, getting data from the MItemData
 	function _sub_confirmCurrentOption()
 	{
 		if (currentMenu == null) return;
-		var opt:OptionData = currentMenu.getCurrentOptionData();
+		var opt:MItemData = currentMenu.getCurrentItemData();
 		if (opt == null) return; // with error?
 	
 		var xpos:Int = cast currentMenu.currentElement.x + currentMenu.currentElement.width;
 		var ypos:Int = cast currentMenu.currentElement.y;
 	
 		popup_YesNo(xpos, ypos, function(b:Bool) {
-			if (b) { _ocallback("optFire", opt); } else { _mcallback("back"); }
+			if (b) { _ocallback("fire", opt); } else { _mcallback("back"); }
 		}, opt.data.conf_question, opt.data.conf_options);
 		
 	}//---------------------------------------------------;
 	
 
 	/**
-	 * Confirm action for currently selected option
+	 * Confirm action for currently selected item
 	 * 
 	 * @param	qcallback Callback to this function with a result
 	 * @param	question If set it will display this text
@@ -785,8 +783,8 @@ class FlxMenu extends FlxGroup
 			list.styleBase = Styles.newStyle_Base();
 			list.styleBase.anim_tween_ease = "elastic";
 			list.styleBase.anim_total_time = 0.2;
-			list.styleOption = Reflect.copy(styleOption);
-			list.styleOption.size = Std.int(list.styleOption.size / 2);
+			list.styleMItem = Reflect.copy(styleMItem);
+			list.styleMItem.size = Std.int(list.styleMItem.size / 2);
 			
 		var p:PageData = new PageData("question");
 			if (question != null) p.add(question, { type:"label" } );
@@ -795,15 +793,15 @@ class FlxMenu extends FlxGroup
 			
 		// --
 		list.setPageData(p);
-		list.option_highlight("no"); 
+		list.item_highlight("no"); 
 		
 		// -- Add a small bg
 		var bg:FlxSprite = new FlxSprite(X - 2, Y - 2);
 		#if neko
 			trace("Warning, Neko throws error when puting vars to makeGraphic");
-			bg.makeGraphic(100, 40, list.styleOption.borderColor);
+			bg.makeGraphic(100, 40, list.styleMItem.borderColor);
 		#else
-			bg.makeGraphic(list.width + 4, list.height + 8, list.styleOption.borderColor);
+			bg.makeGraphic(list.width + 4, list.height + 8, list.styleMItem.borderColor);
 		#end
 			bg.scrollFactor.set(0, 0);
 		add(bg);
@@ -817,9 +815,9 @@ class FlxMenu extends FlxGroup
 		}
 		
 		// callback
-		list.callbacks = function(s:String, o:OptionData) {
+		list.callbacks = function(s:String, o:MItemData) {
 			// -- check the callbacks
-			if (s == "optFire") {
+			if (s == "fire") {
 				popupCloseFunction();
 				qcallback((o.SID == "yes"));
 				return;
@@ -847,7 +845,7 @@ class FlxMenu extends FlxGroup
 	
 	//--
 	// Can return NULL
-	public function get_currentElement():MenuOptionBase
+	public function get_currentElement():MItemBase
 	{
 		if (currentMenu != null) 
 		return currentMenu.currentElement;
@@ -876,25 +874,25 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	// --
-	function _ocallback(s:String, ?o:OptionData) 
+	function _ocallback(s:String, ?o:MItemData) 
 	{
 		// new: Call the menu callback as well to handle sounds
 		switch(s) {
-			case "optFire": 
+			case "fire": 
 				_mcallback("tick_fire");
 				if (o.type == "link" && o.data.callback != null) {
 					o.data.callback();
 				}
-			case "optChange": _mcallback("tick_change");
-			case "optInvalid": _mcallback("tick_error"); return;	// do not proceed
+			case "change": _mcallback("tick_change");
+			case "invalid": _mcallback("tick_error"); return;	// do not proceed
 		}
 		
-		if (currentPage.custom.callbacks_option != null){
-			currentPage.custom.callbacks_option(s, o);
+		if (currentPage.custom.callbacks_item != null){
+			currentPage.custom.callbacks_item(s, o);
 			return;
 		}
 		
-		if (callbacks_option != null) callbacks_option(s, o);
+		if (callbacks_item != null) callbacks_item(s, o);
 		
 	}//---------------------------------------------------;
 	

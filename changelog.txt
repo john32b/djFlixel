@@ -3,10 +3,24 @@ DJFLIXEL CHANGE LOG
 ====================
 Newest at top
 
-	! VListBase. Improved More scroll indicator arrows, Parameterized color, icon, shadow
+
+
+	~ BREAKING CHANGES ~
+	{
+		Changed some namings in a way that they make more sense now:
+		+ All elements that go inside a Menu are now called "MItems" instead of "Options"  (Menu Items)
+		+ All "MenuOption.." classes are now renamed to "MItem.."
+		+ PageData and MItemData are now in djFlixel.gui.menu
+		+ IListItem is now in djFlixel.gui.list
+		+ Changes in function and variable naming in FlxMenu.hx, VListMenu.hx, Styles.hx, IListItem.hx, all MItem Types
+		+ FlxMenu.callbacks_option -> callbacks_item. Also the string events have changed as well.
+		+ "optChange" ,"optBlur" ... opt prefix removed -> "change", "blur", "fire"
+	}
+		
+	-------
+	! VListBase. Improved More scroll indicator arrows, Parameterized color, icon, shadow with
 	! BUGFIX, VListNav, can now call setViewIndex() while scrolling and it will not cause problems.
 	+ BlinkSprite. now supports linking other sprites to synchronize blink
-	-------
 	! BUGFIX, Styles.hx, styled text will now autocalculate the shadow depth in relation to fontsize, previously was always 1.
 	+ OptionStyle, customizable borderIcon Color and borderSize,
 	+ GfxTools.stitchBitmaps(..) will take a series of bitmaps and put them together in a strip

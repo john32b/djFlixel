@@ -1,31 +1,27 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.menu;
 
-import djFlixel.gui.Styles.OptionStyle;
-import djFlixel.gui.list.VListMenu;
+import djFlixel.gui.Styles.MItemStyle;
 import flixel.FlxG;
 import flixel.text.FlxText;
 
-class MenuOptionLink extends MenuOptionBase
+class MItemLink extends MItemBase
 {
-	
-	// Optional decorative symbol
+	// Optional decorative symbol for use when the link goes to another page
 	// Animated dots . ..
 	var deco:FlxText;
-	// 
 	var hasDeco:Bool;
 	// -----
 	var dTimer:Float; // timer
 	var dCounter:Int; // place in the array
 	var dArr:Array<String> = [" ", ".", ".."]; // loop through these
-	
 	//====================================================;
 	// --
-	public function new(_style:OptionStyle)
+	public function new(_style:MItemStyle)
 	{
 		super(_style);
 		
 		deco = new FlxText(0, 0, 0);
-		Styles.styleOptionText(deco, style);
+		Styles.styleMItemText(deco, style);
 		deco.color = style.color_default;
 		add(deco);
 		
@@ -53,7 +49,7 @@ class MenuOptionLink extends MenuOptionBase
 	{
 		if (inputName == "fire" || inputName == "click")
 		{
-			cb("optFire");
+			cb("fire");
 		}
 	}//---------------------------------------------------;
 	// --

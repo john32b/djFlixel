@@ -1,12 +1,11 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.menu;
 
-import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.Styles;
 import flixel.FlxG;
 import flixel.text.FlxText;
 
 
-class MenuOptionOneof extends MenuOptionBase
+class MItemOneof extends MItemBase
 {
 	// Displayed text
 	var label2:FlxText;
@@ -21,24 +20,24 @@ class MenuOptionOneof extends MenuOptionBase
 	var arrow_timer:Float;	// Keep track of the update time
 	var arrows_flag:Bool;	// Are the arrows currently showing? Useful for the update function
 	
-	// Helper, I need to know where does the part 2 starts
+	// Helper, I need to know where does the part 2 start
 	var part2_start:Float = 0;
 	
 	//---------------------------------------------------;
-	public function new(_style:OptionStyle)
+	public function new(_style:MItemStyle)
 	{
 		super(_style);
 		
 		label2 = new FlxText();
-		Styles.styleOptionText(label2, style);
+		Styles.styleMItemText(label2, style);
 		add(label2);
 		
 		// --
 		arrows = [];
 		arrows[0] = new FlxText(0, 0, 0, "<");
 		arrows[1] = new FlxText(0, 0, 0, ">");
-		Styles.styleOptionText(arrows[0], style);
-		Styles.styleOptionText(arrows[1], style);
+		Styles.styleMItemText(arrows[0], style);
+		Styles.styleMItemText(arrows[1], style);
 		arrows[0].color = style.color_default;
 		arrows[1].color = style.color_default;
 		arrows[0].visible = false;
@@ -82,7 +81,7 @@ class MenuOptionOneof extends MenuOptionBase
 		label2.y = label.y;
 		label2.x = label.x + part2_start + arrows[0].width;
 		
-		updateOptionData();
+		updateItemData();
 		
 	}//---------------------------------------------------;
 	// --
@@ -124,16 +123,16 @@ class MenuOptionOneof extends MenuOptionBase
 				if (opt.data.current < opt.data.pool.length - 1) {
 					opt.data.previous = opt.data.current;
 					opt.data.current ++;
-					updateOptionData();
-					cb("optChange");
+					updateItemData();
+					cb("change");
 				};
 				
 			case "left":
 				if (opt.data.current > 0) {
 					opt.data.previous = opt.data.current;
 					opt.data.current--;
-					updateOptionData();
-					cb("optChange");
+					updateItemData();
+					cb("change");
 				}
 				
 			case "click":
@@ -143,7 +142,7 @@ class MenuOptionOneof extends MenuOptionBase
 	}//---------------------------------------------------;
 	// --
 	// Called once on data set, and then everytime the data changes
-	function updateOptionData()
+	function updateItemData()
 	{
 		arrowStat[0] = (opt.data.current > 0);
 		arrowStat[1] = (opt.data.current < opt.data.pool.length - 1);

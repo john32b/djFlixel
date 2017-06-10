@@ -1,10 +1,10 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.list;
 
 
 /**
- * Interface for a sprite that will go inside a ( VListBase | VListNav )
+ * Interface for a sprite that can go inside a ( VListBase | VListNav )
  */
-interface IListOption<T>
+interface IListItem<T>
 {
 	// -- Set by parent, fire input events.
 	//    The ID is handled by parent.
@@ -17,7 +17,7 @@ interface IListOption<T>
 	public function unfocus():Void; // Visually Unfocus
 	public var isFocused(default, null):Bool;
 	// This gets reported to the list as the visual height of the element
-	public function getOptionHeight():Int;
+	public function getItemHeight():Int;
 	// Returns true if passed data is the same as the data set to this object
 	// Required for the reuse pooling
 	public function isSame(data:T):Bool;

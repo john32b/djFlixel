@@ -4,8 +4,12 @@ import flixel.FlxSprite;
 
 
 /**
- * A Sprite that blinks forever
- * Used in GUI elements
+ * A Sprite that blinks forever. Used in GUI elements
+ * -----
+ * LinkedSprites : 
+ * . you "link" other sprites to this blinkSprite and all the linked sprites
+ *   will blink in sync with this one. Add with addLinked(..)
+ * 
  */
 class BlinkSprite extends FlxSprite
 {

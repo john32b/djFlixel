@@ -1,7 +1,6 @@
-package djFlixel.gui.listoption;
-import djFlixel.gui.list.VListMenu;
+package djFlixel.gui.menu;
 
-class MenuOptionLabel extends MenuOptionBase
+class MItemLabel extends MItemBase
 {
 	override function state_disabled() 
 	{

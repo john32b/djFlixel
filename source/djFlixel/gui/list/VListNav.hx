@@ -1,6 +1,8 @@
 package djFlixel.gui.list;
+
 import djFlixel.gui.Styles.VListStyle;
-import djFlixel.gui.listoption.IListOption;
+import djFlixel.gui.list.IListItem;
+
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
@@ -17,7 +19,7 @@ import flixel.tweens.misc.VarTween;
  *  new VListNav<GraphicElement,DataElement>
  * 
  */
-class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
+class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 {
 	// -- DATA ::
 	// --
@@ -65,7 +67,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	// ------------
 	
 	// -- You can set this at any time
-	// Enables mouse interaction with the optionelements
+	// Enables mouse interaction with the item elements
 	public var flag_use_mouse:Bool = true;
 	
 	// -- If true will try to scroll up and down using the mouse
@@ -73,7 +75,6 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	// Precalculate camera viewport and scrolling for mouse overlap calculations
 	var _camCheckOffset:SimpleCoords;
-	
 	
 	// -- Tweens
 	var slotTweens:Map<T,VarTween>;
@@ -125,7 +126,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 			_index_data = -1;
 			_index_slot = -1;
 			currentElement = null;
-			trace("Error: You need to have at least one element option");
+			trace("Error: You need to have at least one element item");
 			return;
 		}
 		
@@ -198,7 +199,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 						
 		cursor_updatePos();
 		
-		callback_option("optFocus");
+		callback_item("focus");
 	}//---------------------------------------------------;	
 	
 	// --
@@ -289,7 +290,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	 * 		 . when the list is half full
 	 * 		 . when the list is exactly full
 	 * 
-	 * PRE: OptionPointer is not NULL
+	 * PRE: Item Pointer is not NULL
 	 */
 	function checkInput() 
 	{
@@ -343,15 +344,13 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 						 }
 					}
 					
-					// In the case where this scrolls instantly continue
-					// if (isScrolling) return; 
 					return;
-				
 				}
 		}// --
 	
 		
-		// -- Check Collision on all slots
+		// -- Check Mouse Collision on all slots
+		// TODO: it works but it could be better
 		for (counter in 0..._slotsTotal) 
 		{
 			if (elementSlots[counter] != null) 
@@ -362,6 +361,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
 						if (!r_el.isFocused) requestRollOver(counter); else
 						if (FlxG.mouse.justPressed) r_el.sendInput("click");
+						// TODO: MouseWhell send input to elements, INDEV:
 						//else if (FlxG.mouse.wheel < 0) r_el.sendInput("wdown");
 						//else if (FlxG.mouse.wheel > 0) r_el.sendInput("wup");
 					}
@@ -471,7 +471,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	
 	/**
-	 * Get the next selectable option index, starting and including &fromIndex 
+	 * Get the next selectable item index, starting and including &fromIndex 
 	 * @param	fromIndex Starting index to search from
 	 * @param	direction >0 to search downwards, <0 to search upwards
 	 * @return
@@ -520,7 +520,7 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 	override function getNewElement(index:Int):T 
 	{
 		r_el = super.getNewElement(index);
-		r_el.callbacks = callback_option;
+		r_el.callbacks = callback_item;
 		return r_el;
 	}//---------------------------------------------------;
 	
@@ -537,10 +537,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		}
 	}//---------------------------------------------------;
 	
-	// Option related callback
-	// Child options are calling this directly
-	// NOTE: Only the currently selected option is allowed to push callbacks.
-	function callback_option(status:String)
+	// Items related callback
+	// Child items are calling this directly
+	// NOTE: Only the currently selected item is allowed to push callbacks.
+	function callback_item(status:String)
 	{
 		if (callbacks != null) {
 			callbacks(status, _data[_index_data]);
@@ -579,10 +579,10 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		
 		// SAFEGUARD : elemenSlots[0] can be null 
 		if (elementSlots[0] != null) {
-			elHeight = elementSlots[0].getOptionHeight();
+			elHeight = elementSlots[0].getItemHeight();
 		}else {
 			r_el = factory_getElement(0);
-			elHeight = r_el.getOptionHeight();
+			elHeight = r_el.getItemHeight();
 			r_el.destroy();
 		}
 	
@@ -624,13 +624,13 @@ class VListNav<T:(IListOption<K>,FlxSprite),K> extends VListBase<T,K>
 		
 		// Tween from left to right now
 		// Vertical movement is handled on the update function
-		// in case the option has scrolled, I call ALIGNV at the end of this tween
+		// in case the item has scrolled, I call ALIGNV at the end of this tween
 		cursorTween = FlxTween.tween(cursor, { x:_cursor_x_end, alpha:1 }, 
 									_cursor_tween_time, { ease: FlxEase.backOut } );
 	}//---------------------------------------------------;
 
 	// -- 
-	// Quick valign the cursor to it's pointing option
+	// Quick valign the cursor to it's pointing item
 	function cursor_AlignVertical(?f:FlxTween)
 	{
 		cursor.y = elementSlots[_index_slot].y + _cursor_y_offset;

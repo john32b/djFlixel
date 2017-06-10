@@ -1,31 +1,29 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.menu;
 
-import djFlixel.gfx.GfxTool;
 import djFlixel.gui.Styles;
-import djFlixel.gui.list.VListMenu;
-import djFlixel.gui.OptionData;
-import flixel.FlxBasic;
+import djFlixel.gui.list.IListItem;
+import djFlixel.gui.menu.MItemData;
+
 import flixel.FlxG;
-import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 
 
-// MenuOptionBase
+// Menu Item Base
 // --
-// Basic MenuOption, Other more specific options will derive from this.
+// Basic Menu Item, Other more specific items will derive from this.
 // Don't forget this is only a representation of data.
 // Any changes should be written back to the $data object, as it acts as a pointer
 // --
-class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
+class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 {
-	// Pointer to the OptionData. Deal with this when handling data
-	public var opt(default, null):OptionData;
+	// Pointer to the MItemData. Deal with this when handling data
+	public var opt(default, null):MItemData;
 	
 	// Pointer to a style, parent sets this.
-	public var style:OptionStyle;
+	public var style:MItemStyle;
 	
-	// Whether or not this optionelement is keyboard focused right now
+	// Whether or not this item has input focus right now
 	public var isFocused(default, null):Bool;
 
 	// -- Set by parent, fire input events.
@@ -42,9 +40,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 
 	//====================================================;
 	
-	/**
-	 */
-	public function new(_style:OptionStyle)
+	public function new(_style:MItemStyle)
 	{
 		super();
 		
@@ -56,9 +52,9 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		isFocused = false;
 		style = _style;
 		
-		// - All options have a label
+		// - All items must have a label
 		label = new FlxText();
-		Styles.styleOptionText(label, style);
+		Styles.styleMItemText(label, style);
 		add(label);
 		
 		PADDING_FROM_LABEL = style.size;
@@ -68,7 +64,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	// NOTE: can be called multiple times in recycled objects
 	// If you want to update the extended object,
 	// do so in updateVisual();
-	public function setData(OPT:OptionData) 
+	public function setData(OPT:MItemData) 
 	{
 		opt = OPT;
 		// Updates the data portion
@@ -77,7 +73,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		updateState();
 	}//---------------------------------------------------;
 	// --
-	public function isSame(OPT:OptionData)
+	public function isSame(OPT:MItemData)
 	{
 		// It is quicker to check for Integers, just be sure they are set.
 		return this.opt.UID == OPT.UID;
@@ -103,7 +99,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 	public function sendInput(inputName:String) 
 	{
 		if (opt.disabled) {
-			cb("optInvalid");
+			cb("invalid");
 		}else {
 			handleInput(inputName);
 		}
@@ -176,7 +172,7 @@ class MenuOptionBase extends FlxSpriteGroup implements IListOption<OptionData>
 		return alpha = Value;
 	}//---------------------------------------------------;
 	// --
-	public inline function getOptionHeight():Int
+	public inline function getItemHeight():Int
 	{
 		return Std.int(label.size);
 		//return Std.int(label.textField.textHeight);

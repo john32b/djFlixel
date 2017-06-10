@@ -1,68 +1,60 @@
-package djFlixel.gui;
+package djFlixel.gui.menu;
 
 /**
- * Just the data of menu element
+ * Just the data of menu item that goes inside an FlxMenu 
+ * Types of what this Item can be:
+ * 
+ * - Label		;	Just text, can
+ * - Link		;	Fires a function or goes to another page
+ * - Checkbox	;	On/Off
+ * - Slider		;	Selects integers from a range
+ * - OneOf		;	Selects strings from a selection
+ * 
  */
-class OptionData
+class MItemData
 {
 	// A simple incremental UID Generator
-	// Possible bugs after 32bit values??
 	static var UID_GENERATOR:Int = 0;
 	
-	// General Purpose Int ID of the option
-	// # auto set #
+	// General Purpose Int ID of the item
 	public var UID:Int;
-	// General Purpose String ID of the option
+	
+	// General Purpose String ID of the item
 	public var SID:String;
-	// Label text of the menu option, This is the full text, not the rendered one.
+	
+	// Label text of the menu item, This is the full text, not the rendered one.
 	public var label:String;
+	
 	// Some optional description
 	public var description:String;
 	
-	// == Functionality ==
-	// ===================
-	
-	// If this is false, then this option can't be selected
-	// Useful for label text
+	// If this is false, then this item can't be selected
+	// : useful for label texts
 	public var selectable:Bool = true;
 	
-	// A disabled element cant have interactions.
+	// A disabled element can't have interactions
 	public var disabled:Bool = false;
 	
-	// All the available functionality types the menuOption Offers
+	// All the available functionality types the menuItem Offers
 	public static var AVAILABLE_TYPES(default, never):Array<String> = [
 		"link", "slider", "oneof", "toggle", "label"
 	];
 	
-	// What functionality this MenuOption has
-	// :: Must be one of the available types
+	// What functionality this MenuItem has
+	// : must be one of the available types
 	public var type:String;
 	
-	// Hold all the internal data
+	// Holds all the internal data
 	// Also can include custom user data in this object
 	public var data:Dynamic;
 	
 	//====================================================;
 	
 	/**
-	 * 
-	 * @param	label   The label of this option
-	 * @param	params [ multiple parameters dynamic obj ]
-	 * 
-	 * 					current: Depending on type
-	 * 					desc: Description
-	 * 					type: "link", "slider", "oneof", "toggle", "label"
-	 * 					sid: starting with
-	 * 							#, popup confirmation
-	 * 							!, fullpage confirmation
-	 * 							@, goto target page
-	 * 					pool: Depending on type
-	 * 					conf_question: String, Question, optional
-	 * 					conf_options:  Array<String>, instead of YES NO
-	 * 					callback: If it's a link, this (void->void) will be called
-	 * 					styleOption : Applicable in some occations like a full confirmation page
-	 * 
-	 */		
+	 * Constructor
+	 * @param	label   The label of this item
+	 * @param	params {..} see: MItemData.setNewParameters(..) for help
+	 */
 	public function new(?label:String, ?params:Dynamic)
 	{
 		// Info: Actionscript INT MaxSize = 2147483647;
@@ -72,8 +64,27 @@ class OptionData
 		setNewParameters(params);
 	}//---------------------------------------------------;
 	
-	// --
-	// Set and initialize new data
+	/**
+	 * Sets and initializes new data
+	 * NOTE: I need this to be a separate function, don't merge with the constructor
+	 * @param params { .. } 
+	 * 
+	 * 		type: String, 	["link", "slider", "oneof", "toggle", "label"]
+	 * 		desc: String,	Description
+	 * 		sid:  String,   Give the itemData an unique ID. String starting with :
+	 * 							# = popup confirmation, open a small popup
+	 * 							! = fullpage confirmation before firing the callback
+	 * 							@ = goto target page, e.g. "@options" will go to the page with SID="options"
+	 * 
+	 * 		pool: Dynamic, 		Data associated with the controller, depends on type
+	 * 		current: Dynamic,	Current value of the controller, depends on type
+	 * 
+	 * 		conf_question: 	String, Question to present if a confirmation check is required
+	 * 		conf_options:Array<String>: Anything other instead of YES / NO
+	 * 	
+	 *		styleItem: Applicable in some occations like a full confirmation page
+	 * 		callback: If it's a link, this (void->void) will be called
+	 */
 	public function setNewParameters(?params:Dynamic)
 	{
 		if (params == null) return;
@@ -82,42 +93,29 @@ class OptionData
 			switch(f) {
 				// Those fields apply to the object
 				case "sid": SID = Reflect.field(params, f);
-				case "label": label = Reflect.field(params, f);
 				case "type": type = Reflect.field(params, f);
 				case "desc": description = Reflect.field(params, f);
-				case "selectable": selectable = Reflect.field(params, f);
+				case "label": label = Reflect.field(params, f);
 				case "disabled": disabled = Reflect.field(params, f);
+				case "selectable": selectable = Reflect.field(params, f);
 				// Map all other custom fields to the data object.
 				default: Reflect.setProperty(data, f, Reflect.field(params, f));
 			}
 		}
 		
-		initData();
-	}//---------------------------------------------------;
-	
-	// --
-	public function destroy()
-	{
-		if (data.pool != null) data.pool = null;
-		if (data.current != null) data.current = null;
-		data = null;
-	}//---------------------------------------------------;
-	
-	// --
-	// Call this after setting data to initialize it
-	function initData()
-	{
 		// -- Some Safeguards
 		if (type == null) {
 			type == "label";
 			label = "(null)" + label;
-			trace("Error: Forgot to set a type",this);
+			trace("Error: Forgot to set a type", this);
 		}
+		
 		if ((type != "label") && (SID == null || SID.length == 0)) {
 			// It should be filled with something in most cases.
-			trace("Warning: SID is NULL",this);
+			trace("Warning: SID is NULL", this);
 			SID = "null";
 		}
+		
 		if (label == null) {
 			label = "(null)";
 		}
@@ -190,13 +188,19 @@ class OptionData
 			}
 			
 		default:  // If not null but something else
-			trace('Error: Invalid type ($type) for MenuOptionData');
-		}
-		
+			trace('Error: Invalid type ($type) for MItemData');
+		}// -- end switch
 	}//---------------------------------------------------;
-
 	
 	// --
+	public function destroy()
+	{
+		if (data.pool != null) data.pool = null;
+		if (data.current != null) data.current = null;
+		data = null;
+	}//---------------------------------------------------;
+	
+	// -- Debugging
 	public function toString():String
 	{
 		return '[SID:$SID | Label:$label | Type:$type | Data:$data';

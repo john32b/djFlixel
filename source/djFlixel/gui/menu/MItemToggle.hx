@@ -1,15 +1,12 @@
-package djFlixel.gui.listoption;
+package djFlixel.gui.menu;
 
 import djFlixel.gfx.GfxTool;
-import djFlixel.gfx.Palette_DB32;
-import djFlixel.gui.Styles.OptionStyle;
-import djFlixel.gui.list.VListMenu;
-import djFlixel.gui.OptionData;
-import flash.display.BitmapData;
+import djFlixel.gui.Styles.MItemStyle;
+import djFlixel.gui.menu.MItemData;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
-class MenuOptionToggle extends MenuOptionBase
+class MItemToggle extends MItemBase
 {	
 	// Checkbox sprite
 	var box:FlxSprite;
@@ -18,8 +15,9 @@ class MenuOptionToggle extends MenuOptionBase
 	var frameStart:Int;
 	
 	// -- No need for constuctor --
-	
+	//====================================================;
 	// --
+	
 	// Position the checkbox.
 	override function initElements() 
 	{
@@ -73,7 +71,7 @@ class MenuOptionToggle extends MenuOptionBase
 		box.x = x + label.fieldWidth + PADDING_FROM_LABEL;
 		add(box);
 		
-		updateOptionData();
+		updateItemData();
 		
 	}//---------------------------------------------------;
 	
@@ -83,13 +81,13 @@ class MenuOptionToggle extends MenuOptionBase
 		switch(inputName){
 			case "fire" | "click":
 				opt.data.current = !opt.data.current;
-				updateOptionData();
-				cb("optChange");
+				updateItemData();
+				cb("change");
 		}
 	}//---------------------------------------------------;
 	
 	// --
-	function updateOptionData()
+	function updateItemData()
 	{
 		if (opt.data.current) {
 			box.animation.frameIndex = frameStart + 1;
@@ -97,7 +95,6 @@ class MenuOptionToggle extends MenuOptionBase
 			box.animation.frameIndex = frameStart;
 		}
 	}//---------------------------------------------------;
-
 
 	override function state_default() 
 	{

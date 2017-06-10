@@ -1,36 +1,32 @@
 package djFlixel.gui.list;
 
-import djFlixel.gui.Styles.OptionStyle;
-import djFlixel.gui.PageData;
-import djFlixel.gui.OptionData;
-import djFlixel.gui.listoption.*;
+import djFlixel.gui.menu.*;
+import djFlixel.gui.Styles.MItemStyle;
 import djFlixel.tool.DataTool;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
-
 /**
- * A Specialized List holding MenuOption elements
+ * A Specialized List holding MenuItem elements
  * used by FlxMenu
  */
-class VListMenu extends VListNav<MenuOptionBase,OptionData> 
+class VListMenu extends VListNav<MItemBase,MItemData> 
 {
-
 	// Pointer to the currently loaded page data
 	public var page(default, null):PageData;
 
 	// Style for all the MenuBaseStyles on this page
-	public var styleOption:OptionStyle;
+	public var styleMItem:MItemStyle;
 	
 	//====================================================;
 	// --
 	public function new(X:Float, Y:Float, WIDTH:Int, ?SlotsTotal:Int) 
 	{
-		super(MenuOptionBase, X, Y, WIDTH, SlotsTotal);
+		super(MItemBase, X, Y, WIDTH, SlotsTotal);
 	}//---------------------------------------------------;
 	
 	
-	// Rather than setting an array with optionData elements,
+	// Rather than setting an array with MItemData elements,
 	// Directly set a $pageData element, this also
 	// gets any custom set parameters from a page
 	public function setPageData(Page:PageData)
@@ -48,11 +44,11 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 			styleList = DataTool.applyFieldsInto(page.custom.styleList, Reflect.copy(styleList));
 		}
 		
-		// Option Style from page
-		if (page.custom.styleOption != null) {
-			styleOption = DataTool.applyFieldsInto(page.custom.styleOption, Reflect.copy(styleOption));
+		// MItem Style from page
+		if (page.custom.styleMItem != null) {
+			styleMItem = DataTool.applyFieldsInto(page.custom.styleMItem, Reflect.copy(styleMItem));
 		}else {
-			if (styleOption == null) styleOption = Styles.default_OptionStyle;
+			if (styleMItem == null) styleMItem = Styles.default_MItemStyle;
 		}
 		// Base Style from page
 		if (page.custom.styleBase != null) {
@@ -65,9 +61,9 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 		}
 		
 		// Put push the bottom scroll indicator a little further
-		moreArrow.paddingDown = Std.int(2 * (styleOption.size / 8));
-		moreArrow.shadowColor = styleOption.borderColor;
-		moreArrow.color = styleOption.color_default;
+		moreArrow.paddingDown = Std.int(2 * (styleMItem.size / 8));
+		moreArrow.shadowColor = styleMItem.borderColor;
+		moreArrow.color = styleMItem.color_default;
 		
 		super.setDataSource(page.collection);
 		
@@ -81,7 +77,7 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 				cur = new FlxSprite(0, 0, styleList.cursor_image);                                                                                                                   
 			}else {
 				var t = new FlxText(0, 0, 0, ">");
-				Styles.styleOptionText(t, styleOption);
+				Styles.styleMItemText(t, styleMItem);
 				cur = cast t;
 			}
 			hasCursor = true;
@@ -90,10 +86,10 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 
 	// --
-	// Highlight an option with a target SID
-	public function option_highlight(sid:String)
+	// Highlight an item with a target SID
+	public function item_highlight(sid:String)
 	{
-		var ind = getOptionIndexWithField("SID", sid);
+		var ind = getItemIndexWithField("SID", sid);
 		if (ind > -1) {
 			setViewIndex(ind);
 		}
@@ -101,45 +97,42 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	
 	
 
-	// Update data fields of an option, both DATA + VISUAL,
+	// Update data fields of an item, both DATA + VISUAL,
 	// Will search in the pool as well.
-	public function option_updateData(sid:String, params:Dynamic)
+	public function item_updateData(sid:String, params:Dynamic)
 	{
-		var ind = getOptionIndexWithField("SID", sid);
+		var ind = getItemIndexWithField("SID", sid);
 		if (ind ==-1) return;
 		
 		// Overwrite old parameters, set new
 		_data[ind].setNewParameters(params);
 		
-		// -- Data changed. Set visual element to reflect changes
+		//  Data changed. Set visual element to reflect changes
 		
-		// . Check to see if it's onscreen
+		//  Check to see if it's onscreen
 			for (i in elementSlots) {
 				if (i.isSame(_data[ind])) {
-					// trace("FOUND DATA", _data[ind]);
-					// trace(i.y);
-					i.setData(_data[ind]); // Resets whole option from the start
-					// trace(i.y);
+					i.setData(_data[ind]); // Resets whole item from the start
 					return;
 				}
 			}		
 			
-		// . If not found, check to see if the element is pooled.
+		// If not found, check to see if the element is pooled.
 			if (flag_pool_reuse)
 			{
-				var b:MenuOptionBase = poolGet(ind); // Guaranteed that it won't be removed from the pool
+				var b:MItemBase = poolGet(ind); // Guaranteed that it won't be removed from the pool
 				if (b != null) b.setData(_data[ind]);
 			}
 	}//---------------------------------------------------;
 
 	
 	/**
-	 * Returns the index of an option with a target field, Returns -1 if nothing found
+	 * Returns the index of an item with a target field, Returns -1 if nothing found
 	 * @param	field String Name of the field to check. (e.g. "SID", "UID .. )
 	 * @param	check The value of the field will be checked against this
 	 * @return 
 	 */
-	public function getOptionIndexWithField(field:String, check:Dynamic):Int
+	public function getItemIndexWithField(field:String, check:Dynamic):Int
 	{
 		var i = 0;
 		for (i in 0..._data_length) {
@@ -151,10 +144,10 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	}//---------------------------------------------------;
 	
 	/**
-	 * Get the current active option data the cursor is pointing
+	 * Get the current active item data the cursor is pointing
 	 * @return
 	 */
-	public function getCurrentOptionData():OptionData
+	public function getCurrentItemData():MItemData
 	{
 		if (_index_data < 0) return null;
 		return _data[_index_data];
@@ -182,15 +175,15 @@ class VListMenu extends VListNav<MenuOptionBase,OptionData>
 	
 	
 	// --
-	override function factory_getElement(dataIndex:Int):MenuOptionBase
+	override function factory_getElement(dataIndex:Int):MItemBase
 	{
 		return switch(_data[dataIndex].type) {
-			case "link"   : new MenuOptionLink(styleOption);
-			case "oneof"  : new MenuOptionOneof(styleOption);
-			case "toggle" : new MenuOptionToggle(styleOption);
-			case "slider" : new MenuOptionSlider(styleOption);
-			case "label"  : new MenuOptionLabel(styleOption);
-			default: new MenuOptionBase(styleOption);
+			case "link"   : new MItemLink(styleMItem);
+			case "oneof"  : new MItemOneof(styleMItem);
+			case "toggle" : new MItemToggle(styleMItem);
+			case "slider" : new MItemSlider(styleMItem);
+			case "label"  : new MItemLabel(styleMItem);
+			default: new MItemBase(styleMItem);
 		}
 	}//---------------------------------------------------;
 	
