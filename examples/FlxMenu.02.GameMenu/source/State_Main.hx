@@ -4,8 +4,8 @@ import djFlixel.FLS;
 import djFlixel.SND;
 import djFlixel.fx.StarfieldSimple;
 import djFlixel.gui.FlxMenu;
-import djFlixel.gui.OptionData;
-import djFlixel.gui.PageData;
+import djFlixel.gui.menu.PageData;
+import djFlixel.gui.menu.MItemData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -76,7 +76,7 @@ class State_Main extends FlxState
 		
 		// NEW ::
 		// You can set a title for each page
-		p.header = "Main Menu";
+		p.title = "Main Menu";
 		
 		// The new game is going to be a simple link button
 		p.add("New game", { type:"link", sid:"newgame", desc:"Start a new game!" } );
@@ -100,7 +100,7 @@ class State_Main extends FlxState
 		
 		// + Create the options menu
 		p = menu.newPage("options");
-		p.header = "Options";
+		p.title = "Options";
 		
 		// Add some generic options.
 		p.add("Antialiasing", { type:"toggle", sid:"aa", desc:"Change the antialiasing" } );
@@ -170,7 +170,7 @@ class State_Main extends FlxState
 		};
 		
 		// Create Callbacks for the options
-		menu.callbacks_option = function(type:String, opt:OptionData) {
+		menu.callbacks_item = function(type:String, opt:MItemData) {
 			switch(type)
 			{
 				case "optFocus":
@@ -239,12 +239,12 @@ class State_Main extends FlxState
 							// -- These will fire from the save game simulation menu:
 							case "sg_yes":
 								HAS_SAVE_DATA = true;
-								menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
+								menu.item_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 								menu.goHome();
 								
 							case "sg_no":
 								HAS_SAVE_DATA = false;
-								menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
+								menu.item_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 								menu.goHome();
 								
 					}
@@ -258,7 +258,7 @@ class State_Main extends FlxState
 		
 		// -- Check for any conditional options, BEFORE opening the page
 		// You can call it everywhere you like
-		menu.option_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
+		menu.item_updateData("main", "resume", { disabled: !HAS_SAVE_DATA } );
 		
 	}//---------------------------------------------------;
 	
