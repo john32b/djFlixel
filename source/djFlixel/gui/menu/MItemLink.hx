@@ -1,6 +1,6 @@
 package djFlixel.gui.menu;
 
-import djFlixel.gui.Styles.MItemStyle;
+import djFlixel.gui.Styles.StyleVLMenu;
 import flixel.FlxG;
 import flixel.text.FlxText;
 
@@ -16,13 +16,13 @@ class MItemLink extends MItemBase
 	var dArr:Array<String> = [" ", ".", ".."]; // loop through these
 	//====================================================;
 	// --
-	public function new(_style:MItemStyle)
+	public function new(_s:StyleVLMenu, _w:Int)
 	{
-		super(_style);
+		super(_s, _w);
 		
 		deco = new FlxText(0, 0, 0);
-		Styles.styleMItemText(deco, style);
-		deco.color = style.color_default;
+		Styles.applyTextStyle(deco, style);
+		deco.color = style.color_focused;
 		add(deco);
 		
 		hasDeco = false;
@@ -86,7 +86,15 @@ class MItemLink extends MItemBase
 		{
 			 // Show the decorative animated dots only when this 
 			 // is a link to another page.
-			deco.x = label.fieldWidth + PADDING_FROM_LABEL;
+			 switch(style.alignment)
+			 {
+				case "right":
+					deco.x = label.x - EL_PADDING - style.fontSize; // Hack: nudge it a bit to the left.
+				case "justify":
+					deco.x = label.x + parentWidth - style.fontSize - EL_PADDING;
+				default:
+					deco.x = label.x + label.fieldWidth + EL_PADDING;
+			 }
 			hasDeco = true;
 		}
 	}//---------------------------------------------------;

@@ -1,210 +1,280 @@
 package djFlixel.gui;
 
+import djFlixel.gfx.GfxTool;
 import djFlixel.gfx.Palette_DB32;
+import djFlixel.tool.DataTool;
 import flixel.text.FlxText;
-import flixel.util.FlxColor;
 
 
-//====================================================;
-// Parameters for a <VListBase>
-//====================================================;
 
-	typedef VBaseStyle = {
-		
-		// Time it takes to scroll the elements in and out of the list.
-		var element_scroll_time:Float;
-		
-		// Use a tween to scroll elements or make them appear instantly
-		var instantScroll:Bool;
-		
-		// Padding between elements in pixels.
-		var element_padding:Int;
 
-		// ==----------------------------------==
-		// -- Animation for onScreen,offScreen --
-		
-		// How much time between elements to activate an on/off tween
-		// -1: auto calculate
-		//  0: everything at the same time
-		//  x: another time between elements
-		var anim_time_between_elements:Float;
-		// Total time to animate all the slots ignoring time_between_elements
-		//   e.g. if there are 10 elements, and this is 1 seconds,
-		//		  tween time would be 1 / 10 = 0.1seconds for each element
-		var anim_total_time:Float;
-		
-		// When animating onScreen(), start from this offset,
-		// - in relation to an element's starting position
-		var anim_start_x:Int;
-		var anim_start_y:Int;
-		
-		// When animating offScreen(), go to this offset
-		var anim_end_x:Int;
-		var anim_end_y:Int;
-		
-		// Page in and out transition type:
-		// "sequential", "parallel", "none"
-		var anim_style:String;
-		
-		// Easy type of the elements:
-		// "bounce", "elastic", "linear", "back", "circ"
-		var anim_tween_ease:String;
-		
-	}
-	 
-
-//====================================================;
-//  Parameters for a <VListMenu>.
-//====================================================;
-
-	typedef VListStyle = {	 
-		 // Start scrolling the view before reaching the edges by this much.
-		 var scrollPad:Int;
-		 // How many pixels to the right to animate the highlighted element
-		 var focus_nudge:Int;
-		 // Apply a custom cursor offset [x,y]
-		 var cursor_offset:Array<Int>;
-		 // If set then the cursor will be a sprite with this image asset.
-		 var cursor_image:String;
-		 // Loop at edges
-		 var loop_edge:Bool;
-	 }
- 
-	 
-	 
-//====================================================;
-// Parameters for a <FlxText> that goes inside Lists
-//====================================================;
- 
-	typedef MItemStyle = {		
-		var font:String; 			// Custom embedded font, null for flixel default
-		var size:Int;     			// Font Size
-		var alignment:String;		// left | center | right | justify
-		var color_default:Int;		// --
-		var color_focused:Int;		// --
-		var color_accent:Int;		// Special Accent color, used in labels and icons
-		var color_disabled:Int;		// Color for all disabled elements, (excluding labels)
-		var color_disabled_f:Int;	// Focused color of disabled element
-		@:optional 
-		var borderColor:Int;		// If set, then it will apply a border of this color
-		@:optional
-		var borderSize:Int;			// The depth of the shadow/border in pixels. 0/null to autocalculate
-		@:optional
-		var borderIcon:Int;			// If set the icons like checkboxes and arrows, will generate this shadow
-		// --
-		@:optional
-		var icons:Dynamic;			// Object holding custom icon parameters : {
-									//	tileSheet:String ; assetname of the tileset of the icons
-									//	tileSize:Int	 ; size of the tiles must be square
-									//	ind_checkbox:Int ; index of the checkbox, 2 tiles, open,close
-									//  ind_arrows:Int	 ; index of the arrows, 2 tiles, left,right
-									// };
-	}
-
-	
 //====================================================;
 // Parameters for a <FlxText>, 
 // can by set with applyTextStyle()
 //====================================================;
 
 	typedef TextStyle = {
-		var size:Int;		// Custom embedded font, null for flixel default
-		var color:Int;
-		@:optional var font:String;
-		@:optional var borderColor:Int;
+		
+		?font:String,		// Font name
+		
+		fontSize:Int,		// Font size, ( I keep changing the name, I think fontSize is the best )
+		
+		?color:Int,			// Color
+		
+		?color_border:Int,	// Border Color ( note I am using color_border and not borderColor so that this
+							// can be set with applyStyleNodeTo() and have the color translated :-)
+			
+		?border_size:Int	// The depth of the shadow/border in pixels. 
+							// null or -1 to autocalculate size
 	}
 
+	
+// -- Style/Parameters for a VListBase
+// --------------------------------------
+
+	typedef StyleVLBase = {
+		
+		// How fast to scroll elements in and out, 0 for instant scroll
+		el_scroll_time:Float,	
+		// How much padding between the elements in pixels
+		el_padding:Int,
+	
+		// How to align the elements vertically in the List
+		// [ left | right | center | justify ]
+		alignment:String,
+		
+		// == Screen Tweens -----------------
+		// 	. Behavior of the elements if they are to enter/exit the view
+		// 	. Used at onScreen() and offScreen()
+		
+		// Time to move each element from start to end offset
+		stw_el_time:Float,
+		// Time to wait after starting each element to get to start animating the next one
+		// 0 : everything at the same time
+		stw_el_wait:Float,
+		// Go from this starting (X,Y) offset to init pos when onScreen(); e.g.[0,-16] will start from 16 pixels above
+		stw_el_EnterOffs:Array<Int>,
+		// Go from current pos to this ending (X,Y) position when offScreen();
+		stw_el_ExitOffs:Array<Int>,
+		// Name of the ease function found in "FlxEase.hx"
+		// e.g : bounceOut, SineIn, backInOut
+		stw_el_ease:String,
+		
+		// == Scroll Indicators -----------------
+		// . Arrows at the top and bottom of the list
+		//   indicating that there are more elements to scroll to
+		//	 The arrows are fetched form the GUI ICON LIB.
+		?scrollInd:Dynamic
+			// size:Int			; Force a icon size (8,12,16,24)
+			// blinkRate:Float	; Blink every this milliseconds
+			// alignment:String	; Force an alignment, else it's the same as "style.alignment"
+			// color:Int		; Indicator color, else it's White
+			// color_border:Int	; Border color
+			// offset:Array<Int> ; [top,bottom] positioning padding
+		
+		// ======================================
+		
+	}// --
+	
+	
+// -- Style/Parameters for a VListNav
+// --------------------------------------
+	typedef StyleVLNav = {>StyleVLBase,
+	
+		// Start scrolling the view before reaching the edges by this much.
+		scrollPad:Int,
+		// How many pixels to the right to animate the highlighted element at (el_scroll_time) speed
+		focus_nudge:Int,
+		// Loop at edges
+		loop_edge:Bool
+
+	}// --
+
+	 
+// -- Style/Parameters for a VListMenu and its menu items
+// --------------------------------------------------------
+ 
+	typedef StyleVLMenu = {
+		> StyleVLNav,
+		> TextStyle,
+		
+		color_focused:Int,		// Focused Color
+		color_accent:Int,		// Special Accent color, used in labels and icons
+		color_disabled:Int,		// Color for all disabled elements, (excluding labels)
+		color_disabled_f:Int,	// Focused color of disabled element
+	
+		?color_icon_shadow:Int,	// If set, icons (checkboxes,arrows) will generate this shadow color
+								// Usually same as the text "color_border"
+		
+		pageEnterStyle:String,	// Page in and out transition type ( used in FLXMenu )
+								// [ wait | parallel | none ]
+
+		// -- If you want to override the djFlixel icon lib
+		?icons:Dynamic,
+			//
+			// image:String			; Asset of a new icon set, --It must follow the icon template--
+			// size:Int				; Declare the size for the custom set
+			//						; also FORCES the size of the default icons
+			// colorize:Bool		; If false will not re-color the icons, Default to (true)  # UNUSED
+			// -
+			// checkboxText:Array<String>	; if set then checkbox will not use an icon and will use for off/on
+			//								; text strings. e.g. ["( )" , "(X)"]
+			// sliderText:Array<String>		; if set then the slider will use text symbols for left/right
+			//								; e.g. ["<",">"]
+			// sliderTime:Float				; Time to complete a full cursor nudge loop
+						
+		// -- In some special occations where you might want to use other images for icons
+		// 	  that don't follow the djFlixel icon lib template
+		?custom_icons:Dynamic,
+			//
+			// image:String			; Assetname of the tileset
+			// size:Int				; Size of the tiles, must be square
+			// checkbox:Array<Int>	; Two frames in an array, [off, on]
+			// arrows:Array<Int>	; Frames in an array, [left,right,up,down] // UNUSED FOR NOW --
+		
+		// Object holding custom cursor parameters :
+		// NOTE: VListMenu will use a text cursor by default
+		?cursor:Dynamic
+			//
+			// image:String			;	The assetname of the cursor
+			// size:Int				;	Required if animated, set the size of the frame, must be square
+			// fps:Int				;	Required if animated, this will be the speed of the animation
+			// frames:Array<Int>	;	If not NULL, will set this animation to the cursor
+			// align:Bool			;	If true will Vertically Align the cursor on the menu item
+			// -
+			// disable:Bool			;	Don't use a cursor at all
+			// offset:Array<Int>	;	Place the cursor with an offset [x,y]
+			// text:String			;	If set it will use this text for the cursor. e.g. "->"
+			//						;	Note it will be the same size as the label.size
+			
+			
+		// TIP: You can use the same image for the cursor and icons
+		
+	}// --
+
+	
+	
+
+	
+	
 //====================================================;
 // Static class with Styling helpers 
-// for gui.lists and flxTexts
+// for VLists and FlxTexts
 //====================================================;
 
 class Styles
 {
-	// --
-	public inline static var DEF_TEXT_COLOR:FlxColor   = 0xFFEEEEEE;
-	public inline static var DEF_BORDER_COLOR:FlxColor = 0xFF111111;
+	// -- DJFLixel Defaults ::
 	
-	// -- Default FlxMenu styles::
+	public inline static var DEF_TEXT_COLOR:Int   = 0xFFEEEEEE;
+	public inline static var DEF_BORDER_COLOR:Int = 0xFF111111;	
 	
-	public static var default_ListStyle(default, never):VListStyle = {
-		focus_nudge : 5,
-		scrollPad : 1,
-		cursor_offset : null,
-		cursor_image : null,
-		loop_edge : false
-	}; // --
-		
-	public static var default_BaseStyle(default, never):VBaseStyle = {
-		element_scroll_time:0.18,
-		instantScroll:false,
-		element_padding:2,
-		anim_time_between_elements:0,
-		anim_total_time: 0.4,
-		anim_start_x:0,
-		anim_start_y:-12,
-		anim_end_x:16,
-		anim_end_y:2,
-		anim_tween_ease:"linear",
-		anim_style:"none"
-	}; // --
-	
-	public static var default_MItemStyle(default, never):MItemStyle = {
-		font:null,
-		size:8,
+	public static var DEF_STYLEVLBASE(default, never):Dynamic = {
+		el_scroll_time:0.15,
+		el_padding:1,
 		alignment:"left",
-		color_default:Palette_DB32.COL_21,
+		// --
+		stw_el_time:0.10,
+		stw_el_wait:0.02,
+		stw_el_EnterOffs:[0,-10],	// Enter from top
+		stw_el_ExitOffs:[16,2],		// Leave going right
+		stw_el_ease:"easeOut"
+	};
+	
+	public static var DEF_STYLEVLNAV(default, never):Dynamic = {
+		focus_nudge:5,
+		scrollPad:1,
+		loop_edge:false
+	};
+	
+	public static var DEF_STYLEVLMENU(default, never):Dynamic = {
+		// TextStyle:
+		font:null,
+		fontSize:8,
+		color:Palette_DB32.COL_21,
+		color_border:Palette_DB32.COL_02,
+		border_size:-1,	// auto
+		// -- MenuStyle ::
 		color_focused:Palette_DB32.COL_09,
 		color_accent:Palette_DB32.COL_06,
 		color_disabled:Palette_DB32.COL_26,
 		color_disabled_f:Palette_DB32.COL_24,
-		borderColor:Palette_DB32.COL_02,
-		borderIcon:Palette_DB32.COL_25
-	}; // --
-	
+		color_icon_shadow:Palette_DB32.COL_25,
+		pageEnterStyle:"wait"
+	};
 	
 	//====================================================;
-	// FUNCTIONS
-	//====================================================;
-
 	
-	// NEW STYLES
-	// ----------
-	// If you want to quickly create a newstyle based on the default,
+	// New Style Generators
+	// ------------------
+	// If you want to quickly create a newstyle based on the defaults
 	// use these functions.
 	
 	// --
-	public static function newStyle_Base(?styleNode:Dynamic):VBaseStyle
+	public static function newStyleVLBase():StyleVLBase
 	{
-		return applyStyleNodeTo(styleNode, Reflect.copy(default_BaseStyle));
+		return Reflect.copy(DEF_STYLEVLBASE);
 	}//---------------------------------------------------;
 	// --
-	public static function newStyle_MItem(?styleNode:Dynamic):MItemStyle
+	public static function newStyleVLNav():StyleVLNav
 	{
-		return applyStyleNodeTo(styleNode, Reflect.copy(default_MItemStyle));
+		// Merge StyleVLBase + StyleVLNav
+		return DataTool.applyFieldsInto(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
 	}//---------------------------------------------------;
 	// --
-	public static function newStyle_List(?styleNode:Dynamic):VListStyle
+	public static function newStyleVLMenu():StyleVLMenu
 	{
-		return applyStyleNodeTo(styleNode, Reflect.copy(default_ListStyle));
+		// Merge StyleVLBase + StyleVLNav + StyleVLMenu
+		var p = DataTool.applyFieldsInto(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
+		return  DataTool.applyFieldsInto(DEF_STYLEVLMENU, p);
 	}//---------------------------------------------------;
 	
+	// --
+	public static function newStyleText():TextStyle
+	{
+		return {
+			fontSize:8,
+			color:DEF_TEXT_COLOR
+		};
+	}//---------------------------------------------------;
+	
+	
 	/**
-	 * Applies a Dynamic Object with styles to a style target
-	 * It will convert colors from "0xffffff" or "blue" to proper INT
-	 * @param	node The object with the styles.
-	 * @param	target Must exist
+	 * Applies a Dynamic Object with styles to a target object
+	 * - INPUT NODE fields will overwrite any Target Object Fields
+	 * - Any fields not defined in INPUT but exist on TARGET, will remain unchanged
+	 * 
+	 * - If a field starts with "color" it will automatically convert it to proper INT
+	 *    e.g. "0xffffff" or "blue" => (int)0x0000FF
+	 * 
+	 * - Palettes : Supports Getting colors from Palettes , check GfxTool.palCol(.)
+	 *		use the "@" prefix and call normally. 
+	 *		e.g. "@A16[3]" => (int)0xFFBE2633 
+	 * 
+	 * @param	node The input object with the styles
+	 * @param	target The Output object where input will be transated into
 	 */
 	public static function applyStyleNodeTo(node:Dynamic, target:Dynamic):Dynamic
 	{
+		if (target == null) target = {};
 		if (node != null)
 		for (i in Reflect.fields(node)) {
+			
+			var n:Dynamic = Reflect.field(node, i);
+			
 			// Convert COLOR string to INT
-			if (Std.is(i, String) && i.indexOf("color_") == 0) {
-				Reflect.setField(target, i, FlxColor.fromString(Reflect.field(node, i)));
+			if (i.indexOf("color") == 0) {
+				Reflect.setField(target, i, GfxTool.stringColor(n));
 				continue;
 			}
-	
+			// Recurse in object nodes
+			if (Reflect.isObject(n) && !Std.is(n, Array) && !Std.is(n, String))
+			{	
+				if (!Reflect.hasField(target, i)) Reflect.setField(target, i, {});
+				applyStyleNodeTo(n, Reflect.field(target, i));
+				continue;
+			}
+			
 			// Just copy everything else.
 			Reflect.setField(target, i, Reflect.field(node, i));
 		}
@@ -212,14 +282,18 @@ class Styles
 		return target;
 	}//---------------------------------------------------;
 	
-	
 	/**
 	 * Quickly apply border to an FlxText object
+	 * @param	t FlxText
+	 * @param	c Border Color
+	 * @param	size if -1 it will generate 1 pixel for every 8 pixels of the fontSize
+	 * @return
 	 */
-	public static function quickTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR, size:Int = 0 ):FlxText
+	public static function applyTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR, size:Int = -1 ):FlxText
 	{
+		if (size == 0) return t;
 		t.borderStyle = FlxTextBorderStyle.SHADOW;
-		t.borderSize = (size == 0)?Math.ceil(t.size / 8):size;
+		t.borderSize = (size == -1)?Math.ceil(t.size / 8):size;
 		t.borderColor = c;
 		t.borderQuality = 1;
 		return t; // for chaining
@@ -227,36 +301,25 @@ class Styles
 	
 	
 	/**
-	 * Quickly add a predefined style to an FlxText
-	 * @param	t The flxText
-	 * @param	style the style, check the TextStyle typedef
+	 * Style an FlxText with a predefined (TextStyle) style
+	 * @param	t The FlxText
+	 * @param	s The style, check the TextStyle typedef, can also be StyleVLMenu which includes TextStyle
 	 * @return
 	 */
-	public static function applyTextStyle(t:FlxText, style:TextStyle):FlxText
+	public static function applyTextStyle(t:FlxText, s:TextStyle):FlxText
 	{
-		if (style == null) style = {
-			font:null,
-			size:8,
-			color:DEF_TEXT_COLOR
-		};
-		if (t.font != null) t.font = style.font;
-		t.size = style.size; // Size first, don't move this.
-		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
-		t.color = style.color;
+		#if debug
+		if (s == null) { // DEV: I don't remember why I wrote this.
+			trace("ERROR: Style is null!");
+			s = newStyleText();
+		}
+		#end
+		
+		if (t.font != null) t.font = s.font;
+		t.size = s.fontSize; // Size first, don't move this.
+		if (s.color_border != null) applyTextBorder(t, s.color_border, s.border_size);
+		if (s.color != null) t.color = s.color;
 		return t; // for chaining
-	}//---------------------------------------------------;
-	
-	
-	/**
-	 * Style FlxTexts that are used in FlxMenus.
-	 */
-	public static function styleMItemText(t:FlxText, style:MItemStyle)
-	{
-		if (style.font != null) t.font = style.font;
-		t.size = style.size; // Size first, don't move this.
-		if (style.borderColor != null) quickTextBorder(t, style.borderColor);
-		t.alignment = style.alignment;
-		t.wordWrap = false;
 	}//---------------------------------------------------;
 	
 }// -- 

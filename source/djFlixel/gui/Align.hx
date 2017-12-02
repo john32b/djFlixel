@@ -96,14 +96,6 @@ class Align
 	}//---------------------------------------------------;
 	
 	
-	// Pointer to the last object aligned
-	// static var lastAligned:FlxSprite = null;
-	
-	// -- New for 0.3
-	//====================================================;
-	// Stripe
-	//====================================================;
-	
 	/**
 	 * Align a bunch of objects in a line
 	 * @param	x Line start X

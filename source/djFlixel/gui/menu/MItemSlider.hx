@@ -41,6 +41,8 @@ class MItemSlider extends MItemOneof
 		label2.text = '${opt.data.current}';
 		
 		// Check visibility and reset nudge
-		_updateArrow();
+		_updateArrows();
+		
+		updateLabel2Pos();
 	}//---------------------------------------------------;
 }// --

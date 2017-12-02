@@ -55,6 +55,7 @@ class BlinkSprite extends FlxSprite
 	public function sync()
 	{
 		timer = 0;
+		if (active) visible = true;
 	}//---------------------------------------------------;
 	
 	/**

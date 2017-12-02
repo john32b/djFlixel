@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
-	<assets path="assets/hud_icons.png" embed="true" />
-	<!-- <assets path="assets/shaders/blur.txt" if="desktop"/> -->
+
+	<!-- General -------->
+	
+	<set name="SWF_VERSION" value="20" /> <!-- default is 11.8 -->
+
+	<!-- DJFlixel --------->
+	
+	<assets path="assets/icons_8.png"  embed="true" if="DJFLX_ICONS_8" />
+	<assets path="assets/icons_12.png" embed="true" if="DJFLX_ICONS_12" />
+	<assets path="assets/icons_16.png" embed="true" if="DJFLX_ICONS_16" />
+	<assets path="assets/icons_24.png" embed="true" if="DJFLX_ICONS_24" />
+	
+	<section if="NEWGROUNDS">
+		<haxedef name="NEWGROUNDS"/>
+		<haxedef name="as3_native" if="flash"/>
+		<haxeflag name="-swf-lib" value="assets/newgrounds/NewgroundsAPI.swc"/>
+	</section>
+	
+	<!-- Flixel Defines ------->
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />	
+	
+	<haxedef name="VIRTUAL_PAD" if="mobile" />
+	<haxedef name="FLX_NO_TOUCH" unless="mobile"/> 
+	<haxedef name="FLX_NO_MOUSE" if="mobile"/>
+	<haxedef name="FLX_NO_KEYBOARD" if="mobile"/>
+	
+	<!-- Haxe -->
+	<haxeflag name="--no-traces" unless="debug"/>
+
 </project>

@@ -53,6 +53,9 @@ class FlxAutoText extends FlxSpriteGroup
 	static inline var DEFAULT_CARRIER_TICK:Float = 0.24;
 	static inline var DEFAULT_WIDTH:Int = 128;
 	
+	// Minimum text update frequency
+	public static var DEFAULT_MIN_TICK:Float = 0.12;
+	
 	// -- The markup tags
 	// - The chars go inside parenthesis + integer .e.g. (c3)
 	inline static var TAG_CPS:String 	= 'c';
@@ -61,14 +64,14 @@ class FlxAutoText extends FlxSpriteGroup
 	inline static var TAG_WORD:String 	= 'm';
 	inline static var TAG_NP:String 	= 'p';
 	
-	// Minimum text update frequency
-	public static var MIN_TICK:Float = 0.12;
-	
 	// Wait times, affect the (w) and (m) tags, and the waitX() function
 	public static var WAIT_TABLE = [0.1, 0.3, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5];	
 	
 	// The actual flxText object
 	public var textObj(default, null):FlxText;
+	
+	// Current minimum tick
+	public var MIN_TICK:Float;
 	
 	// --
 	var currentLength:Int;	// Length displayed of the final string. Displays characters up until but not inclusive.
@@ -160,6 +163,7 @@ class FlxAutoText extends FlxSpriteGroup
 		add(textObj);
 		active = false;
 		lineHeight = 10; // precalculated value if default text style is used.
+		MIN_TICK = DEFAULT_MIN_TICK;
 		setCPS(DEFAULT_CPS); // default
 	}//---------------------------------------------------;
 	// --

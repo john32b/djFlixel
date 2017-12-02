@@ -16,8 +16,6 @@ interface IListItem<T>
 	public function focus():Void; // Visually Focus
 	public function unfocus():Void; // Visually Unfocus
 	public var isFocused(default, null):Bool;
-	// This gets reported to the list as the visual height of the element
-	public function getItemHeight():Int;
 	// Returns true if passed data is the same as the data set to this object
 	// Required for the reuse pooling
 	public function isSame(data:T):Bool;

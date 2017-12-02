@@ -1,73 +1,82 @@
 package djFlixel.gui.list;
 
+import djFlixel.gfx.GfxTool;
 import djFlixel.gui.list.IListItem;
 import djFlixel.gui.BlinkSprite;
 import djFlixel.gui.Styles;
+import djFlixel.tool.DEST;
+import djFlixel.tool.DataTool;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
+import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxTimer;
-	
 
 /**
+ * == Basic Vertical List ==
  * 
  * General Purpose ListBox that presents ChildElements in a
- * scrollable vertical list
+ * scrollable vertical list. No cursor or selectable elements in this class
+ * they are implemented in the extended VListNav.hx
  * 
  * # Purpose is to be extended into a more specific class
  *   or you can use it as a bare element scroller
  * 
  * # Children must have a standard Height and implement <IListItem>
  * 
- * T: Type Element of Child
- * K: Type of Child Data
+ * # It's is used like a HUD element and is fixed on the screen. (scrolloffset=0)
  * 
- * 
- * # DEV NOTES:
- * 
- * 	width : if 0 will guess this from the max width of the first elements
+ * T: Type Element of Child, must be or derive from FlxSprite
+ * K: Type of Child Data, must implement IListItem
  * 
  */
 
 
+@:generic // I won't be using this with many Type combinations, so I think this would be faster?
 class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 {	
 	
-	// -- Some Defaults ::
+	// -- Some Static Defaults ::
 	// --
-	static inline var DEF_SLOTS:Int = 3;
-	static inline var DEF_POOL_REUSE_MAX:Int = 8;
-	static inline var DEF_POOL_MODE:String = "recycle";
+	static var DEF_SLOTS:Int = 3;
+	static var DEF_POOL_REUSE_MAX:Int = 8;
+	static var DEF_POOL_MODE:String = "recycle"; // [off, reuse, recycle], see below for explanation
 
-	// -- User set Variables ::
+	// -- User Set Object Variables::
 	// --
 	// If true, then the elements are initialized right after setting data
 	// e.g. FLXMenu doesn't need that to happen.
 	public var flag_InitViewAfterDataSet:Bool = true;
 		
 	// Custom Styling and parameters
-	public var styleBase:VBaseStyle;
+	public var styleB:StyleVLBase;
 		
 	// -- System ::
-	// --
+	
+	// Positioning, Size and some states :
 	public var x(default, null):Float;
 	public var y(default, null):Float;
 	public var width(default, null):Int;
-	public var height(default, null):Int;
+	public var height(default, null):Int;		// The height is autoset on initialization based on the slot length
 	public var isFocused(default, null):Bool;
-	public var isScrolling(default, null):Bool;
-	var _elementClass:Class<T>;
+	public var isScrolling (default, null):Bool;
 	
-	// Experimental
+	var _elementClass:Class<T>;	// The class of Items expected to be set
+	
 	// Keep all the tweens applied to this object, so that I can remove them
 	var allTweens:Array<VarTween>;
 	
+	// Start positioning the elements from this Y offset from the top
+	var posOffsetY:Int = 0;
+	
 	// == Pooling mode ==
 	// -----
-	// + NOTE: You MUST set this right after new() and before setting data.
+	// NOTE: You MUST set this right after new() and before setting data
+	// 		 with setPoolingMode(..)
 	// -----
 	// + Values ::
 	// 
@@ -99,9 +108,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	
 	// -- Elements ::
 	// --
-	var elementSlots:Array<T>;	// As the elements appear on the menu
+	var elementSlots:Array<T>;	// As the elements that appear on the menu (slots)
 	var elementHeight:Int; 		// INCLUDES PADDING !!
-
+	
 	
 	// -- Data ::
 	// --
@@ -119,43 +128,21 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	// Quick Int 
 	var counter:Int;
 		
-	// ==-- Animation --
-	// --
-	// Have the elements appear with a transitioning animation
-	var animTimer:FlxTimer;
-	// Store the starting Y position of each slot, used later in the animation
-	var elementYPositions:Array<Int>;
 	
-	// -- Scrolling Indicators when there are more elements above or below.
-	// -- Can be overriden later
-	var moreArrow:Dynamic = {
-		inited:false,
-		padding:4,
-		paddingDown:0,	// Extra padding applied on the bottom arrow
-		iconSize:0,		// Icon size to get from the ICON lib (0-2)
-		color:null,		// If set it will tint it to this color // Copied from MItemStyle.defaultColor
-		shadowColor:0xFF222222 // Copied from MItemStyle.borderColor
-	};
-	
-	var arrUp:BlinkSprite;
-	var arrDown:BlinkSprite;
-	
-	
-	#if debug
-		// -- Draws a rectangle with the menu dimensions behind the menu
-		public static var flag_draw_bg_area:Bool = true;
-	#end
-	
+	// - Scrolling Indicators --  
+	//	When there are more elements above or below 
+	//	You can style the indicators from (StyleB.scrollInd)
+	var scInd:Array<BlinkSprite> = null;
 	
 	// ===================================================;
 	// ===================================================;
 	
 	/**
-	 * 
+	 * Create a Basic Vertical List object.
 	 * @param	X Position on the screen.
 	 * @param	Y Position on the screen.
-	 * @param	WIDTH Set to 0 to Fill Screen Width with some padding
-	 * @param	SlotsTotal How many slots to show on the screen.
+	 * @param	WIDTH If 0 will be autoset from X to the right edge of the screen
+	 * @param	SlotsTotal How many slots to show on the screen (has a default if 0)
 	 */
 	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, SlotsTotal:Int = 0)
 	{
@@ -165,13 +152,21 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		
 		_slotsTotal = SlotsTotal;
 		if (_slotsTotal == 0) {
-			trace("Info: Setting default slots to ", DEF_SLOTS);
 			_slotsTotal = DEF_SLOTS;
+		}
+		
+		if (width == 0) {
+			width = cast FlxG.width - x; // Can only work because the menu is supposed to be a HUD
+			#if debug
+			if (width < 0 || width > FlxG.width) {
+			trace("Error: Getting menu width, set it manually"); width = 128;
+			} 
+			#end
 		}
 		
 		// -- Other Data
 		r_el = null;
-		elementHeight = -1;	// Set later
+		elementHeight = -1;	// Set Later
 		elementSlots = new Array<T>();
 		
 		isScrolling = false;
@@ -183,44 +178,71 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 				
 		allTweens = [];
 		pooling_mode = null;
+		
+		
 	}//---------------------------------------------------;
 	
 	/**
 	 * Call this after any scroll change. Creates and updates the more arrows
+	 * These are indicators that blink and show that are are more elements in that direction
 	 */
 	function updateScrollIndicator()
 	{
-		if (moreArrow.inited == false) {
-			if (width == 0 || height == 0) {
-				trace("Error: Needs width and height to be set.");
-				return;
-			}
+		if (_data_length <= _slotsTotal) return; // No need to create
+		
+		if (scInd == null) 
+		{
+			// Default Style :
+			var c = DataTool.defParams(styleB.scrollInd, {
+				size:Gui.getApproxIconSize(Std.int(elementHeight * 0.7)),
+				color:0xFFEEEEEE,
+				color_border:0xFF333333,
+				alignment:styleB.alignment,
+				offset:[0, 0],
+				blinkRate:0.3
+			});
 			
-			// Create the arrows
-			arrUp = new BlinkSprite();
-			arrDown = new BlinkSprite();
-			arrUp.loadGraphic(Gui.getIcon("ar_up", moreArrow.iconSize, moreArrow.shadowColor, 0, moreArrow.iconSize + 1));
-			arrDown.loadGraphic(Gui.getIcon("ar_down", moreArrow.iconSize, moreArrow.shadowColor, 0, moreArrow.iconSize + 1));
-			arrUp.offset.set(5, 2);
-			arrDown.offset.set(5, 2);
-			arrUp.scrollFactor.set(0, 0);
-			arrDown.scrollFactor.set(0, 0);
+			scInd = [];
+
+			for (i in 0...2)
+			{
+				scInd[i] = new BlinkSprite();
+				scInd[i].blinkRate = c.blinkRate;
+				scInd[i].scrollFactor.set(0, 0);
+				scInd[i].loadGraphic(Gui.getIcon( ["ar_up", "ar_down"][i], c.size, null, c.color_border, 0, cast c.size / 8));
+				scInd[i].replaceColor(0xFFFFFFFF, c.color);
+				insert(i, scInd[i]);
+				// Position at X Axis
+				switch(c.alignment) {
+					case "right":
+						scInd[i].x = x + width - elementHeight;
+					case "justify", "center":
+						scInd[i].x = x + (width / 2) - (scInd[i].width / 2);
+					default: // "left"
+						scInd[i].x = x + elementHeight;
+				}
+
+			}// end loop
 			
-			if (moreArrow.color != null) {
-				arrUp.color = moreArrow.color;
-				arrDown.color = moreArrow.color;
-			}
 			
-			arrUp.setPosition(this.x + (this.width / 2), this.y - moreArrow.padding);
-			arrDown.setPosition(arrUp.x, this.y + this.height + moreArrow.padding + moreArrow.paddingDown);
-			add(arrUp);
-			add(arrDown);
-			moreArrow.inited = true;
+			// Position at Y axis:
+			// A 2 pixel extra padding seems to work and avoid overlapping in most occasions
+			
+			// I want nothing above the 0.0 horizontal line, so push everything down
+			// to compensate for the scroll indicator
+			// Arrows are half the frame height
+			
+			posOffsetY = Math.ceil(c.size / 2) + 2;
+			posOffset(0, posOffsetY);
+			height += posOffsetY;
+			scInd[0].y = y - Math.ceil(c.size / 2) + c.offset[0];
+			scInd[1].y = y + height + styleB.el_padding + c.offset[1] + 2;
+			
 		} // --
 		
-		arrUp.set(hasMoreAbove());
-		arrDown.set(hasMoreBelow());
-		arrUp.sync(); arrDown.sync();
+		scInd[0].set(hasMoreAbove());
+		scInd[1].set(hasMoreBelow());
+		scInd[0].sync(); scInd[1].sync();
 	}//---------------------------------------------------;
 	
 	
@@ -240,9 +262,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		// Ready this to accept new data
 		clearTweens();
 		
-		// Get the default style if it's not set already.
-		if (styleBase == null) {
-			styleBase = Styles.default_BaseStyle;
+		// Get the default style if it's not set already. (rare)
+		if (styleB == null) {
+			styleB = Styles.DEF_STYLEVLBASE;
 		}
 		
 		// Removed Width init
@@ -252,25 +274,18 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		// Also :: Set the starting positions of all the slots ::
 		if (elementHeight < 0) {
 			r_el = factory_getElement(0);
-			elementHeight = r_el.getItemHeight() + styleBase.element_padding;
+			elementHeight = Std.int(r_el.height) + styleB.el_padding;
 			r_el.destroy();
-			height = (_slotsTotal * elementHeight) - styleBase.element_padding;
-			
-			// -- Get the starting positions of the slots
-			elementYPositions = [];
-			for (s in 0..._slotsTotal) {
-				elementYPositions[s] = s * elementHeight;
-			}
-			//trace("Info: Set element positions", elementYPositions);
+			height = (_slotsTotal * elementHeight) - styleB.el_padding;
 		}
 		
 		// Pooling?
 		if (pooling_mode == null)
 			setPoolingMode(DEF_POOL_MODE);
-
+			
 		// It's going to be called upon the first showpage
 		if (flag_InitViewAfterDataSet) {
-			trace('Info: Setting data, initializing view');
+			trace('Info: Setting data, initializing view..');
 			_scrollOffset = -1;
 			setViewIndex(0);
 		}
@@ -279,11 +294,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	
 	
 	// -- Helper
-	function clearTweens()
+	public function clearTweens()
 	{
-		for (i in allTweens) {
-			if (i != null) { i.cancel(); i = null; }
-		}
+		DEST.tweenAr(allTweens);
 		allTweens = [];
 	}//---------------------------------------------------;
 	
@@ -297,18 +310,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		_data = null;
 		elementSlots = null;
 		markedForRemoval = null;
-		styleBase = null;
-		elementYPositions = null;
+		styleB = null;
 		
-		if (animTimer != null) {
-			animTimer.cancel();
-			animTimer = null;
-		}
-				
-		if (_pool != null) { for (i in _pool) i.destroy(); _pool = null; }
+		_pool = FlxDestroyUtil.destroyArray(_pool);
 		
 	}//---------------------------------------------------;
-	
 	
 	/**
 	 * Scroll the entire list down by one element
@@ -332,25 +338,20 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 			counter = 0;
 			while (counter < _slotsTotal)
 			{
-				if (styleBase.instantScroll) {
+				if (styleB.el_scroll_time==0) {
 					elementSlots[counter].y -= elementHeight;
 				}else
 				{
-					// Make sure the tween starts from a valid pos
-					if (counter == 0) { // This is to fade off the first one only
-					 allTweens.push(FlxTween.tween(elementSlots[counter], 
-						{ alpha:0, y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
-					} else {
-					 allTweens.push(FlxTween.tween(elementSlots[counter], 
-						{ y:elementSlots[counter].y - elementHeight }, styleBase.element_scroll_time ));
-					}
+					var pr = { y:elementSlots[counter].y - elementHeight };
+					if (counter == 0) Reflect.setField(pr, "alpha", 0); // Fade the first element only
+					allTweens.push(FlxTween.tween(elementSlots[counter], pr, styleB.el_scroll_time));
 				}
 
 				elementSlots[counter] = elementSlots[counter + 1];
 				counter++;
 			}
 			
-			if (styleBase.instantScroll) {
+			if (styleB.el_scroll_time == 0) {
 				
 				r_el = getNewElementIntoPos(counter - 1 , _scrollOffset + counter);
 				_scrollOffset++;
@@ -366,7 +367,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 				isScrolling = true;
 
 				r_el.alpha = 0;
-				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y - elementHeight }, styleBase.element_scroll_time, 
+				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y - elementHeight }, styleB.el_scroll_time, 
 						{ onComplete:__scrollComplete } ));
 			}
 
@@ -402,23 +403,19 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 			counter = r_1; // last index
 			while (counter >= 0)
 			{
-				if (styleBase.instantScroll) {
+				if (styleB.el_scroll_time==0) {
 					elementSlots[counter].y += elementHeight; // elementHeight includes padding
 				}else {
-					if (counter == r_1) {
-						allTweens.push(FlxTween.tween(elementSlots[counter],
-							{alpha:0, y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
-					}else {
-						allTweens.push(FlxTween.tween(elementSlots[counter],
-							{y:elementSlots[counter].y + elementHeight }, styleBase.element_scroll_time));
-					}
+					var pr = { y:elementSlots[counter].y + elementHeight };
+					if (counter == r_1) Reflect.setField(pr, "alpha", 0);
+					allTweens.push(FlxTween.tween(elementSlots[counter], pr, styleB.el_scroll_time));
 				}
 			
 				elementSlots[counter] = elementSlots[counter - 1];
 				counter--;
 			}
 			
-			if (styleBase.instantScroll)
+			if (styleB.el_scroll_time==0)
 			{
 				// Counter is now -1;
 				r_el = getNewElementIntoPos(counter + 1, _scrollOffset - 1);
@@ -435,8 +432,8 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 				
 				isScrolling = true;
 
-				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y + elementHeight }, styleBase.element_scroll_time, 
-						{ onComplete:__scrollComplete } ));
+				allTweens.push(FlxTween.tween(r_el, { alpha:1, y:r_el.y + elementHeight }, 
+					styleB.el_scroll_time, { onComplete:__scrollComplete } ));
 			}
 			
 			return true;
@@ -458,6 +455,10 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	public function unfocus()
 	{
 		isFocused = false;
+		if (scInd[0] != null) {
+			scInd[0].set(false);
+			scInd[1].set(false);
+		}
 	}//---------------------------------------------------;
 	
 	
@@ -466,59 +467,47 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	//====================================================;
 	
 	// --
-	// THIS is mainly used for the onScreen,offScreen animations
-	// Animate all slots , Implies the elements are on their starting position!!!
-	// NOTE : Starting and ending positions are offsets
-	function animationAllSlots(	startAlpha:Float, endAlpha:Float, 
-								startOffsetX:Float, endOffsetX:Float,
-								startOffsetY:Float, endOffsetY:Float, 
-								onComplete:Void->Void)
+	// Mainly used for the onScreen,offScreen animations
+	// Animates all slots 
+	// NOTE :	- Starting offsets from current pos ( will directly move the elements there )
+	// 			- Ending offsets from the initial positions (so 0,0 will end at init pos)
+	function animateAllSlots(	Alpha:Array<Float>, StartOffs:Array<Int>,
+								EndOffs:Array<Int>, onComplete:Void->Void) 
+								
 	{
-		
-		var elementTime:Float = styleBase.anim_total_time / _slotsTotal;
-		var betweenTime:Float = styleBase.anim_time_between_elements;
-			if (betweenTime < 0) betweenTime = elementTime * 0.9;
-			
-		var easeFn:EaseFunction = Reflect.field(FlxEase, styleBase.anim_tween_ease);
-		
-		/* OLD WAY::
-		switch(styleBase.anim_tween_ease) {
-			case "bounce": easeFn = FlxEase.bounceOut;
-			case "elastic": easeFn = FlxEase.elasticOut;
-			case "back": easeFn = FlxEase.backOut;
-			case "circ": easeFn = FlxEase.circOut;
-			default: easeFn = null; // linear
-		} */
+				
+		// if easeFn is null, then the animation is going to be linear
+		var easeFn:EaseFunction = Reflect.field(FlxEase, styleB.stw_el_ease);
+
+		clearTweens();
 		
 		var i:Int = 0;
 		while (elementSlots[i] != null)
-		{		
-			elementSlots[i].alpha = startAlpha;
-			elementSlots[i].x += startOffsetX;
-			elementSlots[i].y += startOffsetY;
+		{
+			r_el = elementSlots[i];
+			r_el.alpha = Alpha[0];
+			r_el.x += StartOffs[0];
+			r_el.y += StartOffs[1];
 			
-			allTweens.push(FlxTween.tween(elementSlots[i], 
-				{ x:this.x + endOffsetX, y:this.y + elementYPositions[i] + endOffsetY, alpha:endAlpha }, elementTime,
-				{ startDelay:(i * betweenTime), ease:easeFn } ));
-				
+			allTweens.push(FlxTween.tween(elementSlots[i], {
+				x:getStartingXPos(r_el) + EndOffs[0], 	// Ending at init pos + offset
+				y:y + (i * elementHeight) + posOffsetY + EndOffs[1], // -- same --
+				alpha:Alpha[1] }, styleB.stw_el_time,
+				{ startDelay:(i * styleB.stw_el_wait), ease:easeFn } 
+				));
+	
 			i++;
 		}
 		
-		// trace("ANIMATION END AT INDEX", i);
-		
 		isScrolling = true;
 		
-		if (animTimer != null) {
-			animTimer.cancel();
+		// Get the oldest tween and put a callback to it
+		allTweens[allTweens.length - 1].onComplete = function(?tw:FlxTween){
+			isScrolling = false;
+			clearTweens();
+			onComplete();
 		}
 		
-		animTimer = new FlxTimer();
-		animTimer.start((betweenTime * i) + elementTime * 2, function(_) { 
-				isScrolling = false;
-				clearTweens();
-				animTimer = null;
-				onComplete();
-			} );	
 	}//---------------------------------------------------;
 	
 	
@@ -530,13 +519,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	public function onScreen(focusAfter:Bool = true, ?onComplete:Void->Void)
 	{
 		visible = true;
-			
-		animationAllSlots( 0, 1, styleBase.anim_start_x, 0, 
-								 styleBase.anim_start_y, 0,
-							function() {
-								if (focusAfter) focus();
-								if (onComplete != null) onComplete(); 
-							});
+		animateAllSlots([0, 1], styleB.stw_el_EnterOffs, [0, 0],
+						function() {
+							if (focusAfter) focus();
+							if (onComplete != null) onComplete(); 
+						});
 	}//---------------------------------------------------;
 	/**
 	 * Animates the menu to offScreen
@@ -545,13 +532,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	public function offScreen(?onComplete:Void->Void)
 	{
 		unfocus();
-			
-		animationAllSlots( 0.9, 0,  0, styleBase.anim_end_x,
-									0, styleBase.anim_end_y,
-							function() {
-								visible = false;
-								if (onComplete != null) onComplete();
-							});
+		animateAllSlots([0.9, 0], [0, 0], styleB.stw_el_ExitOffs,
+						function() {
+							visible = false;
+							if (onComplete != null) onComplete(); 
+						});
 	}//---------------------------------------------------;
 
 	// Sets a new view index and resets the elements
@@ -601,19 +586,20 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 			}
 		}
 		
-		// -- This is the first time the autowidth is going to be calculated
-		if (width == 0)
-		{
-			var maxw:Float = 0;
-			for (i in elementSlots) {
-				if (i != null && i.width > maxw) maxw = i.width;
-			}
-			width = cast maxw;
-			if (width == 0) { trace("Error: Autowidth was 0 !"); width = 42; }	
-		}
-		
 		updateScrollIndicator();
 	}//---------------------------------------------------;
+	
+	
+	// Utility, goes through all onscreen items and returns the maximum width found
+	public function getMaxElementWidthFromView():Float
+	{
+		var m:Float = 0;
+		for (i in elementSlots){
+			if (i != null && (i.width > m)) m = i.width;	
+		}
+		return m;
+	}//---------------------------------------------------;
+	
 	
 	//====================================================;
 	// HELPERS
@@ -661,15 +647,15 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	* Get a Recycled or New Item Element
 	* put it into a screen slot, and set it with data
 	* # Adds it to the stage
-	* @param	ySlot 		, 0 is the first slot. -1 is valid
+	* @param	ySlot 		, 0 is the first slot, NOTE this could be -1 or +1
 	* @param	dataIndex	, The index of the data array to pass
 	*/
 	function getNewElementIntoPos(ySlot:Int, dataIndex:Int):T
 	{
 		r_el = poolGet(dataIndex);
 		r_el.visible = true; // Just in case
-		r_el.x = x; // Just in case
-		r_el.y = y + (ySlot * elementHeight);
+		r_el.y = y + (ySlot * elementHeight) + posOffsetY;
+		r_el.x = getStartingXPos(r_el);
 		r_el.unfocus(); // Element might be focused or just created. Just in case to default?
 		add(r_el);
 		// Note: At this point the alpha could be anything because of recycle
@@ -677,7 +663,23 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	   return r_el;
 	}//---------------------------------------------------;
 	
-	// --
+	
+	// I need this for the item alignments
+	function getStartingXPos(el:T):Float
+	{
+		// Currently only "center" does anything, anything else puts at 0
+		// So I can skip a switch case and use an if
+		if (styleB.alignment == "center")
+		{
+			return x + width / 2 - el.width / 2;
+		}else
+		{
+			return x;
+		}
+		
+	}//---------------------------------------------------;
+	
+	// -- Create and return a new Element, initialize it too
 	function getNewElement(index:Int):T
 	{
 		r_el = factory_getElement(index);
@@ -693,37 +695,37 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 
 	/**
 	 * Call this BEFORE setting DATA
-	 * @param	val [off,reuse,recycle]
+	 * @param	val [off, reuse, recycle]
 	 * @param	param applicable in reuse
 	 * @return
 	 */
 	public function setPoolingMode(val:String, param:Int = 0 )
 	{
+		
 		switch(val) {
 			case 'recycle':
 				flag_pool_recycle = true;
 				flag_pool_reuse = false;
-				pooling_mode = val;
 				_pool_max_size = _slotsTotal + 2; // Plus 2 is enough, because the scrolling is being done one by one
 			case 'reuse':
 				flag_pool_recycle = false;
 				flag_pool_reuse = true;
-				pooling_mode = val;
 				_pool_max_size = param; if (_pool_max_size < 1) _pool_max_size = DEF_POOL_REUSE_MAX;
 			case 'off':
 				flag_pool_recycle = false;
 				flag_pool_reuse = false;
 				_pool_max_size = 0;
-				pooling_mode = "off";
 			default : throw "Invalid pooling move";
 		}
+		
+		pooling_mode = val;
 		
 		//trace('Info: Setting POOL mode to [$val]');
 		//trace('Info: POOL MAX SIZE [$_pool_max_size]');
 		
 		// -- Initialize the pool
 		if (_pool != null) {
-			trace("Error: Resetting data is still in development, be careful");
+			trace("Error: Resetting the pool is not tested, be careful");
 			return;
 		}
 		
@@ -736,13 +738,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	// Get an element depending on the pool type
 	function poolGet(_dataIndex:Int):T
 	{
-		
 		if (flag_pool_reuse)
 		{
 			// Search if an element with the data is already in the pool
 			for (i in _pool) {
 				if (i.isSame(_data[_dataIndex])) {
-					// trace("Pool GET, found element on the pool");
 					return i;
 				}
 			}
@@ -751,7 +751,6 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		else if (flag_pool_recycle)
 		{
 			if (_pool_length > 0) {
-				// trace("Pool GET, returning first available element");
 				_pool_length--;
 				return _pool.shift();
 			}
@@ -777,7 +776,6 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		if (flag_pool_reuse) {
 			// Don't add the same element if it's already there
 			if (_pool.indexOf(el) !=-1) {
-				// trace('Pool PUT, Element already exists, skipping');
 				return;
 			}
 		}
@@ -785,7 +783,6 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		{
 			// There is no pooling mode here.
 			// Destroy the object
-			// trace('Pool PUT, No pool mode, destroying object');
 			el.destroy();
 			return;
 		}
@@ -796,22 +793,24 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		if (_pool_length > _pool_max_size) {
 			_pool_length--;
 			_pool.shift();
-			//trace('Pool PUT - OVERFLOW, destroying first element. New pool size = $_pool_length');
 		}
 		
-		// trace('Pool PUT , New pool size = $_pool_length');
 	}//---------------------------------------------------;
 
-	// --
-	public function setPosition(X:Float, Y:Float)
+	
+	/**
+	 * Moves all the children by an offset
+	 * e.g. posOffset(0,10) moves elements by 10 pixels down
+	 * NOTE: You'll need to recalculate the height manually again.
+	 * @param	X X offset to move
+	 * @param	Y Y offset to move
+	 */
+	public function posOffset(X:Float = 0, Y:Float = 0)
 	{
-		var dx = X - x;
-		var dy = Y - y;
-		for (i in elementSlots) {
-			i.x += dx;
-			i.y += dy;
+		for (i in this.members) {
+			cast(i, FlxSprite).x += X;
+			cast(i, FlxSprite).y += Y;
 		}
-		x = X; y = Y;
 	}//---------------------------------------------------;
 	
 	//====================================================;

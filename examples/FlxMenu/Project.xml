@@ -2,7 +2,7 @@
 <project>
 	
 	<!-- APP ---->
-	<app title="djFlixel MegaDemo" file="djFlixel" main="Main" version="0.3.0" company="JohnDimi" />
+	<app title="FlxMenu Example" file="FlxMenuExample" main="Main" version="0.3.0" company="JohnDimi" />
 	<app preloader="flixel.system.FlxBasePreloader"/>
 	
 	<!-- WINDOW SETTINGS- --->
@@ -11,11 +11,19 @@
 	
 	<!-- PATHS ----------------->
 	<classpath name="source" />
-	<set name="BUILD_DIR" value="build/debug/" />
+	<set name="BUILD_DIR" value="build/debug/" if="debug"/>
+	<set name="BUILD_DIR" value="build/release/" unless="debug"/>
 	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
 
 	<!-- DJFLIXEL -------------->
+	
+	<!-- Go ahead and include all the icon sets -->
 	<set name="DJFLX_ICONS_8"/> 
+	<set name="DJFLX_ICONS_12"/> 
+	<set name="DJFLX_ICONS_16"/> 
+	<set name="DJFLX_ICONS_24"/> 
+	
+	<!-- Reload some external files without recompiling, just press F12 -->
 	<haxedef name="EXTERNAL_LOAD"/>
 
 	<!-- FLIXEL ---------------->
@@ -24,5 +32,8 @@
 	<!-- LIBRARIES ------------->
 	<haxelib name="flixel"/>
 	<haxelib name="djFlixel"/>
+	
+	<!-- Note: 	Many common defines are being declared in the "djflixel/source/include.xml" file
+				This is to save space and streamline the project.xml file a bit -->
 	
 </project>

@@ -1,7 +1,7 @@
 package djFlixel.gui.list;
 
 import djFlixel.gui.menu.*;
-import djFlixel.gui.Styles.MItemStyle;
+import djFlixel.gui.Styles;
 import djFlixel.tool.DataTool;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
@@ -16,13 +16,15 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 	public var page(default, null):PageData;
 
 	// Style for all the MenuBaseStyles on this page
-	public var styleMItem:MItemStyle;
+	// NOTE: FlxMenu creates a copy so it's safe to modify it
+	public var styleMenu(default, set):StyleVLMenu;
 	
 	//====================================================;
 	// --
-	public function new(X:Float, Y:Float, WIDTH:Int, ?SlotsTotal:Int) 
+	public function new(X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
 	{
 		super(MItemBase, X, Y, WIDTH, SlotsTotal);
+		setPoolingMode("reuse");
 	}//---------------------------------------------------;
 	
 	
@@ -33,55 +35,80 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 	{
 		page = Page;
 		
-		// Get and set the styles 
-		// ----------------------
-		// 1. If a style exists on the page, apply it ELSE
-		// 2. If FLXMenu has set a style, apply that ELSE
-		// 3. Get the default style
-		
-		// List style
-		if (page.custom.styleList != null) {
-			styleList = DataTool.applyFieldsInto(page.custom.styleList, Reflect.copy(styleList));
+		// A VListMenu usually exists inside a FlxMenu so styleMenu is already set
+		// so , if you create it outside of an FlxMenu get a style
+		if (styleMenu == null) {
+			styleMenu = Styles.newStyleVLMenu(); 
 		}
 		
-		// MItem Style from page
-		if (page.custom.styleMItem != null) {
-			styleMItem = DataTool.applyFieldsInto(page.custom.styleMItem, Reflect.copy(styleMItem));
-		}else {
-			if (styleMItem == null) styleMItem = Styles.default_MItemStyle;
-		}
-		// Base Style from page
-		if (page.custom.styleBase != null) {
-			styleBase = DataTool.applyFieldsInto(page.custom.styleBase, Reflect.copy(styleBase));
+		if (page.custom.styleMenu != null)
+		{
+			Styles.applyStyleNodeTo(page.custom.styleMenu, styleMenu);
 		}
 		
-		// If creating a listMenu outside of the FlxMenu:
-		if (styleBase == null) {
-			styleBase = Styles.newStyle_Base(); // NOTE: I might not need this, since it's being checked again later?
+		// -- Adjust the scroll Indicator
+		// Warning, writing back to the style, but this should be a copy
+		
+		// Shadow Padding Hack 	, place the down arrow a bit further to compensate for the shadow size
+		//						, if an offset is already set this will be ignored and user offset will be used
+		var sh:Int = 0;
+		if (styleMenu.border_size != null && styleMenu.border_size > 0) {
+			sh = styleMenu.border_size;
+		}else{
+			sh = Math.ceil(styleMenu.fontSize / 8);
 		}
 		
-		// Put push the bottom scroll indicator a little further
-		moreArrow.paddingDown = Std.int(2 * (styleMItem.size / 8));
-		moreArrow.shadowColor = styleMItem.borderColor;
-		moreArrow.color = styleMItem.color_default;
+		styleB.scrollInd = DataTool.defParams(styleB.scrollInd, {
+			color:styleMenu.color,
+			color_border:styleMenu.color_border,
+			padding:[0,sh]
+		});
 		
 		super.setDataSource(page.collection);
 		
-		// -- Add a cursor, it's mandatory as of yet.
-		if (!hasCursor) 
+		/// -- Add a cursor --
+		
+		if (cursor == null)
 		{
+			var c = styleMenu.cursor;
+			if (c && c.disable) return; // Because there is nothing else to do after the parent if
+			
 			var cur:FlxSprite;
-			if (styleList.cursor_image != null) {
-				// BUG:
-				// It doesn't align well
-				cur = new FlxSprite(0, 0, styleList.cursor_image);                                                                                                                   
-			}else {
-				var t = new FlxText(0, 0, 0, ">");
-				Styles.styleMItemText(t, styleMItem);
-				cur = cast t;
+			
+			// Shortcut function ::
+			// Append Offsets, Add Cursor, Starting with offsets (a,b)
+			function _a(a, b) {
+				var co = [a, b];
+				if (c && c.offset) {
+					co[0] += cast c.offset[0];
+					co[1] += cast c.offset[1];	
+				}
+				cursor_setSprite(cur, co);
+			}// --
+			
+			if (c && c.image) // Using an image cursor
+			{
+				if(c.frames){
+				cur = new FlxSprite(0, 0);
+				cur.loadGraphic(c.image, true, c.size, c.size); // be sure (size) is set
+				cur.animation.add("main", c.frames, c.fps); 	// be sure (fps) is set
+				cur.animation.play("main");
+				}else{
+				cur = new FlxSprite(0, 0, c.image);					
+				}
+				if (c.align) _a(0, Math.round(cur.height / 2 - elementHeight / 2));
+				else _a(0, 0);
 			}
-			hasCursor = true;
-			cursor_setSprite(cur, false);
+			else // Using a text cursor
+			{
+				var s = styleMenu.alignment == "right"?"<":">"; // Default symbol
+				if (c && c.text) s = c.text;
+				var t = new FlxText(0, 0, 0, s);
+				Styles.applyTextStyle(t, styleMenu);
+				t.color = styleMenu.color_focused; // #COLOR, I am experimenting
+				cur = cast t;
+				_a(0, 2);	// Compensate for 2 Pixel Gutter above the text, same as MItemBase
+			}
 		}
 	}//---------------------------------------------------;
 
@@ -110,19 +137,19 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		//  Data changed. Set visual element to reflect changes
 		
 		//  Check to see if it's onscreen
-			for (i in elementSlots) {
-				if (i.isSame(_data[ind])) {
-					i.setData(_data[ind]); // Resets whole item from the start
-					return;
-				}
-			}		
+		for (i in elementSlots) {
+			if (i.isSame(_data[ind])) {
+				i.setData(_data[ind]); // Resets whole item from the start
+				return;
+			}
+		}		
 			
 		// If not found, check to see if the element is pooled.
-			if (flag_pool_reuse)
-			{
-				var b:MItemBase = poolGet(ind); // Guaranteed that it won't be removed from the pool
-				if (b != null) b.setData(_data[ind]);
-			}
+		if (flag_pool_reuse)
+		{
+			var b:MItemBase = poolGet(ind); // Guaranteed that it won't be removed from the pool
+			if (b != null) b.setData(_data[ind]);
+		}
 	}//---------------------------------------------------;
 
 	
@@ -173,18 +200,26 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		return -1;
 	}//---------------------------------------------------;
 	
-	
 	// --
 	override function factory_getElement(dataIndex:Int):MItemBase
 	{
 		return switch(_data[dataIndex].type) {
-			case "link"   : new MItemLink(styleMItem);
-			case "oneof"  : new MItemOneof(styleMItem);
-			case "toggle" : new MItemToggle(styleMItem);
-			case "slider" : new MItemSlider(styleMItem);
-			case "label"  : new MItemLabel(styleMItem);
-			default: new MItemBase(styleMItem);
+			case "link"   : new MItemLink(styleMenu,width);
+			case "oneof"  : new MItemOneof(styleMenu,width);
+			case "toggle" : new MItemToggle(styleMenu,width);
+			case "slider" : new MItemSlider(styleMenu,width);
+			case "label"  : new MItemLabel(styleMenu,width);
+			default: new MItemBase(styleMenu,width);
 		}
+	}//---------------------------------------------------;
+	
+	// --
+	// Set the style and init
+	function set_styleMenu(val:StyleVLMenu):StyleVLMenu
+	{
+		styleMenu = val;
+		styleNav = styleMenu;
+		return val;
 	}//---------------------------------------------------;
 	
 }// -- end -- //

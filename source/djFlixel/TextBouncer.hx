@@ -2,6 +2,7 @@ package djFlixel;
 
 import djFlixel.SND;
 import djFlixel.gui.Align;
+import djFlixel.tool.DEST;
 import djFlixel.tool.DataTool;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
@@ -117,9 +118,7 @@ class TextBouncer extends FlxSpriteGroup
 	// --
 	override public function destroy():Void 
 	{
-		for (i in tweens) {
-			if (i != null) i.cancel();
-		}
+		tweens = DEST.tweenAr(tweens);
 		super.destroy();
 	}//---------------------------------------------------;
 

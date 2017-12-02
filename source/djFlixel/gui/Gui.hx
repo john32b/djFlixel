@@ -5,9 +5,7 @@ import djFlixel.SimpleVector;
 import djFlixel.gfx.GfxTool;
 import flash.display.BitmapData;
 import flixel.FlxG;
-import flixel.FlxObject;
 import flixel.FlxSprite;
-import flixel.input.FlxPointer;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -25,8 +23,6 @@ import flixel.util.FlxColor;
 class Gui
 {
 
-	public inline static var DEF_GUI_ICONS:String = "assets/hud_icons.png";
-	
 	//====================================================;
 	// Custom Global Text Formatting
 	//====================================================;
@@ -66,7 +62,7 @@ class Gui
 		var t = new FlxText(X, Y, 0, "", size);
 		t.scrollFactor.set(0, 0);
 		if (textC !=-1) t.color = textC; else t.color = Styles.DEF_TEXT_COLOR;
-		if (useBorder) Styles.quickTextBorder(t, t.borderColor);
+		if (useBorder) Styles.applyTextBorder(t, t.borderColor);
 		t.applyMarkup(text, formatPairs);
 		return t;
 	}//---------------------------------------------------;
@@ -86,7 +82,7 @@ class Gui
 		var t = new FlxText(X, Y, 0, text, size);
 		t.scrollFactor.set(0, 0);
 		if (textC !=-1) t.color = textC; else t.color = Styles.DEF_TEXT_COLOR;
-		if (borderC !=-1) Styles.quickTextBorder(t, t.borderColor);
+		if (borderC !=-1) Styles.applyTextBorder(t, t.borderColor);
 		return t;
 	}//---------------------------------------------------;
 	
@@ -128,7 +124,6 @@ class Gui
 	
 	
 	
-	// NEW for 3.0
 	//====================================================;
 	// QUICK PANEL
 	// useful for quickly putting and aligning text
@@ -151,7 +146,7 @@ class Gui
 	/**
 	 * Puts text on the current state, automatically aligns it to the previous text put with qText
 	 * @param	text String of text
-	 * @param	next bool, if true it will place it next to the previous one
+	 * @param	next bool, if true it will place it next to the previous one, false to place it below the previous one
 	 */
 	public static function qText(txt:String="", next:Bool = false):FlxText
 	{
@@ -167,6 +162,8 @@ class Gui
 		return cast(FlxG.state.add(t));
 	}//---------------------------------------------------;
 	
+	
+	
 	//====================================================;
 	// ICONS
 	//====================================================;
@@ -178,64 +175,81 @@ class Gui
 	// - Store the generated icons
 	static var icons:Map<String,BitmapData>;
 	
+	// DjFlixel Default icons name prefix.
+	public inline static var DEF_ICONS_PREFIX = "icons_";
+	
 	/**
-	 * Returns a new bitmap with an icon from the default gui lib
-	 * @param	type check, ar_left, ar_right, ar_up, ar_down, dot, plus
-	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
+	 * Returns a new bitmap with an icon from the GUI icon lib
+	 * Use getIcon(..) for caching and shadow effects
+	 * @param	type ch_on, ch_off, ar_left, ar_right, ar_up, ar_down, dot, plus
+	 * @param	size Available Sizes = [8,12,16]
+	 * @param	set Declare an external LIB ICON set to get the icon from there.
 	 * @return Note Bitmap returned is of size 16x16
 	 */
-	static function getLibIcon(type:String, size:Int = 0):BitmapData
+	static function getIconBasic(type:String, size:Int, ?set:String):BitmapData
 	{
 		var frame:Int;
 		
-		// Checkbox is the only icon that will return a strip of 2 consecutive frames, open/close
-		if (type == "check")
-		{
-			if (size == 0) frame = 12; else
-			if (size == 1) frame = 14; else frame = 16;
-			return GfxTool.getBitmapPortion(DEF_GUI_ICONS, frame * 16, 0, 32, 16);
-		}
+		/** Order of Icons in the DjFlixel Icon Sets :
+		 *	[left,right,up,down,checkbox_off,checkbox_on,dot,plus]
+		 * 
+		 * Make sure you embed the icon files on the "Project.xml" 
+		 * 	with <set name="DJFLX_ICONS_XX"/>  XX=8,12,16,24
+		 *  note: before loading the djFlixel lib
+		 */
 		
 		// Arrows and other icons are singles
+		// DEV: make a lookup table??
 		frame = switch(type)
 		{
-			case "ar_left": 
-				if (size == 0) 0; else
-				if (size == 1) 2; else 4;
-			case "ar_right":
-				if (size == 0) 1; else
-				if (size == 1) 3; else 5;
-			case "ar_up":
-				if (size == 0) 6; else
-				if (size == 1) 8; else 10;
-			case "ar_down":
-				if (size == 0) 7; else
-				if (size == 1) 9; else 11;
-			case "dot":  18;
-			case "plus": 19;
-			default: 19;
+			case "ar_left":0;
+			case "ar_right":1;
+			case "ar_up":2;
+			case "ar_down":3;
+			case "ch_off":4;
+			case "ch_on":5;
+			case "dot":6;
+			case "plus":7;
+			default:trace("ERROR: icon not defined"); 7;
 		};		
-		return GfxTool.getBitmapPortion(DEF_GUI_ICONS, frame * 16, 0, 16, 16);
+		
+		if (set != null)
+		return GfxTool.getBitmapPortion(set, frame * size, 0, size, size);
+		
+		#if debug try{ #end
+		
+		var iconFile = "assets/" + DEF_ICONS_PREFIX + size + ".png";
+		return GfxTool.getBitmapPortion(iconFile, frame * size, 0, size, size);
+		
+		#if debug }catch (e:Dynamic){
+		throw "Error: You must delcare the icons to use in the Project.xml file ; <set name=\"DJFLX_ICONS_" + size +"\"/>";
+		} #end
+		
 	}//---------------------------------------------------;
 	
 	/**
-	 * Get a library icon with a border color applied to it
-	 * @param	type check , ar_left, ar_right, ar_up, ar_down, dot, plus
+	 * Get a library icon with a border color applied to it.
+	 * Also caches the result so next time the call will be faster.
+	 * @param	type ch_on, ch_off , ar_left, ar_right, ar_up, ar_down, dot, plus
 	 * @param	size 0-small 1-medium 2-big, (8 pixels to 16pixels)
-	 * @param	shadowCol If set, will apply this shadow color at a default 1 pixel offset at bottom right
+	 * @param	set Declare an external LIB ICON set to get the icon from there
+	 * @param	shadowCol If set, will apply this shadow color
 	 * @param	offX Shadow offset X
 	 * @param	offY Shadow offset Y
 	 * @return
 	 */
-	public static function getIcon(type:String, size:Int = 0, ?shadowCol:FlxColor, offX:Int = 2, offY:Int = 1):BitmapData
+	public static function getIcon(type:String, size:Int, ?set:String, ?shadowCol:FlxColor, offX:Int = 2, offY:Int = 1):BitmapData
 	{
 		if (icons == null) icons = new Map();
 		var uid = '$type$size$shadowCol$offX$offY';
+		if (set != null) {
+			uid += set.split("/").pop(); // Just put the filename there
+		}
 		var b:BitmapData;
 		if (icons.exists(uid)) {
 			b = icons.get(uid);
 		}else{
-			b = getLibIcon(type, size);
+			b = getIconBasic(type, size, set);
 			if (shadowCol != null) b = GfxTool.applyShadow(b, shadowCol, offX, offY);
 			icons.set(uid, b);
 		}
@@ -243,8 +257,19 @@ class Gui
 		// Important to return a clone, because if it's a pointer it could be destroyed when a sprite is destroyed
 	}//---------------------------------------------------;
 	
+	// -- 
+	// Get an Approximate icon size to a number e.g. font size
+	public static function getApproxIconSize(s:Int)
+	{
+		if (s <= 13) return 8;
+		if (s <= 18) return 12;
+		if (s <= 26) return 16;
+		return 24;
+	}//---------------------------------------------------;
 	
-	// --
+	/**
+	 * Mainly clears the icon cache
+	 */
 	public static function destroy()
 	{
 		for (i in icons){
@@ -254,11 +279,12 @@ class Gui
 	}//---------------------------------------------------;
 		
 	
+	
 	//====================================================;
 	// Debugging
 	//====================================================;
 	// Color for some debug shapes
-	public static var d_color:Int = 0xFFFF9933;
+	public static var d_color:Int = 0x77FF4433;
 	
 	#if debug
 	/**
@@ -273,7 +299,7 @@ class Gui
 	public static function d_box(x:Float, y:Float, w:Float, h:Float)
 	{
 		var f = new FlxSprite(x, y);
-			f.makeGraphic(Std.int(w),Std.int(h), d_color);
+			f.makeGraphic(Std.int(w), Std.int(h), d_color);
 			f.scrollFactor.set(0, 0);
 		FlxG.state.add(f);
 	}//---------------------------------------------------;

@@ -1,22 +1,22 @@
 package djFlixel.gui;
-import djFlixel.SimpleCoords;
+
+import djFlixel.FlxAutoText;
 import djFlixel.gui.Styles;
-import djFlixel.gui.Styles.MItemStyle;
-import djFlixel.gui.Styles.VListStyle;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.menu.MItemBase;
 import djFlixel.gui.menu.MItemData;
 import djFlixel.gui.menu.PageData;
 import djFlixel.tool.ArrayExecSync;
+import djFlixel.tool.DEST;
 import djFlixel.tool.DataTool;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
-import flixel.text.FlxText;
+import flixel.util.FlxDestroyUtil;
 import flixel.util.typeLimit.OneOfTwo;
 
 /**
  * FlxMenu
- * A multi-page customizable menu system that can hold various item types
+ * A multi-page customizable menu system that can hold various Menu Item Types
  * ----------------------------------------------------------------------------
  */
 class FlxMenu extends FlxGroup
@@ -28,10 +28,7 @@ class FlxMenu extends FlxGroup
 	public var height(get, null):Int;
 	public var isFocused(default, null):Bool;
 	// Check isOpen by checking visible
-	
-	// Whether is is going on or off right now
-	var isAnimating:Bool;
-	
+		
 	// How many slots the lists should have, unless overriden by a page.
 	var slotsTotal:Int;
 	//---------------------------------------------------;
@@ -42,11 +39,11 @@ class FlxMenu extends FlxGroup
 	// *Pointer to the previous page, useful for animating
 	var previousMenu:VListMenu;
 	
+	// Pointer to the current loaded page.
+	public var currentPage(default, null):PageData;
+	
 	// Hold all the page data this menu is going to use
 	public var pages(default, null):Map<String,PageData>;
-	
-	// Pointer to the current loaded page.
-	var currentPage:PageData;
 	
 	// --
 	public var currentPageName(get, null):String;
@@ -55,40 +52,44 @@ class FlxMenu extends FlxGroup
 	var history:Array<String>;
 	
 	// Popup close fn, useful to have as global, in case the menu needs to close
+	// ALSO: if this is set, it means that a popup is currently active
 	var popupCloseFunction:Void->Void;
 	
 	// Keep a small pool of Pages so it doesn't have to recreate them
 	var _pool:Array<VListMenu>;
 	
 	// -- Header text displayed on top of the list (optional)
-	var headerText:FlxText;
+	var headerText:FlxAutoText;
+	var f_use_header:Bool = true;
+	// --
+	var decoLine:DecoLine;
 	
-	// -- Animation helper
-	var animQ:ArrayExecSync < (Void->Void)->Void > ;
+	// -- Animation helper for when animating pages in and out
+	var animQ:ArrayExecSync<Void->Void>;
 	
 	// Hold the latest dynamic pages in case it needs to go back to them
 	var dynPages:Array<PageData>;
 	
-	// Hold this many dynamic pages in the buffer.
-	public var dynPagesMax:Int = 3;
-	
-	// ===---- USER ----===
-	// =------------------=
+	// ===---- USER SETS ---===
+	// =----------------------=
 	
 	// Global list style for all menus, unless a page overrides this
 	// NULL to use the default style, Set right after creating
-	public var styleList:VListStyle;
+	public var styleMenu:StyleVLMenu;
 	
-	// Global item list style for all item Menus, unless a page overrides this
-	// NULL to use the default style, Set right after creating
-	public var styleMItem:MItemStyle;
-	
-	// Global item list style for all item Menus, unless a page overrides this
-	// NULL to use the default style, Set right after creating
-	public var styleBase:VBaseStyle;
-	
-	// The Header defaults to the style as an item
-	public var styleHeader:MItemStyle;
+	// The Text Style for the Optional Header
+	public var styleHeader:{
+		?enable:Bool,		// False to disable header info
+		?textS:TextStyle,	// Textstyle to be applied on the header text
+							// - autocalculated to reflect the stylemenu style unless overridden
+		?offsetText:Int,	// Y Offset for the text only,
+		?offset:Int, 		// Y Offset for both the line and text,
+		?alignment:String,	// left, right, center -- Will be borrowed from styleMenu.alignment
+		?CPS:Int,			// Characters per Second, 0 for instant
+		?deco_line:Int		// If >0 will draw a decorative line with this height between the header and the menu 
+							// the line's color will be the same as "color_accent" from the menu items
+		
+	};
 
 	// When you are going back to menus, remember the position it came from
 	public var flag_remember_cursor_position:Bool = true;
@@ -102,17 +103,23 @@ class FlxMenu extends FlxGroup
 	// Keep X maximum menus in the pool. !! SET THIS RIGHT AFTER NEW() !!
 	public var POOLED_MENUS_MAX:Int = 4;
 	
+	// Hold this many dynamic pages in the buffer.
+	public var dynPagesMax:Int = 8;
 	//---------------------------------------------------;
 	
 	// ==  User callbacks
 	// -------------------==
 	
+	// Callbacks for Menu Items Statuses ::
+	//
 	// blur   - This item was just unfocused // Unimplemented. need to add it. VListNav
 	// focus  - A new item has been focused <sends item>
 	// change - When an item changed value, <sends item>
-	// fire   - An item recieved an action command
+	// fire   - An item received an action command
 	public var callbacks_item:String->MItemData->Void;
 	
+	// Callbacks for Menu Statuses ::
+	// 
 	// start    - Start button was pressed ( useful in pause menus, to close the menu )
 	// back  	- The menu went back a page
 	// rootback - When user wants to back out from the root menu
@@ -120,7 +127,7 @@ class FlxMenu extends FlxGroup
 	// close  	- The menu was just closed, $param == SID just went off screen
 	// pageOn 	- The page with $param == SID just went on screen
 	// pageOff  - The page with $param == SID just went off screen
-	
+	//
 	// The following types are mainly for sound effect handling from the user
 	// ------
 	// tick		   - An item was focused, The cursor moved.
@@ -135,7 +142,7 @@ class FlxMenu extends FlxGroup
 	 * Constructor
 	 * @param	X Screen X position, You cannot change this later
 	 * @param	Y Screen Y position, You cannot change this later
-	 * @param	WIDTH 0 for auto width
+	 * @param	WIDTH Must set a width
 	 * @param	SlotsTotal Maximum slots for pages, unless overrided by a page
 	 */
 	public function new(X:Float, Y:Float, WIDTH:Int, SlotsTotal:Int = 4)
@@ -146,13 +153,8 @@ class FlxMenu extends FlxGroup
 		pages = new Map();
 		
 		// Default styles, can be overriden later
-		styleMItem = Styles.newStyle_MItem();
-		styleList   = Styles.newStyle_List();
-		styleBase   = Styles.newStyle_Base();
-		styleHeader = Styles.newStyle_MItem();
-		
-		// - Tweak the font size, User can change it later
-		styleHeader.size = 16;
+		styleMenu = Styles.newStyleVLMenu();
+		styleHeader = {};
 		
 		// Default to not visible at start,
 		// calling the showpage will make it visible
@@ -165,63 +167,22 @@ class FlxMenu extends FlxGroup
 		previousMenu = null;
 		currentPage = null;	
 		
-		animQ = new ArrayExecSync<(Void->Void)->Void>();
-		animQ.queue_complete = animQ_onComplete;
-		animQ.queue_action = function(fn:(Void->Void)->Void) { fn(animQ.next); };
+		// Page Animation Queue
+		animQ = new ArrayExecSync<Void->Void>();
+		animQ.queue_action = function(fn:Void->Void){fn();};
 		popupCloseFunction = null;
 	}//---------------------------------------------------;
 	
-
+	
 	/**
 	 * Apply a style to the menu
-	 * @param	node An object containing 4 optional nodes { .item .list .base .header }
+	 * @param	stMenu This must be a StyleVLMenu compatible object
+	 * @param	stHeader This must be a styleHeader compatible object
 	 */
-	public function applyMenuStyle(node:Dynamic)
+	public function applyMenuStyle(stMenu:Dynamic,?stHeader:Dynamic)
 	{
-		Styles.applyStyleNodeTo(node.item, styleMItem);
-		Styles.applyStyleNodeTo(node.list, styleList);
-		Styles.applyStyleNodeTo(node.base, styleBase);
-		Styles.applyStyleNodeTo(node.header, styleHeader);
-	}//---------------------------------------------------;
-	
-	/**
-	 * Apply a style that is set on the main PARAMS.JSON file
-	 * @param styleID Name of the style, Check the examples for formatting.
-	 */
-	@:deprecated("Use ApplyMenuStyle instead")
-	public function applyMenuStyleFromJSON(styleID:String)
-	{
-		var styleNode = Reflect.getProperty(FLS.JSON, styleID);
-		if (styleNode == null) {
-			trace('Warning: Can\'t find style "$styleID" in the json file');
-			return;
-		}
-		applyMenuStyle(styleNode);
-	}//---------------------------------------------------;
-	
-
-	/**
-	 * Apply a custom style to a page, nodes will overwrite the default style
-	 * @param	node An object containing {.list .base .MItem} styles
-	 * @param	page The page to apply the style to
-	 */
-	@:deprecated("This function is useless, Just set the overrides directly in the page.custom object")
-	public function applyPageStyle(styleNode:Dynamic, page:PageData)
-	{
-		if (styleNode.MItem != null) {
-			page.custom.styleMItem = Styles.newStyle_MItem();
-			DataTool.applyFieldsInto(styleNode.MItem, page.custom.styleMItem);
-		}
-		
-		if (styleNode.list != null) {
-			page.custom.styleList = Styles.newStyle_List();
-			DataTool.applyFieldsInto(styleNode.list, page.custom.styleList);
-		}
-		
-		if (styleNode.base != null) {
-			page.custom.styleBase = Styles.newStyle_Base();
-			DataTool.applyFieldsInto(styleNode.base, page.custom.styleBase);
-		}
+		Styles.applyStyleNodeTo(stMenu, styleMenu);
+		if (stHeader != null) Styles.applyStyleNodeTo(stHeader, styleHeader);
 	}//---------------------------------------------------;
 	
 	
@@ -235,28 +196,22 @@ class FlxMenu extends FlxGroup
 		previousMenu = null;
 		currentPage = null;
 		
-		styleBase = null;
 		styleHeader = null;
-		styleList = null;
-		styleMItem = null;
+		styleMenu = null;
 		
-		for (e in _pool) {
-			e.destroy();
-			e = null;
-		}
-		_pool = null;
+		animQ.destroy();
+		_pool = FlxDestroyUtil.destroyArray(_pool);
+		dynPages = FlxDestroyUtil.destroyArray(dynPages);
+		pages = DEST.map(pages); 
 		
-		for (i in pages) {
-			i.destroy();
-			i = null;
-		}
-		pages = null;
-		
-		for (p in dynPages) p.destroy();
 	}//---------------------------------------------------;
 	
-	// --
-	// Quick way to create and add a page to the menu
+	/**
+	 * Quick way to create and add a page to the menu
+	 * @param	pageSID Give the page a unique string Identifier
+	 * @param	params Check PageData.hx for options
+	 * @return
+	 */
 	public function newPage(pageSID:String, ?params:Dynamic):PageData
 	{
 		var p = new PageData(pageSID, params);
@@ -264,16 +219,35 @@ class FlxMenu extends FlxGroup
 		return p;
 	}//---------------------------------------------------;
 	
-	// --
-	// Highlight an item of a target SID
+	/**
+	 * Highlight an item with a target SID
+	 * @param	sid The SID of the menu item
+	 */
 	public function item_highlight(sid:String)
 	{
 		if (currentMenu == null) return;
 		currentMenu.item_highlight(sid);
 	}//---------------------------------------------------;
 	
+	
+	/**
+	 * Retrieve the menu item data from a page, searches the page database for the item
+	 * @param	pageSID The PAGE SID the item belongs to
+	 * @param	SID	The SID of the item
+	 * @return
+	 */
+	public function item_get(pageSID:String, SID:String):MItemData
+	{
+		var p = pages.get(pageSID);
+		if (p != null) for (i in p.collection) if (i.SID == SID) return i;
+		// Could not get the item
+		return null;
+	}//---------------------------------------------------;
+	
 	/**
 	 * Update the data on an item, alters Data and updates Visual
+	 * The item doesn't have to be on the current page it will search and alter it
+	 * in the pages database.
 	 * 
 	 * @param	pageSID You must provide the pageSID the item is in
 	 * @param	SID SID of the item
@@ -329,10 +303,11 @@ class FlxMenu extends FlxGroup
 				return;
 			}
 			
+			// Check to see if it's a dynamic page and retrieve it
+			// usually when going back to a dyn page
 			if (!pages.exists(pageSID)) 
 			{
 				var cp:PageData = null;
-				// Check if its a dynamic page
 				if (pageSID.substr(0, 4) == "dyn_" && dynPages != null)
 				{
 					dynPages.map(function(pg){if (pg.SID == pageSID) cp = pg; });
@@ -361,16 +336,16 @@ class FlxMenu extends FlxGroup
 			if (dynPages.length > dynPagesMax) dynPages.shift();
 		}
 
-		// -- ORDERING IS IMPORTANT
 		// 1. Set the previous, current values
 		previousMenu = currentMenu;
 		currentMenu = null;
-
+		
 		// 2. Now, call focus, this way it won't actually focus the currentMenu yet		
 		if (autofocus) {
-			focus();	
+			if (!visible) _mcallback("open");
+			visible = true;
+			isFocused = true; // Don't call focus(); I need a hacky way to do this.
 		}
-		
 		// 3. Store the cursor position and push the old page to the POOL
 		if (previousMenu != null) {
 			// Store the cursor position
@@ -401,29 +376,25 @@ class FlxMenu extends FlxGroup
 		//	  is going to be autofocused at the end of the animation.
 		animQ.reset();
 		
-		switch(currentMenu.styleBase.anim_style)
+		switch(currentMenu.styleMenu.pageEnterStyle)
 		{
-			case "sequential":
+			case "wait":
 				animQ.push(animQ_previousOffScreen);
-				animQ.push(function(fn:Void->Void) { _mcallback("pageOn", currentPage.SID); fn(); } );
+				animQ.push(function() { _mcallback("pageOn", currentPage.SID); animQ.next(); } );
 				animQ.push(animQ_currentOnScreen);
 				animQ.next(); // start the queue
 				
 			case "parallel":
 				_mcallback("pageOn", currentPage.SID);
-				animQ_previousOffScreen(_NL);
-				animQ_currentOnScreen(animQ_onComplete);				
+				animQ.push(animQ_previousOffScreen);
+				animQ.push(animQ_currentOnScreen);
 			default: // "none":
 				_mcallback("pageOn", currentPage.SID);
-				animQ_previousRemove(_NL);
-				animQ_currentOnScreen(animQ_onComplete);
+				animQ.push(animQ_previousRemove);
+				animQ.push(animQ_currentOnScreen);
 		}
 		
-		if (!visible)
-		{
-			visible = true;
-			_mcallback("open");
-		}
+		animQ.next();
 		
 	}//---------------------------------------------------;
 	
@@ -433,10 +404,13 @@ class FlxMenu extends FlxGroup
 	 */
 	public function close(flagRememberPos:Bool = false)
 	{
-		if (visible) {
-			visible = false;
-			_mcallback("close", currentPage != null?currentPage.SID:null);
-		}else return; // Already closed
+		if (!visible) return;
+		visible = false;
+		
+		if (decoLine != null) decoLine.stop();
+		if (headerText != null) headerText.stop();
+		
+		_mcallback("close", currentPage != null?currentPage.SID:null);
 		
 		if (flagRememberPos && currentPage!=null)
 		{
@@ -446,6 +420,7 @@ class FlxMenu extends FlxGroup
 		
 		// Unload current menus
 		if (currentMenu != null) {
+			currentMenu.clearTweens();	// In some cases the menu is animating with a callback
 			currentMenu.visible = false;
 			currentMenu.unfocus();
 			currentMenu = null;
@@ -463,18 +438,16 @@ class FlxMenu extends FlxGroup
 	 */
 	public function focus()
 	{
-		if (isFocused) return;
-			isFocused = true;
+		if (isFocused || !visible) return;
 		
-		if (!visible)
-		{
-			visible = true;
-			_mcallback("open");
-		}
+		// A popup is active. Don't focus the menu
+		if (popupCloseFunction != null) return;
+		
+			isFocused = true;
 		
 		if (currentMenu != null) {
 			// Fix: If called right after a showpage()
-			//	    And the menu is animating, it can't be focused due bugs.
+			//	    And the menu is animating, it can't be focused BUG
 			if(!currentMenu.isScrolling)	
 				currentMenu.focus();
 		}
@@ -486,7 +459,9 @@ class FlxMenu extends FlxGroup
 	public function unfocus()
 	{
 		if (!isFocused) return;
-			isFocused = false;
+		if (popupCloseFunction != null) return;
+		
+		isFocused = false;
 			
 		if (currentMenu != null) {
 			currentMenu.unfocus();
@@ -518,6 +493,8 @@ class FlxMenu extends FlxGroup
 	 */
 	public function goHome()
 	{
+		if (popupCloseFunction != null) return;
+		
 		if (history.length <= 1) {
 			trace("Info: No more pages in history");
 			return;
@@ -566,12 +543,10 @@ class FlxMenu extends FlxGroup
 					
 			m.flag_InitViewAfterDataSet = false;
 			m.flag_use_mouse = flag_use_mouse;
-			m.styleList = styleList;
-			m.styleMItem = styleMItem;
-			m.styleBase = styleBase;
+			m.styleMenu = Reflect.copy(styleMenu);	// Safest to copy, since Page.customStyle could write over
 			m.cameras = [camera];
 			m.setPageData(P);
-
+		
 		return m;
 		
 	}//---------------------------------------------------;
@@ -658,7 +633,7 @@ class FlxMenu extends FlxGroup
 				p.link(o.data.conf_options[0], o.SID);
 				p.link(o.data.conf_options[1], "@back");
 				p.custom.cursorStart = 'back'; // Highlight BACK first
-				if (o.data.styleMItem != null) p.custom.styleMItem = o.data.styleMItem;
+				if (o.data.conf_p_style != null) p.custom.styleMenu = o.data.conf_p_style;
 			pages.set(questionPageID, p);
 		}
 		showPage(questionPageID);
@@ -712,32 +687,66 @@ class FlxMenu extends FlxGroup
 	// --
 	function _sub_CheckAndSetHeader()
 	{
-		if (currentPage.title != null) {
+		if (f_use_header && currentPage.title != null) {
 			
 			// Create the header if it's not already
 			if (headerText == null)
 			{
-				headerText = new FlxText();
-				headerText.x = x;
+				// Text Style, if anything is set, keep that, else default value
+				var ts = DataTool.defParams(styleHeader.textS, {
+					font:styleMenu.font,
+					fontSize:styleMenu.fontSize,
+					color:styleMenu.color_accent, // <<-TODO
+					color_border:styleMenu.color_border,
+					border_size:-1
+				});
+				
+				styleHeader = DataTool.defParams(styleHeader, {
+					enable:true,
+					CPS:25, deco_line:1,
+					offset:-2,
+					offsetText:0,
+					alignment: styleMenu.alignment
+				}); var sh = styleHeader;
+				f_use_header = sh.enable;
+				if (!f_use_header) return;
+				
+				// Where the line should start
+				var ystart = y - 2 + sh.offset - sh.deco_line;
+				
+				// Text --
+				headerText = new FlxAutoText(x, 0, width, 1);
+				Styles.applyTextStyle(headerText.textObj, ts);
+				headerText.textObj.alignment = sh.alignment;
 				headerText.cameras = [camera];
 				headerText.scrollFactor.set(0, 0);
-				Styles.styleMItemText(headerText, styleHeader);
-				// Header styling is a WIP
-				headerText.color = styleHeader.color_default;
+				headerText.MIN_TICK = 0.06;	// Faster 
+				headerText.setCPS(sh.CPS);
+				headerText.y = ystart - headerText.textObj.height + 2 + sh.offsetText;
 				add(headerText);
+				
+				// Create the Deco Line --
+				if (sh.deco_line > 0) {
+					decoLine = new DecoLine(x, ystart, width, sh.deco_line, styleMenu.color);
+					add(decoLine);
+				}
+				
+			}// --
+			
+			headerText.start(currentPage.title);
+			headerText.visible = true;
+			
+			if (decoLine != null) {
+				decoLine.visible = true;
+				decoLine.start(styleMenu.stw_el_time * 2);
 			}
 			
-			// Set this now because it could be autogenerated
-			// headerText.fieldWidth = currentMenu.width;	// Remove width restriction?
-			headerText.text = currentPage.title;
-			headerText.y = this.y - headerText.height;
-			headerText.visible = true;
 		}else
 		{
-			if (headerText != null)
-			{
-				headerText.text = "";
+			if (headerText != null) {
+				headerText.clearAndWait();
 				headerText.visible = false;
+				if (decoLine != null) decoLine.visible = false;
 			}
 		}
 		
@@ -749,11 +758,11 @@ class FlxMenu extends FlxGroup
 	function _sub_confirmCurrentOption()
 	{
 		if (currentMenu == null) return;
-		var opt:MItemData = currentMenu.getCurrentItemData();
+		var opt = currentMenu.getCurrentItemData();
 		if (opt == null) return; // with error?
 	
-		var xpos:Int = cast currentMenu.currentElement.x + currentMenu.currentElement.width;
-		var ypos:Int = cast currentMenu.currentElement.y;
+		var xpos = currentMenu.currentElement.x + currentMenu.currentElement.width;
+		var ypos = currentMenu.currentElement.y;
 	
 		popup_YesNo(xpos, ypos, function(b:Bool) {
 			if (b) { _ocallback("fire", opt); } else { _mcallback("back"); }
@@ -770,23 +779,33 @@ class FlxMenu extends FlxGroup
 	 * @param	options Custom names instead of YES,NO
 	 */
 	@:access(djFlixel.gui.list.VListNav.setInputFocus)
-	public function popup_YesNo(X:Int, Y:Int, qcallback:Bool->Void, ?question:String, ?yesno:Array<String>):Void
+	public function popup_YesNo(X:Float, Y:Float, qcallback:Bool->Void, ?question:String, ?yesno:Array<String>):Void
 	{
 		if (yesno == null) yesno = ["Yes", "No"];
-		if (yesno.length != 2) { trace("Error: yesno must have exactly 2 strings"); return; }
 		
+		#if debug // Do I really need this check?
+		if (yesno.length != 2) { trace("Error: yesno must have exactly 2 strings"); return; }
+		#end
+				
 		if (currentMenu != null) currentMenu.setInputFocus(false);
+		
+		// Menu padding inside the box at X,Y axis
+		var pad = [2, 4];
 
 		// -- Create a list and adjust the style a bit ::
-		var list = new VListMenu(X, Y, 0, question != null?3:2);
-			list.flag_InitViewAfterDataSet = false; // because option_highlight() is called
-			list.styleBase = Styles.newStyle_Base();
-			list.styleBase.anim_tween_ease = "elastic";
-			list.styleBase.anim_total_time = 0.2;
-			list.styleMItem = Reflect.copy(styleMItem);
-			list.styleMItem.size = Std.int(list.styleMItem.size / 2);
+		var list = new VListMenu(X + pad[0], Y + pad[1], 0, question != null?3:2);
+			list.flag_InitViewAfterDataSet = false; // It gets inited with (item_highlight) below
+			list.styleMenu = Reflect.copy(styleMenu);
+		var s = list.styleMenu;
+			s.fontSize = Std.int(s.fontSize / 2); if (s.fontSize < 8) s.fontSize = 8; // MIN
+			s.stw_el_ease = "elasticOut";
+			s.stw_el_time = s.el_scroll_time = 0.1;
+			s.stw_el_EnterOffs = [0, Std.int( -s.fontSize / 2)];
+			s.focus_nudge = cast s.fontSize / 4;
+			s.cursor = {disable:true};
 			
-		var p:PageData = new PageData("question");
+		// --
+		var p:PageData = new PageData("popup_question");
 			if (question != null) p.add(question, { type:"label" } );
 			p.link(yesno[0], "yes");
 			p.link(yesno[1], "no");
@@ -796,46 +815,46 @@ class FlxMenu extends FlxGroup
 		list.item_highlight("no"); 
 		
 		// -- Add a small bg
-		var bg:FlxSprite = new FlxSprite(X - 2, Y - 2);
-		#if neko
-			trace("Warning, Neko throws error when puting vars to makeGraphic");
-			bg.makeGraphic(100, 40, list.styleMItem.borderColor);
-		#else
-			bg.makeGraphic(list.width + 4, list.height + 8, list.styleMItem.borderColor);
-		#end
-			bg.scrollFactor.set(0, 0);
-		add(bg);
-		
-		// short call
+		var bg:FlxSprite = new FlxSprite(X, Y);
+		var W = list.getMaxElementWidthFromView() + s.focus_nudge;
+		bg.makeGraphic(cast W + pad[0] * 2, cast list.height + pad[1] * 2, s.color_border);
+		bg.scrollFactor.set(0, 0);
+				
+		// -- Setup a close function so that it can be accessed from everywhere
+		//	  in case the menu needs to close. Also this acts like a popup status
 		popupCloseFunction = function() {
 			list.offScreen(function() { remove(list); list.destroy(); list = null; } );
-			remove(bg);
-			popupCloseFunction = null;
+			remove(bg); bg.destroy();
+			popupCloseFunction = null; // Important to do this
 			if (currentMenu != null) currentMenu.setInputFocus(true);
 		}
 		
-		// callback
-		list.callbacks = function(s:String, o:MItemData) {
-			// -- check the callbacks
+		// -- Popup Callbacks
+		list.callbacks = function(s:String, o:MItemData) 
+		{
 			if (s == "fire") {
 				popupCloseFunction();
 				qcallback((o.SID == "yes"));
 				return;
-			}else
-			if (s == "back") {
+			}
+			else if (s == "back") {
 				popupCloseFunction();
 				_mcallback("back");
 				return;
-			}else
-			if (s == "start") return;	// no start button
+			}
+			else if (s == "start") return;	// no start button
 			
 			// pass through all others
 			_listCallbacks(s, o);
 		};
 
 		// -
-		add(list);
+		// If I just ADD sometimes it doesn't go to the top, so force it to the top
+		insert(members.length, bg);
+		insert(members.length, list);
+		
 		list.onScreen();
+		
 		_mcallback("tick_fire"); // For the sound effect?
 	}//---------------------------------------------------;
 	
@@ -908,55 +927,53 @@ class FlxMenu extends FlxGroup
 	//====================================================;
 	// Animation Helpers
 	//====================================================;
-	// --
 	// -- These small functions only work with the animQ 
 	//	  object. Meaning, that each function is responsible
 	//	  for advancing the queue when finished
 
 	// -- Animate on the current screen
 	// --
-	function animQ_currentOnScreen(then:Void->Void)
+	function animQ_currentOnScreen()
 	{
 		add(currentMenu);
-		currentMenu.onScreen(isFocused, then);
+		currentMenu.onScreen(isFocused, animQ.next);
 	}//---------------------------------------------------;
 	
 	// -- Animate off the previous screen
-	function animQ_previousOffScreen(then:Void->Void):Void
+	function animQ_previousOffScreen():Void
 	{
 		if (previousMenu != null) {
 			previousMenu.offScreen(function() { 
 				remove(previousMenu);
-				then();
+				animQ.next();
 			});
 		}
 		else
 		{
-			then();
+			animQ.next();
 		}
 
 	}//---------------------------------------------------;
 	// -- Sudden remove the previous page
-	function animQ_previousRemove(then:Void->Void)
+	function animQ_previousRemove()
 	{
 		if (previousMenu != null) {	
 			previousMenu.unfocus();
 			remove(previousMenu);
 			previousMenu = null;
 		}
-		then();
+		animQ.next();
 	}//---------------------------------------------------;
 
-	// --
-	function animQ_onComplete():Void
-	{
-	}//---------------------------------------------------;
 	
-	// --
-	function _NL():Void
+	#if debug
+	// Write some debugging ingo
+	override public function toString():String 
 	{
-		// helper, send this to functions that require a callback
-		// when you don't need a callback
+		var np = 0; for (i in pages.keys()) np++; // Count Pages
+		return 	'Pages Total : $np | Dyn Pages Total : ${dynPages.length} |' +
+				'History Length : ${history.length} | Pool Length : ${_pool.length} | Current Page : $currentPageName';
 	}//---------------------------------------------------;
+	#end
 	
 }// -- end -- //

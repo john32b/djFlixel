@@ -79,10 +79,10 @@ class MItemData
 	 * 		pool: Dynamic, 		Data associated with the controller, depends on type
 	 * 		current: Dynamic,	Current value of the controller, depends on type
 	 * 
+	 *		conf_p_style: 	If it's a full page confirmation, you can override/set its style
 	 * 		conf_question: 	String, Question to present if a confirmation check is required
 	 * 		conf_options:Array<String>: Anything other instead of YES / NO
 	 * 	
-	 *		styleItem: Applicable in some occations like a full confirmation page
 	 * 		callback: If it's a link, this (void->void) will be called
 	 */
 	public function setNewParameters(?params:Dynamic)
@@ -203,7 +203,7 @@ class MItemData
 	// -- Debugging
 	public function toString():String
 	{
-		return '[SID:$SID | Label:$label | Type:$type | Data:$data';
+		return 'SID:$SID | Label:$label | Type:$type | Data:$data';
 	}//---------------------------------------------------;
 		
 }//-- end --

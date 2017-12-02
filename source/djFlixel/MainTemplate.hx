@@ -68,9 +68,8 @@ class MainTemplate extends Sprite
 		FLS.JSON = DynAssets.json.get(FLS.PARAMS_FILE);
 
 		#if debug
-		if (FLS.JSON.sys == null) {
-			trace("Error: JSON params file missing 'sys' node");
-			return;
+		if (FLS.JSON == null || FLS.JSON.sys == null) {
+			throw "Error: JSON params file ERROR or missing 'sys' node";
 		}
 		#end
 		

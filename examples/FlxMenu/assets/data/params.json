@@ -1,0 +1,31 @@
+{
+	"sys" : {
+		"NAME" : "FlxMenu Example",
+		"VERSION" : "0.3",
+		"ANTIALIASING" : true,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"soundFiles" : [
+		{ "id":"c_tick", "file":"cursor_tick","fast":true},
+		{ "id":"c_back", "file":"cursor_low","fast":true},
+		{ "id":"c_sel", "file":"cursor_high","fast":true},
+		{ "id":"c_err", "file":"cursor_error","fast":true}
+	],
+	
+
+	"STATE_DEMO_VARS" : {
+		"gradient" : ["0xFF355986","0xFF85A7CF"],
+		"menu" : { "x" : 8, "y" : 32, "width" : 160 },
+		"info" : { "width" : 160, "height" : 120, "color0" : "0xFF333322", "color1" : "0xFFBBBBBB" },
+		"desc" : { "x" : 155, "y": 40, "width":150, "color":"0xFFE8EAE8" }
+	},
+	
+	"STATE_STYLEGEN" : {
+		"m1" : {"x" : "8", "y" :"16", "width" : "80", "slots" : 10},
+		"m2" : {"x" : "130",  "y" :"40", "width" : "100"},
+		"box" : {"width" : 180,"height" : 32, "color0" : "0xFF445544", "color1" : "0xFFBBBBBB"} 
+	}
+
+}

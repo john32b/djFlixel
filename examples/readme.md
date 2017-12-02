@@ -1,14 +1,10 @@
-## Examples
+## DjFlixel Examples
+NOTE: Curently all the examples are tested to work for **Flash** builds.
 
-Tested to run on FLASH builds.
+**MEGADEMO** 
+-In development-, will feature all the main tools and classes of djFlixel.
 
-**MEGADEMO**
-Currently in development, will feature all the main tools and classes of djFlixel.
+**FlxMenu**
+Various examples of setting up and using the FlxMenu
 
-**FlxMenu.01.Simple**
-How to quickly setup a one page flxMenu
-
-**FlxMenu.02.GameMenu**
-How to setup a basic game menu with multiple pages/callbacks/sounds/dynamic options
-
-
+**More coming**

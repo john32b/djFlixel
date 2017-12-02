@@ -100,10 +100,10 @@ class DataTool
 	 * @param	node The Master object to copy fields from
 	 * @param	into The Target object to copy fields to
 	 */
-	public static function applyFieldsInto(node:Dynamic, into:Dynamic):Dynamic
+	public static function applyFieldsInto(from:Dynamic, into:Dynamic):Dynamic
 	{
-		for (field in Reflect.fields(node)) {
-			Reflect.setField(into, field, Reflect.field(node, field));
+		for (field in Reflect.fields(from)) {
+			Reflect.setField(into, field, Reflect.field(from, field));
 		}
 		return into;
 	}//---------------------------------------------------;

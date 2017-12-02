@@ -33,10 +33,6 @@ class ListItem<T> extends FlxTypedSpriteGroup implements IListItem<T>
 	public function unfocus():Void
 	{
 	}//---------------------------------------------------;
-	public function getItemHeight():Int
-	{
-		return 0;
-	}//---------------------------------------------------;
 	public function isSame(data:T):Bool
 	{
 	}//---------------------------------------------------;

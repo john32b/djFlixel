@@ -1,7 +1,8 @@
 package djFlixel.gui.list;
 
-import djFlixel.gui.Styles.VListStyle;
+import djFlixel.gui.Styles;
 import djFlixel.gui.list.IListItem;
+import djFlixel.tool.DEST;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -11,7 +12,14 @@ import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
 
 /**
- * Provide element navigation with a cursor on a VList
+ * == Vertical List Navigatiable ==
+ * 
+ * Provide element navigation with a cursor on a Basic Vertical List
+ * 
+ * CURSOR:
+ * ----------------
+ * 
+ * 
  *
  * NOTES:
  * ----------------
@@ -21,6 +29,12 @@ import flixel.tweens.misc.VarTween;
  */
 class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 {
+	// When animating the cursor start from this alpha to 1
+	static inline var CURSOR_START_ALPHA:Float = 0.5;
+	// Cursor tween in time is (Style.el_scroll_time) * this mutliplier
+	// NOTE: Needs to be faster then (el_scroll_time) because cursor renders when (isScrolling==true)
+	static inline var CURSOR_TWEEN_TIME_MULTIP:Float = 0.9;
+	
 	// -- DATA ::
 	// --
 	// Current highlighted index on the data array
@@ -35,32 +49,36 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	var inputAllowed:Bool;
 	
 	// # USER SET::
-	// 
-	// tick : 
-	// back :
-	// start:
+	// Push status messages involving the menu and menu items
+	// back	 : Back Button pressed
+	// start : Start Button pressed
+	// tick  : Fired when changing elements
+	// ..
+	// focus : K element was focused
+	// __ 	 : K element pushed __
 	public var callbacks:String->K->Void = null;
 	
 	// -- STYLINGS
 	// --
-	// How far from the edges to trigger a pad. Sanitized styleList.scrollpad
+	// How far from the edges to trigger a pad. Sanitized styleNav.scrollpad
 	var scrollPadding:Int;
-	// General menu parameters
-	public var styleList(default,set):VListStyle;
 	
-	// -- Sprite Cursor
+	// Whenever this is set, styleB is also set and points to this
+	public var styleNav(default, set):StyleVLNav;
+
+	
+	// -- Sprite Cursor --
 	// --
 	public var cursor(default, null):FlxSprite;
-	var hasCursor:Bool;
 	
 	// Keep the tween in case I want to cancel it
 	var cursorTween:VarTween;
 	
-	// Cursor position is auto-generated
-	var _cursor_x_end:Float;
-	var _cursor_x_start:Float;
-	var _cursor_y_offset:Float; // offset from the current elements's y position
-	var _cursor_tween_time:Float;
+	// These cursor vars are auto-calculated ::
+	var _cursor_tween_time:Float;	// Time the cursor tween lasts
+	var _cursor_rest_offset:Float;	// The cursor rests at the beggining/end of each slot +this much padding
+	var _cursor_anim_offset:Float;	// Offset X position from the resting position to start animating in
+	var _cursor_align_right:Bool;	// If true, places the cursor on the right, inverses anim_x_offset
 	
 	
 	// -- Mouse Related
@@ -84,7 +102,6 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
 	{
 		super(ObjClass, X, Y, WIDTH, SlotsTotal);
-		setPoolingMode("reuse");
 		_index_data = -1;
 		_index_slot = -1;
 		currentElement = null;
@@ -98,14 +115,16 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	override public function setDataSource(arr:Array<K>) 
 	{
 		if (arr == null) return;
-
-		if (styleList == null) {
-			styleList = Styles.default_ListStyle;
+		
+		// Just in case
+		if (styleNav == null) {
+			styleNav = Styles.newStyleVLNav();
 		}
 		
 		// This will call the setViewIndex back to 0,
 		// which will reset the cursor back to top.
 		super.setDataSource(arr); 
+		
 	}//---------------------------------------------------;
 	
 	
@@ -182,37 +201,47 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	}//---------------------------------------------------;
 	
 	// --
+	// Nudge the selected element a bit, highlight it and also update the cursor position	
 	function currentElement_Focus()
 	{	
 		if (currentElement == null) return;
 		
 		currentElement.focus();
 		
-		// :: Try to cancel any previous tween
-		if (slotTweens.exists(currentElement)) {
-			slotTweens.get(currentElement).cancel();
-			// do not remove it will be replaced on set()
+		if (styleNav.focus_nudge != 0) 
+		{
+			if (slotTweens.exists(currentElement)) { // Cancel any previous tween
+				slotTweens.get(currentElement).cancel();
+				// Note : do not remove it will be replaced below
+			}
+			slotTweens.set(currentElement, FlxTween.tween( currentElement, 
+				{ x:getStartingXPos(currentElement) + styleNav.focus_nudge }, styleB.el_scroll_time, { ease:FlxEase.cubeOut } ));
 		}
 		
-		slotTweens.set(currentElement, FlxTween.tween(	currentElement, { x:this.x + styleList.focus_nudge }, 
-						styleBase.element_scroll_time, { ease:FlxEase.cubeOut } ));
-						
 		cursor_updatePos();
 		
 		callback_item("focus");
 	}//---------------------------------------------------;	
 	
+	
 	// --
+	// Nudge the selected element back to where it was and unhighlight it
 	function currentElement_Unfocus()
 	{	
 		if (currentElement == null) return;
+		
 		currentElement.unfocus();
-		// :: Try to cancel any previous tween
-		if (slotTweens.exists(currentElement)) {
-			slotTweens.get(currentElement).cancel();
-			// do not remove it will be replaced on set()
+		
+		if (styleNav.focus_nudge != 0) 
+		{
+			if (slotTweens.exists(currentElement)) { // Cancel any previous tween
+				slotTweens.get(currentElement).cancel();
+				// Note : do not remove it will be replaced below
+			}	
+			slotTweens.set(currentElement, FlxTween.tween(currentElement, 
+				{ x:getStartingXPos(currentElement) }, styleB.el_scroll_time));
 		}
-		slotTweens.set(currentElement, FlxTween.tween(currentElement, { x:this.x }, styleBase.element_scroll_time));
+		
 	}//---------------------------------------------------;
 	
 	
@@ -265,13 +294,13 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	{
 		inputAllowed = state; 
 		
-		if (!hasCursor) return;
+		if (cursor == null) return;
 		
 		if (inputAllowed)
 		{
 			cursor.alpha = 0;
 			cursor.visible = true;
-			allTweens.push(FlxTween.tween(cursor, { alpha:1 }, styleBase.element_scroll_time));
+			allTweens.push(FlxTween.tween(cursor, { alpha:1 }, styleB.el_scroll_time));
 			cursor_updatePos();
 			
 		}else {
@@ -301,27 +330,26 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 			case Controls.RIGHT:	currentElement.sendInput("right");
 		}// end switch--
 		
+		if (isScrolling) return;
+		
 		// =============================== CONTROLS SELECT   =======;
-		if (Controls.CURSOR_OK())
-		{
+		if (Controls.CURSOR_OK()) {
 			currentElement.sendInput("fire");
 		}else
 		// =============================== CONTROLS BACK     =======;
 		if (Controls.CURSOR_CANCEL()) {
-			if (isScrolling) return;
 			callback_menu("back");
 			
 		}else
 		// =============================== Start Button     =======;
 		// This could be triggered to close the menu.
 		if (Controls.justPressed(Controls.START)) {
-			if (isScrolling) return;
 			callback_menu("start");
 		}
 
 		// -- Check mouse controls ::
-		if (!flag_use_mouse || isScrolling) return;
-		
+		if (!flag_use_mouse) return;
+
 		// :: Check for mouse scrolling
 		if (flag_mouse_scroll && (FlxG.mouse.wheel < 0 || FlxG.mouse.wheel > 0))
 		{
@@ -361,9 +389,9 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
 						if (!r_el.isFocused) requestRollOver(counter); else
 						if (FlxG.mouse.justPressed) r_el.sendInput("click");
-						// TODO: MouseWhell send input to elements, INDEV:
-						//else if (FlxG.mouse.wheel < 0) r_el.sendInput("wdown");
-						//else if (FlxG.mouse.wheel > 0) r_el.sendInput("wup");
+						//if (FlxG.mouse.justReleasedRight) r_el.sendInput("clickR"); else
+						//if (FlxG.mouse.wheel < 0 && FlxG.keys.pressed.CONTROL) r_el.sendInput("left"); else
+						//if (FlxG.mouse.wheel > 0 && FlxG.keys.pressed.CONTROL) r_el.sendInput("right");
 					}
 			}//--
 		}//--
@@ -378,7 +406,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	function selectionOneUp()
 	{
 		if (_index_data == 0) {
-			if (styleList.loop_edge) {
+			if (styleNav.loop_edge) {
 				setViewIndex(_data_length - 1); callback_menu("tick");
 			}
 			return;
@@ -427,7 +455,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 		// Sometimes when not the entire slots are filled,
 		// prevent scrolling to an empty slot by checking this.
 		if (_index_data == _data_length - 1) {
-			if (styleList.loop_edge) {
+			if (styleNav.loop_edge) {
 				setViewIndex(0); callback_menu("tick");
 			}
 			return;
@@ -478,15 +506,10 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	 */
 	public function findNextSelectableIndex(fromIndex:Int, direction:Int = 1):Int
 	{
-		while (_data[fromIndex] != null)
-		{
-			// if (_data[fromIndex].selectable) return fromIndex;
-			return fromIndex;
-			fromIndex += direction;
-		}
-
-		trace('Warning: Didn\'t find a selectable index, returning -1');
-		return -1;
+		// -- OVERRIDE THIS --
+		// Currently is being overriden in VListMenu and it checks for MenuItems
+		// Generic elements are all selectable
+		return fromIndex;
 	}//---------------------------------------------------;
 	
 	// --
@@ -504,7 +527,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	// -- 
 	// Cursor data has changed, reflect to visual
-	// :: _index_data,_index_slot have changed.
+	// :: _index_data, _index_slot have changed.
 	// # Called when the input moves the cursor
 	function _dataIndexChanged()
 	{
@@ -553,50 +576,52 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	//====================================================;
 	
 	// --
-	// Note: elementHeight is known.
-	// Note: Apply after setting the DATA SOURCE
-	public function cursor_setSprite(s:FlxSprite, centerOrigin:Bool = true, ?_offset:Array<Int>):Void
+	/**
+	 * Create and start using a cursor. You must manually center it
+	 * @param	s the Sprite to set as a sprite
+	 * @param	centerOrigin If true then the bounding box will be a dot at the center of the sprite
+	 * @param	Offset [x,y] Resting Offset.
+	 */
+	public function cursor_setSprite(s:FlxSprite, ?Offset:Array<Int>):Void
 	{
+		#if debug
+		if (elementHeight == -1)
+		{
+			trace("Error : Currently, you need to set a cursor after calling setDataSource(..)");
+			return;
+		}
+		#end
+		
 		if (cursor != null) {
 			remove(cursor); cursor.destroy();
 		}
-		
-		var elHeight:Int = Std.int(s.height); // Safeguard?
-		
-		hasCursor = true;
+				
 		cursor = s;
 		cursor.scrollFactor.set(0, 0);
 		cursor.cameras = [camera];
-		cursor.width = 1;
-		if (centerOrigin) {	
-			cursor.height = 1;
-			_cursor_y_offset = elHeight / 2;
-		}else {
-			_cursor_y_offset = 0;
-		}
-		cursor.centerOffsets();
 		add(cursor);
 		
-		// SAFEGUARD : elemenSlots[0] can be null 
-		if (elementSlots[0] != null) {
-			elHeight = elementSlots[0].getItemHeight();
-		}else {
-			r_el = factory_getElement(0);
-			elHeight = r_el.getItemHeight();
-			r_el.destroy();
-		}
-	
-		// These values only make sense if the cursor is an FlxText
-		// If the cursor is a graphic, these won't work well
-		_cursor_x_start = this.x - (cursor.frameWidth / 2);
-		_cursor_x_end = this.x + styleList.focus_nudge - (cursor.frameWidth / 4);
-		_cursor_tween_time = styleBase.element_scroll_time * 1.25;
+		// It can be 0, then the tween will render instantly
+		_cursor_tween_time = styleB.el_scroll_time * CURSOR_TWEEN_TIME_MULTIP;
 		
-		if (_offset != null) {
-			cursor.offset.set( cursor.offset.x - _offset[0], cursor.offset.y - _offset[1]);
+		if(styleB.alignment=="right") {
+			_cursor_align_right = true;
+			_cursor_rest_offset = styleNav.focus_nudge;
+			_cursor_anim_offset = cursor.width;
+		}else{
+			_cursor_align_right = false;
+			// Offset from slot.x to place cursor.
+			_cursor_rest_offset = -cursor.width + styleNav.focus_nudge;
+			// Start from there ( offset from rest offset )
+			_cursor_anim_offset = -cursor.width;
 		}
 		
-		if (isFocused && _data.length > 0) {
+		// User manual centering fix
+		if (Offset != null) {
+			cursor.offset.add(Offset[0], Offset[1]);
+		}
+		
+		if (isFocused && currentElement != null) {
 			cursor_updatePos();
 		}else {
 			cursor.visible = false;
@@ -610,45 +635,42 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	// Animate Cursor from Left to Right
 	function cursor_updatePos():Void
 	{
-		if (!hasCursor) return; // called on fucus, So I have got to chedk for cursor
+		if (cursor == null) return; // called on fucus, So I have got to chedk for cursor
 		
-		// SET x and y position
-		cursor.x = _cursor_x_start;
-		cursor_AlignVertical();
+		// SET x and y position	
+		cursor.x = getStartingXPos(currentElement) + _cursor_rest_offset + _cursor_anim_offset;
+		cursor.y = elementSlots[_index_slot].y;
+		cursor.alpha = CURSOR_START_ALPHA;
 		
-		cursor.alpha = 0.5;
+		if (_cursor_align_right) {
+			cursor.x += width; // WORKS because child elements should have full width
+		}
 		
 		if (cursorTween != null) {
 			cursorTween.cancel();
 		}
 		
-		// Tween from left to right now
-		// Vertical movement is handled on the update function
-		// in case the item has scrolled, I call ALIGNV at the end of this tween
-		cursorTween = FlxTween.tween(cursor, { x:_cursor_x_end, alpha:1 }, 
-									_cursor_tween_time, { ease: FlxEase.backOut } );
+		// NOTE: Vertical movement is handled on the update function
+		cursorTween = FlxTween.tween(cursor, { x:cursor.x - _cursor_anim_offset, alpha:1 },
+											_cursor_tween_time, { ease: FlxEase.backOut });
 	}//---------------------------------------------------;
 
-	// -- 
-	// Quick valign the cursor to it's pointing item
-	function cursor_AlignVertical(?f:FlxTween)
-	{
-		cursor.y = elementSlots[_index_slot].y + _cursor_y_offset;
-	}//---------------------------------------------------;
-	
 	
 	// --
-	// Set the style and sanitize the scrollPadding
-	function set_styleList(val:VListStyle):VListStyle
+	// Set the style and init
+	function set_styleNav(val:StyleVLNav):StyleVLNav
 	{
-		styleList = val;
-		if (styleList != null) {
-			scrollPadding = styleList.scrollPad;
+		styleNav = val;
+		styleB = styleNav;
+		
+		if (styleNav != null) {
+			scrollPadding = styleNav.scrollPad;
 			if (scrollPadding > Math.floor(_slotsTotal / 2)) {
 				scrollPadding = Math.floor(_slotsTotal / 2);
 			}
 		}
-		return styleList;
+		
+		return styleNav;
 	}//---------------------------------------------------;
 	
 	
@@ -667,8 +689,8 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 			
 			// Prevent choppy cursor animation when the cursor 
 			// is pointing to a a scrolling element
-			if (isScrolling && hasCursor) {
-				cursor_AlignVertical();
+			if (isScrolling && cursor != null) {
+				cursor.y = elementSlots[_index_slot].y;
 			}
 		}
 		
@@ -677,16 +699,14 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	override public function destroy():Void 
 	{
 		super.destroy();
-		for (tw in slotTweens) {
+		
+		for (tw in slotTweens) { // Note: This is a MAP
 			tw.cancel();
 		}
 		slotTweens = null;
 		
-		if (cursorTween != null) {
-			cursorTween.cancel();
-			cursorTween = null;
-		}
-		styleList = null;
+		cursorTween = DEST.tween(cursorTween);
+		styleNav = null;
 	}//---------------------------------------------------;
 	
 	

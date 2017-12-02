@@ -1,75 +1,122 @@
 package djFlixel.gui.menu;
 
 import djFlixel.gfx.GfxTool;
-import djFlixel.gui.Styles.MItemStyle;
+import djFlixel.gui.Styles.StyleVLMenu;
 import djFlixel.gui.menu.MItemData;
+import flash.display.BitmapData;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
+/**
+ * [Label + Checkbox], something that toggles on/off
+ * ------------------------
+ * Checkbox can either have an animation or be 2 separate bitmaps and swap them
+ */
 class MItemToggle extends MItemBase
-{	
-	// Checkbox sprite
-	var box:FlxSprite;
+{
+	// The Color of the default Icon that will be replaced in box states, (white as the icons in the ICONLIB)
+	inline static var KEY:Int = 0xFFFFFFFF; 
 	
-	// Checkbox frame helper
-	var frameStart:Int;
+	var box:FlxSprite;			// Checkbox sprite
+	var frm:Array<Int>;			// [offFrame,onFrame]
+	var bit:Array<BitmapData>;	// [offBitmap,onBitmap]
+		
+	// Keep the current color the box is supposed to be in
+	var currentColor:Int;
 	
-	// -- No need for constuctor --
-	//====================================================;
-	// --
+	// True if using a custom sprite
+	var flag_sprite:Bool = false;
+	// True if using text labels
+	var flag_text:Bool = false;
+	// The text object, same as box but casted as FlxText
+	var text:FlxText;
+	//---------------------------------------------------;
 	
-	// Position the checkbox.
+	public function new(_s:StyleVLMenu,_w:Int)
+	{
+		super(_s, _w);
+		
+		currentColor = style.color_accent;
+		
+		// If a custom icon has not been set, get graphic from the default LIB
+		// else load the default icon
+		
+		if (style.custom_icons) // :: Use a custom checkbox image
+		{
+			flag_sprite = true;
+			box = GfxTool.getSpriteFrame(style.custom_icons.image, 0, style.custom_icons.size, style.custom_icons.size);
+			frm = style.custom_icons.checkbox;
+		}
+		else
+		{
+			flag_sprite = false;
+			var c = style.icons;
+			
+			// Text Checkbox ::
+			if (c && c.checkboxText)
+			{
+				flag_text = true;
+				text = new FlxText();
+				text.text = c.checkboxText[0];
+				Styles.applyTextStyle(text, style);
+				box = cast text;
+			}else{
+				
+			// Icon BOX ::
+			bit = [];
+			var forceSize = (style.icons && style.icons.size);
+			var forceSet:String = (style.icons?style.icons.image:null);
+			var ics = forceSize?style.icons.size:Gui.getApproxIconSize(style.fontSize);
+			var ss:Int = cast label.borderSize;	// Because border could be auto-generated from the style
+			bit[0] = Gui.getIcon("ch_off", ics, forceSet, style.color_icon_shadow, ss, ss);
+			bit[1] = Gui.getIcon("ch_on",  ics, forceSet, style.color_icon_shadow, ss, ss);
+			box = new FlxSprite();
+			box.makeGraphic(bit[0].width, bit[0].height, 0x00000000, true); // Unique is important!
+			box.setSize(ics-1, ics-1);
+			if (style.fontSize > 38 && !forceSize) {
+				// NOTE : Anything bigger, will scale up the 24x24 sprite
+				//		: If you are using AntiAliasing, the box will be overly blurred
+				// 		: with arbitrary size ratio to make it a bit smaller than the fontsize
+				trace("Warning: Font size too big, Resizing the checkbox, add a custom IconSet to avoid AA blur");
+				box.scale.set((style.fontSize / 30), (style.fontSize / 30));
+				box.updateHitbox();
+			}
+			}// end if
+		}// endif
+		
+		add(box);
+	}//---------------------------------------------------;
+	
+	
+	// The data state has changed update the visual
+	function updateItemData()
+	{
+		if (flag_sprite) {
+			box.animation.frameIndex = frm[opt.data.current?1:0];
+		}
+		else{
+			boxUpdateAndColor(currentColor); // Draws the current state with target color
+		}
+	}//---------------------------------------------------;
+	
+	
+	// Position the checkbox
 	override function initElements() 
 	{
 		super.initElements();
 		
-		// -- Reset the box, since this could be a recycled object
-		if (box != null) {
-			remove(box);
-			box.destroy();
-		}
+		box.y = label.y + (label.height / 2) - (box.height / 2);
 		
-		if (style.icons == null || style.icons.ind_checkbox == null)
+		switch(style.alignment)
 		{
-			frameStart = 0;
-			
-			// shortcut this call
-			function ld(ss){
-				box = new FlxSprite();
-				box.loadGraphic(Gui.getIcon("check", ss , style.borderIcon, Std.int(label.borderSize), Std.int(label.borderSize)), true, 16, 16);
-			};
-			
-			// I checked those hardcoded size values against the default font, and they look ok
-			// Should work for other fonts just fine
-			if (style.size < 12) {
-				ld(0);
-				box.setSize(7, 7);
-			}else if (style.size < 17) {
-				ld(1);
-				box.setSize(10, 10);
-			}else if (style.size < 26) {
-				ld(2);
-				box.setSize(14, 14);
-			}else { 
-				// Anything bigger, just in case
-				// NOTE : If you are using AntiAliasing, the box will be overly blurred
-				ld(2);
-				box.scale.set((style.size / 15), (style.size / 15));
-				box.updateHitbox();
-				box.setSize(style.size, style.size);
-			}
-			
-		}else
-		{
-			// :: Use a custom checkbox image
-			box = GfxTool.getSpriteFrame(style.icons.tileSheet, 0, style.icons.tileSize, style.icons.tileSize);
-			// TODO: Custom size in case the checkbox is smaller than the image?
-			frameStart = style.icons.ind_checkbox;
+			case "right":
+				box.x = label.x - EL_PADDING - box.width;
+			case "justify":
+				box.x = x + parentWidth - box.width;
+			default:
+				box.x = label.x + label.fieldWidth + EL_PADDING;
+				
 		}
-		
-		box.y = y + (label.height / 2) - (box.height / 2);
-		box.x = x + label.fieldWidth + PADDING_FROM_LABEL;
-		add(box);
 		
 		updateItemData();
 		
@@ -85,37 +132,47 @@ class MItemToggle extends MItemBase
 				cb("change");
 		}
 	}//---------------------------------------------------;
-	
-	// --
-	function updateItemData()
-	{
-		if (opt.data.current) {
-			box.animation.frameIndex = frameStart + 1;
-		}else {
-			box.animation.frameIndex = frameStart;
-		}
-	}//---------------------------------------------------;
 
 	override function state_default() 
 	{
 		super.state_default();
+		if (flag_sprite) return;
+
 		if (opt.disabled)
-			box.color = style.color_disabled;
+			boxUpdateAndColor(style.color_disabled);
 		else
-			box.color = style.color_accent;
+			boxUpdateAndColor(style.color_accent);
 	}//---------------------------------------------------;
 	
 	override function state_focused() 
 	{
 		super.state_focused();
-		box.color = label.color;
+		if (flag_sprite) return;
+		boxUpdateAndColor(label.color);
 	}//---------------------------------------------------;
 	
 	override function state_disabled() 
 	{
 		super.state_disabled();
-		box.color = style.color_disabled;
+		if (flag_sprite) return;
+		boxUpdateAndColor(style.color_disabled);
 	}//---------------------------------------------------;
-
 	
+	/**
+	 * Replace the color of the KEY color, in order to keep the shadow color the same.
+	 * 
+	 */
+	function boxUpdateAndColor(col:Int)
+	{
+		if (flag_text){
+			text.text = style.icons.checkboxText[opt.data.current?1:0];
+			text.color = col;
+		}else{
+			GfxTool.drawBitmapOn(
+				GfxTool.replaceColor(bit[opt.data.current?1:0], KEY, col), 
+				box.pixels);
+			box.dirty = true;
+		}
+		currentColor = col;
+	}//---------------------------------------------------;
 }// --

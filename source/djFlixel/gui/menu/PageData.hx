@@ -1,4 +1,5 @@
 package djFlixel.gui.menu;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
 // PageData
 // --------
@@ -6,7 +7,7 @@ package djFlixel.gui.menu;
 // parameters about the page like title, custom styles
 // and an array with all the menu items it contains.
 // --
-class PageData
+class PageData implements IFlxDestroyable
 {
 	// Auto Incremented everytime a page is generated
 	public static var UID_GENERATOR:Int = 0;
@@ -36,9 +37,7 @@ class PageData
 	// ------------------------------------------------------------------------------
 	// width			Int, Custom page width
 	// slots	 		Int, How many slots this page should have for the screen representation
-	// styleMItem		Object, custom styleMItem
-	// styleList		Object, custom styleList
-	// styleBase		Object, custom styleBase
+	// styleMenu		Object, custom styleMenu can override parts of the FlxMenu style
 	// lockNavigation   Bool, If true the page cannot send a "back" request ( by pressing the back button )
 	// cursorStart		SID, the sid of the item to always highlight when going into this menu
 	// callbacks_item   override the menu's callback function to this one.
@@ -94,6 +93,7 @@ class PageData
 	 * Quickly add a Link
 	 * @param label The display name
 	 * @param SID Start with "@" to link to page, Start with "!" or "#" to confirm action, "#back" to go back
+	 * @param callback If you want to specifically manage callbacks from this item. Otherwise use the global menu callback handler
 	 */
 	public inline function link(label:String, SID:String, ?callback:Void->Void):MItemData
 	{
@@ -114,7 +114,7 @@ class PageData
 	 */
 	public inline function addBack(?text:String):MItemData
 	{
-		return add(text != null?text:"Back", { type:"link", sid:"@back", desc:"Go back" } );
+		return add(text!= null?text:"Back", { type:"link", sid:"@back", desc:"Go back" } );
 	}//---------------------------------------------------;
 
 	

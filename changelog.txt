@@ -4,20 +4,62 @@ DJFLIXEL CHANGE LOG
 Newest at top
 
 
-
+	# 06-12-2017 Dev
+	============================================================
 	~ BREAKING CHANGES ~
-	{
-		Changed some namings in a way that they make more sense now:
-		+ All elements that go inside a Menu are now called "MItems" instead of "Options"  (Menu Items)
-		+ All "MenuOption.." classes are now renamed to "MItem.."
-		+ PageData and MItemData are now in djFlixel.gui.menu
-		+ IListItem is now in djFlixel.gui.list
-		+ Changes in function and variable naming in FlxMenu.hx, VListMenu.hx, Styles.hx, IListItem.hx, all MItem Types
-		+ FlxMenu.callbacks_option -> callbacks_item. Also the string events have changed as well.
-		+ "optChange" ,"optBlur" ... opt prefix removed -> "change", "blur", "fire"
-	}
+	
+	Notes:
+		.Improved the FLXMenu family classes ( MenuItems, VListBase, VListNav, VListMenu )
+		.Added more style options , fixed bugs, refactored code
+		.Added a few new things
+	
+	
+	- NEW, DEST.hx, a destroyer helper for timers and tweens
+	- NEW, GfxTool.replaceColor(..) will replace colors in a bitmap 
+	- NEW, GfxTool.stringColor(..) will parse custom string colors supporting custom palettes
+	- NEW, DecoLine.hx, simple animated customizable decorative line sprite
+	- VListBase.getMaxElementWidthFromView(), can be useful and used on FlxMenu
+	
+	- Styles.hx, new style parameters and some names are changed,
+	- Styles.styleMItemText(..) removed, menuItems now are styled with the generic Styles.applyTextStyle(..)
+	- Styles.quickTextBorder(..) renamed to Styles.applyTextBorder(..)
+	- Styles.applyStyleNodeTo() now works recursively inside its object nodes, and now supports setting Palette Colors
+	- NEW VListBase, Support Alignment of the items (left,center,right,justify)
+	- VListBase removed getElementHeight, will now use a getter
+	- VListBase Better Scrolling Indicators with more styling options
+	- VerticalList family, there is only one object storing the styles now, instead of having a style object for every class
+	- VListNav, Cursor now supports animated sprites, custom text, and is implemented better
+	- MItemToggle, now supports Text icons, e.g. "[X]", customizable in the Style Parameters
+	- MItemOneOf, now supports Text Arrows, e.g. ">" customizable in the Style Parameters
+	- MenuItems GUI Icons on will now keep their shadow color when changing colors
+	- MenuItems, now support GUI Icons instead of just text for animated arrows and checkboxes
+	- Gui.hx, Changed the way GUI Icons are stored, Icon Files are now separate files based on size
+	- MacroHelp.hx added a few useful functions
+	- FlxMenu Header improvements and more styling options ( decoline + FlxAutoText )
+	- FlxMenu.popup_YesNo(.) implemented a lot better now
+	- FlxMenu, you can override the default GuiIcon sets or use custom images for some MenuItems(toggles) from the Style Object
+	- Many bugfixes and code refactoring
+	- Working on a new FlxMenu Example. in the "examples" folder
+	
+	- Soon to be pushed to the master branch
+	
+	# 06-2017
+	============================================================
+	
+	~ BREAKING CHANGES ~
+	
+	! Changed some namings in a way that they make more sense now:
+	+ All elements that go inside a Menu are now called "MItems" instead of "Options"  (Menu Items)
+	+ All "MenuOption.." classes are now renamed to "MItem.."
+	+ PageData and MItemData are now in djFlixel.gui.menu
+	+ IListItem is now in djFlixel.gui.list
+	+ Changes in function and variable naming in FlxMenu.hx, VListMenu.hx, Styles.hx, IListItem.hx, all MItem Types
+	+ FlxMenu.callbacks_option -> callbacks_item. Also the string events have changed as well.
+	+ "optChange" ,"optBlur" ... opt prefix removed -> "change", "blur", "fire"
+
 		
-	-------
+	============================================================
+
 	! VListBase. Improved More scroll indicator arrows, Parameterized color, icon, shadow with
 	! BUGFIX, VListNav, can now call setViewIndex() while scrolling and it will not cause problems.
 	+ BlinkSprite. now supports linking other sprites to synchronize blink

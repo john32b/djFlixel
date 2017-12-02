@@ -1,13 +1,14 @@
 package djFlixel.gui;
 
 import djFlixel.gfx.GfxTool;
+import djFlixel.tool.DEST;
 import djFlixel.tool.DataTool;
 import flash.display.BitmapData;
 import flash.geom.Point;
+import flash.utils.Timer;
+import flash.geom.Rectangle;
 import flixel.FlxSprite;
-import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxTimer;
-import openfl.geom.Rectangle;
 
 
 /**
@@ -192,8 +193,7 @@ class PanelPop extends FlxSprite
 		pixels.unlock();
 		dirty = true;
 		if ((++step) == widthSteps.length) {
-			timer.cancel();
-			timer = FlxDestroyUtil.destroy(timer);
+			timer = DEST.timer(timer);
 			if (onComplete != null) onComplete();
 			if (sound.end != null) SND.play(sound.end);
 		}
@@ -231,8 +231,7 @@ class PanelPop extends FlxSprite
 		var rr = new Rectangle(0, 0, width, height);
 		pixels.fillRect(rr, 0x00000000);
 		dirty = true;
-		if (timer != null) timer.cancel();
-		timer = FlxDestroyUtil.destroy(timer);
+		timer = DEST.timer(timer);
 	}//---------------------------------------------------;
 	
 	
@@ -250,8 +249,7 @@ class PanelPop extends FlxSprite
 	override public function destroy():Void 
 	{
 		super.destroy();
-		if(timer!=null) timer.cancel();
-		timer = FlxDestroyUtil.destroy(timer);
+		timer = DEST.timer(timer);
 	}//---------------------------------------------------;
 	
 }// --

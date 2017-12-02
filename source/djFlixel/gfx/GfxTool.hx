@@ -1,17 +1,15 @@
 package djFlixel.gfx;
 
-import flash.display.Bitmap;
+import flash.display.BitmapData;
 import flash.geom.ColorTransform;
 import flash.geom.Matrix;
+import flash.geom.Point;
+import flash.geom.Rectangle;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets;
-import flixel.util.FlxSpriteUtil;
-import openfl.Assets;
-import openfl.geom.Rectangle;
-import openfl.display.BitmapData;
-import openfl.geom.Point;
+import flixel.util.FlxColor;
 
 /**
  * Various general purpose Graphic Tools
@@ -69,7 +67,7 @@ class GfxTool
 	 * @param	color The color of the shadow
 	 * @param	offx offset X of the shadow 
 	 * @param	offy offset Y of the shadow
-	 * @return
+	 * @return	A new bitmap, Note, it is now bigger in size
 	 */
 	public static function applyShadow(im:BitmapData, color:Int = 0xFF111111, offx:Int = 1, offy:Int = 1):BitmapData
 	{
@@ -77,7 +75,7 @@ class GfxTool
 		var _tc = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 		var _ma = new Matrix();
 		var _tp = new Point();
-		var n = new BitmapData(im.width, im.height, true, 0x00000000);
+		var n = new BitmapData(cast im.width + Math.abs(offx), cast im.height + Math.abs(offy), true, 0x00000000);
 
 		_ma.tx = offx; _ma.ty = offy;  _tc.color = color;
 		n.draw(im, _ma, _tc); // The shadow
@@ -132,17 +130,18 @@ class GfxTool
 	
 	
 	/**
-	 * Draws an entire bitmap onto another bitmap at coordinates
-	 * @param	bit The bitmap to be drawn
+	 * Draws an entire bitmap onto another bitmap at coordinates. 
+	 * NOTE: The bitmap is copied, so alphas are overwritten.
+	 * @param	src The bitmap to be drawn
 	 * @param	dest The bitmap to be drawn to
 	 * @param	x
 	 * @param	y
 	 */
-	public static function drawBitmapOn(bit:BitmapData, dest:BitmapData, x:Int = 0, y:Int = 0)
+	public static function drawBitmapOn(src:BitmapData, dest:BitmapData, x:Int = 0, y:Int = 0)
 	{
-		var rect:Rectangle = new Rectangle(0, 0, bit.width, bit.height );
+		var rect:Rectangle = new Rectangle(0, 0, src.width, src.height );
 		var point:Point = new Point(x, y);
-		dest.copyPixels(bit, rect, point);
+		dest.copyPixels(src, rect, point);
 	}//---------------------------------------------------;
 	
 	
@@ -182,6 +181,23 @@ class GfxTool
 	
 	
 	/**
+	 * Replace a color on a bitmap using the built-in Threshold function. Returns a new bitmap
+	 * @param	source The source bitmap
+	 * @param	color0 Color to be replaced
+	 * @param	color1 Replace with this color
+	 * @return  The new bitmap
+	 */
+	public static function replaceColor(source:BitmapData, color0:Int, color1:Int):BitmapData
+	{
+		var rect:Rectangle = new Rectangle(0, 0, source.width, source.height);
+		var point:Point = new Point();
+		var dest = source.clone();
+		dest.threshold(dest, rect, point, "==", color0, color1);
+		return dest;
+	}//---------------------------------------------------;
+		
+	
+	/**
 	 * Replace a set of colors in a bitmap with another set of colors
 	 * Creates a new bitmap, does not modify the original one.
 	 * #NOTE: You should declare "persist==true" if you want to keep it after state change
@@ -192,6 +208,7 @@ class GfxTool
 	 */
 	public static function getGraphicColorReplace(b:BitmapData, source:Array<Int>, dest:Array<Int>):FlxGraphic
 	{
+		trace("Warning: I can improve this function by making it use bitmap not flxgraphic");
 		var gfx:FlxGraphic = FlxG.bitmap.create(b.width, b.height, 0x00000000, true);
 			
 		// gfx.persist = true;
@@ -282,25 +299,42 @@ class GfxTool
 		return b;
 	}//---------------------------------------------------;
 	
-	
-	//====================================================;
-	// QUICK PALLETE
-	//====================================================;
-	
+
+	// Prefix for when parsing a color string
+	static inline var PREFIX_PALETTE:String = "@";
 	
 	/**
-	 * Return a palette color based on a string
-	 * Supported :
+	 * Quickly parse a custom color string, useful when reading color data from JSON etc
+	 * Will check the string for PaletteColors "check palCol()" and then pass it to FlxColor.fromString()
+	 * @param	s The Coded String, can be Palette or other Color Format
+	 * @return  The color found
+	 */
+	static public function stringColor(s:String):Int
+	{
+		if (s.indexOf(PREFIX_PALETTE) == 0)
+		{
+			// It's a Palette Color
+			return palCol(s.substr(1));
+		}else{
+			return FlxColor.fromString(s);
+		}
+	}//---------------------------------------------------;
+
+	
+	/**
+	 * Return a palette color based on a string code
+	 * Supported :: (check djFlixel.gfx.palette.*)
 	 * 
-	 * 	A16[0-15]  -> Arne 16
-	 *  DB32[0-31] -> DB32
-	 *  AMS[0-26]  -> Amstrad
+	 * 	A16[]  	-> Arne 16
+	 *  DB32[] 	-> DB32
+	 *  AMS[]	-> Amstrad
 	 * 
 	 * e.g.
 	 * 
-	 * 	palCol("A16[3]") == 0xFFBE2633
+	 * 	palCol("A16[3]") == 0xFFBE2633 ; the 4th color of the palette
 	 * 
-	 * @param	str A16[] | DB32[] | AMS[]
+	 * 
+	 * @param	str A16[0-15] | DB32[0-31] | AMS[0-26]
 	 * @return The Color
 	 */
 	static public function palCol(str:String):Int
