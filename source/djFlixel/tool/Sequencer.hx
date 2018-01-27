@@ -44,6 +44,9 @@ class Sequencer implements IFlxDestroyable
 	public var timer(default, null):FlxTimer = null;
 	// --
 	var currentStep:Int = 0;
+	
+	// Useful flag, if true will not callback anything
+	var isCancelled:Bool = false;
 	//----------------------------------------------------;
 	/**
 	 * 
@@ -55,6 +58,14 @@ class Sequencer implements IFlxDestroyable
 		currentStep = 0;
 		timer = new FlxTimer();
 	}//---------------------------------------------------;
+	
+	// -- Like stop but also prevents any more callbacks from ongoing steps to being called
+	public function cancel()
+	{
+		stop();
+		isCancelled = true;
+	}//---------------------------------------------------;
+	
 	// --
 	public function stop()
 	{
@@ -89,6 +100,8 @@ class Sequencer implements IFlxDestroyable
 	 */
 	public function next(?delay:Float)
 	{
+		if (isCancelled) return;
+		
 		currentStep++;
 		
 		// If somehow the timer is running, kill it.
@@ -107,6 +120,8 @@ class Sequencer implements IFlxDestroyable
 	 */
 	public function forceTo(step:Int)
 	{
+		if (isCancelled) return;
+		
 		reset();
 		currentStep = step;
 		callback(currentStep);
@@ -117,6 +132,7 @@ class Sequencer implements IFlxDestroyable
 	 */
 	public function nextF()
 	{
+		if (isCancelled) return;
 		next();
 	}//---------------------------------------------------;
 		
@@ -126,6 +142,8 @@ class Sequencer implements IFlxDestroyable
 	 */
 	public function nextT(e:FlxTween)
 	{
+		if (isCancelled) return;
+		
 		next();
 	}//---------------------------------------------------;
 	

@@ -1,20 +1,26 @@
 package;
 
+import common.Common;
 import djFlixel.FLS;
 import djFlixel.MainTemplate;
-import flash.Lib;
 
 class Main extends MainTemplate
 {
-	public function new()
+	override function init() 
 	{
+		INITIAL_STATE = St_Boot;
+
+		Common.demo_return_state = St_Menu;
+		
+		// 
 		FLS.extendedClass = Reg;
-		super(St_Boot, 0, 0, 60); // 60fps?
-		//super(St_Boot);
-	}//---------------------------------------------------;
-	// --
-	public static function main():Void
-	{	
-		Lib.current.addChild(new Main());
+	
+		// Note, These are ASSET ID's, can't load externally. 
+		// 		 hacky way to load external projects and use the same 'params.json'
+		//		 file, by giving ID's to it in `project.xml`
+		// 		 Then,before loading the states, I set FLS.JSON to point to the appropriate one
+		FLS.assets.add("guidemo.json");
+		FLS.assets.add("fxdemo.json");
+		FLS.assets.add("flxmenu.json");
 	}//---------------------------------------------------;
 }// --

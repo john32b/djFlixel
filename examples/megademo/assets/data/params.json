@@ -1,48 +1,175 @@
 {
 	"sys" : {
 		"NAME" : "djFlixel MegaDemo",
-		"VERSION" : "0.3.0",
-		"ANTIALIASING" : true,
+		"VERSION" : "0.1.0",
+		"ANTIALIASING" : false,
 		"FULLSCREEN" : false,
 		"VOLUME" : 0.7
 	},
 	
+	
+	
 	"soundFiles" : [
-		{"id":"c_tick", "file":"cursor_tick", "fast":true },
-		{"id":"c_sel", "file":"cursor_high", "fast":true },
-		{"id":"c_back", "file":"cursor_low", "fast":true },
-		{"id":"short1", "file":"short1", "fast":true },
-		{"id":"short2", "file":"short2", "fast":true }
+		{"id":"c_tick", "file":"cursor_tick"},
+		{"id":"c_sel",  "file":"cursor_high"},
+		{"id":"c_back", "file":"cursor_low" },
+		{"id":"c_err",  "file":"cursor_error"},
+		{"id":"c_low",	"file":"cursor_low_2"},
+		{"file":"short1", 	"vol":0.7 },
+		{"file":"short2", 	"vol":0.7 },
+		{"file":"8bitload", "vol":0.8 }
 	],
+
 	
-	
-	"st_boot" : 
+	"St_Boot" : 
 	{
-		"bgColor" : "_A16[14]",
-		"text" : "(c20)Initializing djFlixel 0.3(c2)...",
+		"colorBG" : "@A16[1]",
+		"text" : "(c30)djFlixel 0.3 \n(w2)Starting Demo (w2)(c4)...",
 		"carrier" : "_",
-		"noise" : { "color1" : "0xFF111111", "color2" : "0xFF222222" }
+		"noise" : { "color1" : "0xFF111111", "color2" : "0xFF222222" },
+		"textStyle" : {
+			"font":"fonts/mozart",
+			"fontSize":16,
+			"color":"0xFF8D8D8D",
+			"color_border":"-1",
+			"border_size":1 
+		}
 	},
 	
-	"st_intro" : 
+	
+	
+	"St_intro" : 
 	{
-		"bgColor" : 1, "bgColor2" : 12, "delay1" : 0.7,
-		"l1_blink" : { "open" : true, "time" : 2.8 },
+		"toast":{
+			"colorBG" : "0xFF515151",
+			"color" : "0xFFB7B7B7",
+			"timeTween":0.7,
+			"timeOn":1.2,
+			"alignX":"right",
+			"alignText":"right"
+		},
+			
+		"colorBG" : "@A16[1]", "colorBG2" : "@A16[12]", "delay1" : 0.7,
+		"l1_blink" : { "time":2.8, "open":true},
 		"l1_wave" :  { "id":"wave", "time" : 1, "width" : 3, "height" : 0.5 },
 		"l1_line" :  { "id":"line", "h0" : 2, "w0" : 20, "time" : 0 },
-		"l2_box" :   { "id":"nbox", "w":6, "j":4 },
+		"l2_box" :   { "id":"nbox", "w":6, "j1":4, "time":0 },
 		"l2_line" :  { "fx2":true, "time":2, "w1":4, "run":2 },		
 		"l2_diss" :  { "time":1, "size":12 },
-		"l3_wave" :  { "time" : 0.4, "width" : 2, "height" : 0.5}
+		"l3_wave" :  { "time" : 2, "width" : 2, "height" : 0.6}
 	},
 	
 	
-	"st_intro2" : 
+	"St_intro2": 
 	{
+		"colorBG": "0xFFFFFFFF",
+		
 		"emitter": { 
-			"x" : -12, "y" : 48, "h" : 64, "freq":0.2, "size": 64,
-			"vx0" : 40,
-			"vx1" : 80
+			"x" : 320, "y" : 32, "h" : 64, "freq":0.3, "size": 64,
+			"vx0" : -40,
+			"vx1" : -70
+		},
+		
+		"gradient" : {
+			"colorA" : "0xFF0080FF",
+			"colorB" : "0xFF200050",
+			"steps" : 12
+		},
+		
+
+		"sineText": 
+			"djFlixel 0.3 tools and helpers for haxeflixel (like this sine-text scroller) Following is a selection of interactive demos.",
+			
+		"sineParams":
+		{	"color":"@DB32[21]",
+			"color_border":"@DB32[0]",
+			"border_type":1,
+			"border_size":3,
+			"y":170,
+			"speed": 3.8 ,
+			"loopMode" : 0,
+			"fontSize":24,
+			"pad":1,
+			"sineHeight":24,
+			"sineWidthRatio":1.3,
+			"sineSpeedRatio":0.03
+			
+		},
+		
+		"lettersFX":{
+			"font":"fonts/blocktopia",
+			"fontSize":256,
+			"ofEnd":[0,16],
+			"ofStart":[0, -24],
+			"timeLetter" :0.13,
+			"timeWait":0.03,
+			"sound":"short2"
+		}
+	},
+	
+	
+	"St_Menu" : 
+	{
+		"colorBG" : "@DB32[25]",
+		
+		"infoboxStyle":{
+			"font":"fonts/pixelarial",
+			"colorBG":"@DB32[21]",
+			"colorText":"@DB32[22]",
+			"width":220,
+			"position":[8,157],
+			"colorT1":"@DB32[29]",
+			"colorT2":"@DB32[19]"
+		},
+		"infoboxText":
+			"Short selection of $demos$ and $examples$. Use the #mouse# to make a selection from the menu above. Press #ESC# to go back at screens. Be sure to visit the $github$ page for more information.",
+		
+		"buttons" : {
+			"size":32,
+			"colorsBG":["@DB32[2]","@DB32[14]","@DB32[19]","@DB32[20]"],
+			"colorsFG":["@DB32[0]","@DB32[23]","@DB32[19]"]
+		},		
+		"buttonPos":[240,192],
+		"buttonNames" : [ 
+			"Github" , 
+			"Twitter"		
+		],
+		"buttonLinks" : [ 
+			"https://github.com/johndimi/djFlixel" , 
+			"https://twitter.com/jondmt"
+		],
+		"stripe":
+		{
+			"y":6,
+			"speed":2.2,
+			"color":"@DB32[1]"
+		},
+		
+		"footer": {
+			"align":"right-bottom","color":"@DB32[22]"
+		},
+		
+		"menu":{
+			"x":12,"y":64,"width":220,
+			"style":{
+				"font":"fonts/blocktopia",
+				"fontSize":16,
+				"color":"@DB32[21]",
+				"color_focused":"@DB32[28]",
+				"color_accent":"@DB32[19]",
+				"border_size":1,
+				"el_padding":1
+			},
+			"header":{
+				"textS":{
+					"font":"fonts/blocktopia",
+					"fontSize":32,
+					"color":"@DB32[8]",
+					"border_size":2
+				},
+				"deco_line":0,
+				"offset":-16
+			}
 		}
 	}
 

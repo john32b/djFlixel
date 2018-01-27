@@ -12,15 +12,10 @@ import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
 
 /**
- * == Vertical List Navigatiable ==
+ * == Vertical List Navigable ==
  * 
  * Provide element navigation with a cursor on a Basic Vertical List
  * 
- * CURSOR:
- * ----------------
- * 
- * 
- *
  * NOTES:
  * ----------------
  * 
@@ -81,7 +76,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	var _cursor_align_right:Bool;	// If true, places the cursor on the right, inverses anim_x_offset
 	
 	
-	// -- Mouse Related
+	// ## USER SET FLAGS
 	// ------------
 	
 	// -- You can set this at any time
@@ -89,7 +84,11 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	public var flag_use_mouse:Bool = true;
 	
 	// -- If true will try to scroll up and down using the mouse
-	public var flag_mouse_scroll:Bool = true;
+	public var flag_wheel_scroll:Bool = true;
+	
+	// -- If true, controls will fire on elements regardless
+	//       false to push fire to the element itself and it will fireback a "fire" event (used in flxmenu)
+	public var flag_simple_fire:Bool = true;
 	
 	// Precalculate camera viewport and scrolling for mouse overlap calculations
 	var _camCheckOffset:SimpleCoords;
@@ -99,7 +98,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	
 	//---------------------------------------------------;
 	
-	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
+	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, SlotsTotal:Int = 0)
 	{
 		super(ObjClass, X, Y, WIDTH, SlotsTotal);
 		_index_data = -1;
@@ -309,93 +308,88 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	}//---------------------------------------------------;
 	
 	
-	
 	/**
-	 * Functionality to move the cursor within boundaries
-	 * taking into account a padding value
-	 * --
-	 * V1.0. Tested and works.
-	 *       . when the list is more than full
-	 * 		 . when the list is half full
-	 * 		 . when the list is exactly full
-	 * 
-	 * PRE: Item Pointer is not NULL
+	 * Check and handle input from controllers or mouse
 	 */
 	function checkInput() 
 	{
-		switch(Controls.CURSOR_DIR()) {
-			case Controls.UP: 		selectionOneUp();
-			case Controls.DOWN:		selectionOneDown();
-			case Controls.LEFT:		currentElement.sendInput("left");
-			case Controls.RIGHT:	currentElement.sendInput("right");
-		}// end switch--
+		if (CTRL.timePress(CTRL.UP)) selectionOneUp(); else
+		if (CTRL.timePress(CTRL.DOWN)) selectionOneDown(); else
+		if (CTRL.timePress(CTRL.RIGHT, 0.7, 0.08, 0.02)) currentElement.sendInput("right"); else
+		if (CTRL.timePress(CTRL.LEFT, 0.7, 0.08, 0.02)) currentElement.sendInput("left"); 
 		
 		if (isScrolling) return;
 		
 		// =============================== CONTROLS SELECT   =======;
-		if (Controls.CURSOR_OK()) {
+		if (CTRL.CURSOR_OK()) {
 			currentElement.sendInput("fire");
+			if (flag_simple_fire) callback_item("fire");
 		}else
 		// =============================== CONTROLS BACK     =======;
-		if (Controls.CURSOR_CANCEL()) {
+		if (CTRL.CURSOR_CANCEL()) {
 			callback_menu("back");
 			
 		}else
 		// =============================== Start Button     =======;
 		// This could be triggered to close the menu.
-		if (Controls.justPressed(Controls.START)) {
+		if (CTRL.justPressed(CTRL.START)) {
 			callback_menu("start");
 		}
 
 		// -- Check mouse controls ::
 		if (!flag_use_mouse) return;
+		
+		var mx:Float = FlxG.mouse.screenX + _camCheckOffset.x;
+		var my:Float = FlxG.mouse.screenY + _camCheckOffset.y;
 
-		// :: Check for mouse scrolling
-		if (flag_mouse_scroll && (FlxG.mouse.wheel < 0 || FlxG.mouse.wheel > 0))
+		// -- If mouse is within the menu window :
+		if ((mx > x) && (mx < x + width) && (my > y) && (my < y + height))
 		{
-			if ((FlxG.mouse.screenX + _camCheckOffset.x > this.x) && (FlxG.mouse.screenX + _camCheckOffset.x < this.x + this.width) &&  
-				(FlxG.mouse.screenY + _camCheckOffset.y > this.y) && (FlxG.mouse.screenY + _camCheckOffset.y < this.y + this.height )) {
-					
-					if (FlxG.mouse.wheel < 0) 
-					{
-						if (scrollDownOne()) {	
-							_index_data++;
-							_dataIndexChanged();
-							
-						}
+			// Check for mouse scrolling :
+			if (flag_overflow && flag_wheel_scroll)
+			{
+				if (FlxG.mouse.wheel < 0) {
+					if (scrollDownOne()) {
+						_index_data++;
+						_dataIndexChanged();
 					}
-					else
-					{
-						 if (scrollUpOne()) {
-							_index_data--;
-							_dataIndexChanged();
-						 }
-					}
-					
 					return;
 				}
-		}// --
-	
-		
-		// -- Check Mouse Collision on all slots
-		// TODO: it works but it could be better
-		for (counter in 0..._slotsTotal) 
-		{
-			if (elementSlots[counter] != null) 
+				else if(FlxG.mouse.wheel > 0) {
+					 if (scrollUpOne()) {
+						_index_data--;
+						_dataIndexChanged();
+					 }
+					 return;
+				}
+			}
+			
+			// Check for rollover and clicks :
+			for (c in 0..._slotsTotal) 
 			{
-				r_el = elementSlots[counter]; // Readability
-				// if (r_el.opt.disabled || !r_el.opt.selectable) continue;
-				if ((FlxG.mouse.screenX + _camCheckOffset.x > r_el.x) && (FlxG.mouse.screenX + _camCheckOffset.x < r_el.x + r_el.width) &&  
-					(FlxG.mouse.screenY + _camCheckOffset.y > r_el.y)  && (FlxG.mouse.screenY + _camCheckOffset.y < r_el.y + elementHeight )) {
-						if (!r_el.isFocused) requestRollOver(counter); else
-						if (FlxG.mouse.justPressed) r_el.sendInput("click");
-						//if (FlxG.mouse.justReleasedRight) r_el.sendInput("clickR"); else
-						//if (FlxG.mouse.wheel < 0 && FlxG.keys.pressed.CONTROL) r_el.sendInput("left"); else
-						//if (FlxG.mouse.wheel > 0 && FlxG.keys.pressed.CONTROL) r_el.sendInput("right");
+				if (elementSlots[c] != null)
+				{
+					r_el = elementSlots[c]; // Readability
+			
+					// Check for highlight
+					if (my > r_el.y && my < r_el.y + r_el.height)
+					{
+						if (!r_el.isFocused) requestRollOver(c);
+						// Send the X,Y Coordinates along with the click status to the item
+						// I am doing it this way so I don't have to change the function
+						if (FlxG.mouse.justPressed) {
+							r_el.sendInput("c|" + Std.int(mx - r_el.x) + "|" + Std.int(my - r_el.y) );
+						}else
+						// Do mouse wheel checks only if there is no overflow
+						if (!flag_overflow){
+							if (FlxG.mouse.wheel > 0) r_el.sendInput("right"); else
+							if (FlxG.mouse.wheel < 0) r_el.sendInput("left");
+						}
 					}
-			}//--
-		}//--
-
+				}
+			}
+		}// -- end mouse for elements
+		
 	}//---------------------------------------------------;
 	
 
@@ -552,7 +546,7 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 	// Callbacks from children elements
 	//====================================================;
 	
-	// Menu related callback
+	// Helper	: Menu related callback, push just the message, no item is needed
 	function callback_menu(status:String)
 	{
 		if (callbacks != null) {
@@ -560,9 +554,8 @@ class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
 		}
 	}//---------------------------------------------------;
 	
-	// Items related callback
-	// Child items are calling this directly
-	// NOTE: Only the currently selected item is allowed to push callbacks.
+	// Helper 	: Items related callback, push message and current item
+	// 			: Menu Items can call this directly
 	function callback_item(status:String)
 	{
 		if (callbacks != null) {

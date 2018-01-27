@@ -26,10 +26,15 @@ class PageData implements IFlxDestroyable
 	
 	// Data holder, Store the items serially
 	public var collection:Array<MItemData>;
-
+	
+	// Override the menu's default callbacks with this one
+	public var callbacks_override:String->String->MItemData->Void = null;
+	
+	// The menu will call this in addition to its callbacks
+	public var callbacks:String->String->MItemData->Void = null;
+	
 	// Store some page specific custom parameters
 	public var custom:Dynamic;	
-	
 	// Things that you can store in the custom object ::
 	// These vars are OPTIONAL and will override the FlxMenu defaults for this page.
 	// NOTE: You can just set whatever fields you need on the styles, 
@@ -40,12 +45,11 @@ class PageData implements IFlxDestroyable
 	// styleMenu		Object, custom styleMenu can override parts of the FlxMenu style
 	// lockNavigation   Bool, If true the page cannot send a "back" request ( by pressing the back button )
 	// cursorStart		SID, the sid of the item to always highlight when going into this menu
-	// callbacks_item   override the menu's callback function to this one.
+	// initFire			Bool, If `true` will fire a `change` event on all menu items whenever this page gets `onScreen`
 	// -----------------------------------------------
 	// - Fields starting with _ are used internally ::
 	// -----------------------------------------------
-	// _cursorLastPos   Int, Store the latest cursor position if it's needed later
-	// _dynamic			Bool, Dynamic page flag
+	// _cursorLastUID   Int, Store the latest cursor position if it's needed later
 	// -----------------------------------------------
 	
 	//====================================================;
@@ -60,32 +64,43 @@ class PageData implements IFlxDestroyable
 	 * 		title: optional Title
 	 * 		desc:  optional Description
 	 */
-	public function new(?SID:String, ?params:Dynamic)
+	public function new(?_SID:String, ?params:Dynamic)
 	{
 		collection = [];
 		custom = { };
 		
-		this.UID = UID_GENERATOR++;
-		this.SID = SID;
+		UID = UID_GENERATOR++;
+		SID = _SID;
+		if (SID == null) SID = 'p_$UID';
 		
 		if (params == null) return; // no need to read params if null	
 		
-		title = Reflect.field(params, "title");		  // Title
-		description = Reflect.field(params, "desc");  // Description, or subtitle
-		
+		for (f in Reflect.fields(params)) {
+			switch(f) {
+				// Those fields apply to the object
+				case "title": title = Reflect.field(params, f);
+				case "desc": description = Reflect.field(params, f);
+				// Map all other custom fields to the data object.
+				default: Reflect.setProperty(custom, f, Reflect.field(params, f));
+			}
+		}
 	}//---------------------------------------------------;
 
 	/**
 	 * Quick add an item data to this page
 	 * 
 	 * @param	label The label of the Menu Item
-	 * @param	params { .. } see: MItemData.setNewParameters(..) for help
+	 * @param	params type:link,slider,oneof,toggle,label | sid:String | see: MItemData.setNewParameters(..) for help
 	 * @return The produced MItemData
 	 */
 	public function add(label:String, ?params:Dynamic):MItemData
 	{
 		var o = new MItemData(label, params);
 		collection.push(o);
+		// If you didn't set an SID, it will be set to the item index on the set
+		if (o.SID == null) {
+			o.SID = '${collection.length}';
+		}
 		return o;
 	}//---------------------------------------------------;
 	
@@ -95,9 +110,9 @@ class PageData implements IFlxDestroyable
 	 * @param SID Start with "@" to link to page, Start with "!" or "#" to confirm action, "#back" to go back
 	 * @param callback If you want to specifically manage callbacks from this item. Otherwise use the global menu callback handler
 	 */
-	public inline function link(label:String, SID:String, ?callback:Void->Void):MItemData
+	public inline function link(label:String, ?SID:String, ?description:String, ?callback:Void->Void):MItemData
 	{
-		return add(label, { type:"link", sid:SID, callback:callback } );
+		return add(label, { type:"link", sid:SID, callback:callback, desc:description } );
 	}//---------------------------------------------------;
 
 	/**
@@ -122,6 +137,7 @@ class PageData implements IFlxDestroyable
 	 * Adds a question to the page. Useful in dynamic pages.
 	 * @param	text  Question to ask
 	 * @param	sid   The results will callback as : "sid_yes", "sid_no"
+	 * @param	lockNavigation  Can it send a 'back' trigger
 	 */
 	public function question(text:String, sid:String, lockNavigation:Bool = false)
 	{
@@ -156,6 +172,34 @@ class PageData implements IFlxDestroyable
 	{
 		for (i in collection) if (i.SID == sid) return i; return null;
 	}//---------------------------------------------------;
-
+	
+	/**
+	 * Returns the index of an item with a target field, Returns -1 if nothing found
+	 * @param	field String Name of the field to check. (e.g. "SID", "UID .. )
+	 * @param	check The value of the field will be checked against this
+	 * @return 
+	 */
+	public function getItemIndexWithField(field:String, check:Dynamic):Int
+	{
+		var i = 0;
+		for (i in 0...collection.length) {
+			if (Reflect.field(collection[i], field) == check) {
+				return i;
+			}
+		}
+		return -1; // Not found
+	}//---------------------------------------------------;
+	
+	/**
+	 * Swap the indexes of two items in place in the collection array
+	 * @param	i0 First Index
+	 * @param	i1 Second Index
+	 */
+	public function swap(i0:Int,i1:Int)
+	{
+		var t = collection[i0];
+		collection[i0] = collection[i1];
+		collection[i1] = t;
+	}//---------------------------------------------------;
 	
 }//-- end --//

@@ -183,16 +183,16 @@ class FlxMenuPages extends FlxGroup
 		if (isAnimating || !visible) return;
 		
 		// Keys
-		if (Controls.CURSOR_START() || Controls.CURSOR_CANCEL()) {
+		if (CTRL.CURSOR_START() || CTRL.CURSOR_CANCEL()) {
 			if (callback_action != null) callback_action("back");
 		}else
-		switch(Controls.CURSOR_DIR()) {
-				case Controls.RIGHT: 
+		switch(CTRL.CURSOR_DIR()) {
+				case CTRL.RIGHT: 
 				if (pageIndex < pages.length-1) {
 					showPage(pageIndex + 1);
 					if (callback_action != null) callback_action("change");
 				}
-				case Controls.LEFT: 
+				case CTRL.LEFT: 
 				if (pageIndex > 0) {
 					showPage(pageIndex-1);
 					if (callback_action != null) callback_action("change");

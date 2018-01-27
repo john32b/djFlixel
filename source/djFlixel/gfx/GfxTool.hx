@@ -146,7 +146,7 @@ class GfxTool
 	
 	
 	/**
-	 * Takes a bunch of bitmaps and stiches them to a long stripe
+	 * Takes a bunch of bitmaps and stitches them together to a long stripe
 	 * @param	ar Array of bitmaps NOTE: They must be of the same size!
 	 * @return
 	 */
@@ -182,16 +182,17 @@ class GfxTool
 	
 	/**
 	 * Replace a color on a bitmap using the built-in Threshold function. Returns a new bitmap
+	 * It's faster than `FlxButmapDataUtil.replaceColor()`
 	 * @param	source The source bitmap
 	 * @param	color0 Color to be replaced
 	 * @param	color1 Replace with this color
 	 * @return  The new bitmap
 	 */
-	public static function replaceColor(source:BitmapData, color0:Int, color1:Int):BitmapData
+	public static function replaceColor(source:BitmapData, color0:Int, color1:Int, cloneImage:Bool = false):BitmapData
 	{
 		var rect:Rectangle = new Rectangle(0, 0, source.width, source.height);
 		var point:Point = new Point();
-		var dest = source.clone();
+		var dest:BitmapData = cloneImage?source.clone():source;
 		dest.threshold(dest, rect, point, "==", color0, color1);
 		return dest;
 	}//---------------------------------------------------;
@@ -326,6 +327,7 @@ class GfxTool
 	 * Supported :: (check djFlixel.gfx.palette.*)
 	 * 
 	 * 	A16[]  	-> Arne 16
+	 *  DB16[]  -> DB16
 	 *  DB32[] 	-> DB32
 	 *  AMS[]	-> Amstrad
 	 * 
@@ -344,6 +346,7 @@ class GfxTool
 		if (exp.matched(1) != null){
 			switch(exp.matched(1)){
 				case "A16" : return Palette_Arne16.COL[Std.parseInt(exp.matched(2))];
+				case "DB16" : return Palette_DB16.COL[Std.parseInt(exp.matched(2))];
 				case "DB32" : return Palette_DB32.COL[Std.parseInt(exp.matched(2))];
 				case "AMS" :return Palette_Amstrad.COL[Std.parseInt(exp.matched(2))];
 				default : trace("ERROR - Unsupported pallete code", exp.matched(1)); return 0;

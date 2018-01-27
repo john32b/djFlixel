@@ -1,10 +1,10 @@
 package djFlixel.gui.menu;
 
 /**
- * Just the data of menu item that goes inside an FlxMenu 
+ * Just the data of menu item that goes inside a VListMenu/FlxMenu 
  * Types of what this Item can be:
  * 
- * - Label		;	Just text, can
+ * - Label		;	Just text, unselectable
  * - Link		;	Fires a function or goes to another page
  * - Checkbox	;	On/Off
  * - Slider		;	Selects integers from a range
@@ -13,9 +13,15 @@ package djFlixel.gui.menu;
  */
 class MItemData
 {
+	// All the available functionality types the menuItem Offers
+	public static var AVAILABLE_TYPES(default, never):Array<String> = [
+		"link", "slider", "oneof", "toggle", "label"
+	];
+	
 	// A simple incremental UID Generator
 	static var UID_GENERATOR:Int = 0;
 	
+	// --------------------------------------
 	// General Purpose Int ID of the item
 	public var UID:Int;
 	
@@ -34,15 +40,9 @@ class MItemData
 	
 	// A disabled element can't have interactions
 	public var disabled:Bool = false;
-	
-	// All the available functionality types the menuItem Offers
-	public static var AVAILABLE_TYPES(default, never):Array<String> = [
-		"link", "slider", "oneof", "toggle", "label"
-	];
-	
+
 	// What functionality this MenuItem has
-	// : must be one of the available types
-	public var type:String;
+	public var type:String = null;
 	
 	// Holds all the internal data
 	// Also can include custom user data in this object
@@ -78,12 +78,17 @@ class MItemData
 	 * 
 	 * 		pool: Dynamic, 		Data associated with the controller, depends on type
 	 * 		current: Dynamic,	Current value of the controller, depends on type
+	 *		loop:Bool,			Affects "oneof" and "slider", loops at edges
 	 * 
-	 *		conf_p_style: 	If it's a full page confirmation, you can override/set its style
-	 * 		conf_question: 	String, Question to present if a confirmation check is required
-	 * 		conf_options:Array<String>: Anything other instead of YES / NO
+	 *		conf_active:Bool		, Confirmation is required for this a link
+	 *		conf_style:Dynamic 		, If it's a full page confirmation, you can override/set its style
+	 * 		conf_question:String	, Question to present if a confirmation check is required
+	 * 		conf_options:Array<String> , Anything other instead of YES / NO
 	 * 	
-	 * 		callback: If it's a link, this (void->void) will be called
+	 * 		callback:Void->Void	,	If it's a link, this will be called on fire, 
+	 * 								replaces any menu callbacks for this item call
+	 * 
+	 * 		noInit:Bool			,	If true, this item will not fire on pages with `initFire` enabled
 	 */
 	public function setNewParameters(?params:Dynamic)
 	{
@@ -104,20 +109,14 @@ class MItemData
 		}
 		
 		// -- Some Safeguards
+		if (label == null) {
+			label = "[nolabel]";
+		}
+		
 		if (type == null) {
 			type == "label";
-			label = "(null)" + label;
+			label = "[notype]" + label;
 			trace("Error: Forgot to set a type", this);
-		}
-		
-		if ((type != "label") && (SID == null || SID.length == 0)) {
-			// It should be filled with something in most cases.
-			trace("Warning: SID is NULL", this);
-			SID = "null";
-		}
-		
-		if (label == null) {
-			label = "(null)";
 		}
 		
 		// Initialize the types
@@ -131,31 +130,49 @@ class MItemData
 			// Current is the index
 			if (data.current == null) 
 				data.current = 0; 
+				
+			if (data.loop == null)
+				data.loop = false;
+				
 			#if debug
 			if (data.pool == null || data.pool.length == 0) {
 				trace("Error: Data Pool is empty. Filling with dummy data.");
 				data.pool = ["one", "two"];
 			}
 			#end
-		
+			
 		case "toggle":	// ---------------------------- toggle 
 			if (data.current == null)
 				data.current = false;
 				
 		case "slider": // ----------------------------- slider
-			// Current shows actual value
 			#if debug
 			if (data.pool == null) {
 				trace("Error: dataPool is NULL. Setting to [1,10]");
 				data.pool = [1, 10];
-				data.current = 1; 
-				return;
 			}
 			#end
+			
+			// Current shows actual value
 			if (data.current == null)
-				data.current = data.pool[0];	
+				data.current = data.pool[0];
+				
+			// You can customize the increments
+			if (data.inc == null)
+				data.inc = 1;
+				
+			if (data.loop == null)
+				data.loop = false;
+				
+			// Is if a float, flag
+			data.float = (data.inc % 1 > 0);
 				
 		case "link":  // ----------------------------- link
+			
+			if (SID == null){
+				//trace("Warning: Link without an SID.. Autogenerating", this);
+				SID = '$UID';
+			}
 			
 			if (SID.charAt(0) == "#") // Confirm before calling, POPUP STYLE
 			{
@@ -167,7 +184,7 @@ class MItemData
 				// data.conf_question, defaults are at FLXMENU
 				// data.conf_options , defaults are at FLXMENU
 			}
-			else if (SID.charAt(0) == "!")
+			else if (SID.charAt(0) == "!")	// Confirm before calling, FULLPAGE
 			{
 				data.fn = "call";
 				SID = SID.substring(1);
@@ -178,7 +195,7 @@ class MItemData
 				if (data.conf_question == null)
 					data.conf_question = label + ", Are you sure?";
 			}
-			else if (SID.charAt(0) == "@") 
+			else if (SID.charAt(0) == "@") // GOTO PAGE
 			{
 				data.fn = "page";
 				SID = SID.substring(1);
@@ -192,11 +209,23 @@ class MItemData
 		}// -- end switch
 	}//---------------------------------------------------;
 	
+	/**
+	 * Return data, according to type
+	 * @return
+	 */
+	public function get():Dynamic
+	{
+		return switch(type){
+			case "slider": data.current;
+			case "oneof": data.pool[data.current];
+			case "toggle": data.current;
+			default: data.sid;
+		}
+	}//---------------------------------------------------;
+	
 	// --
 	public function destroy()
 	{
-		if (data.pool != null) data.pool = null;
-		if (data.current != null) data.current = null;
 		data = null;
 	}//---------------------------------------------------;
 	

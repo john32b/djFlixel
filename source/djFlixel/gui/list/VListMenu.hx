@@ -21,10 +21,11 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 	
 	//====================================================;
 	// --
-	public function new(X:Float, Y:Float, WIDTH:Int = 0, ?SlotsTotal:Int) 
+	public function new(X:Float, Y:Float, WIDTH:Int = 0, SlotsTotal:Int = 0)
 	{
 		super(MItemBase, X, Y, WIDTH, SlotsTotal);
 		setPoolingMode("reuse");
+		flag_simple_fire = false;
 	}//---------------------------------------------------;
 	
 	
@@ -43,7 +44,7 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		
 		if (page.custom.styleMenu != null)
 		{
-			Styles.applyStyleNodeTo(page.custom.styleMenu, styleMenu);
+			DataTool.copyFieldsC(page.custom.styleMenu, styleMenu);
 		}
 		
 		// -- Adjust the scroll Indicator
@@ -58,7 +59,7 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 			sh = Math.ceil(styleMenu.fontSize / 8);
 		}
 		
-		styleB.scrollInd = DataTool.defParams(styleB.scrollInd, {
+		styleB.scrollInd = DataTool.copyFields(styleB.scrollInd, {
 			color:styleMenu.color,
 			color_border:styleMenu.color_border,
 			padding:[0,sh]
@@ -71,24 +72,24 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		if (cursor == null)
 		{
 			var c = styleMenu.cursor;
-			if (c && c.disable) return; // Because there is nothing else to do after the parent if
-			
+			if (c != null && c.disable == true) return; // Because there is nothing else to do after the parent if
+
 			var cur:FlxSprite;
 			
 			// Shortcut function ::
 			// Append Offsets, Add Cursor, Starting with offsets (a,b)
-			function _a(a, b) {
+			function _a(a:Int, b:Int) {
 				var co = [a, b];
-				if (c && c.offset) {
+				if (c != null && c.offset != null) {
 					co[0] += cast c.offset[0];
 					co[1] += cast c.offset[1];	
 				}
 				cursor_setSprite(cur, co);
 			}// --
 			
-			if (c && c.image) // Using an image cursor
+			if (c != null && c.image != null) // Using an image cursor
 			{
-				if(c.frames){
+				if (c.frames != null){
 				cur = new FlxSprite(0, 0);
 				cur.loadGraphic(c.image, true, c.size, c.size); // be sure (size) is set
 				cur.animation.add("main", c.frames, c.fps); 	// be sure (fps) is set
@@ -96,13 +97,13 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 				}else{
 				cur = new FlxSprite(0, 0, c.image);					
 				}
-				if (c.align) _a(0, Math.round(cur.height / 2 - elementHeight / 2));
+				if (c.align != null) _a(0, Math.round(cur.height / 2 - elementHeight / 2));
 				else _a(0, 0);
 			}
 			else // Using a text cursor
 			{
 				var s = styleMenu.alignment == "right"?"<":">"; // Default symbol
-				if (c && c.text) s = c.text;
+				if (c != null && c.text != null) s = c.text;
 				var t = new FlxText(0, 0, 0, s);
 				Styles.applyTextStyle(t, styleMenu);
 				t.color = styleMenu.color_focused; // #COLOR, I am experimenting
@@ -116,20 +117,23 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 	// Highlight an item with a target SID
 	public function item_highlight(sid:String)
 	{
-		var ind = getItemIndexWithField("SID", sid);
+		var ind = page.getItemIndexWithField("SID", sid);
 		if (ind > -1) {
 			setViewIndex(ind);
 		}
 	}//---------------------------------------------------;
 	
-	
 
-	// Update data fields of an item, both DATA + VISUAL,
-	// Will search in the pool as well.
-	public function item_updateData(sid:String, params:Dynamic)
+	/**
+	 * Update data fields of an item, both DATA + VISUAL,
+	 * Will search in the pool as well.
+	 * @param	sid
+	 * @param	params
+	 */
+	public function item_updateData(sid:String, params:Dynamic):Bool
 	{
-		var ind = getItemIndexWithField("SID", sid);
-		if (ind ==-1) return;
+		var ind = page.getItemIndexWithField("SID", sid);
+		if (ind ==-1) return false;
 		
 		// Overwrite old parameters, set new
 		_data[ind].setNewParameters(params);
@@ -140,7 +144,7 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		for (i in elementSlots) {
 			if (i.isSame(_data[ind])) {
 				i.setData(_data[ind]); // Resets whole item from the start
-				return;
+				return true;
 			}
 		}		
 			
@@ -148,27 +152,17 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		if (flag_pool_reuse)
 		{
 			var b:MItemBase = poolGet(ind); // Guaranteed that it won't be removed from the pool
-			if (b != null) b.setData(_data[ind]);
-		}
-	}//---------------------------------------------------;
-
-	
-	/**
-	 * Returns the index of an item with a target field, Returns -1 if nothing found
-	 * @param	field String Name of the field to check. (e.g. "SID", "UID .. )
-	 * @param	check The value of the field will be checked against this
-	 * @return 
-	 */
-	public function getItemIndexWithField(field:String, check:Dynamic):Int
-	{
-		var i = 0;
-		for (i in 0..._data_length) {
-			if (Reflect.field(_data[i], field) == check) {
-				return i;
+			if (b != null) {
+				b.setData(_data[ind]);
+				return true;
 			}
 		}
-		return -1; // Not found
+		
+		// There is no actual sprite anywhere, so it will be created from scratch
+		// once it is needed.
+		return true;
 	}//---------------------------------------------------;
+
 	
 	/**
 	 * Get the current active item data the cursor is pointing
@@ -213,6 +207,7 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		}
 	}//---------------------------------------------------;
 	
+	
 	// --
 	// Set the style and init
 	function set_styleMenu(val:StyleVLMenu):StyleVLMenu
@@ -220,6 +215,26 @@ class VListMenu extends VListNav<MItemBase,MItemData>
 		styleMenu = val;
 		styleNav = styleMenu;
 		return val;
+	}//---------------------------------------------------;
+	
+	
+	override public function onScreen(focusAfter:Bool = true, ?onComplete:Void->Void) 
+	{
+		// Fire a "change" status on all elements that support it
+		if (page.custom.initFire && callbacks != null)
+		{
+			var types = ["oneof", "toggle", "slider"];
+			
+			for (item in page.collection) {
+				if (types.indexOf(item.type) >-1){
+					if (item.data.noInit == null){
+						callbacks("change", item);
+					}
+				}
+			}
+		}
+		
+		super.onScreen(focusAfter, onComplete);
 	}//---------------------------------------------------;
 	
 }// -- end -- //

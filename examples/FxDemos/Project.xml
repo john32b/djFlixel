@@ -1,0 +1,57 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<!-- APP ---->
+	<app title="djFlixel FX Demos" file="djflx_fxdemos" main="fxdemos.Main" version="0.1.0" company="none" />
+	<app preloader="flixel.system.FlxBasePreloader"/>
+	
+	<!-- WINDOW SETTINGS- --->
+	<!--These window settings apply to all targets-->
+	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
+	
+	<!-- PATHS ----------------->
+	<set name="BUILD_DIR" value="build/" />
+	
+	<classpath name="source" />
+	
+	<classpath name="../common" />
+	
+	<!--Own project assets-->
+	<assets path="assets"/>
+	
+	<!--Graphics and Data-->
+	<assets path="../assets" rename="assets" include="*.png|*.jpg|*.tmx"/>
+	
+	<!-- SOUNDS -->
+	<assets path="../assets/sounds" rename="sounds" inlude="*.mp3" if="flash"/>
+		
+	<!-- FONTS -->
+	<assets path="../assets/fonts">
+		<!--<font path="pixelarial.ttf" id="fonts/pixelarial"/>-->
+		<!--<font path="mozart.ttf" id="fonts/mozart"/>-->
+	</assets>
+	
+	<!-- DJFLIXEL -------------->
+	<set name="DJFLX_ICONS_8"/> 
+	<haxedef name="EXTERNAL_LOAD" if="flash debug"/>
+
+	<!-- FLIXEL ---------------->
+	<section if="html5">
+		<set name="canvas"/> <haxedef name="canvas"/>
+	</section>
+	
+	<set name="next" unless="neko"/> <!--It doesn't boot with neko and next-->
+	
+	<section if="desktop">
+		<haxedef name="FLX_NO_SOUND_SYSTEM"/> <!-- I don't have any .ogg sounds ready :-(, so temporarily off -->
+	</section>
+	
+	<!-- LIBRARIES ------------->
+	<haxelib name="djFlixel"/>
+	<haxelib name="flixel"/>
+	
+	<!-- Note: 	Many common defines are being declared in the "djflixel/source/include.xml" file
+				This is to save space and streamline the project.xml file a bit -->
+
+</project>

@@ -1,115 +1,189 @@
 package djFlixel.gui;
 
-import flixel.FlxBasic;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 
 /**
- * STATIC CLASS HELPER
- * Quick and Easy align sprites
- * ...
+ * Align Tools
+ * ------------
+ * Helper functions that can quickly align sprites to guides and other sprites
+ * 
  */
 class Align
 {
 	/**
-	 * 
-	 * @param	X left,center,right,none
-	 * @param	Y top,center,bottom,none
+	 * Align an object using the screen viewport as a guide
+	 * @param	obj Object to align
+	 * @param	alignX left,center,right,none
+	 * @param	alignY top,center,bottom,none
 	 * @param   padding Apply this much padding in pixels
 	 */
-	public static function screen(obj:FlxObject, X:String = "center", Y:String = "center", padding:Int = 0):FlxObject
+	public static function screen(obj:FlxObject, alignX:String = "center", alignY:String = "center", padding:Float = 0):FlxObject
 	{
-		switch(X)
+		switch(alignX)
 		{
 			case "left" : obj.x = 0 + padding;
 			case "right" : obj.x = obj.camera.width - obj.width - padding;
 			case "center" : obj.x = (obj.camera.width / 2) - (obj.width / 2);
-			case "none" : 
+			// case "none" : 
 			default:
 		}
 		
-		switch(Y)
+		switch(alignY)
 		{
 			case "top" : obj.y = 0 + padding;
 			case "bottom" : obj.y = obj.camera.height - obj.height - padding;
 			case "center" : obj.y = (obj.camera.height / 2) - (obj.height / 2);
-			case "none":
+			// case "none":
 			default: 
 		}
 		
 		return obj; // for chaining
 	}//---------------------------------------------------;
 	
+	/**
+	 * Align Horizontally an object to another object
+	 * @param	o Object to Align
+	 * @param	t The Guide Object
+	 * @param	type center|left|right
+	 * @param	offs Placement Offset
+	 */
+	public static function XAxis(o:FlxObject, t:FlxObject, type:String = "center", offs:Float = 0):FlxObject
+	{
+		switch(type){
+			case "center":
+				o.x = t.x + (t.width - o.width) / 2;	
+			case "left":
+				o.x = t.x;
+			case "right":
+				o.x = t.x + t.width - o.width;
+			default:
+		}
+		o.x += offs; return o;
+	}//---------------------------------------------------;
 	
 	/**
-	 * Place an object NEXT to another object
-	 * 
-	 * @param	source The object to change coords
-	 * @param	of The object being a reference
-	 * @param	adjX Adjust the X pos for a custom fitting
-	 * @param	adjY Adjust the Y pos for a custom fitting
-	 * @return
+	 * Align Verticaly an object to another object
+	 * @param	o Object to Align
+	 * @param	t The Guide Object
+	 * @param	type center|top|bottom
+	 * @param	offs Placement Offset
 	 */
-	public static function nextTo(source:FlxObject, of:FlxObject, adjX:Int = 0, adjY:Int = 0):FlxObject
+	public static function YAxis(o:FlxObject, t:FlxObject, type:String = "center", offs:Float = 0):FlxObject
 	{
-		source.x = of.x + of.width + adjX;
-		source.y = of.y + adjY;
-		return source;
+		switch(type){
+			case "center":
+				o.y = t.y + (t.height - o.height) / 2;
+			case "top":
+				o.y = t.y;
+			case "bottom":
+				o.y = t.y + t.height - o.height;
+			default:
+		}
+		o.y += offs; return o;
+	}//---------------------------------------------------;
+	
+	/**
+	 * Place an object to the RIGHT of another object
+	 * @param	o Object to Align
+	 * @param	t Guide Object
+	 * @param	offX Offset X
+	 * @param	offY Offset Y
+	 * @return  Placed Object
+	 */
+	public static function right(o:FlxObject, t:FlxObject, offX:Float = 0, offY:Float = 0):FlxObject
+	{
+		o.x = t.x + t.width + offX;
+		o.y = t.y + offY;
+		return o;
 	}//---------------------------------------------------;
 	
 	/** 
-	 * Place an object LEFT to another object
+	 * Place an object to the LEFT of another object
+	 * @param	o Object to Align
+	 * @param	t Guide Object
+	 * @param	offX Offset X
+	 * @param	offY Offset Y
+	 * @return  Placed Object
 	 */
-	public static function prevTo(source:FlxObject, of:FlxObject, adjX:Int = 0, adjY:Int = 0):FlxObject
+	public static function left(o:FlxObject, t:FlxObject, offX:Float = 0, offY:Float = 0):FlxObject
 	{
-		source.x = of.x - source.width + adjX;
-		source.y = of.y + adjY;
-		return source;
+		o.x = t.x - o.width + offX;
+		o.y = t.y + offY;
+		return o;
 	}//---------------------------------------------------;
 	
 	/**
-	 * Place an object below another object and center the middle point to match the source object
+	 * Place an object on TOP of another object
+	 * @param	o Object to Align
+	 * @param	t Guide Object
+	 * @param	offX Offset X
+	 * @param	offY Offset Y
+	 * @return  Placed Object
 	 */
-	public static function downCenter(source:FlxObject, of:FlxObject, paddingY:Int = 0):FlxObject
+	public static function up(o:FlxObject, t:FlxObject, offX:Float = 0, offY:Float = 0):FlxObject
 	{
-		source.x = of.x + ((of.width - source.width) / 2);
-		source.y = of.y + of.height + paddingY;
-		return source;
+		o.x = t.x + offX;
+		o.y = t.y - o.height + offY;
+		return o;
 	}//---------------------------------------------------;
 	
 	/**
-	 * Place an array of objects below another object and center the middle point to match the source object
+	 * Place an object BELOW another object
+	 * @param	o Object to Align
+	 * @param	t Guide Object
+	 * @param	offX Offset X
+	 * @param	offY Offset Y
+	 * @return  Placed Object
 	 */
-	@:deprecated("Use inLineCenterBelow()")
-	public static function downCenterM(source:Array<FlxObject>, of:FlxObject, paddingY:Int = 0, paddingEl:Int = 0)
+	public static function down(o:FlxObject, t:FlxObject, offX:Float = 0, offY:Float = 0):FlxObject
 	{
-		var tot:Float = 0;
-		for (i in source) {
-			tot += i.width;
-			i.y = of.y + of.height + paddingY;
-		}
-		source[0].x = of.x + ((of.width - tot) / 2);
-		for (i in 1...source.length) {
-			source[i].x = source[i - 1].x + source[i - 1].width + paddingEl;
-		}
+		o.x = t.x + offX;
+		o.y = t.y + t.height + offY;
+		return o;
 	}//---------------------------------------------------;
 	
+	/**
+	 * Places an object below another object and center it in the middle of it
+	 */
+	public static function downCenter(o:FlxObject, t:FlxObject, offY:Float = 0):FlxObject
+	{
+		o.x = t.x + ((t.width - o.width) / 2);
+		o.y = t.y + t.height + offY;
+		return o;
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Align a bunch of elements centered below a target sprite
+	 * @param	elements Array of elements to align on the line
+	 * @param	source The element to put the line below
+	 * @param	padX X padding of line elements
+	 * @param	padY Y padding from the source element
+	 */
+	public static function inLineCenterBelow(elements:Array<FlxSprite>, guide:FlxSprite, offX:Float = 1, offY:Float = 1)
+	{
+		inLine(guide.x, guide.y + guide.height + offY, guide.width, elements, "center", offX);
+	}//---------------------------------------------------;
 	
 	/**
 	 * Align a bunch of objects in a line
 	 * @param	x Line start X
 	 * @param	y Line start Y
-	 * @param	width Width of the Line
+	 * @param	width Width of the Line, 0: Rest of the screen, -1: Center of the screen mirror to X
 	 * @param	elements Array of elements to align
-	 * @param	align center,left,right,justify
+	 * @param	align center, left, right, justify
 	 * @param   pad if align="center,left,right" use padding between elements in pixels
 	 */
-	public static function inLine(x:Float, y:Float, width:Float, elements:Array<FlxSprite>, align:String = "center", pad:Int = 1)
+	public static function inLine(x:Float, y:Float, width:Float, elements:Array<FlxSprite>, align:String = "center", pad:Float = 0)
 	{
 		var sx:Float; // start x, when placing
 		var tw:Float = 0; // total Width padding included
 		
+		if (width == 0) width = FlxG.width - x;
+		if (width < 0) width = FlxG.width - x * 2;
+	
 		inline function getTW(){
 			tw = 0;
 			for (i in elements) tw += i.width;
@@ -139,32 +213,21 @@ class Align
 		}
 	}//---------------------------------------------------;
 	
-	
-	/**
-	 * Align a bunch of elements centered below a target sprite
-	 * @param	elements Array of elements to align on the line
-	 * @param	source The element to put the line below
-	 * @param	padX X padding of line elements
-	 * @param	padY Y padding from the source element
-	 */
-	public static function inLineCenterBelow(elements:Array<FlxSprite>, source:FlxSprite, padX:Int = 1, padY:Int = 1)
-	{
-		inLine(source.x, source.y + source.height + padY, source.width, elements, "center", padX);
-	}//---------------------------------------------------;
-	
 	/**
 	 * Align a bunch of elements vertically 
 	 * @param	x Line start X
 	 * @param	y Line start Y
-	 * @param	height Line Height
+	 * @param	height Line Height 0:Rest of the screen, -1:Center of the screen mirror to Y
 	 * @param	elements The elements to align
 	 * @param	align center,top,bottom,justify
 	 * @param   pad if align="center,top,bottom" use padding between elements in pixels
 	 */
-	public static function inVLine(x:Float, y:Float, height:Float, elements:Array<FlxSprite>, align:String = "center", pad:Int = 1)
+	public static function inVLine(x:Float, y:Float, height:Float, elements:Array<FlxSprite>, align:String = "center", pad:Float = 0)
 	{
 		var sy:Float; // start x, when placing
 		var th:Float = 0; // total Width padding included
+		if (height == 0) height = FlxG.height - y;
+		if (height < 0 ) height = FlxG.height - y * 2;
 		
 		inline function getTH(){
 			th = 0;

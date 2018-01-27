@@ -1,120 +1,87 @@
 package djFlixel.tool;
 
+import flixel.FlxBasic;
 import flixel.FlxG;
+import flixel.FlxState;
 
-
-/// TODO: This class is a mess, remove it!
 
 /**
- * TODO: Make it an FLXBasic so that it gets removed automatically
+ * Simple timer that counts real numbers and callbacks
+ * Automatically gets added/removed to the state so you can use it like
  * 
- * Counts and callback Numbers in a range
- * Doesn't use flxTimer, User needs to call update manually :-/
+ * e.g. 
+ * 	new StepTimer(0,10,2.5,fn(a,b){});
  * 
+ *  Will call fn() 11 times, every 2.5/11 times
+ * 	- fn(0,false) // second parameter is finished or not
+ *  - fn(1,false)
+ *  - ...
+ *  - ..
+ *  - fn(10,true) // finished
  * ...
- * @author JohnDimi, @jondmt
  */
-class StepTimer
+class StepTimer extends FlxBasic
 {
-	
-	var isActive:Bool;
-	// 
-	var step_current:Int = 0;
-	//
-	var step_target:Int = 0;
-	// Speed increment of the steps, +1 or -1
-	var step_dir:Int = 0;
-	// -
-	var step_frequency:Float;
-	// -
-	var step_timer:Float;
-	
-	// Call this on step
-	var callback_tick:Int->Void;
-	// Call this when all steps are done
-	var callback_complete:Void->Void;
-	
-	//====================================================;
-	//====================================================;
-	
-	public function new() 
-	{
-		clear();
-	}//---------------------------------------------------;
+	var c_current:Int;
+	var c_target:Int;
+	var c_dir:Int;
+	var t:Float; 	// timer
+	var tick:Float;
+	var onTick:Int->Bool->Void; // fn(Step,Finished){};
+	// --
 	
 	/**
-	 * 
-	 * @param	from Count from here
-	 * @param	to to this
-	 * @param	frequency in seconds
-	 * @param	onTick
-	 * @param	onComplete
+	 * Create and start a stepTimer, calling ONTick(.) with the progress
+	 * @param	from Any Interger
+	 * @param	to Any Interger
+	 * @param	totalTime Total Time to spend counting, Step time will be equally divided
+	 * @param	ONTick (a,b) a:Int = Current Step, b:Bool = Finished 
+	 * @param	state The state to add this, Useful if running from a substate where the main state is paused
 	 */
-	public function once(from:Int, to:Int, frequency:Float, onTick:Int->Void, ?onComplete:Void->Void)
+	public function new(from:Int, to:Int, totalTime:Float, ONTick:Int->Bool->Void, ?state:FlxState)
 	{
-		if (from == to)
-		{
+		super();
+		onTick = ONTick;
+		if (from == to){
 			trace("Warning: Start and Target is the same. Returning");
-			if (onComplete != null) onComplete();
+			if (onTick != null) onTick(from, true);
 			return;
 		}
 		
-		step_timer = 0;
-		step_current = from;
-		step_target = to;
-		step_frequency = frequency;
-		isActive = true;
-		
-		if (from < to)
-		{
-			step_dir = 1;
-		}else
-		{
-			step_dir = -1;
+		if (state != null){
+			state.add(this);
+		}else{
+			FlxG.state.add(this);
 		}
 		
-		callback_complete = onComplete;
-		callback_tick = onTick;
-		
-		// Hard set the first, because the next call will be in (frequancy time) and will invoke the next step
-		onTick(from);
-		
+		c_current = from;
+		c_target = to;
+		if (to > from) c_dir = 1; else c_dir = -1;
+		var totalSteps = Math.abs(to - from) + 1;
+		t = 0; tick = totalTime / totalSteps;
+		// Call the first step right now
+		onTick(c_current, false);
 	}//---------------------------------------------------;
-	
-	// Call this on an update function.
 	// --
-	public function update():Void 
-	{		
-		if (!isActive) return;
+	override public function update(elapsed:Float):Void 
+	{
+		super.update(elapsed);
 		
-		step_timer += FlxG.elapsed;
-		if (step_timer > step_frequency)
-		{
-			step_timer = 0;
-			step_current += step_dir;
-			callback_tick(step_current);
-			if (step_current == step_target)
-			{
-				isActive = false;
-				if (callback_complete != null) callback_complete();
+		if ((t += elapsed) >= tick) {
+			t = 0; c_current += c_dir;
+			if (c_current == c_target) { // Finished
+				destroy();
+				onTick(c_current, true);
+			}else{
+				onTick(c_current, false);
 			}
 		}
-		
 	}//---------------------------------------------------;
-	
 	// --
-	// Apply a loop X many times
-	public function loop()
+	override public function destroy():Void 
 	{
-		// TODO
-	}//---------------------------------------------------;
-	
-	// --
-	public function clear()
-	{
-		isActive = false;
-		callback_complete = null;
-		callback_tick = null;
+		FlxG.state.remove(this);
+		super.destroy();
 	}//---------------------------------------------------;
 	
 }// -- end -- //

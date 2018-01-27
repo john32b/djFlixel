@@ -1,6 +1,7 @@
 package djFlixel.gui;
 
 import djFlixel.tool.DEST;
+import flash.geom.Rectangle;
 import flixel.FlxSprite;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -38,7 +39,7 @@ class DecoLine extends FlxSprite
 	{
 		// Reset tween and clear
 		stop(true);
-		t = FlxTween.num(0, width,time,{ease:Reflect.field(FlxEase, Ease)},function(v:Float){
+		t = FlxTween.num(0, width, time, {ease:Reflect.field(FlxEase, Ease)}, function(v:Float){
 			FlxSpriteUtil.drawRect(this, 0, 0, Std.int(v), height, C);
 		});
 		
@@ -46,7 +47,10 @@ class DecoLine extends FlxSprite
 	public function stop(clear:Bool = false)
 	{
 		t = DEST.numTween(t);
-		if(clear) pixels.floodFill(0, 0, 0x00000000);
+		if (clear) {
+			pixels.floodFill(0, 0, 0x00000000);
+			dirty = true;
+		}
 	}//---------------------------------------------------;
 	// --
 	override public function destroy():Void 

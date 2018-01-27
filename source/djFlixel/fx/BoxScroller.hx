@@ -13,9 +13,13 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
 /**
- * Tiles an image inside a box and scrolls it.
- * Useful for Paralax layers
+ * Tiles an image inside a square, Useful for Paralax layers or fullscreen backgrounds.
+ * For Performance reasons, don't use very small image sources
+ * 
+ * NOTE: Works like `FlxTiledSprite.hx` but this is faster since
+ * 		 it's using `copyPixels()`
  * ...
+ * @author John Dimi
  */ 
 class BoxScroller extends FlxSprite
 {
@@ -54,25 +58,29 @@ class BoxScroller extends FlxSprite
 	 * 
 	 * @param	X World Placement
 	 * @param	Y World Placement
-	 * @param	W Actual width of the scroller
-	 * @param	H If>0 then it will enable the Y axis tiling, else 0 for automatic height based on the image
+	 * @param	W Box Width, 0 for source image Width
+	 * @param	H Box Height, 0 for source image height
+	 * @param   YTiling Tiles on the Y Axis also
 	 * @param	source
 	 */
 	
-	public function new(source:FlxGraphicSource, X:Float, Y:Float, W:Float, H:Float = 0) 
+	public function new(source:FlxGraphicSource, X:Float = 0, Y:Float = 0, W:Float = 0, H:Float = 0, YTiling:Bool = false) 
 	{
 		super(X, Y);
 		
 		_tIm = FlxAssets.resolveBitmapData(source);
 		
 		// -- Just use the X axis for tiling if no Height is set
-		if (H == 0) {
-			H = _tIm.height;
+		if (W == 0) W = _tIm.width;
+		if (H == 0) H = _tIm.height;
+		
+		// There are cases where you don't need y tiling
+		if (YTiling){
+			flag_tileY = true;
+			_updateFunction = _updatePixelsXY;			
+		}else {
 			flag_tileY = false;
 			_updateFunction = _updatePixelsX;
-		}else{
-			_updateFunction = _updatePixelsXY;
-			flag_tileY = true;
 		}
 		
 		makeGraphic(Std.int(W), Std.int(H), 0x00000000, true); // Transparent
@@ -81,11 +89,26 @@ class BoxScroller extends FlxSprite
 		_tpoint = new Point();
 		_scX = 0; _scY = 0;
 		
-		trace('---- new BoxScroller() :: ');
-		trace(' - box:$W,$H | image:${_tIm.width},${_tIm.height}');
-		trace(' - TilingY:$flag_tileY -');
+		//trace('---- new BoxScroller() :: ');
+		//trace(' - box:$W,$H | image:${_tIm.width},${_tIm.height}');
+		//trace(' - TilingY:$flag_tileY -');
 		
 		_updateFunction(); // Force an initial update.
+	}//---------------------------------------------------;
+
+	/**
+	 * Load a new image and keep the same box dimensions
+	 * @param	source
+	 */
+	public function loadNewGraphic(source:FlxGraphicSource)
+	{
+		_tIm = FlxAssets.resolveBitmapData(source);
+		_scX = 0; _scY = 0;
+	}//---------------------------------------------------;
+	
+	public function resize(W:Float, H:Float)
+	{
+		makeGraphic(Std.int(W), Std.int(H), 0x00000000, true); // Transparent
 	}//---------------------------------------------------;
 	
 	// --

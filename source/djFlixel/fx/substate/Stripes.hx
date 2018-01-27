@@ -1,9 +1,11 @@
 package djFlixel.fx.substate;
 
-import djFlixel.FlxAutoText;
+import djFlixel.gui.FlxAutoText;
 import djFlixel.SND;
 import djFlixel.SimpleCoords;
 import djFlixel.tool.DataTool;
+import djFlixel.tool.DelayCall;
+import djFlixel.tool.StepTimer;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -41,15 +43,8 @@ class Stripes extends FlxSubState
 	var stripe_height:Float;		// autocalculated,
 	var stripes:Array<FlxSprite>;	// stores all the stripes
 	
-	// Is a transition curently running
-	var isRunning(default, null):Bool;
-	
 	// Function applied to each stripe when they are timer triggered
-	var runFunc:Int->Void; 
-	
-	// Store the index of the last stripe of the transition.
-	// When this stripe completes the animation, fires the END trigger
-	var lastStripeIndex:Int;
+	var runFunc:Int->?Bool->Void; 
 	
 	// Running parameters: check the constructor
 	var P:Dynamic;
@@ -60,29 +55,32 @@ class Stripes extends FlxSubState
 	
 	// Call this on transition end
 	var onComplete:Void->Void;
+	
+	var tween_ease:EaseFunction;
+	var halfIndex:Int;
 	//====================================================;
 	
 	/**
 	 * @param   mode  , "x-y" x:on,off, y:left,right,in,out. e.g. "off-out"
-	 * @param	params, Check Below:
+	 * @param	params, Check in Code
 	 * 	
 	 */
-	public function new(mode:String, ?params:Dynamic, ?onComplete:Void->Void)
+	public function new(mode:String, ?onComplete:Void->Void, ?params:Dynamic)
 	{
 		super();
 		
 		this.onComplete = onComplete;
 	
-		P = DataTool.defParams( params, {
+		P = DataTool.copyFields(params, {
 			// true, it will create a new camera and apply to the whole screen
 			// false, will apply to the current camera
 			fullscreen : false,
 			// How many stripes
-			stripes: 15,	
-			// Time between stripes
-			timeA: 0.1, 
-			// Stripe Tween Time
-			timeB: 0.3,
+			stripes: 15,			
+			// Time to complete the whole animation,
+			time:1.2,
+			// Time to tween a single stripe
+			timeStripe:0.2,
 			// Time To wait before going
 			timePre: 0.1, 
 			// Time to wait after completing
@@ -90,16 +88,20 @@ class Stripes extends FlxSubState
 			// Sound ID to play with SND.play every time a stripe triggers
 			soundID: "",
 			// Color of the stripes
-			color: 0xFF000000
+			color: 0xFF000000,
+			// Type of ease
+			ease:"cubeOut"
 		});
 				
 		// Now check for valid data
 		if (P.stripes % 2 == 0) {
 			P.stripes ++;
-			trace("Stripes must be an odd number, converted to", P.stripes);
+			trace("Info: Stripes must be an odd number, converted to", P.stripes);
 		}
-
-		isRunning = false;
+		
+		halfIndex = Math.ceil( (P.stripes) / 2) - 1;
+		tween_ease = Reflect.field(FlxEase, P.ease);
+		
 		runMode = mode.split("-")[0];
 		if (runMode == null) runMode = "in";
 		runDir = mode.split("-")[1];
@@ -131,6 +133,7 @@ class Stripes extends FlxSubState
 			stripe_height = FlxG.camera.height;
 		}
 		
+		// Create the stripe boxes
 		for (i in 0...P.stripes)
 		{
 			var s = new FlxSprite((stripe_width * i), 0);
@@ -143,17 +146,15 @@ class Stripes extends FlxSubState
 		}
 		
 		// -- Start Running
-		if (runMode == "on")
-		{
+		if (runMode == "on") {
 			runFunc = _tweenStripeOn;
 			forceSet(false);
-			timer = new FlxTimer().start(P.timePre, startTimer);
-		}else
-		{
+		}else{
 			runFunc = _tweenStripeOff;
 			forceSet(true);
-			timer = new FlxTimer().start(P.timePre, startTimer);
 		}
+		
+		new DelayCall(startAnimation, P.timePre, this);
 		
 	}//---------------------------------------------------;
 	
@@ -173,51 +174,57 @@ class Stripes extends FlxSubState
 		}
 	}//---------------------------------------------------;
 	
+	
+	/**
+	 * (f) Must be 0 -> middle
+	 * @param	f return the mirror to center index
+	 * @return
+	 */
+	function getMirrored(f:Int):Int
+	{
+		return (stripes.length - 1) - f;
+	}//---------------------------------------------------;
+	
 	// PRE:
 	// Stripes are initialized into the starting position
-	function startTimer(?t:FlxTimer)
+	function startAnimation()
 	{
-		isRunning = true;
 		
 		switch(runDir)
 		{		
 			case "out": // Mirror Inside to Outer ::
-				var half:Int = Math.ceil(P.stripes / 2);
-				lastStripeIndex = 0;
-				timer = new FlxTimer().start(P.timeA, function(e:FlxTimer) {
+				
+				new StepTimer(halfIndex, 0, P.time, function(a, b){
+					var mirrored = getMirrored(a);
 					playSound();
-					runFunc(e.loopsLeft);
-					if (e.loopsLeft < half) {	
-						runFunc(cast(P.stripes - e.loopsLeft - 1));
-					}
-				},half);
+					runFunc(a, b);
+					if (mirrored != a) runFunc(mirrored);
+				}, this);
 				
 			case "in": 	// Mirror Outside to Inner ::
-				var half:Int = Math.ceil(P.stripes / 2);
-				lastStripeIndex = half;
-				var c:Int = 0;
-				timer = new FlxTimer().start(P.timeA, function(e:FlxTimer) {
-					playSound();
-					runFunc(c);
-					if (c < half - 1){
-						runFunc(cast(P.stripes - c - 1));
-					}
-					c++;
-				},half);
 				
-			case "left":
-				lastStripeIndex = 0;
-				timer = new FlxTimer().start(P.timeA, function(e:FlxTimer) {
+				new StepTimer(0, halfIndex, P.time, function(a, b){
+					var mirrored = getMirrored(a);
 					playSound();
-					runFunc(e.loopsLeft);
-				},P.stripes);
+					runFunc(a, b);
+					if (mirrored != a) runFunc(mirrored);
+				}, this);
+
+			case "left":
+				
+				new StepTimer(0, stripes.length - 1, P.time, function(a, b){
+					playSound();
+					runFunc(a, b);
+				}, this);
 				
 			case "right":
-				lastStripeIndex = cast(P.stripes - 1);
-				timer = new FlxTimer().start(P.timeA, function(e:FlxTimer) {
+				
+				new StepTimer(stripes.length - 1, 0, P.time, function(a, b){
 					playSound();
-					runFunc(cast(P.stripes - e.loopsLeft - 1));
-				},P.stripes);
+					runFunc(a, b);
+				}, this);
+				
+
 			default:
 				
 		}
@@ -234,54 +241,52 @@ class Stripes extends FlxSubState
 	//--
 	function _transitionComplete()
 	{
-		timer = new FlxTimer().start(P.timePost, function(_) {
+		new DelayCall(function(){
 			
-			isRunning = false;
 			// There is no point on keeping it onscreen
 			if (runMode == "off")
 				close();
-				
+
 			if (onComplete != null) onComplete();
-		});
+			
+		}, P.timePost, this);
+		
 	}//---------------------------------------------------;
 	
 	// --
-	inline function _tweenStripeOn(s:Int)
+	function _tweenStripeOn(s:Int,lastOne:Bool = false)
 	{
 		stripes[s].visible = true;
-		FlxTween.tween(stripes[s].scale, { x:1 }, P.timeB, { ease:FlxEase.cubeOut, onComplete:function(_) {	
-			if (s == lastStripeIndex) _transitionComplete();
+		FlxTween.tween(stripes[s].scale, { x:1 }, P.timeStripe, { ease:tween_ease, onComplete:function(_) {
+			if (lastOne ) _transitionComplete();
 		}} );
 	}//---------------------------------------------------;	
 	
 	// --
-	inline function _tweenStripeOff(s:Int)
+	function _tweenStripeOff(s:Int, lastOne:Bool = false)
 	{
-		FlxTween.tween(stripes[s].scale, { x:0 }, P.timeB, { ease:FlxEase.cubeOut, onComplete:function(_) {	
-			if (s == lastStripeIndex) _transitionComplete();
+		FlxTween.tween(stripes[s].scale, { x:0 }, P.timeStripe, { ease:tween_ease, onComplete:function(_) {
+			if (lastOne) _transitionComplete();
 		}} );
 	}//---------------------------------------------------;
 	
 	// --
 	override public function destroy():Void 
 	{
-		super.destroy();
 		for (i in stripes) {
 			i.destroy();
 		}
-		// Can I cancel any pending tweens?
 		stripes = null;
-		timer = FlxDestroyUtil.destroy(timer);
 		
 		// Important to remove, else the camera will stay forever
 		// In case the superstate removes the camera first
-		// fo a check to avoid a warning ::
+		// do a check to avoid a warning ::
 		#if (!desktop)
 		if (P.fullscreen && FlxG.cameras.list.indexOf(cam) >-1)
 			FlxG.cameras.remove(cam); 
 		#end
 		
-		//trace(" - Done destroying fadesprites");
+		super.destroy();
 	}//---------------------------------------------------;
 	
 }//-- end class --//

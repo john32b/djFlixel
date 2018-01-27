@@ -47,12 +47,9 @@ class PanelPop extends FlxSprite
 	// -- BORDER ::	
 	var borderIm:BitmapData;
 	var bs:Int; // Same as border.size, used for readability
-	// Border Parameters : DEFAULTS
-	public var border(default, null):Dynamic = {
-		sheet:null, // FlxGraphic: 8 square tiles, check the assets for examples
-		size:8,		// int: Square size of the spritesheet
-		inset:0		// int: Draw the background this much pixels inside of the area
-	};
+	
+	// Border Parameters
+	public var border(default, null):Dynamic;
 	
 	// Declare the ID of the sounds you want to be played
 	// # USER SET 
@@ -87,7 +84,12 @@ class PanelPop extends FlxSprite
 		heightSteps = [0.25, 0.5, 0.7, 1];
 		
 		// --
-		border = DataTool.defParams(_border, border);
+		border = DataTool.copyFields(_border, {
+			sheet:null, // FlxGraphic: 8 square tiles, check the assets for examples
+			size:8,		// int: Square size of the spritesheet
+			inset:0		// int: Draw the background this much pixels inside of the area
+		});
+		
 		bs = border.size;
 		
 		// --
@@ -206,6 +208,8 @@ class PanelPop extends FlxSprite
 	 */
 	public function open(?_oncomplete:Void->Void, speed:Float = -1)
 	{
+		timer = DEST.timer(timer); // Just in case it is running
+		
 		onComplete = _oncomplete;
 		if (speed ==-1) speed = DEF_TICK;
 		

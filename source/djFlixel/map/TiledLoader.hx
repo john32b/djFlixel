@@ -29,11 +29,11 @@ import openfl.Assets;
  * Data structure for a floating map entity
  */
 typedef MapEntity = {
-	x:Int,
-	y:Int,
-	id:Int,
-	?type:String,
-	?uid:Int
+	x:Int,			// Tile position if it's tile data, Word Pos if object
+	y:Int,			// --
+	id:Int,			// As it is on the TILED editor
+	?type:String,	// Optional and only available in Map Objects
+	?uid:Int		// MapTemplate.hx uses it to handle streamingData
 };
 
 /**

@@ -47,7 +47,7 @@ class MItemLink extends MItemBase
 	// --
 	override function handleInput(inputName:String) 
 	{
-		if (inputName == "fire" || inputName == "click")
+		if (inputName == "fire" || inputName.indexOf("c|") == 0)
 		{
 			cb("fire");
 		}

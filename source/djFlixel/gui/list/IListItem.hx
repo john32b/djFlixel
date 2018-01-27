@@ -6,17 +6,37 @@ package djFlixel.gui.list;
  */
 interface IListItem<T>
 {
-	// -- Set by parent, fire input events.
-	//    The ID is handled by parent.
+	/**
+	 * Sometimes you might need the list items to push callbacks to the parent menu. 
+	 * VListNa autosets this.
+	 */
 	public var callbacks:String->Void;
-	// Change the data shown
+	/**
+	 * Handles data pushed from the parent menu.
+	 * @param	data
+	 */
 	public function setData(data:T):Void;
-	// Send key input, can be anything like [select, cancel, right, left]..etc
+	/**
+	 * Handles key input that is passed from VListNav.
+	 * @param	inputName [ left, right, fire, c|0|0 ]
+	 */
 	public function sendInput(inputName:String):Void;
-	public function focus():Void; // Visually Focus
-	public function unfocus():Void; // Visually Unfocus
+	/**
+	 * Visually focus the element.
+	 */
+	public function focus():Void;
+	/**
+	 * Visually unfocus the element. (Resting state)
+	 */
+	public function unfocus():Void;
+	/**
+	 * Useful flag that is used by the parent menu
+	 */
 	public var isFocused(default, null):Bool;
-	// Returns true if passed data is the same as the data set to this object
-	// Required for the reuse pooling
+	/**
+	 * Returns true if the parameter data is the same as the current data this item has. 
+	 * This is used for pooling.
+	 * @param	data
+	 */
 	public function isSame(data:T):Bool;
 }

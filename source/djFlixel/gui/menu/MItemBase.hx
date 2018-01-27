@@ -42,6 +42,7 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 	function cb(a:String) { if (callbacks != null) callbacks(a); }	
 	
 	// This is the left portion of the item, the label
+	@:allow(djFlixel.gui.list.VListMenu)
 	var label:FlxText;
 
 	// Minimum padding to pad (part 2) when it's placed next to the label
@@ -49,6 +50,10 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 
 	// The width of the Vertical List this belongs to
 	var parentWidth:Int;
+	
+	// Write the actual width for better alignment, works with get_width();
+	// Separate var so I don't have to override the getter at each extended class
+	var self_width:Float = 0;
 	
 	//====================================================;
 	
@@ -103,14 +108,17 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 	{
 		label.text = opt.label;
 		
-		// "Center" is managed by the parent, just put the elements together as you would do in a "left" justify
-
 		if (style.alignment == "right"){
 			label.x = x + parentWidth - label.fieldWidth;
+			self_width = parentWidth;
 		}else
 		if (style.alignment == "justify"){
-			label.fieldWidth = parentWidth;
+			self_width = parentWidth;
+		}else{
+			// left center
+			self_width = label.fieldWidth;
 		}
+		
 	}//---------------------------------------------------;
 	
 	/**
@@ -118,7 +126,7 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 	 * @param	inputName [ fire , left , right , click, clickR ]
 	 */
 	public function sendInput(inputName:String) 
-	{
+	{	
 		if (opt.disabled) {
 			cb("invalid");
 		}else {
@@ -173,7 +181,7 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 	
 	// --
 	// Updates the visual state
-	// Called on initialization and by user ( call after making changed to the MenuData to reflect state changes )
+	// Called on initialization and by user ( call after making changes to the MenuData to reflect state changes )
 	public function updateState()
 	{
 		if (!opt.selectable)  {
@@ -198,6 +206,12 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 	{
 		return label.size;
 	}//---------------------------------------------------;
+	
+	override function get_width():Float 
+	{
+		return self_width;
+	}//---------------------------------------------------;
+	
 	// --
 	// There is a 2 pixel gutter around a textfield so I am putting
 	// 	everything 2 pixels higher
@@ -207,11 +221,25 @@ class MItemBase extends FlxSpriteGroup implements IListItem<MItemData>
 		return super.add(Sprite);
 	}//---------------------------------------------------;
 	
-	
 	#if debug
 	override public function toString():String {
 		return 'x:$x | y:$y | width:$width | height:$height | data:(${opt})';
 	}//---------------------------------------------------;
 	#end
+	
+	
+	/**
+	 * Translate mouse input status to X,Y
+	 * @param	str "c|X|Y"
+	 * @return [X,Y] int array, NULL otherwise
+	 */
+	private function getMouseCoords(str:String):Array<Int>
+	{
+		if (str.indexOf("c|") == 0) {
+			var s:Array<String> = str.split("|");
+			return [Std.parseInt(s[1]), Std.parseInt(s[2])];
+		}
+		return null;
+	}//---------------------------------------------------;
 	
 }// --

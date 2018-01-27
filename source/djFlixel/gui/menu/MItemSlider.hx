@@ -1,4 +1,5 @@
 package djFlixel.gui.menu;
+import djFlixel.tool.DataTool;
 
 class MItemSlider extends MItemOneof
 {
@@ -14,29 +15,58 @@ class MItemSlider extends MItemOneof
 		switch(inputName)
 		{
 			case "left":
-				if (Std.int(opt.data.current) > Std.int(opt.data.pool[0])) {
-					opt.data.current--;
-					updateItemData();
-					cb("change");
-				}
-			case "right":
-				if (Std.int(opt.data.current) < Std.int(opt.data.pool[1])) {
-					opt.data.current++;
-					updateItemData();
-					cb("change");
+				var c:Float = opt.data.current;
+				var lim:Float = opt.data.pool[0];
+				
+				if (c == lim && !opt.data.loop) return;
+
+				c -= opt.data.inc;
+				
+				if (opt.data.float) {
+					c = DataTool.roundFloat(c);
 				}
 				
-			case "click":
-				var r = collideWithCursor();
-				if (r < 0) handleInput("left"); else if (r > 0) handleInput("right");
+				if (c < lim) {
+					if (opt.data.loop) c = opt.data.pool[1]; else c = lim;
+				}
+				
+				opt.data.current = c;
+				updateItemData();
+				cb("change");
+				
+			case "right":
+				var c:Float = opt.data.current;
+				var lim:Float = opt.data.pool[1];
+				if (c == lim && !opt.data.loop) return;
+				
+				c += opt.data.inc;
+				
+				if (opt.data.float) {
+					c = DataTool.roundFloat(c);
+				}
+				
+				if (c > lim) {
+					if (opt.data.loop) c = opt.data.pool[0]; else c = lim;
+				}
+				
+				opt.data.current = c;
+				updateItemData();
+				cb("change");
+			
+			default:
+				handleInputClick(inputName);
 		}
 	}//---------------------------------------------------;
 
 	// --
 	override function updateItemData() 
 	{
-		arrowStat[0] = (opt.data.current > Std.int(opt.data.pool[0]));
-		arrowStat[1] = (opt.data.current < Std.int(opt.data.pool[1]));
+		if (!opt.data.loop){
+			arrowStat[0] = (opt.data.current > Std.int(opt.data.pool[0]));
+			arrowStat[1] = (opt.data.current < Std.int(opt.data.pool[1]));
+		}else{
+			arrowStat[0] = arrowStat[1] = true;
+		}
 		
 		label2.text = '${opt.data.current}';
 		

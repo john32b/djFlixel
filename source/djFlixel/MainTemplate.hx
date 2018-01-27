@@ -1,13 +1,11 @@
 package djFlixel;
 
-import openfl.display.Sprite;
+import djFlixel.tool.DynAssets;
+import djFlixel.FLS;
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
-import flash.events.Event;
-import flash.Lib;
-import haxe.Json;
-import djFlixel.tool.DynAssets;
+import openfl.display.Sprite;
 
 /**
  * Generalized MAIN sprite to be added on the stage
@@ -16,89 +14,80 @@ import djFlixel.tool.DynAssets;
 class MainTemplate extends Sprite
 {
 	// Some defaults
-	var render_width:Int = 320;
-	var render_height:Int = 240;
-	var framerate:Int = 40; // 40 is ok and fast. If it feels choppy, set to more (60)
-	var zoom:Float = 2;		// A zoom level of 2 is ok for now
-	var skipSplash:Bool = true;
-	var startFullscreen:Bool = true; // Unused, User can manually go to fullscreen
-	var initialState:Class<FlxState>;
+	var RENDER_WIDTH:Int = 320;
+	var RENDER_HEIGHT:Int = 240;
+	var FPS:Int = 40; 				// 40 is ok and fast. If it feels choppy, set to more (60)
+	var ZOOM:Float = 2;				// A zoom level of 2 is ok for now
+	var SKIP_SPLASH:Bool = true;
+	var INITIAL_STATE:Class<FlxState>;
 	
 	/**
-	 * Constuctor
-	 * @param	startState
-	 * @param	w_ Width Default 320
-	 * @param	h_ Height Default 240
-	 * @param	f_ Framerate Default 40
-	 * 
 	 */
-	public function new(startState:Class<FlxState>, w_:Int = 0, h_:Int = 0, f_:Int = 0)
+	public function new()
 	{
 		super();
-		
-		if (w_ > 0) render_width = w_;
-		if (h_ > 0) render_height= h_;
-		if (f_ > 0) framerate = f_;
-		// zoom ??
-		
-		initialState = startState;
-		
-		if (stage != null) {
-			init();
-		} else {
-			addEventListener(Event.ADDED_TO_STAGE, init);
-		}
+		// Dynamic Assets init
+		FLS.assets = new DynAssets();
+		// Initialize User
+		init();
+		// The default main parameters file
+		FLS.assets.add(FLS.PARAMS_ASSET);
+		// This is Async, will call setupGame when all files are loaded
+		FLS.assets.loadFiles(setupGame);
 	}//---------------------------------------------------;
+
 	
-	private function init(?E:Event):Void 
+	/**
+	 * OVERRIDE THIS to set running parameters
+	 */
+	function init()
 	{
-		if (hasEventListener(Event.ADDED_TO_STAGE)) {
-			removeEventListener(Event.ADDED_TO_STAGE, init);
-		}
-	
-		DynAssets.FILE_LOAD_LIST.push(FLS.PARAMS_FILE);
-		//Load external files and continue with game
-		DynAssets.loadFiles(setupGame);
+		// example to use on the overriden class:
+		//
+		// FLS.extendedClass = Reg;	
+		//
+		// RENDER_WIDTH = 640;
+		// RENDER_HEIGHT = 480;
+		// FPS = 60;
+		// ZOOM = 1;
+		//
+		// SKIP_SPLASH = false;
+		// INITIAL_STATE = State_Menu;
+		//
+		// Push user files to the Dynamic File List:
+		// FLS.assets.FILE_LIST.push("map.tmx"); <-- This file will reload on F12
 	}//---------------------------------------------------;
+	
 	
 	// --
 	function setupGame():Void
 	{
 		//-- Try to get the initial state to boot
-		FLS.JSON = DynAssets.json.get(FLS.PARAMS_FILE);
+		FLS.JSON = FLS.assets.json.get(FLS.PARAMS_ASSET);
 
 		#if debug
 		if (FLS.JSON == null || FLS.JSON.sys == null) {
 			throw "Error: JSON params file ERROR or missing 'sys' node";
 		}
+		if (INITIAL_STATE == null)
+		{
+			throw "Error: You forgot to set the INITIAL_STATE";
+		}
 		#end
 		
-		try {
-			if (FLS.JSON.sys.START_STATE != null) {
-				initialState = cast Type.resolveClass(FLS.JSON.sys.START_STATE);
-				trace("Forced Initial State :: ", initialState);
-			}
+		// - Read FPS
+		if (FLS.JSON.sys.FPS != null) {
+			FPS = Std.parseInt(FLS.JSON.sys.FPS);
 		}
 		
-		var stageWidth:Int = Lib.current.stage.stageWidth;
-		var stageHeight:Int = Lib.current.stage.stageHeight;
-
-		if (zoom == -1)
-		{
-			var ratioX:Float = stageWidth / render_width;
-			var ratioY:Float = stageHeight / render_height;
-			zoom = Math.min(ratioX, ratioY);
-			render_width = Math.ceil(stageWidth / zoom);
-			render_height = Math.ceil(stageHeight / zoom);
-		}
-
 		// - Do this only once in the game lifetime
 		FlxG.signals.stateSwitched.addOnce(function() {
 			if (FLS.extendedClass == null) FLS.extendedClass = FLS;
 			Type.createInstance(FLS.extendedClass, []);
 		});
-					
-		addChild(new FlxGame(render_width, render_height, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
+		
+		
+		addChild(new FlxGame(RENDER_WIDTH, RENDER_HEIGHT, INITIAL_STATE, ZOOM, FPS, FPS, SKIP_SPLASH));
 		
 	}//---------------------------------------------------;
 }// --

@@ -1,17 +1,16 @@
 package djFlixel.fx;
 
-import djFlixel.SimpleCoords;
+
+import djFlixel.gfx.GfxTool;
+import djFlixel.tool.DEST;
 import djFlixel.tool.DataTool;
-import flash.display.Sprite;
 import flixel.FlxG;
 import flixel.FlxSprite;
-import flixel.system.FlxAssets;
-import djFlixel.gfx.GfxTool;
-import flash.display.BitmapData;
-import flixel.system.FlxAssets.FlxGraphicSource;
+import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
-import flixel.tweens.misc.VarTween;
+import flixel.tweens.misc.NumTween;
+import openfl.display.BitmapData;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
 import openfl.geom.Point;
@@ -19,21 +18,19 @@ import openfl.geom.Rectangle;
 
 
 /**
- * Various animated effects
+ * Various realtime animated effects that are applied on a bitmap
  * 
- * USAGE
- * -------
- * 	flag_freeze_last	//	when the last effect is removed, then this will keep the last frame
- * 
- * EFFECTS
- * -------
- *  split
- *  noiseline
- *  noisebox
- *  mask
- *  blink
- * 		
+ * Effect List 
+ * -------------------
+ * - dissolve - 
+ * - wave -
+ * - split -
+ * - noiseline - 
+ * - noisebox - 
+ * - blink - 
+ * - mask -
  */
+
 class SpriteEffects extends FlxSprite
 {
 	
@@ -41,29 +38,31 @@ class SpriteEffects extends FlxSprite
 	public var FREQ:Float = 0.08;
 	
 	// Keep time for FREQ
-	var timer:Float;
+	var timer:Float = 0;
 	
 	// Source image
 	var _im:BitmapData;
+	// Helpers that are used often
 	var _ma:Matrix;
 	var _tr:Rectangle;
 	var _tc:ColorTransform;
 	var _tp:Point;
+	// Currently processing FX
+	var fx:SpriteFX;
 	
-	// -- Array of all active effects
+	// -- Effect Stack, [0] is the last effect
 	var stack:Array<SpriteFX>;
-	// -- Awaiting for removal
-	var removeList:Array<SpriteFX>;
+	
 	// -- Prevent callbacks from beeing called when on a loop
 	var callbackList:Array<Void->Void>;
 	
-	// -- If true, when all effects are removed, it will keep the last frame without resetting it to normal
-	public var flag_freeze_last:Bool = false;
+	// When is it safe to delete the source image
+	var flag_unique_src:Bool;
 	//---------------------------------------------------;
 	
 	/**
 	 * 
-	 * @param	im
+	 * @param	im A Bitmap or an Asset
 	 * @param	sheet { .tw .th .frame } Set this if you are loading a tilesheet
 	 */
 	public function new(im:FlxGraphicAsset, ?sheet:Dynamic) 
@@ -73,10 +72,12 @@ class SpriteEffects extends FlxSprite
 		if (sheet != null)
 		{
 			_im = GfxTool.getBitmapPortion(im, Std.int(sheet.tw * sheet.frame), 0, sheet.tw, sheet.th);
+			flag_unique_src = true;
 		}
 		else
 		{
 			_im = GfxTool.resolveBitmapData(im);
+			flag_unique_src = false;
 		}
 		
 		makeGraphic(_im.width, _im.height, 0x00000000, true); // Transparent
@@ -88,7 +89,6 @@ class SpriteEffects extends FlxSprite
 		_tp = new Point();
 		
 		stack = [];
-		removeList = [];
 		callbackList = [];
 		
 		drawFirst(); 
@@ -98,7 +98,7 @@ class SpriteEffects extends FlxSprite
 	// --
 	override public function destroy():Void 
 	{
-		if (_im != null) _im.dispose(); /// This might break future calls to the bitmap because of the cache system??
+		if (_im != null && flag_unique_src) _im.dispose();
 		for (i in stack){
 			i.destroy();
 		}
@@ -106,36 +106,44 @@ class SpriteEffects extends FlxSprite
 	}//---------------------------------------------------;
 	
 	/**
-	 * Does not actually remove, but rather requests a removal.
-	 * @param	fx
-	 */
-	public function removeEffect(fx:SpriteFX)
-	{
-		fx.destroy();
-		removeList.push(fx);
-	}//---------------------------------------------------;
-	
-	/**
 	 * Remove an effect with target ID
+	 * You must have set the ID beforehand
+	 * Most useful when called externally
 	 */
 	public function removeEffectID(id:String)
 	{
 		if (id == 'all'){
-			for (i in stack) removeEffect(i);
+			for (i in stack) i.destroy();
+			stack = [];
 			return;
 		}
 		
 		for (fx in stack){
 			if (fx.p.id != null && fx.p.id == id) {
-				removeEffect(fx); break;
+				removeEffect(fx);
+				return;
 			}
 		}
 	}//---------------------------------------------------;
 	
+	public function removeEffect(fx:SpriteFX)
+	{
+		if (fx != null)
+		{
+			fx.destroy();
+			stack.remove(fx);
+		}
+		
+		if (stack.length == 0) {
+			drawFirst();
+		}
+	}//---------------------------------------------------;
+	
 	// --
-	// Draw the original image, don't need to clear the buffer, as the alhpa pixels are copied as well
+	// Draw the original image
 	function drawFirst()
 	{
+		// Note, I am not clearing the buffer since the original image alphas are copied
 		// I don't need these, as the first FX will process the source directly
 		_tp.setTo(0, 0);
 		_tr.setTo(0, 0, _im.width, _im.height);
@@ -147,240 +155,226 @@ class SpriteEffects extends FlxSprite
 	/**
 	 * 
 	 * @param	effect split | noiseline | noisebox | mask | blink | dissolve | wave
-	 * @param	params check the function :-/
-	 * @param	callback Make sure this is a short callback as it will be called inside a traverse loop
+	 * @param	params check the code :-(
+	 * @param	callback When the effect completes, make sure RUN times is not -1 (infinite)
 	 * @return	The FX object created, useful if you want to manually remove it later
 	 */
 	public function addEffect(effect:String, ?params:Dynamic, ?callback:Void->Void):SpriteFX
 	{
 		timer = FREQ + 1; // Force the first update to process the effects
-		var fx = new SpriteFX();
-		fx.onComplete = callback;
-		stack.push(fx);
-		fx.head = (stack.length == 1);
+		
+		var FX = new SpriteFX();
+			FX.onComplete = callback;
+			FX.head = (stack.length == 0);
+			stack.unshift(FX);	// Add the last effect to the top of the array
+		
+		// Temporarily store the effect parameters
+		var P:Dynamic = null;
 		
 		switch(effect)
 		{
-			
 			//====================================================;
 			case "dissolve":
-				fx.p = DataTool.defParams(params, {
+				P = DataTool.copyFieldsC(params, {
 					open:false,		// if true effect will start reverse, building the image
-					time:2,			// Time to complete the effect
-					size:2,			// pixel size, it's faster when bigger
-					color:0x00000000, // Color to disolve to
-					run:1,
-					ease: "quintOut",
-					delay:0,
-					_f:0,			// current pointer
+					random:true,	// if false the tiles will be revealed in sequence
+					size:6,			// dissolve rectangle size
+					color:0, 		// color to disolve to
+					//-- tween params:
+					time:2, delay:0, ease: "linear", run:1, ttype:4
 				});
-				fx.p._w = Math.ceil(pixels.width / fx.p.size);
-				fx.p._h = Math.ceil(pixels.height / fx.p.size);
-				fx.p._total = fx.p._w * fx.p._h; // total rects
-				//-- 
-				var _end = fx.p.open?0:fx.p._total;
-				fx.p._f = fx.p._total - _end;
-				fx.tween = FlxTween.tween(fx.p, {_f:_end}, fx.p.time, 
-					{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease), startDelay:fx.p.delay});
-				fx.update = _fx_dissolve;
-				var ar:Array<Int> = [for (p in 0...(fx.p._total)) p];
-				FlxG.random.shuffle(ar);
-				fx.p.ar = ar;
-			
+				P._w = Math.ceil(pixels.width / P.size);
+				P._h = Math.ceil(pixels.height / P.size);
+				P._total = P._w * P._h;
+				var ar:Array<Int> = [for (i in 0...P._total) i];
+				if (P.random) FlxG.random.shuffle(ar);
+				FX.p = P; P.ar = ar;
+				FX.startTween(0, P._total);
+				FX.update = _fx_dissolve;
 			//====================================================;
 			case "wave":
-				fx.p = DataTool.defParams(params, {
+				P = DataTool.copyFields(params,{
 					width:3,		// width of the wave, [Pixels]
 					height:0.8,		// height of the wave, [Not Pixels], Smaller value, small wave length
-					time:0.4,		// time for the wave to do a cycle
-					_f:0			// current offset of the wave
+					//-- tween params:
+					time:0.4, delay:0, ease: "linear", run: -1, ttype:2
 				});
-				fx.p._r = Math.PI * 2 / pixels.height;
-				fx.update = _fx_wave;
-				fx.tween = FlxTween.tween(fx.p, {_f:Math.PI * 2}, fx.p.time, {type:FlxTween.LOOPING});
+				P._r = Math.PI * 2 / pixels.height;
+				FX.p = P;
+				FX.startTween(0, Math.PI * 2);
+				FX.update = _fx_wave;
 			//====================================================;
 			case "split":
-				
-			fx.p = DataTool.defParams(params, {
-				width:3,  	// max offset width
-				time:0.4, 	// reach the max width in this much seconds
-				delay:0,    // Delay of the timer to start
-				color1:0xFFFF0000, // Left offset color
-				color2:0xFF00FF00, // Right offset color
-				run: -1,		   // Run forever (x>0 to run x times)
-				ease: "circOut",
-				_w:0 				// Current offset width
-			});
-			fx.update = _fx_chromaSplit;
-			fx.p.run = fx.p.run * 2;
-			fx.tween = FlxTween.tween(fx.p, {_w:fx.p.width}, fx.p.time, 
-				{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease),startDelay:fx.p.delay});
-					
+				P = DataTool.copyFieldsC(params, {
+					width:3,  			// max offset width
+					color1:0xFFFF0000, 	// Left offset color
+					color2:0xFF00FF00, 	// Right offset color
+					//-- tween params:
+					time:0.4, delay:0, ease: "circOut", run:-1, ttype:4, loopDelay:0.2
+				});
+				P.run = P.run * 2;	// Just in case
+				FX.p = P;
+				FX.startTween(0, P.width);
+				FX.update = _fx_chromaSplit;
 			//====================================================;
 			case "noiseline":  
-				
-			fx.p = DataTool.defParams(params, {
-				w0:2, 	// min width <-- starting width
-				w1:8,  	// max width of the Wave
-				time:0.5,  // reach the max width in this much seconds. Set to 0 for no wave
-				delay:0,    // Delay of the timer to start
-				run: -1,   // Run forever (x>0 to run x times)
-				ease: "quadOut",
-				h0:1, 	//<-- starting line height
-				h1:16,	// applies if FX1 / FX2
-				// -- flags
-				fx1:false,  // RANDOM Height, from h0 to h1
-				fx2:false,	// MATCH height to the tweener, YOU MUST HAVE SET time>0 , h0 doesn't matter
-				//--
-				_w:0  		// Current offset width
+			P = DataTool.copyFields(params, {	
+					w0:2, 		// min width <-- starting width
+					w1:8,  		// max width of the Wave
+					h0:1, 		// <-- starting line height
+					h1:16,		// applies if FX1 / FX2
+					// -- flags:
+					FX1:false,  // RANDOM Height, from h0 to h1
+					FX2:false,	// MATCH height to the tweener, YOU MUST HAVE SET time>0 , h0 doesn't matter
+					//-- tween params:
+					time:0.5, delay:0, ease: "quadOut", run:-1, ttype:4, loopDelay:0.2
 				});
-			fx.update = _fx_noiseline;
-			fx.p._w = fx.p.w0;
-			if (fx.p.time > 0) {
-				fx.tween = FlxTween.tween(fx.p, {_w:fx.p.w1}, fx.p.time, 
-					{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease),startDelay:fx.p.delay});
-			}
+				FX.C = P.w0;
+				FX.p = P;
+				FX.startTween(P.w0, P.w1);
+				FX.update = _fx_noiseline;
 			//====================================================;
 			case "noisebox" :
-				 fx.p = DataTool.defParams(params, {
-					 w:2, // Size of the noise box
-					 j:2  // Jitter distance
+				 P = DataTool.copyFields(params, {
+					 w:2, 	// Size of the noise box
+					 j1:2,	// Jitter distance start
+					 j2:5,	// Jitter distance end, Set to same value as j1 for no animation
+					//-- tween params:
+					time:0.5, delay:0, ease: "linear", run:-1, ttype:4, loopDelay:0.2
 				 });
-				 fx.update = _fx_noisebox;
-				 fx.p._cx = Math.floor(_im.width / fx.p.w);  // Save a calculation
-				 fx.p._cy = Math.floor(_im.height / fx.p.w); // Save a calculation
-				 fx.p._jm = fx.p.j * 2; // *2 because I want equal jitter from all dirs
-				 
+				 FX.C = P.j1;
+				 P._cx = Math.floor(_im.width / P.w);  // Save a calculation
+				 P._cy = Math.floor(_im.height / P.w); // Save a calculation
+				 FX.p = P;
+				 if (P.j1 != P.j2) FX.startTween(P.j1, P.j2); else FX.C = P.j1;
+				 FX.update = _fx_noisebox;
 			//====================================================;
 			case "mask" :
-				fx.p = DataTool.defParams(params, {
+				#if neko
+				trace("Warning: Realtime Masking is EXTREMELY slow on NEKO");
+				#end
+				P = DataTool.copyFieldsC(params, {
 					colorBG:0xFF000000, 	 // Color of the inverted alpha, black
 					colorMask:0xFFFFFFFF,    // Turn this color to alpha 0, Only active if flag all is false
 					all:false				 // If true, then all colored pixels will turn to alpha 0
 				});
-				fx.update = _fx_mask;
-				
+				FX.p = P;
+				FX.update = _fx_mask;
 			//====================================================;
 			case "blink" :
-				fx.p = DataTool.defParams(params, {
-					open:false,		// If true the effect will reverse
-					time:1,		// Time to complete the effect
-					run:1,
-					delay:0,
-					ease: "",
-					_l:0
+				P = DataTool.copyFields(params, {
+					open:true,
+					//-- tween params:
+					time:1, delay:0, ease: "linear", run:1, ttype:4, loopDelay:0.2
 				});
-				fx.p._hl = Math.ceil(pixels.height / 2); // Half Height
-				var _tt = (fx.p.open?0:fx.p._hl); // End pos
-				fx.p._l = fx.p._hl - _tt; // Start pos
-				fx.tween = FlxTween.tween(fx.p, {_l:_tt}, fx.p.time, 
-					{type:FlxTween.PINGPONG, ease:Reflect.field(FlxEase, fx.p.ease),startDelay:fx.p.delay});
-				fx.update = _fx_blink;
+				if (P.open) {
+					P.ttype = 16;
+				}
+				FX.p = P;
+				FX.startTween(0, pixels.height / 2);
+				FX.update = _fx_blink;
 			default: // ::  --------------------
 				throw "Unsupported FX, check for typos";
 		}
 		
-		return fx;
+		return FX;
 	}//---------------------------------------------------;
-	
 	
 	//====================================================;
 	// EFFECTS 
 	//====================================================;
 	
-	
-	function _fx_dissolve(fx:SpriteFX)
+	function _fx_dissolve()
 	{
-		if (fx.head) {
-			drawFirst();
-		}
+		if (fx.head) drawFirst();
 		
-		for (c in 0...Math.floor(fx.p._f)) {
+		for (c in 0...Std.int(fx.C)) {
 			_tr.setTo(
-				Std.int((fx.p.ar[c] % fx.p._w) * fx.p.size),
-				Std.int((fx.p.ar[c] / fx.p._w) * fx.p.size),
+				(fx.p.ar[c] % fx.p._w) * fx.p.size,
+				Math.floor(fx.p.ar[c] / fx.p._w) * fx.p.size,
 				fx.p.size, fx.p.size);
+				
 			pixels.fillRect(_tr, fx.p.color);
-			
 		}
 	}//---------------------------------------------------;
 	
-	
-	function _fx_wave(fx:SpriteFX)
+	function _fx_wave()
 	{
-		/// todo, variable height, copy from the noiseline
 		for (yy in 0...pixels.height)
 		{
 			_tr.setTo(0, yy, pixels.width, 1);
-			_tp.setTo(
-			Math.sin( fx.p._f + ((fx.p._r * yy) / fx.p.height )) * fx.p.width, 
-			yy);
+			_tp.setTo(Math.sin( fx.C + ((fx.p._r * yy) / fx.p.height )) * fx.p.width, yy);
 			pixels.copyPixels(fx.src, _tr, _tp);
 		}
 	}//---------------------------------------------------;
 	
-	function _fx_blink(fx:SpriteFX)
+	function _fx_blink()
 	{
-		if (fx.head) {
-			drawFirst();
-		}
-	
-		_tr.setTo(0, 0, pixels.width, fx.p._l );
+		if (fx.head) drawFirst();
+		
+		_tr.setTo(0, 0, pixels.width, Math.ceil(fx.C) );
 		pixels.fillRect(_tr, 0x00000000);
 		
-		_tr.setTo(0, pixels.height -  fx.p._l, pixels.width, fx.p._l);
+		_tr.setTo(0, Math.ceil(pixels.height -  fx.C), pixels.width, Math.ceil(fx.C));
 		pixels.fillRect(_tr, 0x00000000);
 		
 	}//---------------------------------------------------;
 	
-	/* -- UNUSED -
-	function ___deleteLine(yy:Float)
+	function _fx_mask()
 	{
-		_tr.setTo(0, yy, pixels.width, 1);
-		_tp.setTo(0, yy);
-		pixels.threshold(pixels, _tr, _tp, ">", 0xFF000000, 0x00000000);
-	}//---------------------------------------------------;*/
-	
-	function _fx_mask(fx:SpriteFX)
-	{
-		if (fx.head) {
-			drawFirst();
-		}else{
-			// Save some cpu, since tr and tp were set on the drawfirst() call
-			_tr.setTo(0, 0, pixels.width, pixels.height);
-			_tp.setTo(0, 0);
-		}
+		#if (!neko)
 		
-		pixels.threshold(fx.src, _tr, _tp, "==", 0x00000000, fx.p.colorBG);
-		
-		if (fx.p.all)
-			pixels.threshold(fx.src, _tr, _tp, ">", 0xFF000000, 0x00000000);
-		else
-			pixels.threshold(fx.src, _tr, _tp, "==", fx.p.colorMask, 0x00000000);
+			if (fx.head) drawFirst(); else {
+				// _tr and _tp were set on drawFirst();
+				_tr.setTo(0, 0, pixels.width, pixels.height);
+				_tp.setTo(0, 0);
+			}
 			
+			pixels.threshold(fx.src, _tr, _tp, "==", 0x00000000, fx.p.colorBG);
+			
+			if (fx.p.all)
+				pixels.threshold(fx.src, _tr, _tp, ">", 0xFF000000, 0x00000000);
+			else
+				pixels.threshold(fx.src, _tr, _tp, "==", fx.p.colorMask, 0x00000000);
+			
+		#else 
+
+		// Threshold is VERY SLOW on NEKO
+			if (fx.head) drawFirst();
+			var p:Int;
+			for (xx in 0..._im.width)
+			for (yy in 0..._im.height) {
+			 	p = pixels.getPixel32(xx, yy);
+				if (p == 0x00000000){ pixels.setPixel32(xx, yy, fx.p.colorBG); continue; }
+				if (p == fx.p.colorMask){ pixels.setPixel32(xx, yy, 0x00000000); continue; }
+			}
+			
+		#end
+		
 	}//---------------------------------------------------;
 	
-	function _fx_noisebox(fx:SpriteFX)
+	function _fx_noisebox()
 	{
-		for(yy in 0...fx.p._cy)
+		for (yy in 0...fx.p._cy)
 		for (xx in 0...fx.p._cx)
 		{
 			_tr.setTo(xx * fx.p.w, yy * fx.p.w, fx.p.w, fx.p.w);
-			_tp.setTo(xx * fx.p.w + (Math.random() * fx.p._jm) - fx.p.j, yy * fx.p.w + (Math.random() * fx.p._jm) - fx.p.j);
+			_tp.setTo(	xx * fx.p.w + (Math.random() * fx.C * 2) - fx.C, 
+						yy * fx.p.w + (Math.random() * fx.C * 2) - fx.C);
 			pixels.copyPixels(fx.src, _tr, _tp);
 		}
 		
 	}//---------------------------------------------------;
 
-	function _fx_chromaSplit(fx:SpriteFX)
+	function _fx_chromaSplit()
 	{
 		_ma.identity();
 		// --
-		_ma.tx = fx.p._w * -1;
+		_ma.tx = fx.C * -1;
 		_tc.color = fx.p.color1;
 		pixels.draw(fx.src, _ma, _tc);
 		// --
-		_ma.tx = fx.p._w;
+		_ma.tx = fx.C;
 		_tc.color = fx.p.color2;
 		pixels.draw(fx.src, _ma, _tc);
 		// --
@@ -388,12 +382,12 @@ class SpriteEffects extends FlxSprite
 		pixels.draw(fx.src, _ma);
 	}//---------------------------------------------------;
 	
-	function _fx_noiseline(fx:SpriteFX)
+	function _fx_noiseline()
 	{
 		if(fx.p.fx1){
 			_tr.height = fx.p.h0 + Std.random(Std.int(fx.p.h1 - fx.p.h0));
 		}else if (fx.p.fx2){
-			_tr.height = (fx.p._w / fx.p.w1) * fx.p.h1;
+			_tr.height = (fx.C / fx.p.w1) * fx.p.h1;
 		}else{
 			_tr.height = fx.p.h0;
 		}
@@ -402,7 +396,7 @@ class SpriteEffects extends FlxSprite
 		for (yy in 0...Math.floor(pixels.height / _tr.height)) {
 			_tr.y = yy * _tr.height;
 			_tp.y = yy * _tr.height;
-			_tp.x = Std.int((Math.random() * fx.p._w)) * FlxG.random.sign();
+			_tp.x = Std.int((Math.random() * fx.C)) * FlxG.random.sign();
 			pixels.copyPixels(fx.src, _tr, _tp);
 		}
 	}//---------------------------------------------------;	
@@ -414,31 +408,11 @@ class SpriteEffects extends FlxSprite
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
-
+		
 		timer += elapsed;
 		
 		if (timer > FREQ && stack.length > 0) 
 		{
-			// --
-			if (removeList.length > 0) 
-			{
-				for (r in removeList) {
-					stack.remove(r);
-				}
-				
-				for (f in 0...stack.length){
-					// Reorder the head flag, only the first one should be true
-					stack[f].head = (f == 0);
-				}
-				
-				removeList.splice(0, removeList.length);
-				
-				if (stack.length == 0 && !flag_freeze_last)
-				{
-					drawFirst();
-				}
-			}// -- remove
-		
 			timer = 0;
 			pixels.lock();
 			
@@ -446,20 +420,23 @@ class SpriteEffects extends FlxSprite
 			_tr.setTo(0, 0, _im.width, _im.height);
 			pixels.fillRect(_tr, 0x00000000);
 			
-			for (i in 0...stack.length) {
+			var i = stack.length;
+			while (--i >= 0)
+			{
+				fx = stack[i];
 				
-				// If there is just one fx, save some CPU time
-				if (i == 0) {
-					stack[i].src = _im; 
+				// Save some CPU, don't copy the pixels of the first effect
+				if (i == stack.length - 1) {
+					fx.src = _im; 
 				}else{
-					stack[i].src = pixels.clone();
+					fx.src = pixels.clone();
 				}
 				
-				stack[i].update(stack[i]);
+				fx.update();
 				
-				if (stack[i].checkLoopEnd()) {
-					removeEffect(stack[i]);
-					if (stack[i].onComplete != null) callbackList.push(stack[i].onComplete);
+				if (fx.checkLoopEnd()) {
+					stack.splice(i, 1);	// Save to remove as the iteration is going down
+					if (fx.onComplete != null) callbackList.push(fx.onComplete);
 				}
 			}
 			
@@ -486,22 +463,46 @@ class SpriteEffects extends FlxSprite
 
 @:publicFields
 class SpriteFX {
-	var head:Bool;			  // True if this is the first of the effects applied
-	var p:Dynamic;
+	var update:Void->Void;	// Main Effect function
+	var head:Bool;			// True if this is the first of the effects applied
+	var p:Dynamic;			// Every effect can have it's own custom parameters here
+							// Some Common :: {
+							//  ttype: Tween Type ( PERSIST:1, LOOPING:2, PINGPONG:4, BACKWARD:16 )
+							// 	run :	How many times to repeat the effect, -1 for infinite
+							//	delay:	Delay the tween start, for effects that use a tween
+							//  ease:	String name of FlxEase to use for effects that use a tween
+							//  loopDelay: Delay between loops ( if the effect is looping )
+							// }
 	var onComplete:Void->Void;
-	var tween:VarTween;		  // optional tween, some effects might use this
-	var src:BitmapData;		  // temp bitmapdata for operations
-	
-	// flag use previous for input
+	var tween:NumTween;		// optional tween, some effects might use this
+	var src:BitmapData;		// temp bitmapdata for operations
+	var C:Float = 0;		// general Purpose counter used in Tweens.
+	//====================================================;
+	// --
 	inline public function checkLoopEnd():Bool {
+		if (tween == null) return false;
 		return (p.run > 0 && tween.executions == p.run);
 	}
+	// --
 	public dynamic function destroy(){
-		if (tween != null){ tween.cancel(); tween.destroy(); }
-		//if (tp != null) {tp.dispose(); tp = null; }	// No because it could be a pointer to "_im"
+		DEST.numTween(tween);
 	}//---------------------------------------------------;
-	public dynamic function update(a:SpriteFX){}
-	public function new(){}
+	// - Starts a tween that affects the "C" variable,
+	// - Uses some parameters in the P object
+	public function startTween(start:Float, end:Float)
+	{
+		if (p.time > 0)
+		tween = FlxTween.num(start, end, p.time, {
+				type:p.ttype,	
+				startDelay:p.delay,
+				loopDelay:p.loopDelay,
+				ease:Reflect.field(FlxEase, p.ease)
+		},
+		function(v){
+			C = v;
+		});
+	}//---------------------------------------------------;
+	public function new(){};
 }
 
 

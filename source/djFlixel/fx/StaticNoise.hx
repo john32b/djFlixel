@@ -7,7 +7,9 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 
 /**
- * Quick static noise box that is pre-rendered for speed
+ * Quick static noise box.
+ * Prerenders a custom amount of frames and loops between them. ( CPU efficient )
+ * Starts running as soon as it's created
  * ...
  */
 class StaticNoise extends FlxSprite
@@ -34,29 +36,32 @@ class StaticNoise extends FlxSprite
 	 * @param	Y Screen pos
 	 * @param	WIDTH
 	 * @param	HEIGHT
-	 * @param	par { .color1 | .color2 | .frames:how many frames to prerender }
+	 * @param	par { .color1 | .color2 | .frames:how many frames to prerender | fps:Playback rate }
 	 */
-	public function new(X:Float = 0, Y:Float = 0, WIDTH:Int = 0, HEIGHT:Int = 0, ?par:Dynamic)
+	public function new(X:Float = 0, Y:Float = 0, WIDTH:Int = 0, HEIGHT:Int = 0, ?params:Dynamic)
 	{
 		super(X, Y);
 		
-		if (WIDTH == 0) WIDTH = FlxG.width;
-		if (HEIGHT == 0) HEIGHT = FlxG.height;
+		if (WIDTH < 1) WIDTH = FlxG.width;
+		if (HEIGHT < 1) HEIGHT = FlxG.height;
+		
+		moves = false;
 		
 		makeGraphic(WIDTH, HEIGHT, 0);
 		
 		// Default parameters
-		par = DataTool.defParams(par, {
-			color1:0xFF333333, // dark gray
-			color2:0xFF999999, // gray
+		params = DataTool.copyFields(params, {	
+			color1:0xFF222222, // dark gray
+			color2:0xFF777777, // gray
 			frames:5,
-			fps:14
+			fps:14,
+			ratio:0.5
 		});
 		
-		FREQ = (1 / par.fps);
+		setFPS(params.fps);
 		
 		currentFrame = 0;
-		framesTotal = par.frames;
+		framesTotal = params.frames;
 		
 		pFrames = [];
 		// -- Create the frames
@@ -67,7 +72,7 @@ class StaticNoise extends FlxSprite
 			f.lock();
 			for (xx in 0...WIDTH)
 			for (yy in 0...HEIGHT)
-			f.setPixel32(xx, yy, Math.random() < 0.5?par.color1:par.color2);
+			f.setPixel32(xx, yy, Math.random() < params.ratio?params.color1:params.color2);
 			f.unlock();
 			pFrames.push(f);
 		}
@@ -77,6 +82,15 @@ class StaticNoise extends FlxSprite
 		_tr = new Rectangle(0, 0, WIDTH, HEIGHT);
 		_tp = new Point(0, 0);
 	}//---------------------------------------------------;
+	
+	// --
+	public function setFPS(fps:Int)
+	{
+		if (fps < 1) fps = 1;
+		FREQ = (1 / fps);
+		timer = FREQ; // Force update at the next cycle
+	}//---------------------------------------------------;
+	
 	
 	// -
 	override public function update(elapsed:Float):Void 
@@ -94,5 +108,14 @@ class StaticNoise extends FlxSprite
 		super.update(elapsed);
 	}//---------------------------------------------------;
 	
+	
+	override public function destroy():Void 
+	{
+		for (i in pFrames){
+			i.dispose();
+		}
+		pFrames = null;
+		super.destroy();
+	}//---------------------------------------------------;
 	
 }// --

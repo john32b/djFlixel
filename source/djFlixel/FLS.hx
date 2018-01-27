@@ -1,10 +1,13 @@
 package djFlixel;
 
 
+import djFlixel.gui.Gui;
+import djFlixel.gui.Styles;
 import flixel.FlxG;
 import flixel.FlxObject;
 import djFlixel.tool.DynAssets;
 import djFlixel.tool.DataTool;
+import haxe.Log;
 
 #if desktop
 	import openfl.filters.BitmapFilter;
@@ -21,9 +24,8 @@ import djFlixel.tool.DataTool;
  * + JSON file must include a 'sys' node at root
  * + All the public statics vars can be overriden in the JSON file
  * 		[VERSION,NAME,VOLUME,MUSIC,WEBSITE,FULLSCREEN,ANTIALIASING,VOL_SOUND,VOL_MUSIC]
- * + Extra nodes in 'sys' node :
- * 	 START_STATE : string, You can specify a state name to override the default starting state
- * 
+ * + Extra FLS Nodes:
+ * 	FPS: Force the render FPS
  */
 class FLS
 {
@@ -31,20 +33,28 @@ class FLS
 	// STATIC 
 	//====================================================;
 	
+	// 
+	public inline static var DJFLX_VERSION:String = "0.3";
+	
 	// -- Parameters file --
 	// -  It is useful to have various game parameters to an external file
 	// -  so that I don't have to compile everytime I want to change a value.
 	// -  !NOTE! This is automatically added to the DynAssets Load Files list.
-	static public var PARAMS_FILE:String = "data/params.json";
+	// -  !NOTE! In order for <external load> to work (flash target), this ID needs to be a valid path
+	static public var PARAMS_ASSET:String = "assets/data/params.json";
 	
 	// -  These vars are loaded externally from the JSON parameters file ::
 	//    If the parameter is not present on the ext file, then these defaults will be used.
-	public static var VERSION:String = "0.3";
+	public static var VERSION:String = "0.1";
 	public static var NAME:String = "HaxeFlixel app";
-	public static var VOLUME:Float = 0.7; // Master volume
-	public static var VOL_SOUND:Float = 0.85; // Sound Effects Volume
-	public static var VOL_MUSIC:Float = 0.85; // Music Volume
+	// -- SOUNDS
+	public static var VOLUME:Float = 0.7; 		// Master volume (Flixel Main Volume)
+	public static var VOL_SOUND:Float = 0.85; 	// Sound Effects Volume
+	public static var VOL_MUSIC:Float = 0.85; 	// Music Volume
 	public static var MUSIC_ON:Bool = true;
+	public static var SOUND_PATH = "sounds/";	// Where are the sound files placed/declared in assets
+	public static var MUSIC_PATH = "music/";	// Where are the music files placed/declared in assets
+	// --
 	public static var WEBSITE:String = "";
 	
 	// Changing this will also take effect
@@ -52,7 +62,7 @@ class FLS
 	// Current Antialiasing on/off, comes with a setter that applies to all cameras
 	public static var ANTIALIASING(default, set):Bool = false;
 	
-	// Store the json parameters loaded from the file
+	// Store the system json parameters loaded from the system params file "PARAMS_ASSET"
 	public static var JSON:Dynamic;
 			
 	// Keep an instantiated object of this class
@@ -64,6 +74,10 @@ class FLS
 	#if(desktop)
 		static var screenFilter:BitmapFilter;
 	#end
+	
+	// Handles asset reloading, JSON parameters and dynamic images
+	public static var assets:DynAssets;
+	
 	//---------------------------------------------------;
 	
 	// --
@@ -97,6 +111,7 @@ class FLS
 		return value;
 	}//---------------------------------------------------;	
 	
+	
 	//====================================================;
 	// DEBUGGING
 	//====================================================;
@@ -117,8 +132,8 @@ class FLS
 			}else{
 				#if EXTERNAL_LOAD
 				trace(" = Reloading external parameters file :: ");
-				DynAssets.loadFiles(function() {
-						JSON = DynAssets.json.get(PARAMS_FILE);
+				assets.loadFiles(function() {
+						JSON = assets.json.get(PARAMS_ASSET);
 						FlxG.resetState();
 				});
 				#end
@@ -151,21 +166,23 @@ class FLS
 	
 	//====================================================;
 	// INSTANTIATED
+	// ----------
+	// Extend these functions with a custom class
+	// You need to set it up with `FLS.extendedClass = myClass`
 	//====================================================;
 	
 	// -- Should be called once right after the FlxGame is created
 	public function new() 
 	{
-		trace("\n:: Initializing FLS ------------ \n");
-	
 		FLS.self = this;
+				
+		DataTool.copyFields(JSON.sys, FLS);
+		
+		trace('\n:: DjFlixel v$DJFLX_VERSION\n:: $NAME, $VERSION\n:: ----------------------------\n');
 		
 		#if (desktop)
 			initFilters();
 		#end
-		
-		DataTool.applyFieldsInto(JSON.sys, FLS);
-		trace(':: $NAME, $VERSION');
 		
 		// Add a state switch trigger, useful to re-set antialiasing automatically
 		FlxG.signals.stateSwitched.add(onStateSwitch);
@@ -177,24 +194,29 @@ class FLS
 		
 		trace("Initializing Sounds.");
 		SND.init();
-		SND.VOL_SOUND = VOL_SOUND;
-		SND.VOL_MUSIC = VOL_MUSIC;
 		SND.MUSIC_ENABLED = MUSIC_ON;
-		SND.loadFromJSON(JSON);
-		FlxG.sound.volume = VOLUME;
+		SND.addMetadataNode(JSON.soundFiles);
+		SND.setVolume(VOLUME);
 		
 		trace("Initializing Controls.");
-		Controls.init();
+		CTRL.init();
+		
+		// -- Other
+		Gui.initOnce();
 		
 		// --
-		// Extended class responsible for API, GAMESAVE and other things
+		// You can extend this class and have additional custom initialization to the extended class
 		
 	}//---------------------------------------------------;
 
 	// --
-	// Gets called after every state switch.
+	// Gets called right before the new state is created
 	private function onStateSwitch()
 	{
+		// Just in case:
+		Gui.autoplaceOff();
+		Gui.mapTweens = new Map();
+		
 		// Force the cameras to use the default AA (with setter)
 		#if (!desktop)
 			FLS.ANTIALIASING = FLS.ANTIALIASING;
@@ -202,17 +224,14 @@ class FLS
 	}//---------------------------------------------------;
 	
 	// --
+	// -- Calls this then onStateSwitch() later
 	private function onPreGameReset()
 	{
-		SND.destroy();
 	}//---------------------------------------------------;
 	
 	// --
 	private function onPostGameReset()
 	{
-		// I need to reload the sounds because reseting flxG destroys all sounds
-		SND.init();
-		SND.loadFromJSON(JSON);
 	}//---------------------------------------------------;
 	
 	
@@ -222,8 +241,8 @@ class FLS
 	//			 Needs a filter node in the JSON file
 	private function initFilters()
 	{
-		trace("Initializing Filters.");
-		var params = DataTool.defParams(JSON.filter, { x:3.0, y:3.0, q:1 } );
+		trace("Desktop Target .. Initializing Filters.");
+		var params = DataTool.copyFields(JSON.filter, {x:2.0, y:2.0, q:1 });
 		screenFilter = new BlurFilter(params.x, params.y, params.q);
 		
 		// Make sure no camera uses antialiasing

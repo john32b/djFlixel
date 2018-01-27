@@ -9,7 +9,7 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import djFlixel.gfx.GfxTool;
 
 /**
- * Load an image and apply masking functionalities
+ * Load an image and apply masking
  * ...
  */
 class MaskedSprite extends FlxSprite

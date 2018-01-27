@@ -133,6 +133,9 @@ class MapTemplate implements IFlxDestroyable
 	// If you use and data object layer you MUST set the tileset filename here
 	// Used to calculate offsets and entity sizes
 	public var dataObjectTileset:String;
+	
+	// Set on override, special occasion when you use same image on multiple layers
+	var SKIP_GID_LAYERS:Array<String> = null;
 	//====================================================;
 	// --
 	public function new() 
@@ -232,7 +235,7 @@ class MapTemplate implements IFlxDestroyable
 		
 		currentLevel = levelID;
 		
-		loader.loadFile(MAP_DIRECTORY + currentLevel + MAP_EXTENSION);
+		loader.loadFile(MAP_DIRECTORY + currentLevel + MAP_EXTENSION, SKIP_GID_LAYERS);
 		
 		mapWidth = loader.mapWidth;
 		mapHeight = loader.mapHeight;
@@ -572,6 +575,21 @@ class MapTemplate implements IFlxDestroyable
 		// x, y is TileSize
 		// en.x en.y are world values
 	}//---------------------------------------------------;
+	
+	// -- Scan the BG layer and callback (xpos,ypos,tileid)
+	function scanBGLayer(fn:Int->Int->Int->Void)
+	{
+		var tile:Int;
+		for (yy in 0...mapHeight) 
+		for (xx in 0...mapWidth) {
+			tile = layerBG.getTile(xx, yy);
+			if (tile > 0) {
+				fn(xx, yy, tile);
+			}
+		}
+	}//---------------------------------------------------;
+	
+	
 	
 	
 	 /**

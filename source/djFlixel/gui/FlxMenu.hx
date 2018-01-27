@@ -1,6 +1,6 @@
 package djFlixel.gui;
 
-import djFlixel.FlxAutoText;
+import djFlixel.gui.FlxAutoText;
 import djFlixel.gui.Styles;
 import djFlixel.gui.list.VListMenu;
 import djFlixel.gui.menu.MItemBase;
@@ -9,6 +9,7 @@ import djFlixel.gui.menu.PageData;
 import djFlixel.tool.ArrayExecSync;
 import djFlixel.tool.DEST;
 import djFlixel.tool.DataTool;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.util.FlxDestroyUtil;
@@ -42,33 +43,28 @@ class FlxMenu extends FlxGroup
 	// Pointer to the current loaded page.
 	public var currentPage(default, null):PageData;
 	
-	// Hold all the page data this menu is going to use
+	// Hold all the STATIC PAGES this menu is going to use
 	public var pages(default, null):Map<String,PageData>;
 	
-	// --
-	public var currentPageName(get, null):String;
-	
-	// A queue of page IDs
-	var history:Array<String>;
+	// Page history. Linear path from the first page to the current page shown
+	// This also stores dynamic pages, in case you want to go back to them
+	var history:Array<PageData>;
 	
 	// Popup close fn, useful to have as global, in case the menu needs to close
 	// ALSO: if this is set, it means that a popup is currently active
-	var popupCloseFunction:Void->Void;
+	var _popupCloseFn:Void->Void;
 	
 	// Keep a small pool of Pages so it doesn't have to recreate them
 	var _pool:Array<VListMenu>;
-	
-	// -- Header text displayed on top of the list (optional)
-	var headerText:FlxAutoText;
+
+	// -- HEADER TEXT AND DECORATIVE LINE ::
+	// -
 	var f_use_header:Bool = true;
-	// --
+	var headerText:FlxAutoText;
 	var decoLine:DecoLine;
 	
 	// -- Animation helper for when animating pages in and out
 	var animQ:ArrayExecSync<Void->Void>;
-	
-	// Hold the latest dynamic pages in case it needs to go back to them
-	var dynPages:Array<PageData>;
 	
 	// ===---- USER SETS ---===
 	// =----------------------=
@@ -86,8 +82,10 @@ class FlxMenu extends FlxGroup
 		?offset:Int, 		// Y Offset for both the line and text,
 		?alignment:String,	// left, right, center -- Will be borrowed from styleMenu.alignment
 		?CPS:Int,			// Characters per Second, 0 for instant
-		?deco_line:Int		// If >0 will draw a decorative line with this height between the header and the menu 
+		?deco_line:Int,		// If >0 will draw a decorative line with this height between the header and the menu 
 							// the line's color will be the same as "color_accent" from the menu items
+		?deco_line_time:Float	// Time to complete the line animation 1 for instant, 
+								// 0 or null to autocalculate
 		
 	};
 
@@ -103,38 +101,41 @@ class FlxMenu extends FlxGroup
 	// Keep X maximum menus in the pool. !! SET THIS RIGHT AFTER NEW() !!
 	public var POOLED_MENUS_MAX:Int = 4;
 	
-	// Hold this many dynamic pages in the buffer.
-	public var dynPagesMax:Int = 8;
 	//---------------------------------------------------;
 	
-	// ==  User callbacks
-	// -------------------==
+	// -- CALLBACKS ::
+	// -- Unified function to get all status messages from menuitems andthe menu
+	// -------------------
+	// callbacks(status,data,item):Void
+	// 	- status 	: general status message,
+	// 	- data 		: extra data associated with the status, e.g. pagename or itemSID
+	// 	- item		: in some cases, an item will be passed
 	
-	// Callbacks for Menu Items Statuses ::
-	//
-	// blur   - This item was just unfocused // Unimplemented. need to add it. VListNav
-	// focus  - A new item has been focused <sends item>
-	// change - When an item changed value, <sends item>
-	// fire   - An item received an action command
-	public var callbacks_item:String->MItemData->Void;
-	
-	// Callbacks for Menu Statuses ::
-	// 
-	// start    - Start button was pressed ( useful in pause menus, to close the menu )
-	// back  	- The menu went back a page
-	// rootback - When user wants to back out from the root menu
-	// open   	- The menu was just opened
-	// close  	- The menu was just closed, $param == SID just went off screen
-	// pageOn 	- The page with $param == SID just went on screen
-	// pageOff  - The page with $param == SID just went off screen
-	//
-	// The following types are mainly for sound effect handling from the user
-	// ------
-	// tick		   - An item was focused, The cursor moved.
-	// tick_change - An item value has changed.
-	// tick_fire   - An item was selected. ( button )
-	// tick_error  - An item that cant be selected or changed
-	public var callbacks_menu:String->String->Void;
+	// STATUS MESSAGES :
+	// -----------------
+	// --- ( Item Related, data = menuitem.sid, item = menuItem)
+	// - focus  - A new item has been focused
+	// - change - When an item changed value
+	// - fire   - An item received a trigger command
+	// - invalid- Fired when trying to tigger a disabled item
+	// -
+	// --- ( Menu Related, data = extra data, item = null )
+	// - start   	- Start button was pressed ( useful in pause menus, to close the menu )
+	// - back  		- The menu went back a page
+	// - rootback 	- When user wants to back out from the root menu
+	// - open   	- The menu was just opened
+	// - close  	- The menu was just closed
+	// - pageOn 	- A page just went on screen, puts page.sid to data
+	// - pageOff  	- A page just went off screen, puts puts page.sid to data
+	// -
+	// --- (The following types are mainly for sound effect handling from the user)
+	// -
+	// - tick		 - An item was focused, The cursor moved
+	// - tick_change - An item value has changed
+	// - tick_fire   - An item was selected. ( button )
+	// - tick_error  - An item that cant be selected or changed
+	// -
+	public var callbacks:String->String->MItemData->Void;
 
 	//====================================================;
 
@@ -142,22 +143,26 @@ class FlxMenu extends FlxGroup
 	 * Constructor
 	 * @param	X Screen X position, You cannot change this later
 	 * @param	Y Screen Y position, You cannot change this later
-	 * @param	WIDTH Must set a width
+	 * @param	WIDTH 0: Rest of the screen, -1: Center of the screen mirror to X
 	 * @param	SlotsTotal Maximum slots for pages, unless overrided by a page
 	 */
-	public function new(X:Float, Y:Float, WIDTH:Int, SlotsTotal:Int = 4)
+	public function new(X:Float, Y:Float, WIDTH:Int=0, SlotsTotal:Int = 6)
 	{
 		super();
 		x = X; y = Y; width = WIDTH;
 		slotsTotal = SlotsTotal;
 		pages = new Map();
 		
+		// --
+		if (width == 0) width = cast FlxG.width - x; else
+		if (width < 0) width = cast FlxG.width - (x * 2);
+		
 		// Default styles, can be overriden later
 		styleMenu = Styles.newStyleVLMenu();
 		styleHeader = {};
 		
 		// Default to not visible at start,
-		// calling the showpage will make it visible
+		// calling the open will make it visible
 		visible = false;
 		
 		// --
@@ -170,7 +175,7 @@ class FlxMenu extends FlxGroup
 		// Page Animation Queue
 		animQ = new ArrayExecSync<Void->Void>();
 		animQ.queue_action = function(fn:Void->Void){fn();};
-		popupCloseFunction = null;
+		_popupCloseFn = null;
 	}//---------------------------------------------------;
 	
 	
@@ -181,8 +186,8 @@ class FlxMenu extends FlxGroup
 	 */
 	public function applyMenuStyle(stMenu:Dynamic,?stHeader:Dynamic)
 	{
-		Styles.applyStyleNodeTo(stMenu, styleMenu);
-		if (stHeader != null) Styles.applyStyleNodeTo(stHeader, styleHeader);
+		DataTool.copyFieldsC(stMenu, styleMenu);
+		if (stHeader != null) DataTool.copyFieldsC(stHeader, styleHeader);
 	}//---------------------------------------------------;
 	
 	
@@ -201,7 +206,6 @@ class FlxMenu extends FlxGroup
 		
 		animQ.destroy();
 		_pool = FlxDestroyUtil.destroyArray(_pool);
-		dynPages = FlxDestroyUtil.destroyArray(dynPages);
 		pages = DEST.map(pages); 
 		
 	}//---------------------------------------------------;
@@ -209,7 +213,7 @@ class FlxMenu extends FlxGroup
 	/**
 	 * Quick way to create and add a page to the menu
 	 * @param	pageSID Give the page a unique string Identifier
-	 * @param	params Check PageData.hx for options
+	 * @param	params {title:String desc:String } Other data will go to the custom object, Check PageData.hx for more
 	 * @return
 	 */
 	public function newPage(pageSID:String, ?params:Dynamic):PageData
@@ -251,7 +255,7 @@ class FlxMenu extends FlxGroup
 	 * 
 	 * @param	pageSID You must provide the pageSID the item is in
 	 * @param	SID SID of the item
-	 * @param	param New Data, e.g. { label:"NewLabel", disabled:false, current: }
+	 * @param	param New Data, e.g. { label:"NewLabel", disabled:false, current:0 }
 	 * 			note: will work with fields inside the item.data as well
 	 */
 	public function item_updateData(pageSID:String, SID:String, param:Dynamic)
@@ -285,152 +289,188 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
+	
 	/**
-	 * Shows a page that is already on the page map.
-	 * Automatically opens the menu if it's closed.
-	 * @param	page The SID of the page to open
-	 * @param	autofocus If true the menu will acquire input focus
+	 * Go to a Page. Either a predeclared static page or a new pagedata. Opens the menu but doesn't focus it.
+	 * @param	Page	SID of page previously added, or a new PageData object. if PageData make sure the SID is Unique
+	 * @param	searchHistory 	if False will append thepage to the history, regardless if it exists already
+	 * 							if True will search the history and if found will go back to the page
 	 */
-	public function showPage(Page:OneOfTwo<String,PageData>, autofocus:Bool = true)
+	public function goto(Page:OneOfTwo<String,PageData>, searchHistory:Bool = true)
 	{	
-		if (Std.is(Page, String))
+		if (Std.is(Page, String)) // It's an SID
 		{
 			var pageSID:String = Page;
 			
-			// Don't show the same page I am currently in
-			if (history[history.length - 1] == pageSID) {
-				trace("Warning: Can't go to the same page");
-				return;
+			// If page on history, go back to it
+			if (searchHistory){
+				var i = history.length;
+				while (i--> 0) {
+					if (history[i].SID == pageSID){
+						history.splice(i, history.length - i); // Remove from i to end
+						break;
+					}
+				}
 			}
 			
-			// Check to see if it's a dynamic page and retrieve it
-			// usually when going back to a dyn page
-			if (!pages.exists(pageSID)) 
+			if (pages.exists(pageSID)) // Just get the page from the static pages array
 			{
-				var cp:PageData = null;
-				if (pageSID.substr(0, 4) == "dyn_" && dynPages != null)
-				{
-					dynPages.map(function(pg){if (pg.SID == pageSID) cp = pg; });
-				}
-				
-				if (cp == null) {
-					trace('Error: Page with SID:"$pageSID" does not exist');
-					return;
-				}
-				
-				currentPage = cp;
+				currentPage = pages.get(pageSID);
 				
 			}else
 			{
-				currentPage = pages.get(pageSID);
+				trace('Error: Could not find page with SID=$pageSID');
+				return;
 			}
-			
-		}else{ // It must be PageData
-			
+
+		}else // It is a dynamic PAGE data
+		{
 			currentPage = Page;
-			currentPage.custom._dynamic = true;
-			currentPage.SID = 'dyn_${currentPage.UID}';
-			
-			if (dynPages == null) dynPages = [];
-			dynPages.push(currentPage);
-			if (dynPages.length > dynPagesMax) dynPages.shift();
 		}
-
-		// 1. Set the previous, current values
-		previousMenu = currentMenu;
-		currentMenu = null;
 		
-		// 2. Now, call focus, this way it won't actually focus the currentMenu yet		
-		if (autofocus) {
-			if (!visible) _mcallback("open");
-			visible = true;
-			isFocused = true; // Don't call focus(); I need a hacky way to do this.
-		}
-		// 3. Store the cursor position and push the old page to the POOL
-		if (previousMenu != null) {
-			// Store the cursor position
+		// Last history entry is always the current page
+		history.push(currentPage);	
+		
+		// -- Change the menu object ::
+		
+		// currentMenu and previousMenu could be animating
+		// It can never happen with normal menu navigation
+		// But it could happen e.g. when user force calls a goto during an animation
+		if (previousMenu != null) previousMenu.clearTweens();
+		
+		if (currentMenu != null) {
 			if (flag_remember_cursor_position) {
-				previousMenu.page.custom._cursorLastUID = previousMenu.getCurrentItemData().UID;
+				currentMenu.page.custom._cursorLastUID = currentMenu.getCurrentItemData().UID;
 			}
-			poolStore(previousMenu);
-			_mcallback("pageOff", previousMenu.page.SID);
-			// It's going to be removed later, when the transition ends.
+			poolStore(currentMenu);
+			currentMenu.clearTweens(); // Just in case
 		}
-
-		history.push(currentPage.SID);	// Last history entry is always the current page
-
-		// 4. Get the new menu
+		
+		previousMenu = currentMenu;
 		currentMenu = poolGetOrNew(currentPage);
 		currentMenu.callbacks = _listCallbacks;
 		
-		// :: Set the cursor Position
+		// Init cursor position for current menu
 		_sub_InitCursorPos();
 		
-		// :: Header Check 
-		//	  Creates the header, but it's not visible yet
+		// Header and deco lone
 		_sub_CheckAndSetHeader();
 		
-		// :: Animating pages in and out
-		//    Figure out the animation type
-		//	  If the FlxMenu is focused, then the new menu 
-		//	  is going to be autofocused at the end of the animation.
-		animQ.reset();
+		// -- Animate
+	
+		if (!visible) {
+			_q_callback("open");
+			visible = true;
+		}
 		
+		animQ.reset();
 		switch(currentMenu.styleMenu.pageEnterStyle)
 		{
 			case "wait":
 				animQ.push(animQ_previousOffScreen);
-				animQ.push(function() { _mcallback("pageOn", currentPage.SID); animQ.next(); } );
 				animQ.push(animQ_currentOnScreen);
-				animQ.next(); // start the queue
-				
 			case "parallel":
-				_mcallback("pageOn", currentPage.SID);
-				animQ.push(animQ_previousOffScreen);
-				animQ.push(animQ_currentOnScreen);
+				animQ_previousOffScreen();
+				animQ_currentOnScreen();
 			default: // "none":
-				_mcallback("pageOn", currentPage.SID);
 				animQ.push(animQ_previousRemove);
 				animQ.push(animQ_currentOnScreen);
 		}
-		
 		animQ.next();
 		
+		//#if debug
+		//trace(this);
+		//#end
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Open the Menu. If you specify a page it will open that page, if null for page it will try 
+	 * to open the last page before close();
+	 * @param	page The SID of the page to open
+	 * @param	autofocus If true the menu will acquire input focus
+	 */
+	public function open(?Page:OneOfTwo<String,PageData>, autofocus:Bool = true)
+	{	
+		if (autofocus) {
+			isFocused = true; // Don't call focus(); It will interfere with the process
+		}
+		
+		if (Page == null && currentMenu != null)
+		{
+			if (!visible) {
+				_q_callback("open");
+				visible = true;
+			}
+			animQ_currentOnScreen();	// Animate it in
+			_sub_CheckAndSetHeader();
+			return;
+		}
+		
+		if (Page == null)
+		{
+			var p:String = "";
+			for (i in pages.keys()) {
+				p = i; break;
+			}
+			if (p == null){
+				trace("Error: There are no static pages to open. Specify a page directly");
+			}else{
+				goto(p);
+			}
+			return;
+		}
+	
+		// Proceed normally:
+		goto(Page);
+	
 	}//---------------------------------------------------;
 	
 	/**
 	 * Closes the menu and loses input focus
-	 * @param	flagRememberPos If true, then when you call open() the current selected menu will be selected
+	 * @param	rememberState If true, then when you call open() the current selected item will be selected, also the history will not be erased
 	 */
-	public function close(flagRememberPos:Bool = false)
+	public function close(rememberState:Bool = false)
 	{
 		if (!visible) return;
-		visible = false;
 		
-		if (decoLine != null) decoLine.stop();
-		if (headerText != null) headerText.stop();
+		// Fade Off
+		if (decoLine != null) {
+			Gui.tween(decoLine, {alpha:0}, styleMenu.stw_el_time * 2);
+			decoLine.stop();
+		}
 		
-		_mcallback("close", currentPage != null?currentPage.SID:null);
+		if (headerText != null) {
+			Gui.tween(headerText.textObj, {alpha:0}, styleMenu.stw_el_time * 2);
+			headerText.stop();
+		}
 		
-		if (flagRememberPos && currentPage!=null)
+		_q_callback("close", currentPage != null?currentPage.SID:null);
+		
+		if (rememberState && currentPage!=null)
 		{
 			var d1 = currentMenu.getCurrentItemData();
 			if (d1 != null) currentPage.custom._cursorLastUID =	d1.UID;
 		}
 		
+		if (!rememberState){
+			currentPage = null;
+			history = [];
+		}
+		
 		// Unload current menus
 		if (currentMenu != null) {
 			currentMenu.clearTweens();	// In some cases the menu is animating with a callback
-			currentMenu.visible = false;
-			currentMenu.unfocus();
-			currentMenu = null;
+			currentMenu.offScreen(function(){
+				visible = false;
+				currentMenu.visible = false;
+			});
 		}
 		
-		if (popupCloseFunction != null)
-			popupCloseFunction();
-		
-		currentPage = null;
-		history = [];
+		if (_popupCloseFn != null)
+			_popupCloseFn();
+			
+		// Note: I am keeping currentPage open();
 	}//---------------------------------------------------;
 
 	/**
@@ -441,12 +481,12 @@ class FlxMenu extends FlxGroup
 		if (isFocused || !visible) return;
 		
 		// A popup is active. Don't focus the menu
-		if (popupCloseFunction != null) return;
+		if (_popupCloseFn != null) return;
 		
 			isFocused = true;
 		
 		if (currentMenu != null) {
-			// Fix: If called right after a showpage()
+			// Fix: If called right after a open()
 			//	    And the menu is animating, it can't be focused BUG
 			if(!currentMenu.isScrolling)	
 				currentMenu.focus();
@@ -459,14 +499,13 @@ class FlxMenu extends FlxGroup
 	public function unfocus()
 	{
 		if (!isFocused) return;
-		if (popupCloseFunction != null) return;
+		if (_popupCloseFn != null) return;
 		
 		isFocused = false;
 			
 		if (currentMenu != null) {
 			currentMenu.unfocus();
 		}
-		
 	}//---------------------------------------------------;
 	
 	/**
@@ -476,16 +515,19 @@ class FlxMenu extends FlxGroup
 	{
 		// Goes back one page
 		if (history.length <= 1) {
-			trace("Info: No more pages in history");
-			_mcallback("rootback");
+			//trace("Info: No more pages in history");
+			_q_callback("rootback");
 			return;
 		}
 	
-		_mcallback("back");
+		_q_callback("back");
 		
 		// The very last element is the current page, Skip it.
 		history.pop();
-		showPage(history.pop());
+		
+		// Set a Useful Flag, Let  GOTO() know that this is a page I am going back to
+		var p = history.pop();
+		goto(p);
 	}//---------------------------------------------------;
 	
 	/**
@@ -493,17 +535,17 @@ class FlxMenu extends FlxGroup
 	 */
 	public function goHome()
 	{
-		if (popupCloseFunction != null) return;
+		if (_popupCloseFn != null) return;
 		
 		if (history.length <= 1) {
-			trace("Info: No more pages in history");
+			//trace("Info: No more pages in history");
 			return;
 		}
 		
-		var p = history[0];
-		pages[p].custom._cursorLastUID = null;
+		var p1 = history[0];
+			p1.custom._cursorLastUID = null;
 		history = [];
-		showPage(p);
+		goto(p1);
 	}//---------------------------------------------------;
 		
 	
@@ -515,11 +557,13 @@ class FlxMenu extends FlxGroup
 	// Store the menu in the pool for future use
 	function poolStore(el:VListMenu)
 	{
+		if (_pool.indexOf(el) >-1) {
+			return;
+		}
 		_pool.push(el);
 		
 		if (_pool.length > POOLED_MENUS_MAX) {
 			_pool.shift().destroy();
-			trace("Info: Destroyed last page element");
 		}
 	}//---------------------------------------------------;
 	
@@ -529,8 +573,9 @@ class FlxMenu extends FlxGroup
 	function poolGetOrNew(P:PageData):VListMenu
 	{		
 		for (i in _pool) {
-			if (i.page.SID == P.SID) {
+			if (i.page == P) {
 				_pool.remove(i);
+				// trace('Info: [${P.SID}] get from POOL');
 				return i;
 			}
 		}
@@ -557,59 +602,63 @@ class FlxMenu extends FlxGroup
 	//====================================================;
 	
 	// --
-	// This MItemData triggered a select
-	function _listCallbacks(status:String, o:MItemData)
+	// Handle MenuItem callbacks from VListMenus
+	function _listCallbacks(status:String, item:MItemData)
 	{	
 		// Before sending to the user, filter some calls
 		
-		// Check the links for internal calls
-		if (status == "fire" && o.type == "link")
+		if (status == "fire" && item.type == "link")
 		{
-			if (o.data.fn == "page") 
+			if (item.data.callback != null)
 			{
-				if (o.SID == "back") {
+				_q_callback("tick_fire");
+				item.data.callback();
+			}
+			
+			else if (item.data.fn == "page") 
+			{
+				if (item.SID == "back") {
 					goBack();
 				}else {
-					_mcallback("tick_fire"); // new
-					showPage(o.SID);
+					_q_callback("tick_fire");
+					goto(item.SID);
 				}
-				return;
 				
-			}else if (o.data.fn == "call")
+			}
+			
+			else if (item.data.fn == "call")
 			{
-				if (o.data.conf_active) 
+				if (item.data.conf_active) 
 				{
-					if(o.data.conf_style == "full")
-						_sub_confirmFullPage(o);
+					if(item.data.conf_style == "full")
+						_sub_confirmFullPage(item);
 					else // popup
-						_sub_confirmCurrentOption();
+						_sub_confirmCurrentItem();
 					
 				}else {
-					_ocallback("fire", o);
+					_q_callback("fire", item);
 				}
-				return;
 			}
-		}
+		} 
 		
 		// Is this a general request? ( from a button press )
-		if (status == "back")
+		else if (status == "back")
 		{
 			goBack();
-			return;
 		}
 		
-		if (status == "start" && flag_start_button_ok)
+		else if (status == "start" && flag_start_button_ok)
 		{
 			if (currentMenu.currentElement != null)
 				currentMenu.currentElement.sendInput("fire");
-			return;
 		}
 		
-		// Internal check complete, push calls to the user.
-		if (o == null) {
-			_mcallback(status);
-		}else {
-			_ocallback(status, o);
+		else {
+		
+			// Internal check complete, push calls to the user.
+			_q_callback(status, item);
+			
+		
 		}
 		
 	}//---------------------------------------------------;
@@ -636,30 +685,27 @@ class FlxMenu extends FlxGroup
 				if (o.data.conf_p_style != null) p.custom.styleMenu = o.data.conf_p_style;
 			pages.set(questionPageID, p);
 		}
-		showPage(questionPageID);
+		goto(questionPageID);
 	}//---------------------------------------------------;
 	
 	
-	// When a new page is loaded
-	// Set the pointing cursor position to whatever it needs to
-	// depending on the settings.
-	// -- If for any reason it fails, the cursor goes to the first available elem
-	// --
+	// Sets the pointing cursor position to whatever it needs to depending on pagedata.
+	// If for any reason it fails, the cursor goes to the first available item
 	function _sub_InitCursorPos()
 	{
 		var r1:Int; // Temp INT holder
 		
 		// If the page needs the cursor to always point to a specific item:
-		// This gets priority
+		// This gets priority over the next check :
 		if (currentPage.custom.cursorStart != null) {
-			r1 = currentMenu.getItemIndexWithField("SID", currentPage.custom.cursorStart);
+			r1 = currentPage.getItemIndexWithField("SID", currentPage.custom.cursorStart);
 			_sub_SetCursToPos(r1); // will check for -1 there
 			return;
 		}
 		
 		// If the cursor needs to go back to where it was
 		if (currentPage.custom._cursorLastUID != null) {
-			r1 = currentMenu.getItemIndexWithField("UID", currentPage.custom._cursorLastUID);
+			r1 = currentPage.getItemIndexWithField("UID", currentPage.custom._cursorLastUID);
 			// Reset the cursorLastUID, because I used it.
 			currentPage.custom._cursorLastUID = null;
 			_sub_SetCursToPos(r1); // will check for -1 there
@@ -669,8 +715,8 @@ class FlxMenu extends FlxGroup
 		
 	}//---------------------------------------------------;
 	
-	// Quick point cursor to an item with SID
 	// --
+	// Quick point cursor to an item with SID
 	function _sub_SetCursToPos(pos:Int)
 	{
 		if (pos >= 0) {	
@@ -693,30 +739,33 @@ class FlxMenu extends FlxGroup
 			if (headerText == null)
 			{
 				// Text Style, if anything is set, keep that, else default value
-				var ts = DataTool.defParams(styleHeader.textS, {
+				var ts = DataTool.copyFields(styleHeader.textS, {
 					font:styleMenu.font,
 					fontSize:styleMenu.fontSize,
-					color:styleMenu.color_accent, // <<-TODO
+					color:styleMenu.color_accent, // NOTE: Is this color ok?
 					color_border:styleMenu.color_border,
 					border_size:-1
 				});
 				
-				styleHeader = DataTool.defParams(styleHeader, {
+				styleHeader = DataTool.copyFields(styleHeader, {
 					enable:true,
-					CPS:25, deco_line:1,
+					deco_line_time: styleMenu.stw_el_time * 3, // Arbitrary, looks good.
+					CPS:25, deco_line:1, 
 					offset:-2,
 					offsetText:0,
 					alignment: styleMenu.alignment
-				}); var sh = styleHeader;
+				}); 
+				var sh = styleHeader;
 				f_use_header = sh.enable;
 				if (!f_use_header) return;
 				
 				// Where the line should start
-				var ystart = y - 2 + sh.offset - sh.deco_line;
+				var ystart:Float = y - 2 + sh.offset - sh.deco_line;
 				
 				// Text --
 				headerText = new FlxAutoText(x, 0, width, 1);
-				Styles.applyTextStyle(headerText.textObj, ts);
+				headerText.style = ts;
+				headerText.textObj.wordWrap = false;
 				headerText.textObj.alignment = sh.alignment;
 				headerText.cameras = [camera];
 				headerText.scrollFactor.set(0, 0);
@@ -734,14 +783,18 @@ class FlxMenu extends FlxGroup
 			}// --
 			
 			headerText.start(currentPage.title);
+			Gui.tween(headerText.textObj);
 			headerText.visible = true;
+			headerText.textObj.alpha = 1; // in case it was faded to off
 			
 			if (decoLine != null) {
+				Gui.tween(decoLine);
 				decoLine.visible = true;
-				decoLine.start(styleMenu.stw_el_time * 2);
+				decoLine.alpha = 1; // in case it was faded to off
+				decoLine.start(styleHeader.deco_line_time);
 			}
 			
-		}else
+		}else // Not using header text
 		{
 			if (headerText != null) {
 				headerText.clearAndWait();
@@ -753,20 +806,22 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	// --
-	// Create a popup YESNO question, getting data from the MItemData
-	function _sub_confirmCurrentOption()
+	/**
+	 * Show a popup [YES,NO] question next to the currently highlighted menu item
+	 */
+	function _sub_confirmCurrentItem()
 	{
 		if (currentMenu == null) return;
-		var opt = currentMenu.getCurrentItemData();
-		if (opt == null) return; // with error?
+		var item = currentMenu.getCurrentItemData();
+		if (item == null) return;
 	
 		var xpos = currentMenu.currentElement.x + currentMenu.currentElement.width;
 		var ypos = currentMenu.currentElement.y;
 	
+		// Push a fire of the actual menuItem if selected YES
 		popup_YesNo(xpos, ypos, function(b:Bool) {
-			if (b) { _ocallback("fire", opt); } else { _mcallback("back"); }
-		}, opt.data.conf_question, opt.data.conf_options);
+			if (b) { _q_callback("fire", item); } else { _q_callback("back"); }
+		}, item.data.conf_question, item.data.conf_options);
 		
 	}//---------------------------------------------------;
 	
@@ -779,7 +834,7 @@ class FlxMenu extends FlxGroup
 	 * @param	options Custom names instead of YES,NO
 	 */
 	@:access(djFlixel.gui.list.VListNav.setInputFocus)
-	public function popup_YesNo(X:Float, Y:Float, qcallback:Bool->Void, ?question:String, ?yesno:Array<String>):Void
+	private function popup_YesNo(X:Float, Y:Float, qcallback:Bool->Void, ?question:String, ?yesno:Array<String>):Void
 	{
 		if (yesno == null) yesno = ["Yes", "No"];
 		
@@ -822,10 +877,10 @@ class FlxMenu extends FlxGroup
 				
 		// -- Setup a close function so that it can be accessed from everywhere
 		//	  in case the menu needs to close. Also this acts like a popup status
-		popupCloseFunction = function() {
+		_popupCloseFn = function() {
 			list.offScreen(function() { remove(list); list.destroy(); list = null; } );
 			remove(bg); bg.destroy();
-			popupCloseFunction = null; // Important to do this
+			_popupCloseFn = null; // Important to do this
 			if (currentMenu != null) currentMenu.setInputFocus(true);
 		}
 		
@@ -833,13 +888,13 @@ class FlxMenu extends FlxGroup
 		list.callbacks = function(s:String, o:MItemData) 
 		{
 			if (s == "fire") {
-				popupCloseFunction();
+				_popupCloseFn();
 				qcallback((o.SID == "yes"));
 				return;
 			}
 			else if (s == "back") {
-				popupCloseFunction();
-				_mcallback("back");
+				_popupCloseFn();
+				_q_callback("back");
 				return;
 			}
 			else if (s == "start") return;	// no start button
@@ -855,29 +910,9 @@ class FlxMenu extends FlxGroup
 		
 		list.onScreen();
 		
-		_mcallback("tick_fire"); // For the sound effect?
+		_q_callback("tick_fire"); // For the sound effect?
 	}//---------------------------------------------------;
-	
-	//====================================================;
-	// Getters Setters
-	//====================================================;
-	
-	//--
-	// Can return NULL
-	public function get_currentElement():MItemBase
-	{
-		if (currentMenu != null) 
-		return currentMenu.currentElement;
-		return null;
-	}//---------------------------------------------------;
-	
-	//--
-	// Can return Empty String
-	public function get_currentPageName():String
-	{
-		if (currentPage != null) return currentPage.SID; else return "";
-	}//---------------------------------------------------;
-	
+
 	
 	//====================================================;
 	//  Helpers
@@ -891,38 +926,36 @@ class FlxMenu extends FlxGroup
 			return 0;
 		}
 	}//---------------------------------------------------;
+
 	
-	// --
-	function _ocallback(s:String, ?o:MItemData) 
+	// Helper: Quickly check for callback and push status and data	
+	function _q_callback(status:String, ?msg:String, ?item:MItemData)
 	{
-		// new: Call the menu callback as well to handle sounds
-		switch(s) {
-			case "fire": 
-				_mcallback("tick_fire");
-				if (o.type == "link" && o.data.callback != null) {
-					o.data.callback();
-				}
-			case "change": _mcallback("tick_change");
-			case "invalid": _mcallback("tick_error"); return;	// do not proceed
+		// - Generate 'tick' statuses on menu items
+		if (item != null) 
+		{
+			msg = item.SID;
+			
+			switch(status) {
+				case "fire": 	_q_callback("tick_fire");
+				case "change": 	_q_callback("tick_change");
+				case "invalid": _q_callback("tick_error");
+			}
 		}
 		
-		if (currentPage.custom.callbacks_item != null){
-			currentPage.custom.callbacks_item(s, o);
+		if (currentPage.callbacks_override != null){
+			currentPage.callbacks_override(status, msg, item);
 			return;
 		}
+				
+		if (currentPage.callbacks != null) {
+			currentPage.callbacks(status, msg, item);
+		}
 		
-		if (callbacks_item != null) callbacks_item(s, o);
-		
-	}//---------------------------------------------------;
-	
-	// -- Quickly check for null and call
-	inline function _mcallback(msg:String, ?data:String) 
-	{
-		if (callbacks_menu != null) {
-			callbacks_menu(msg, data);
+		if (callbacks != null){
+			callbacks(status, msg, item);
 		}
 	}//---------------------------------------------------;
-	
 	
 	//====================================================;
 	// Animation Helpers
@@ -936,6 +969,7 @@ class FlxMenu extends FlxGroup
 	function animQ_currentOnScreen()
 	{
 		add(currentMenu);
+		_q_callback("pageOn", currentPage.SID);
 		currentMenu.onScreen(isFocused, animQ.next);
 	}//---------------------------------------------------;
 	
@@ -943,6 +977,7 @@ class FlxMenu extends FlxGroup
 	function animQ_previousOffScreen():Void
 	{
 		if (previousMenu != null) {
+			_q_callback("pageOff", previousMenu.page.SID);
 			previousMenu.offScreen(function() { 
 				remove(previousMenu);
 				animQ.next();
@@ -957,7 +992,8 @@ class FlxMenu extends FlxGroup
 	// -- Sudden remove the previous page
 	function animQ_previousRemove()
 	{
-		if (previousMenu != null) {	
+		if (previousMenu != null) {
+			_q_callback("pageOff", previousMenu.page.SID);
 			previousMenu.unfocus();
 			remove(previousMenu);
 			previousMenu = null;
@@ -971,8 +1007,7 @@ class FlxMenu extends FlxGroup
 	override public function toString():String 
 	{
 		var np = 0; for (i in pages.keys()) np++; // Count Pages
-		return 	'Pages Total : $np | Dyn Pages Total : ${dynPages.length} |' +
-				'History Length : ${history.length} | Pool Length : ${_pool.length} | Current Page : $currentPageName';
+		return 	'Static Pages : $np | History: '+ [for (i in history) i.SID ] + '| Pool Length : ${_pool.length} | Current Page : ${currentPage.SID}';
 	}//---------------------------------------------------;
 	#end
 	

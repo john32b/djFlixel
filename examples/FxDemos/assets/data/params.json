@@ -1,0 +1,150 @@
+{
+	"sys" : {
+		"NAME" : "FxDemos",
+		"VERSION" : "0.1",
+		"ANTIALIASING" : false,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"soundFiles" : [
+		{"id":"c_tick", "file":"cursor_tick"},
+		{"id":"c_sel",  "file":"cursor_high"},
+		{"id":"c_back", "file":"cursor_low" },
+		{"id":"c_err",  "file":"cursor_error"},
+		{"id":"c_low",	"file":"cursor_low_2"}
+	],
+	
+	
+	"COMMON" :
+	{
+		"infoBox":{
+			"colorBG":"@DB32[0]","colorText":"@DB32[22]",
+			"colorT1":"@DB32[19]","colorT2":"@DB32[8]",
+			"height":32,"padOut":12
+		},
+		
+		"subMenu" : {
+			"x":8, "y":32, "width":128, "slots":10, "height":160, "colorBG":"0xCC000000", "bgpad":4,
+			"style" : {
+				"color_accent" 	: "@DB32[9]",
+				"color_focused" : "@DB32[8]",
+				"color_border"  : "@DB32[14]",
+				"color" : "@DB32[20]",
+				"stw_el_time" : 0.12,
+				"stw_el_EnterOffs" : [-8,0],
+				"stw_el_ExitOffs" : [0,8],
+				"stw_el_wait" : 0
+			},
+			"header" : {
+				"deco_line" : 2, "deco_line_time" : 0.5,
+				"textS": {"color":"@A16[4]","color_border":"@A16[5]"}
+			}
+			
+		},
+		
+		"footer" : {
+			"align":"right-bottom","pad":-2,"color":"0xFF788675"
+		}
+	},
+
+	
+	
+	"State_Main" : 
+	{
+		"scroller": {
+			"colorA" : "@DB32[1]", 
+			"colorB" : "@DB32[2]", 
+			"x" : 0.4, 
+			"y" : -0.2
+		},
+		
+		"infoText"   : "",
+		"infoHeight" : 40,
+		
+		"menu" : { "x":64, "y":20 ,
+			"style" : {
+				"color_accent" 	: "@A16[11]",
+				"color_focused" : "0xFFDD4246",
+				"color_border"  : "@A16[9]",
+				"color" : "0xFFE2E2E2",
+				"fontSize":16
+			},
+			"header" : {
+				"deco_line" : 1,
+				"textS":{"fontSize":8}
+			}
+		}
+	},
+	
+	
+	"State_RainbowStripes" : 
+	{
+	},
+	
+	
+	"State_SpriteEffects":
+	{
+		"x" : 200, "y" : 40,
+		"colorBG": "@DB32[1]"
+	},
+	
+	
+	"State_BounceText":
+	{
+		"colorBG": "@DB32[16]"
+	},
+	
+	
+	"State_BoxScroller":
+	{
+		"colorBG" : "0xFF3C4E34",
+		"images":["assets/bg01.png", "assets/bg02.png", "assets/bg03.png", "assets/bg04.png","assets/bg05.png"],
+		"x":160, "y":42, "w":120, "h":120
+	},
+	
+	
+	"State_Starfield":
+	{
+	},
+	
+	
+	"State_StaticNoise":
+	{
+	},
+	
+	
+	"State_BoxFader":
+	{
+		"x":154, "y":40, "w":150, "h":130,
+		"scroller": {
+			"bg" : 5,
+			"colorA" : "@DB32[27]", 
+			"colorB" : "@DB32[28]", 
+			"x" : 0.4, "y" : 0
+		}
+	},
+	
+	
+	"State_StripesTransition":
+	{
+		"scroller": {
+			"colorA" : "@DB32[15]", 
+			"colorB" : "@DB32[18]", 
+			"x" : 0.4, "y" : 0.4
+		}
+	},
+	
+	
+	"State_FilterFader":
+	{
+		"scroller": {
+			"bg" : 4,
+			"colorA" : "@DB32[31]", 
+			"colorB" : "@DB32[28]", 
+			"x" : -0.4, "y" : 0.2
+		}
+	}
+	
+	
+}

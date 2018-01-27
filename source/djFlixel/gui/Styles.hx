@@ -17,15 +17,17 @@ import flixel.text.FlxText;
 		
 		?font:String,		// Font name
 		
-		fontSize:Int,		// Font size, ( I keep changing the name, I think fontSize is the best )
+		?fontSize:Int,		// Font size, ( I keep changing the name, I think fontSize is the best )
 		
 		?color:Int,			// Color
 		
 		?color_border:Int,	// Border Color ( note I am using color_border and not borderColor so that this
-							// can be set with applyStyleNodeTo() and have the color translated :-)
+							// can be set with DataTool.copyFieldsC() and have the color translated :-)
 			
-		?border_size:Int	// The depth of the shadow/border in pixels. 
+		?border_size:Int,	// The depth of the shadow/border in pixels. 
 							// null or -1 to autocalculate size
+							
+		?border_type:Int	// 0(Default) = shadow,  1 = Outline
 	}
 
 	
@@ -199,7 +201,7 @@ class Styles
 		color_accent:Palette_DB32.COL_06,
 		color_disabled:Palette_DB32.COL_26,
 		color_disabled_f:Palette_DB32.COL_24,
-		color_icon_shadow:Palette_DB32.COL_25,
+		color_icon_shadow:null, //If null going to be same as 'color_border'
 		pageEnterStyle:"wait"
 	};
 	
@@ -219,67 +221,14 @@ class Styles
 	public static function newStyleVLNav():StyleVLNav
 	{
 		// Merge StyleVLBase + StyleVLNav
-		return DataTool.applyFieldsInto(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
+		return DataTool.copyFields(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
 	}//---------------------------------------------------;
 	// --
 	public static function newStyleVLMenu():StyleVLMenu
 	{
 		// Merge StyleVLBase + StyleVLNav + StyleVLMenu
-		var p = DataTool.applyFieldsInto(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
-		return  DataTool.applyFieldsInto(DEF_STYLEVLMENU, p);
-	}//---------------------------------------------------;
-	
-	// --
-	public static function newStyleText():TextStyle
-	{
-		return {
-			fontSize:8,
-			color:DEF_TEXT_COLOR
-		};
-	}//---------------------------------------------------;
-	
-	
-	/**
-	 * Applies a Dynamic Object with styles to a target object
-	 * - INPUT NODE fields will overwrite any Target Object Fields
-	 * - Any fields not defined in INPUT but exist on TARGET, will remain unchanged
-	 * 
-	 * - If a field starts with "color" it will automatically convert it to proper INT
-	 *    e.g. "0xffffff" or "blue" => (int)0x0000FF
-	 * 
-	 * - Palettes : Supports Getting colors from Palettes , check GfxTool.palCol(.)
-	 *		use the "@" prefix and call normally. 
-	 *		e.g. "@A16[3]" => (int)0xFFBE2633 
-	 * 
-	 * @param	node The input object with the styles
-	 * @param	target The Output object where input will be transated into
-	 */
-	public static function applyStyleNodeTo(node:Dynamic, target:Dynamic):Dynamic
-	{
-		if (target == null) target = {};
-		if (node != null)
-		for (i in Reflect.fields(node)) {
-			
-			var n:Dynamic = Reflect.field(node, i);
-			
-			// Convert COLOR string to INT
-			if (i.indexOf("color") == 0) {
-				Reflect.setField(target, i, GfxTool.stringColor(n));
-				continue;
-			}
-			// Recurse in object nodes
-			if (Reflect.isObject(n) && !Std.is(n, Array) && !Std.is(n, String))
-			{	
-				if (!Reflect.hasField(target, i)) Reflect.setField(target, i, {});
-				applyStyleNodeTo(n, Reflect.field(target, i));
-				continue;
-			}
-			
-			// Just copy everything else.
-			Reflect.setField(target, i, Reflect.field(node, i));
-		}
-		
-		return target;
+		var p = DataTool.copyFields(DEF_STYLEVLNAV, Reflect.copy(DEF_STYLEVLBASE));
+		return  DataTool.copyFields(DEF_STYLEVLMENU, p);
 	}//---------------------------------------------------;
 	
 	/**
@@ -289,11 +238,14 @@ class Styles
 	 * @param	size if -1 it will generate 1 pixel for every 8 pixels of the fontSize
 	 * @return
 	 */
-	public static function applyTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR, size:Int = -1 ):FlxText
+	public static function applyTextBorder(t:FlxText, c:Int = DEF_BORDER_COLOR, size:Int = -1, type:Int = 0 ):FlxText
 	{
 		if (size == 0) return t;
-		t.borderStyle = FlxTextBorderStyle.SHADOW;
-		t.borderSize = (size == -1)?Math.ceil(t.size / 8):size;
+		if (type == 1) 
+			t.borderStyle = FlxTextBorderStyle.OUTLINE;
+		else
+			t.borderStyle = FlxTextBorderStyle.SHADOW;
+		t.borderSize = (size < 0)?Math.ceil(t.size / 8):size;
 		t.borderColor = c;
 		t.borderQuality = 1;
 		return t; // for chaining
@@ -302,22 +254,19 @@ class Styles
 	
 	/**
 	 * Style an FlxText with a predefined (TextStyle) style
-	 * @param	t The FlxText
-	 * @param	s The style, check the TextStyle typedef, can also be StyleVLMenu which includes TextStyle
+	 * @param	t The FlxText to apply the style to
+	 * @param	s The style, check `TextStyle` typedef in this file
 	 * @return
 	 */
 	public static function applyTextStyle(t:FlxText, s:TextStyle):FlxText
-	{
-		#if debug
-		if (s == null) { // DEV: I don't remember why I wrote this.
-			trace("ERROR: Style is null!");
-			s = newStyleText();
+	{		
+		if (s.font != null) t.font = s.font;
+		if (s.fontSize != null) t.size = s.fontSize; // Size first, don't move this.
+		if (s.color_border != null) {
+			applyTextBorder(t, s.color_border, 
+				s.border_size != null?s.border_size: -1,
+				s.border_type != null?s.border_type: 0);
 		}
-		#end
-		
-		if (t.font != null) t.font = s.font;
-		t.size = s.fontSize; // Size first, don't move this.
-		if (s.color_border != null) applyTextBorder(t, s.color_border, s.border_size);
 		if (s.color != null) t.color = s.color;
 		return t; // for chaining
 	}//---------------------------------------------------;

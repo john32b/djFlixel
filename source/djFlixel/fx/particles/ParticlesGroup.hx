@@ -8,6 +8,7 @@ import flixel.util.FlxArrayUtil;
 import flixel.util.FlxTimer;
 
 
+// NOTE: Really immature, Needs updating
 
 /**
  * Particle Group for Generic particles
@@ -35,7 +36,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	 * @param	particleInfoNode The node name in the JSON params file
 	 * @param	buffer Options, create this many particles for recycling
 	 */
-	public function new(particleInfoNode:String, buffer:Int = -1)
+	public function new(InfoNode:Dynamic, buffer:Int = -1)
 	{
 		super();
 
@@ -45,7 +46,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			BUFFER_LEN = buffer;
 		}
 		
-		info = Reflect.getProperty(Reg.JSON, particleInfoNode);
+		info = InfoNode;
 		
 		// Create some buffer particles
 		for (i in 0...BUFFER_LEN)
@@ -124,15 +125,15 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	public function popup(x:Float, y:Float, frame:Int, scale:Float = 1)
 	{
 		var p = createOneAt(x, y, null, true);
-		p.velocity.set(0, Reg.JSON._popup.speed);
+		p.velocity.set(0, FLS.JSON._popup.speed);
 		p.animation.frameIndex = frame;
 		p.scale.set(scale, scale);
 		var timer:FlxTimer = new FlxTimer();
 		timers.push(timer);
-		timer.start(Reg.JSON._popup.timer1, function(_) {
+		timer.start(FLS.JSON._popup.timer1, function(_) {
 			p.velocity.set(0, 0);
 			timers.remove(timer);
-			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.04, true, true, function(_) { 
+			FlxFlicker.flicker(p, FLS.JSON._popup.timer2, 0.04, true, true, function(_) { 
 				if (p == null || !p.exists) {
 					trace("warning: Popup callbacks to a dead sprite. Cancelled");
 					return;

@@ -1,11 +1,79 @@
 
-DJFLIXEL CHANGE LOG
-====================
-Newest at top
+OLD DJFLIXEL CHANGE LOG!
+=======================
 
+
+	# NOTE I AM DROPPING THIS .TXT FILE IN FAVOR OF THE NEW `changelog.md` FILE
+	
+
+	# 26-01-2018 Dev // 0.3 Version
+	============================================================
+	~ BREAKING CHANGES ~
+	
+	. MainTemplate.hx Improvements and changes
+	. Gui.hx predefined textStyles support
+	. NEW MapTemplate.scanBGLayer()
+	. SpriteEffects.hx improvements and desktop build compatibility
+	. Styles.ApplyFieldsInto moved to DataTool and renamed to CopyFieldsC(.)
+	. RENAMED DataTool.defParams and applyFields -> copyFields() and copyMFields()
+	. VlistMenu Center Aligned menu items ignore icons for get_width, helps with center alignment
+	. PixelFader code refactor
+	. REMOVED PaletteFader, since it was game specific ( for 4 color palette games )
+	. NEW FilterFader.hx, fades the screen like pixelfader but used bitmap filters ( only black supported for now)
+	. NEW GUI.hx Autoplace functions, easily position elements and texts on the screen
+	. NEW Added Palette DB16
+	. IMPROVEMENT DataTool.copyFieldsC(.) supports converting Array of Colors
+	. NEW Simple Finite State Machine Fsm.hx
+	. RENAMED Controls.hx to CTRL.hx, it's a static class so all caps,like the other static classes
+	. RENAMED RainbowBorder.hx -> RainbowStripes.hx , it makes more sense now
+	. NEW CTRL.timepress() a better implementation of cursor press, supports acceleration and custom times
+	. VlistMenu.getItemIndexWithField moved to PageDatah
+	. FEAT, FlxMenu now supports autocalculated width
+	. FEAT, Pagedata MenuItems can now have empty SIDs and they will be autocalculated
+	. NEW, Gui.Align: YAxis(.) and XAxis(.); Align an object axis to another guide object 
+	. IMPROVED StepTimer.hx, simpler and more direct and easy to use.
+	. NEW BoxFader, simple colored box that fades with hard steps
+	. NEW DelayCall, simple void callback after X time has passed
+	. FEAT, VlistMenu, SLIDERS can now increment a custom amount including floats
+	. NEW, Datatool.roundFloat(.) will round a float to a precision
+	. FlxMenu Improvements. 
+		. RENAME showPage->open(..)
+		. NEW open(..) with no parameters will show the current page before close()
+		. ADDED goto(..)
+		. Code Refactor for dynamic pages and page handling
+		. Fix memory leaks fix on Close(..)
+	. FEATURE PageData.custom.InitFire will fire change events on all items when onscreen. Skip individual items with "noInit:true"
+	. DynAssets improvements, It's is now a single object under FLS.assets
+	. Examples, shared assets folder
+	. Reworked SND.hx, Removed FAST/CACHED sounds as Flixel and OPENFL already caches them
+	. Working on FlxMenu Examples
+	. FlxMenu, overall better mouse handling on elements and alignment fixes
+	. MitemOneOf, bigger area to click on the arrows
+	. FlxMenu, you can use mousewheel to change item selections but only if the view doesn't overflow
+	. Deprecate Datatool.copyMFields, with copyFields 
+	. Code refactor in menuitems and now working for NEKO
+	. FlxMenu ; close() will now animate the current page to offscreen
+	! FlxMenu, changed the way callbacks are handled. It's now just one callback function for menu events and menu item data
+	. FlxMenu, decoline and headertext will now fade on close
+	. VlistNav, simple fire events flag, for elements that don't handle input
+	+ VListmenu, Slider controls added `loop` field, values will loop at the, ( affects "oneof" and "slider" )
+	. IMPROVED StarFieldSimple, realtime changes and shimmering stars
+	+ NEW, Gui.tween(), will tween a and handle a sprite , if called again will cancel previous tween.
+	+ PageData, revamped callbacks, now offers TWO callbacks, one to replace, one to add to the menu callbacks
+	+ NEW, MItemData.get(), will quickly get the data from the item ( useful in oneof mostly )
+	+ Improved Stripes.hx , better code, fixed bugs
+	+ Improved TextBouncer.hx, better code, and parameters
+	+ Improved TOAST.hx, better code and parameters
+	+ Improved UIButton.hx, Can now load graphics and icons from the default `djflixel` assets
+	+ More Gui.Icons and now gets icons from a lookup table
+	+ NEW, TextScroller.hx, Sine Text Scroller, scrolls text letter by letter from right to left with a sine effect
+	+ Sequencer.hx can now be cancelled
+	+ Megademo and Examples complete
+	
 
 	# 06-12-2017 Dev
 	============================================================
+	
 	~ BREAKING CHANGES ~
 	
 	Notes:
@@ -108,21 +176,24 @@ Newest at top
 
 # 11-2016 - dev branch
 ============================================================
-. PixelFader.hx , fade the screen on or off by perpixel operations
-. TextBouncer.hx, Simple bouncy text
-. BGPOP.hx, opens a black window with a retro-style zoom-out effect
-. Mouse support for FlxMenu
-. FlxMenu pages can override parent styles without having to declare a new style 
-. Sound Loading and sound groups
+
+	. PixelFader.hx , fade the screen on or off by perpixel operations
+	. TextBouncer.hx, Simple bouncy text
+	. BGPOP.hx, opens a black window with a retro-style zoom-out effect
+	. Mouse support for FlxMenu
+	. FlxMenu pages can override parent styles without having to declare a new style 
+	. Sound Loading and sound groups
 
 # 06-2016 - dev branch
 ============================================================
-. FlxMenu.option_updateData(...); Will update the data of an option on the fly.
-. FlxMenu, BUGFIX, pageOn callback now reports at the correct time
-. Improved VListBase, VListMenu
-. Added VListNav, which is a navigatable vertical list with custom elements
-. Removed Conditionals from VListMenu
 
+	. FlxMenu.option_updateData(...); Will update the data of an option on the fly.
+	. FlxMenu, BUGFIX, pageOn callback now reports at the correct time
+	. Improved VListBase, VListMenu
+	. Added VListNav, which is a navigable vertical list with custom elements
+	. Removed Conditionals from VListMenu
+
+	
 # 22-05-2016, v. 0.2.4
 ============================================================
 

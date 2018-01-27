@@ -1,8 +1,9 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
 	<!-- APP ---->
-	<app title="FlxMenu Example" file="FlxMenuExample" main="Main" version="0.3.0" company="JohnDimi" />
+	<app title="djFlixel FlxMenu Demo" file="djflx_menudemo" main="flxmenudemo.Main" version="0.1.0" company="johndimi" />
 	<app preloader="flixel.system.FlxBasePreloader"/>
 	
 	<!-- WINDOW SETTINGS- --->
@@ -11,29 +12,52 @@
 	
 	<!-- PATHS ----------------->
 	<classpath name="source" />
-	<set name="BUILD_DIR" value="build/debug/" if="debug"/>
-	<set name="BUILD_DIR" value="build/release/" unless="debug"/>
-	<assets path="assets" exclude="*.ase|thumbs.db|*.wav|#_*|*.ogg"/>
-
-	<!-- DJFLIXEL -------------->
+	<classpath name="../common" />
 	
-	<!-- Go ahead and include all the icon sets -->
+	<set name="BUILD_DIR" value="build/" />
+
+	<!--Own project assets-->
+	<assets path="assets"/>
+	
+	<!--Graphics and Data-->
+	<assets path="../assets" rename="assets" include="*.png"/>
+	
+	<!-- SOUNDS -->
+	<assets path="../assets/sounds" rename="sounds" inlude="*.mp3" if="flash"/>
+		
+	<!-- FONTS -->
+	<assets path="../assets/fonts">
+		<font path="mozart.ttf" id="fonts/mozart"/>
+		<font path="pixelarial.ttf" id="fonts/pixelarial"/>
+		<font path="blocktopia.ttf" id="fonts/blocktopia"/>
+	</assets>	
+	
+	<!-- DJFLIXEL -------------->
+
 	<set name="DJFLX_ICONS_8"/> 
 	<set name="DJFLX_ICONS_12"/> 
 	<set name="DJFLX_ICONS_16"/> 
-	<set name="DJFLX_ICONS_24"/> 
-	
-	<!-- Reload some external files without recompiling, just press F12 -->
-	<haxedef name="EXTERNAL_LOAD"/>
+	<set name="DJFLX_ICONS_24"/>
+
+	<haxedef name="EXTERNAL_LOAD" if="flash debug"/>
 
 	<!-- FLIXEL ---------------->
-	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/> 
+	
+	<section if="html5">
+		<set name="canvas"/> <haxedef name="canvas"/>
+	</section>
+	
+	<section if="desktop">
+		<haxedef name="FLX_NO_SOUND_SYSTEM"/>
+	</section>
+	
+	<set name="next" unless="neko"/>
 	
 	<!-- LIBRARIES ------------->
-	<haxelib name="flixel"/>
 	<haxelib name="djFlixel"/>
+	<haxelib name="flixel"/>
 	
 	<!-- Note: 	Many common defines are being declared in the "djflixel/source/include.xml" file
 				This is to save space and streamline the project.xml file a bit -->
-	
+
 </project>

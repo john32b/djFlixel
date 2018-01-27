@@ -14,14 +14,13 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.VarTween;
 import flixel.util.FlxDestroyUtil;
-import flixel.util.FlxTimer;
 
 /**
  * == Basic Vertical List ==
  * 
- * General Purpose ListBox that presents ChildElements in a
- * scrollable vertical list. No cursor or selectable elements in this class
- * they are implemented in the extended VListNav.hx
+ * A general purpose listbox that handles custom sprites in a vertical scrollable list. 
+ * This base class supports only presenting and scrolling of the elements.
+ * Extra functionality is implemented in the extended VListNav class.
  * 
  * # Purpose is to be extended into a more specific class
  *   or you can use it as a bare element scroller
@@ -30,20 +29,18 @@ import flixel.util.FlxTimer;
  * 
  * # It's is used like a HUD element and is fixed on the screen. (scrolloffset=0)
  * 
- * T: Type Element of Child, must be or derive from FlxSprite
- * K: Type of Child Data, must implement IListItem
+ * T: Type Element of Child, must be or derive from FlxSprite and implement IListItem
+ * K: Type of Child Data
  * 
  */
 
-
-@:generic // I won't be using this with many Type combinations, so I think this would be faster?
 class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 {	
 	
 	// -- Some Static Defaults ::
 	// --
-	static var DEF_SLOTS:Int = 3;
-	static var DEF_POOL_REUSE_MAX:Int = 8;
+	static inline var DEF_SLOTS:Int = 3;
+	static inline var DEF_POOL_REUSE_MAX:Int = 8;
 	static var DEF_POOL_MODE:String = "recycle"; // [off, reuse, recycle], see below for explanation
 
 	// -- User Set Object Variables::
@@ -61,9 +58,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	public var x(default, null):Float;
 	public var y(default, null):Float;
 	public var width(default, null):Int;
-	public var height(default, null):Int;		// The height is autoset on initialization based on the slot length
+	public var height(default, null):Int;			// The height is autoset on initialization based on the slot length
 	public var isFocused(default, null):Bool;
-	public var isScrolling (default, null):Bool;
+	public var isScrolling (default, null):Bool;	// True if any sort of tweening is in effect
 	
 	var _elementClass:Class<T>;	// The class of Items expected to be set
 	
@@ -73,28 +70,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	// Start positioning the elements from this Y offset from the top
 	var posOffsetY:Int = 0;
 	
-	// == Pooling mode ==
-	// -----
-	// NOTE: You MUST set this right after new() and before setting data
-	// 		 with setPoolingMode(..)
-	// -----
-	// + Values ::
-	// 
-	// off 		: Elements in view are created as the list scrolls,
-	//			  Elements off view are destroyed as the list scrolls.
-	
-	// recycle	: Recreate X amount of objects and recycle those upon scrolling
-	//			  -- Elements are re-inited as the list scrolls
-	//			  -- Not Compatible with multiple child types
-	//			  -- All elements must be of the same class !! 
-	//            -- Useful in very large databases, like a text scroller
-	
-	// reuse    : Old elements are not destroyed but they are kept in an array
-	//			  in case they are needed to get onscreen again.
-	//			  -- Useful in multiple child types
-	//            -- USE in short lists, BAD FOR LONG LISTS !
-	
+	// Current pooling mode [ off | recycle | reuse ]
 	var pooling_mode:String;
+	
 	// It is quicker to read BOOLS than compare STRINGS, so I have those:
 	var flag_pool_recycle:Bool;
 	var flag_pool_reuse:Bool;
@@ -134,6 +112,9 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	//	You can style the indicators from (StyleB.scrollInd)
 	var scInd:Array<BlinkSprite> = null;
 	
+	
+	// There are more elements than there are slots
+	public var flag_overflow(default, null):Bool;
 	// ===================================================;
 	// ===================================================;
 	
@@ -141,27 +122,24 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	 * Create a Basic Vertical List object.
 	 * @param	X Position on the screen.
 	 * @param	Y Position on the screen.
-	 * @param	WIDTH If 0 will be autoset from X to the right edge of the screen
+	 * @param	WIDTH 0 for rest of the screen, <0 for mirrored padding from X to the right
 	 * @param	SlotsTotal How many slots to show on the screen (has a default if 0)
 	 */
-	public function new(ObjClass:Class<T>, X:Float, Y:Float, WIDTH:Int = 0, SlotsTotal:Int = 0)
+	public function new(ObjClass:Class<T>, X:Float = 0, Y:Float = 0, WIDTH:Int = 0, SlotsTotal:Int = 0)
 	{
 		super();
 		x = X; y = Y; width = WIDTH;
 		_elementClass = ObjClass;
 		
 		_slotsTotal = SlotsTotal;
-		if (_slotsTotal == 0) {
-			_slotsTotal = DEF_SLOTS;
-		}
+		if (_slotsTotal < 1) _slotsTotal = DEF_SLOTS;
 		
 		if (width == 0) {
-			width = cast FlxG.width - x; // Can only work because the menu is supposed to be a HUD
-			#if debug
-			if (width < 0 || width > FlxG.width) {
-			trace("Error: Getting menu width, set it manually"); width = 128;
-			} 
-			#end
+			// Rest of the screen
+			width = cast FlxG.width - x;
+		}else if (width < 0 ) {
+			// Mirrored X padding to the right
+			width = cast FlxG.width - (x * 2);
 		}
 		
 		// -- Other Data
@@ -193,7 +171,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		if (scInd == null) 
 		{
 			// Default Style :
-			var c = DataTool.defParams(styleB.scrollInd, {
+			var c = DataTool.copyFields(styleB.scrollInd, {
 				size:Gui.getApproxIconSize(Std.int(elementHeight * 0.7)),
 				color:0xFFEEEEEE,
 				color_border:0xFF333333,
@@ -215,11 +193,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 				// Position at X Axis
 				switch(c.alignment) {
 					case "right":
-						scInd[i].x = x + width - elementHeight;
+						scInd[i].x = x + width - elementHeight; //YES, HEIGHT, puts it a bit further
 					case "justify", "center":
 						scInd[i].x = x + (width / 2) - (scInd[i].width / 2);
 					default: // "left"
-						scInd[i].x = x + elementHeight;
+						scInd[i].x = x + elementHeight; //YES, HEIGHT, puts it a bit further
 				}
 
 			}// end loop
@@ -257,6 +235,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 
 		_data = arr;
 		_data_length = _data.length;
+		flag_overflow = _data_length > _slotsTotal;
 		// trace('Info: Added data source with [$_data_length] number of elements');
 		
 		// Ready this to accept new data
@@ -283,15 +262,13 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		if (pooling_mode == null)
 			setPoolingMode(DEF_POOL_MODE);
 			
-		// It's going to be called upon the first showpage
+		// It's going to be called upon the first open
 		if (flag_InitViewAfterDataSet) {
-			trace('Info: Setting data, initializing view..');
 			_scrollOffset = -1;
 			setViewIndex(0);
 		}
 		
 	}//---------------------------------------------------;
-	
 	
 	// -- Helper
 	public function clearTweens()
@@ -549,7 +526,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		}	
 		
 		if (ind == _scrollOffset) {
-			trace('Warning: Requested to set view to same index [$ind], Skipping.');
+			// trace('Warning: Requested to set view to same index [$ind], Skipping.');
 			return;
 		}
 		
@@ -671,7 +648,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		// So I can skip a switch case and use an if
 		if (styleB.alignment == "center")
 		{
-			return x + width / 2 - el.width / 2;
+			return x + (width - el.width) / 2;
 		}else
 		{
 			return x;
@@ -686,6 +663,7 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		r_el.cameras = [camera];
 		r_el.setData(_data[index]);
 		r_el.scrollFactor.set(0, 0);
+		r_el.moves = false;
 		return r_el;
 	}//---------------------------------------------------;
 	
@@ -693,13 +671,32 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	//  POOLING
 	//====================================================;
 
+	// == Pooling mode ==
+	// -----
+	// NOTE: You MUST call this right after new() and before setting data
+	// -----
+	// + Values ::
+	// 
+	// off 		: Elements in view are created as the list scrolls,
+	//			  Elements off view are destroyed as the list scrolls.
+	
+	// recycle	: Recreate X amount of objects and recycle those upon scrolling
+	//			  -- Elements are re-inited as the list scrolls
+	//			  -- Not Compatible with multiple child types
+	//			  -- All elements must be of the same class !! 
+	//            -- Useful in very large databases, like a text scroller
+	
+	// reuse    : Old elements are not destroyed but they are kept in an array
+	//			  in case they are needed to get onscreen again.
+	//			  -- Useful in multiple child types
+	//            -- USE in short lists, BAD FOR LONG LISTS !
 	/**
-	 * Call this BEFORE setting DATA
+	 * Set a pooling mode, check code comments for more info
 	 * @param	val [off, reuse, recycle]
-	 * @param	param applicable in reuse
+	 * @param	param applicable in reuse, How many elements to store in the reuse pool
 	 * @return
 	 */
-	public function setPoolingMode(val:String, param:Int = 0 )
+	public function setPoolingMode(val:String, reuse_max:Int = DEF_POOL_REUSE_MAX )
 	{
 		
 		switch(val) {
@@ -710,7 +707,8 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 			case 'reuse':
 				flag_pool_recycle = false;
 				flag_pool_reuse = true;
-				_pool_max_size = param; if (_pool_max_size < 1) _pool_max_size = DEF_POOL_REUSE_MAX;
+				_pool_max_size = reuse_max; 
+				if (_pool_max_size < 1) _pool_max_size = DEF_POOL_REUSE_MAX;
 			case 'off':
 				flag_pool_recycle = false;
 				flag_pool_reuse = false;
@@ -752,10 +750,11 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 		{
 			if (_pool_length > 0) {
 				_pool_length--;
-				return _pool.shift();
+				r_el = _pool.shift();
+				r_el.setData(_data[_dataIndex]);
+				return r_el;
 			}
 		}
-		
 		// Program got here when could not get any element from the pool
 		// OR pool mode is set to "off"
 		// Return a new element:
@@ -820,15 +819,17 @@ class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
 	// Constantly scrolls, thus creating many FLXTweens at once.
 	// Useful to keep track of memory use, createf objects, etc.
 	// It fills up the memory about ~5 MB then it garbage collects.
-	public function debug_overdrive_tween()
+	public function debug_scrollForever()
 	{
 		trace("Info: Starting to scroll forever");
-		var f:FlxTimer = new FlxTimer();
+		var f = new flixel.util.FlxTimer();
+		
+		var dir:Int = 1; // Down or Up
 		
 		f.start(0.3, function(_) {
-			if (scrollDownOne() == false) {
-				// Go to the start when it reaches the end
-				setViewIndex(0);
+			if ((dir > 0 && !scrollDownOne()) || (dir < 0 && !scrollUpOne()))
+			{
+				dir = dir * -1;
 			}
 		},0);
 		
