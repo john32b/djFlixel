@@ -1,22 +1,32 @@
-## Examples
+## DjFlixel Examples
 
-#### Controls.Example
-
-Example use of the controls.hx static class. Basic controls manager for WASD,ARROW KEYS and 360 CONTROLLER<br/>
-[see flash build here](http://johndimi.github.io/djFlixel/examples/ControlsDemo.swf)
-
-#### FlxMenu.01.Simple
-
-Vesy basic use of the FlxMenu.<br/>
-[see flash build here](http://johndimi.github.io/djFlixel/examples/FlxMenuSimple.swf)
+>**NOTE**: Currently all examples are tested to work on **Flash** and **Neko**
 
 
-#### FlxMenu.02.GameMenu
+### MEGADEMO
 
-More detailed example of FlxMenu. uses multiple pages, and callbacks. Demo use case as in a game menu.<br/>
-[see flash build here](http://johndimi.github.io/djFlixel/examples/FlxMenu02.swf)
+![](https://i.imgur.com/RapofVf.png)
+All around, general demonstration of the library.
+Checkout a `flash` build over here : [johndimi.itch.io/djflixel](https://johndimi.itch.io/djflixel)
 
-#### _mainDemo
+### FlxMenu Demos
+Various examples of setting up and using `FlxMenu`
 
-This is the source of the main demo featured at the itch.io page.<br/>
-[see flash build here](https://johndimi.itch.io/djflixel-tools)
+### Gui Demos
+Use examples of classes in the `djFlixel.gui` package
+
+### FX Demos
+Use examples of classes in the `djFlixel.fx` package
+
+
+## CREDITS
+
+#### FONTS:
+
+- **BlockTopia** by Aaron D. Chand -- https://www.dafont.com/blocktopia.font
+- **Mozart NBP** by Nate Halley -- http://www.fontspace.com/total-fontgeek-dtf-ltd/mozart-nbp
+- **Pixelarial** by Max -- https://www.dafont.com/pixel-arial-11.font
+
+#### MUSIC:
+- **Deep Horizons** by DvD - https://www.youtube.com/watch?v=B49GBo7ezYg
+

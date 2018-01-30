@@ -11,10 +11,7 @@ import flixel.util.FlxTimer;
 import openfl.display.BitmapData;
 
 
-// Graphic for the arrows
-// @:bitmap("assets/hud_icons.png")
-// private class GfxHudIcons extends BitmapData { }
-
+/// THIS NEEDS UPDATING -- DO NOT USE --
 
 /**
  * Display sprites in pages,
@@ -70,7 +67,7 @@ class FlxMenuPages extends FlxGroup
 		
 		// -- Add the cursors
 		cursor_left = new FlxSprite(0, 0);
-		cursor_left.loadGraphic("assets/hud_icons.png", true, 16, 16);
+		cursor_left.loadGraphic(Gui.GUI_ICONS, true, 16, 16);
 		cursor_left.animation.frameIndex = 4;
 		cursor_left.setSize(4, 4);
 		cursor_left.centerOffsets();
@@ -186,16 +183,16 @@ class FlxMenuPages extends FlxGroup
 		if (isAnimating || !visible) return;
 		
 		// Keys
-		if (Controls.CURSOR_START() || Controls.CURSOR_CANCEL()) {
+		if (CTRL.CURSOR_START() || CTRL.CURSOR_CANCEL()) {
 			if (callback_action != null) callback_action("back");
 		}else
-		switch(Controls.CURSOR_DIR()) {
-				case Controls.RIGHT: 
+		switch(CTRL.CURSOR_DIR()) {
+				case CTRL.RIGHT: 
 				if (pageIndex < pages.length-1) {
 					showPage(pageIndex + 1);
 					if (callback_action != null) callback_action("change");
 				}
-				case Controls.LEFT: 
+				case CTRL.LEFT: 
 				if (pageIndex > 0) {
 					showPage(pageIndex-1);
 					if (callback_action != null) callback_action("change");

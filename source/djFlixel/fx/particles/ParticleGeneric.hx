@@ -4,6 +4,9 @@ import djFlixel.tool.DynAssets;
 import flixel.FlxG;
 import flixel.FlxSprite;
 
+
+// NOTE: Really immature, Needs updating
+
 /**
  * Simple Particle, Managed by "ParticlesGroup.hx"
  * ...

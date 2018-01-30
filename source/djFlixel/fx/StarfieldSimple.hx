@@ -2,26 +2,6 @@
  * Very simple starfield
  * =======================
  * 
- * Use example
- * -------------
- * 
- * var stars = new StarfieldSimple(200,200);
- * 	stars.flag_widepixel = true;
- * 	stars.setColors([...]);
- * 	add(stars);
- * 
- * + Other possible calls ::
- * 
- * 	stars.setSpeed(FlxG.random.float(0.3, 1.5));
- *	stars.setDirection(FlxG.random.int(0, 360));
- *	stars.numberOfStars = FlxG.random.int(150, 900);
- *	stars.color_bg = Palette_DB32.getRandomColor();
- *	stars.color_1 = Palette_DB32.getRandomColor();
- *	stars.color_2 = Palette_DB32.getRandomColor();
- *	stars.color_3 = Palette_DB32.getRandomColor();
- * 
- * -----------------
- * 
  * + If you want to stop scrolling, use 
  * 		stars.active = false;
  * 
@@ -29,157 +9,139 @@
 
 package djFlixel.fx;
 
+import djFlixel.gfx.Palette_DB32;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import djFlixel.SimpleVector;
+import flixel.util.FlxSpriteUtil;
 
 class StarfieldSimple extends FlxSprite
 {
-	// -- Default Values if not user customized ---
-	static inline var DEF_COLOR_1:Int = 0xFF999999;		// Back star
-	static inline var DEF_COLOR_2:Int = 0xFF505296; 	// Medium star
-	static inline var DEF_COLOR_3:Int = 0xFFEFEE77; 	// Close Fast star
-	static inline var DEF_COLOR_BG:Int = 0xFF000000; 	// Black BG by default
+	// -- Some Defaults
 	static inline var DEF_STARS_MAX:Int = 200;
 	static inline var DEF_TRAVEL_ANGLE:Int = -180;
 	static inline var DEF_TRAVEL_SPEED:Float = 0.5;
 	
-	// ----
-	static inline var LAYER_1_SPEED:Float = 0.4;		// Speed modifiers from the base speed
-	static inline var LAYER_2_SPEED:Float = 1;	
+	// -- Star Layer Multipliers to STAR_SPEED
+	static inline var LAYER_1_SPEED:Float = 0.3;
+	static inline var LAYER_2_SPEED:Float = 1;
 	static inline var LAYER_3_SPEED:Float = 2.4;
-	
-	
+
 	// Every star should have a x,y float position
 	// Stars are categorized in layers
 	// FG stars move a bit faster and are brighter
 	// BG start move a bit slower and are darker
 	// Extra stars are another layer of stars that are extra bright
-	var ar_stars_fg:Array<SimpleVector>;
+	
 	var ar_stars_bg:Array<SimpleVector>;
-	var ar_start_extra:Array<SimpleVector>;	
+	var ar_stars_middle:Array<SimpleVector>;
+	var ar_stars_fg:Array<SimpleVector>;	
 		
 	// FX+
 	// Apply a bit of a random speed variation to the fg layer stars
 	var ar_fg_speedVariation:Array<Float>;
 	
-	// --------------------
-	// # Currently unused #
-	// Update the star layer every X time, to save some CPU
-	// var updateFrequency:Float = 0.3; 
-	// var timeCur:Float = 0;
-	// ---------------------
-	
 	// Dynamic render function for each star
-	var renderStarFN:Int->Int->Int->Void = null;
-	
-	// The angle which the stars are traveling in degrees
-	var currentAngle:Float;
-	var currentSpeed:Float;
+	var renderStarFN:Float->Float->Int->Void = null;
 	
 	// Calculated Vector for traveling of the stars
 	var dirX:Float;
 	var dirY:Float;
+	// Helper counter
+	var c:Int;
 	
-	// == USER SET ===========================
-	// --
+	// The angle which the stars are traveling in DEGREES (0-360)
+	public var STAR_ANGLE(default, set):Float;
+	
+	// The speed multiplier stars travel
+	public var STAR_SPEED(default, set):Float;
+	
 	// Whether or not to render with widepixels (2x1 normal pixels)
-	public var flag_widepixel(default, set):Bool;
-	// This will re-initialize the arrays, so avoid calling multiple times
-	public var numberOfStars(default, set):Int;
+	public var WIDE_PIXEL(default, set):Bool;
 	
-	// The actual colors of the stars
-	// You can also call setColors(...);
-	public var color_1:Int; // You can change colors1-3 in realtime
-	public var color_2:Int;
-	public var color_3:Int;
-	public var color_bg(default, set):Int;
+	// This will re-initialize the arrays, so avoid calling multiple times
+	public var NUMBER_OF_STARS(default, set):Int;
+	
+	// Colors for background and 3 stars, you can set it at anytime
+	public var COLORS(default, default):Array<Int>;
+	
+	
 	//---------------------------------------------------;
 
-	public function new(Width:Int = 0, Height:Int = 0)
+	public function new(Width:Int = 0, Height:Int = 0, NumberOfStars:Int = DEF_STARS_MAX)
 	{	
 		super();
 		
-		width = Width != 0 ? Width: FlxG.width;
-		height = Height != 0 ? Height: FlxG.height;
-		solid = false;
+		COLORS = [
+			0xFF000000,
+			Palette_DB32.COL[2],
+			Palette_DB32.COL[17],
+			Palette_DB32.COL[8]
+		];
 		
-		// Set the default paramers
-		color_1 = DEF_COLOR_1;
-		color_2 = DEF_COLOR_2;
-		color_3 = DEF_COLOR_3;
+		width = Width > 0 ? Width: FlxG.width;
+		height = Height > 0 ? Height: FlxG.height;
+		moves = false;
 		
-		setDirection(DEF_TRAVEL_ANGLE);
-		setSpeed(DEF_TRAVEL_SPEED);
-		
+		// --
+		makeGraphic(cast width, cast height, COLORS[0]);
+		// Init speeds and angles
+		STAR_ANGLE = DEF_TRAVEL_ANGLE;
+		// --
+		STAR_SPEED = DEF_TRAVEL_SPEED;
 		// These also call the setter functions:
-		flag_widepixel = false;
-		numberOfStars = DEF_STARS_MAX;
-		color_bg = DEF_COLOR_BG;	// This will create the graphic
+		WIDE_PIXEL = false;
+		// This will init the star objects as well
+		NUMBER_OF_STARS = NumberOfStars;
 	}//---------------------------------------------------;
 
 	/**
-	 * Set the starfield colors in an array, 
-	 * @param cols an Array with 4 colors, from DARKEST to BRIGHTEST
+	 * If you directly call COLORS[0], the buffer will not clear
+	 * Call this to set the bg color and clear the buffer.
+	 * @param	col New background color
 	 */
-	public function setColors(cols:Array<Int>, reverse:Bool = false)
+	public function setBGCOLOR(col:Int)
 	{
-		if (reverse) cols.reverse();
-		color_bg = cols[0];
-		color_1 = cols[1];
-		color_2 = cols[2];
-		color_3 = cols[3];
+		COLORS[0] = col;
+		FlxSpriteUtil.drawRect(this, 0, 0, width, height, col);
 	}//---------------------------------------------------;
-	
+
 	/**
-	 * Set the direction of the scrolling and the base speed modifier
+	 * Set the direction of the Stars in Degrees
 	 * @param	angl Angle in degrees
-	 * @param	spd  Speed modifier
 	 */
-	public function setDirection(angl:Float)
+	public function set_STAR_ANGLE(value:Float)
 	{
-		currentAngle = angl;
+		STAR_ANGLE = value;
 		
 		var toRads:Float = Math.PI / 180;
 		
-		dirX = Math.cos(currentAngle * toRads);
-		dirY = Math.sin(currentAngle * toRads);
-	
+		dirX = Math.cos(STAR_ANGLE * toRads);
+		dirY = Math.sin(STAR_ANGLE * toRads);
+		
+		return value;
 	}//---------------------------------------------------;
 
 	/**
-	 * Set the speed ratio of all star layers.
-	 * @param	spd A value from 0 to 64. ( 64 is too fast!, 1-3 is OK)
+	 * Star speed multiplier
+	 * @param	value
 	 */
-	public function setSpeed(spd:Float)
+	public function set_STAR_SPEED(value:Float)
 	{
-		currentSpeed = spd;
-	}//---------------------------------------------------;
-
-	// --
-	function set_color_bg(Value:Int):Int
-	{
-		// I am skipping same color check, because I might want to
-		// clear the screen.
-		// if (color_bg == Value) return Value;
-		
-		trace('Setting BG color to ($Value)');
-		
-		color_bg = Value;
-		makeGraphic(cast width, cast height, color_bg);
-		
-		return Value;
+		STAR_SPEED = value;
+		return value;
 	}//---------------------------------------------------;
 	
-	// --
-	// Call this after creating the object, and after
-	// setting the custom parameters
-	function set_numberOfStars(Value:Int):Int
+	/**
+	 * Reset the number of stars
+	 * @param	Value
+	 * @return
+	 */
+	function set_NUMBER_OF_STARS(Value:Int):Int
 	{
-		if (numberOfStars == Value) return Value;
+		if (NUMBER_OF_STARS == Value) return Value;
 		
-		trace('Setting number of stars to [$Value]');
-		numberOfStars = Value;
+		NUMBER_OF_STARS = Value;
 		
 		// Helpers, don't calculate ints every time
 		var intWidth:Int = Std.int(width);
@@ -187,25 +149,21 @@ class StarfieldSimple extends FlxSprite
 		
 		// Create the arrays to store the stars
 		ar_stars_bg = [];
+		ar_stars_middle = [];
 		ar_stars_fg = [];
-		ar_start_extra = [];
 		ar_fg_speedVariation = [];
 		
-		// Turns out, the graphics don't need to be clears, it's done automatically
-		// if (graphic != null) graphic.destroy();
-		// if (pixels != null) pixels.dispose();
-		
-		var numOfFgStars = Math.floor(numberOfStars * 0.65);
+		var numberOfMiddleStars = Math.floor(NUMBER_OF_STARS * 0.86);
 		var r:SimpleVector;
 		
 		// -- Push the stars in the arrays
-		for (i in 0...numberOfStars)
+		for (i in 0...NUMBER_OF_STARS)
 		{
 			r = new SimpleVector(FlxG.random.int(0, intWidth), FlxG.random.int(0, intHeight));
 			
-			if (i < numOfFgStars)
+			if (i < numberOfMiddleStars)
 			{
-				ar_stars_fg.push(r);
+				ar_stars_middle.push(r);
 				ar_fg_speedVariation.push(FlxG.random.float(0.75, 1.25));
 			}else
 			{
@@ -214,80 +172,111 @@ class StarfieldSimple extends FlxSprite
 		}
 		
 		// Create some unique extra bright stars
-		var numberOfExtraStars:Int = Std.int(numberOfStars * 0.05);
-		for (i in 0...numberOfExtraStars)
+		var numberOfFGStars:Int = Std.int(NUMBER_OF_STARS * 0.05);
+		for (i in 0...numberOfFGStars)
 		{
 			r = new SimpleVector(FlxG.random.int(0, intWidth), FlxG.random.int(8, intHeight - 8));
-			ar_start_extra.push(r);
+			ar_stars_fg.push(r);
 		}
 		
 		return Value;
 	}//---------------------------------------------------;
 	
 	
-	// --
-	function set_flag_widepixel(val:Bool):Bool
+	/**
+	 * Emulate an aesthetic used in old computers like the amstrad CPC
+	 * @param	val
+	 * @return
+	 */
+	function set_WIDE_PIXEL(val:Bool):Bool
 	{
-		flag_widepixel = val;
+		WIDE_PIXEL = val;
 		
-		if (flag_widepixel)
-		{
-			renderStarFN = renderStar_widepixel;
-		}else
-		{
-			renderStarFN = renderStar_normal;
-		}
+		// I am clearing the buffer in case this is called in runtime
+		setBGCOLOR(COLORS[0]);
 		
 		return val;
 	}//---------------------------------------------------;
 	
 	
-	// --
+	/**
+	 * Update the stars
+	 * @param	elapsed
+	 */
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
-			
+	
 		pixels.lock();
 		
-		updateStarArray(ar_stars_bg, LAYER_1_SPEED * currentSpeed, color_1);
-		updateStarArrayFG(ar_stars_fg, LAYER_2_SPEED * currentSpeed, color_2);
-		updateStarArray(ar_start_extra, LAYER_3_SPEED * currentSpeed, color_3);
+		// Process::
+		// --
+		// Draw the background stars
+		// Draw the main stars in variable speeds
+		// Draw the foreground stars
 		
+		if (WIDE_PIXEL)
+		{
+			updateStarArrayRand(ar_stars_bg, LAYER_1_SPEED * STAR_SPEED, COLORS[1], renderStar_Wide);
+			updateStarArrayVarSpeed(ar_stars_middle, LAYER_2_SPEED * STAR_SPEED, COLORS[2], renderStar_Wide);
+		}
+		else
+		{
+			updateStarArrayRand(ar_stars_bg, LAYER_1_SPEED * STAR_SPEED, COLORS[1], renderStar_Normal);
+			updateStarArrayVarSpeed(ar_stars_middle, LAYER_2_SPEED * STAR_SPEED, COLORS[2], renderStar_Normal);
+		}
+		
+		// It's the same size for widepixel and normal pixel
+		updateStarArray(ar_stars_fg, LAYER_3_SPEED * STAR_SPEED, COLORS[3], renderStar_Big);
+
 		pixels.unlock();
 		dirty = true;
-			
 	}//---------------------------------------------------;
+		// --
+	function updateStarArrayRand(ar:Array<SimpleVector>, spd:Float, color:Int, drawFN:Int->Int->Int->Void)
+	{
+		c = ar.length;
+		while (c-->0){
+			// draw over the old position, it's faster than clearing the buffer
+			drawFN(Math.round(ar[c].x), Math.round(ar[c].y), COLORS[0]);
+			ar[c].x += dirX * spd;
+			ar[c].y += dirY * spd;
+			checkbounds(ar[c]);
+			if (Math.random() < 0.4) // Shimmer
+				drawFN(Math.round(ar[c].x), Math.round(ar[c].y), color);
+		}
+	}//---------------------------------------------------;	
 	
 	// --
-	// Avoid redudancy
-	inline function updateStarArray(ar:Array<SimpleVector>, speedMult:Float, color:Int)
+	function updateStarArray(ar:Array<SimpleVector>, spd:Float, color:Int, drawFN:Int->Int->Int->Void)
 	{
-		for (c in 0...ar.length)
-		{
-			// draw over the old position
-			renderStarFN(Math.round(ar[c].x), Math.round(ar[c].y), color_bg);
-			ar[c].x += dirX * speedMult;
-			ar[c].y += dirY * speedMult;
+		c = ar.length;
+		while (c-->0){
+			// draw over the old position, it's faster than clearing the buffer
+			drawFN(Math.round(ar[c].x), Math.round(ar[c].y), COLORS[0]);
+			ar[c].x += dirX * spd;
+			ar[c].y += dirY * spd;
 			checkbounds(ar[c]);
-			renderStarFN(Math.round(ar[c].x), Math.round(ar[c].y) , color);
+			drawFN(Math.round(ar[c].x), Math.round(ar[c].y), color);
 		}
 	}//---------------------------------------------------;	
 	
 	// --
 	// It's a bit faster to have a separate function for rendering with speed variation
-	inline function updateStarArrayFG(ar:Array<SimpleVector>, speedMult:Float, color:Int)
+	function updateStarArrayVarSpeed(ar:Array<SimpleVector>, spd:Float, color:Int, drawFN:Int->Int->Int->Void)
 	{
-		for (c in 0...ar.length)
-		{
-			// draw over the old position
-			renderStarFN(Math.round(ar[c].x), Math.round(ar[c].y), color_bg);
-			ar[c].x += dirX * speedMult * ar_fg_speedVariation[c];
-			ar[c].y += dirY * speedMult * ar_fg_speedVariation[c];
+		c = ar.length;
+		while (c-->0){
+			// draw over the old position, it's faster than clearing the buffer
+			drawFN(Math.round(ar[c].x),Math.round(ar[c].y), COLORS[0]);
+			ar[c].x += dirX * spd * ar_fg_speedVariation[c];
+			ar[c].y += dirY * spd * ar_fg_speedVariation[c];
 			checkbounds(ar[c]);
-			renderStarFN(Math.round(ar[c].x), Math.round(ar[c].y) , color);
+			drawFN(Math.round(ar[c].x),Math.round(ar[c].y), color);
 		}
 	}//---------------------------------------------------;
 	
+	// --
 	inline function checkbounds(star:SimpleVector)
 	{
 		if (star.x < 0) star.x = width;
@@ -298,31 +287,34 @@ class StarfieldSimple extends FlxSprite
 	
 	// # Speed up calls with virtual functions
 	// -- Call this when pixels are locked.
-	inline function renderStar_widepixel(x:Int, y:Int, col:Int)
+	function renderStar_Wide(x:Int, y:Int, col:Int)
 	{
 		pixels.setPixel32(x, y, col);
 		pixels.setPixel32(x + 1, y, col);
 	}//---------------------------------------------------;
 	// --
-	inline function renderStar_normal(x:Int, y:Int, col:Int)
+	function renderStar_Normal(x:Int, y:Int, col:Int)
 	{
 		pixels.setPixel32(x, y, col);
 	}//---------------------------------------------------;	
 	// --
-	inline function renderStar_Big(x:Int, y:Int, col:Int)
+	function renderStar_Big(x:Int, y:Int, col:Int)
 	{
 		pixels.setPixel32(x, y, col);
 		pixels.setPixel32(x + 1, y, col);
 		pixels.setPixel32(x, y + 1, col);
 		pixels.setPixel32(x + 1, y + 1, col);
 	}//---------------------------------------------------;
+		
+	
+	
 	// --
 	override public function destroy():Void 
 	{
 		super.destroy();
 		ar_stars_bg = null;
+		ar_stars_middle = null;
 		ar_stars_fg = null;
-		ar_start_extra = null;
 		ar_fg_speedVariation = null;
 	}//---------------------------------------------------;
 	

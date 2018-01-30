@@ -1,5 +1,5 @@
 /**--------------------------------------------------------
- * SequencerHaxe.hx
+ * Sequencer.hx
  * @author: johndimi, <johndimi@outlook.com> @jondmt
  * --------------------------------------------------------
  * @Description
@@ -13,6 +13,7 @@
  *********************************************************/
 package djFlixel.tool;
 
+import flixel.tweens.FlxTween;
 import flixel.util.FlxTimer;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
@@ -21,49 +22,86 @@ import flixel.util.FlxDestroyUtil.IFlxDestroyable;
  * ----------------
  * Using the FlxTimer,
  * @note use Seconds for time
+ * 
+ * Example:
+ * 	var s = new Sequencer();
+ * 		s.callback = function(s:Int){
+ * 		switch(s){ default: //--
+ * 			case 1: 
+ * 				// do things
+ * 				s.next(0.4);
+ *			case 2:
+ * 				// do things
+ * 				s.next(1.4);
+ *		}		
+ * 	});
  */
 class Sequencer implements IFlxDestroyable
 {
 	// The callback to call when the timer triggers
 	public var callback:Int->Void = null;
-	
-	var timer:FlxTimer = null;	
+	// --
+	public var timer(default, null):FlxTimer = null;
+	// --
 	var currentStep:Int = 0;
+	
+	// Useful flag, if true will not callback anything
+	var isCancelled:Bool = false;
 	//----------------------------------------------------;
+	/**
+	 * 
+	 * @param	callback_ The function handling the steps
+	 */
 	public function new(?callback_:Int->Void) 
 	{
 		callback = callback_;
 		currentStep = 0;
 		timer = new FlxTimer();
 	}//---------------------------------------------------;
+	
+	// -- Like stop but also prevents any more callbacks from ongoing steps to being called
+	public function cancel()
+	{
+		stop();
+		isCancelled = true;
+	}//---------------------------------------------------;
+	
+	// --
 	public function stop()
 	{
 		timer.finished = true;
 		timer.active = false;
 		// faster than calling cancel();
 	}//---------------------------------------------------;
+	@:deprecated("In Development")
 	public function doXTimes()
 	{
-		// LOG.log("In Development");
 	}//---------------------------------------------------;
-	//-- 
-	// Call this when you want to quickly call a waiting seq.next(XXXX) timer
-	// e.g. A timer on a menu that is set to 5 seconds, but a keystroke 
-	//      calls this function to skip waiting.
+	/**
+	 * HELPER: Useful to attach to FlxTimer callbacks
+	 * @param	t
+	 */
 	public function resolveNextAndWait(?t:FlxTimer)
 	{
 		stop(); 
 		callback(currentStep);
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Stop and reset to 0, but doesn't start over
+	 */
 	public function reset()
 	{
 		stop();
 		currentStep = 0;
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Proceed to the next step
+	 * @param	delay Call the next action in X seconds
+	 */
 	public function next(?delay:Float)
 	{
+		if (isCancelled) return;
+		
 		currentStep++;
 		
 		// If somehow the timer is running, kill it.
@@ -76,16 +114,36 @@ class Sequencer implements IFlxDestroyable
 			callback(currentStep);
 		}
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Forces the sequencer to stop and call a specified step
+	 * @param	step
+	 */
 	public function forceTo(step:Int)
 	{
+		if (isCancelled) return;
+		
 		reset();
 		currentStep = step;
 		callback(currentStep);
 	}//---------------------------------------------------;
-	// --
+	
+	/**
+	 * Quick use on a void callback
+	 */
 	public function nextF()
 	{
+		if (isCancelled) return;
+		next();
+	}//---------------------------------------------------;
+		
+	/**
+	 * Quick use on a tween callback
+	 * @param e
+	 */
+	public function nextT(e:FlxTween)
+	{
+		if (isCancelled) return;
+		
 		next();
 	}//---------------------------------------------------;
 	
@@ -93,6 +151,7 @@ class Sequencer implements IFlxDestroyable
 	public function destroy():Void 
 	{
 		if (timer != null) {
+			timer.cancel();
 			timer.destroy();
 			timer = null;
 		}

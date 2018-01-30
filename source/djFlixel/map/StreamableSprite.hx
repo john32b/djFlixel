@@ -31,7 +31,7 @@ class StreamableSprite extends FlxSprite
 	
 	// When going offscreen, use this much padding to trigger a kill
 	// Do not use negative values!
-	public var offscreen_kill_pad:Int;
+	public var offscreen_kill_pad:Int = 0;
 
 	// Unused for now
 	// public var flag_auto_kill_when_offscreen:Bool;

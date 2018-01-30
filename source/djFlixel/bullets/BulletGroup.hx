@@ -1,5 +1,6 @@
 package djFlixel.bullets;
 
+import djFlixel.GroupBuffered;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
@@ -21,7 +22,6 @@ typedef _BulletJsonParams = {
 }
 
 
-
 /**
  * Bullet Group managing Generic bullets
  * ------------------------------------------
@@ -30,25 +30,13 @@ typedef _BulletJsonParams = {
  *  + Supports one spriteSheet and one class
  * 
  */
-class BulletGroup extends FlxTypedGroup<FlxSprite>
+class BulletGroup extends FlxTypedGroup<Bullet>
 {
 	
-	// Keep this many particles in a pool for quick retrieval
-	var BUFFER_LEN:Int = 16;
-
 	// The node object describing the particles
 	var info:_BulletJsonParams;
-	
-	// Hold the number of active bullets
-	var activeBullets:Int;
-	
-	// Last time bullets were checked for offscreen
-	var checkTimer:Float;
-	
-	// Every x seconds, do an offscreen cleanup. 
-	// this is to reduce cpu usage. Bullets don't need to be checked every frame
-	var CHECK_FREQUENCY:Float = 1.5;
-	
+	var minSize:Int;
+
 	//====================================================;
 
 	/**
@@ -59,50 +47,47 @@ class BulletGroup extends FlxTypedGroup<FlxSprite>
 	public function new(bulletInfoNode:String, buffer:Int = 16 )
 	{
 		super();
-		
 		// maxSize = 0; Growing style.
-		
-		BUFFER_LEN = buffer;
+		minSize = buffer;
+	
 		info = Reflect.getProperty(Reg.JSON, bulletInfoNode);
 		
 		// Create some buffer particles
-		for (i in 0...BUFFER_LEN)
+		for (i in 0...minSize)
 		{
 			var b = _createNewBullet();
 				b.kill();
 			add(b);
 		}
 		
-		activeBullets = 0;
-		checkTimer = 0;
+		// NEW: No offscreen killer.
+		
 	}//---------------------------------------------------;
 	
 	/**
 	 * Fire a bullet from this coordinates to X
-	 * @param	type The animation name as defined on the params.json
+	 * @param	type The animation name as defined in the parameters object
 	 * @param	x starting point, centered
 	 * @param	y starting point, centered
 	 */
-	public function fireBulletAt(type:String, x:Float, y:Float, o:FlxSprite, speed:Float = 50)
+	public function fireBulletAt(type:String, x:Float, y:Float, o:FlxSprite, speed:Float = 50, TTL:Float = 1)
 	{
-		var b = recycle(FlxSprite, _createNewBullet);
+		var b = recycle(Bullet, _createNewBullet);
 		
 		// Put centered.
 		b.setPosition(x - (b.width / 2) , y - (b.height / 2));
 		b.animation.play(type, true);
+		b.start(TTL);
 		
-		//	b.velocity.copyFrom(FlxVelocity.velocityFromAngle(FlxG.random.float(0, 360), 40));
+		//b.velocity.copyFrom(FlxVelocity.velocityFromAngle(FlxG.random.float(0, 360), 40));
 		FlxVelocity.moveTowardsObject(b, o, speed);
-		
-		activeBullets++;
 	}//---------------------------------------------------;	
-	
 	
 	// --
 	// Factory generator for bullets
-	function _createNewBullet():FlxSprite
+	function _createNewBullet():Bullet
 	{
-		var b = new FlxSprite();
+		var b = new Bullet();
 		b.loadGraphic(info.sheet, true, info.width, info.height);
 		b.setSize(2, 2);
 		b.centerOffsets();
@@ -113,29 +98,17 @@ class BulletGroup extends FlxTypedGroup<FlxSprite>
 	}//---------------------------------------------------;
 	
 	
-	// --
-	override public function update(elapsed:Float):Void 
+	// -- Destroy all sprites exceeding the minSize
+	//    The rest are killed()
+	public function reset()
 	{
-		super.update(elapsed);
+		for (i in this) i.kill();
 		
-		if (activeBullets > 0)
-		{
-			checkTimer += FlxG.elapsed;
-			if (checkTimer >= CHECK_FREQUENCY)
-			{
-				checkTimer = 0;
-				
-				forEachAlive(function(bullet:FlxSprite) {
-					if (Game.map.spriteIsOffScreen(bullet)) {
-						activeBullets--;
-						bullet.kill();
-					}
-				});
-			}
+		if (minSize > 0 && length > minSize) {
+			var delta:Int = length - minSize;
+			for (i in 0...delta) { members.pop().destroy(); }
+			length = members.length;
 		}
-		
 	}//---------------------------------------------------;
-
 	
-
 }// --

@@ -5,7 +5,7 @@ import flixel.addons.api.FlxKongregate;
 // Kongregate API
 //
 // #Override this class
-class ApiKongregateGeneric extends ApiEmpty
+class ApiKongregateGeneric extends ApiOffline
 {
 	
 	// Override on child

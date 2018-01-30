@@ -1,5 +1,5 @@
 /**--------------------------------------------------------
- * classname.hx
+ * SAVE.hx
  * @author: johndimi, <johndimi@outlook.com> , @jondmt
  * --------------------------------------------------------
  * @Description
@@ -29,19 +29,16 @@
  
 package djFlixel;
 import flixel.util.FlxSave;
+import haxe.Json;
 
 
-/*
- * slot_0 = settingsslot_1._exists = true, false
- */
-	
 class SAVE
 {
 
 	// -- The FlashAPI needs a unique ID for the savegame
 	static var FLASH_SAVE_ID:String;	
 	// -- How many SAVESLOTS this game will use ( +1 settings slot which is permanent )
-	static inline var SAVE_SLOTS:Int = 1;
+	static var SAVE_SLOTS:Int = 1;
 	// -- Prefix for the slot fields inside the save.data object
 	static inline var PREFIX_SLOT:String = 'slot_';
 	
@@ -53,14 +50,23 @@ class SAVE
 	static var currentData:Dynamic;
 	//---------------------------------------------------;
 	// --
-	public static function init(saveName:String)
+	/**
+	 * 
+	 * @param	saveName Unique game ID to associate with the game object
+	 * @param	maxUserSlots
+	 */
+	public static function init(saveName:String, maxUserSlots:Int = 1)
 	{
 		FLASH_SAVE_ID = "djflx" + saveName;
+		SAVE_SLOTS = maxUserSlots; if (SAVE_SLOTS > 9) SAVE_SLOTS = 9;
 		saveObj = new FlxSave();
 		saveObj.bind(FLASH_SAVE_ID);
-		setSlot(0);
+		setSlot(0);             
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Set the current active slot for saving
+	 * @param	num The number of slot to set
+	 */
 	public static function setSlot(num:Int):Void
 	{
 		if (currentSlot == num) return;
@@ -76,53 +82,85 @@ class SAVE
 		if (Reflect.hasField(saveObj.data, '$PREFIX_SLOT$num') == false)
 		{
 			trace('Info: Creating Save Slot [$num]');
-			Reflect.setField(saveObj.data, '$PREFIX_SLOT$num', { } );
+			Reflect.setProperty(saveObj.data, '$PREFIX_SLOT$num', { } );
 		}
 		
 		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Save to the active save slot
+	 * @param	key The key of the save
+	 * @param	data The save data
+	 */
 	public static function save(key:String, data:Dynamic)
 	{
 		Reflect.setField(currentData, key, data);
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Load from the active save slot, returns Null if nothing is found
+	 * @param	key The key to load from
+	 * @return 
+	 */
 	public static function load(key:String):Dynamic
 	{
 		return Reflect.getProperty(currentData, key);
 	}//---------------------------------------------------;
-	// --
+	/**
+	 * Check from the active save slot
+	 * @param	key The Key to check
+	 * @return
+	 */
 	public static function exists(key:String):Bool
 	{
 		return Reflect.hasField(currentData, key);
 	}//---------------------------------------------------;
-	
-	// --
-	// Call this after a bulk save to save for sure?
+	/**
+	 * Call this after a bulk save to force the data to be written
+	 * REQUIRED FOR NON FLASH TARGETS ! !
+	 */
 	public static function flush():Void
 	{
 		saveObj.flush();
 	}//---------------------------------------------------;
 	
-	// --
-	// Completely delete the save game,
-	// This will delete both the game data and the settings
-	// Use something else if you want to delete just the save game.
+	/**
+	 * Completely delete the save game,
+	 * This will delete both the game data and the settings
+	 * Use something else if you want to delete just the save game.
+	 */
 	public static function deleteSave():Void
 	{	
 		saveObj.erase();
 		saveObj.flush();
 	}//---------------------------------------------------;
-	// -- Delete a save slot entirely.
+	/**
+	 * Delete a save slot entirely.
+	 * @param	num The slot no to delete
+	 */
 	public static function deleteSlot(num:Int)
 	{
-		Reflect.setField(saveObj.data, '$PREFIX_SLOT$num', { } );
+		Reflect.setProperty(saveObj.data, '$PREFIX_SLOT$num', { } );
+		currentData = Reflect.getProperty(saveObj.data, '$PREFIX_SLOT$num');
 	}//---------------------------------------------------;
-		
-	// -- GAME SPECIFIC LOGIC -- //
+	/**
+	 * Save a simple object as Stringified JSON to the active save slot
+	 * @param	key Key of the save id
+	 * @param	obj
+	 */
+	public static function saveJsonStr(key:String, obj:Dynamic)
+	{
+		save(key, Json.stringify(obj));
+	}//---------------------------------------------------;
 	
-	// - savegame() -> call all game objects to save
-	// - loadgame() -> call all game objects to load??
-	
+	/**
+	 * Load a stringified JSOn string from active slot and convert it to an object
+	 * @param	(key) Key of the save string
+	 * @return
+	 */
+	public static function loadJsonStr(key:String):Dynamic
+	{
+		if (!exists(key)) return null;
+		return Json.parse(load(key));
+	}//---------------------------------------------------;
 	
 }// --

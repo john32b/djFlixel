@@ -10,6 +10,7 @@ package djFlixel.gfx;
  */
  class Palette_DB32
 {
+	// In the order they are in Aseprite
 	public static var COL:Array<Int> = [
 		0xff000000, 0xff222034,
 		0xff45283c, 0xff663931, 0xff8f563b, 0xffdf7126, 0xffd9a066, 0xffeec39a,
@@ -123,7 +124,7 @@ package djFlixel.gfx;
 	}//---------------------------------------------------;
 	
 	// --
-	public inline static function getRandomColor():Int
+	public static function random():Int
 	{
 		return COL[Std.random(COL.length)];
 	}//---------------------------------------------------;

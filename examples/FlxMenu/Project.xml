@@ -1,0 +1,63 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<!-- APP ---->
+	<app title="djFlixel FlxMenu Demo" file="djflx_menudemo" main="flxmenudemo.Main" version="0.1.0" company="johndimi" />
+	<app preloader="flixel.system.FlxBasePreloader"/>
+	
+	<!-- WINDOW SETTINGS- --->
+	<!--These window settings apply to all targets-->
+	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
+	
+	<!-- PATHS ----------------->
+	<classpath name="source" />
+	<classpath name="../common" />
+	
+	<set name="BUILD_DIR" value="build/" />
+
+	<!--Own project assets-->
+	<assets path="assets"/>
+	
+	<!--Graphics and Data-->
+	<assets path="../assets" rename="assets" include="*.png"/>
+	
+	<!-- SOUNDS -->
+	<assets path="../assets/sounds" rename="sounds" inlude="*.mp3" if="flash"/>
+		
+	<!-- FONTS -->
+	<assets path="../assets/fonts">
+		<font path="mozart.ttf" id="fonts/mozart"/>
+		<font path="pixelarial.ttf" id="fonts/pixelarial"/>
+		<font path="blocktopia.ttf" id="fonts/blocktopia"/>
+	</assets>	
+	
+	<!-- DJFLIXEL -------------->
+
+	<set name="DJFLX_ICONS_8"/> 
+	<set name="DJFLX_ICONS_12"/> 
+	<set name="DJFLX_ICONS_16"/> 
+	<set name="DJFLX_ICONS_24"/>
+
+	<haxedef name="EXTERNAL_LOAD" if="flash debug"/>
+
+	<!-- FLIXEL ---------------->
+	
+	<section if="html5">
+		<set name="canvas"/> <haxedef name="canvas"/>
+	</section>
+	
+	<section if="desktop">
+		<haxedef name="FLX_NO_SOUND_SYSTEM"/>
+	</section>
+	
+	<set name="next" unless="neko"/>
+	
+	<!-- LIBRARIES ------------->
+	<haxelib name="djFlixel"/>
+	<haxelib name="flixel"/>
+	
+	<!-- Note: 	Many common defines are being declared in the "djflixel/source/include.xml" file
+				This is to save space and streamline the project.xml file a bit -->
+
+</project>

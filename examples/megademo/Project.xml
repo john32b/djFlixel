@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<!-- APP ---->
+	<app title="djFlixel MegaDemo" file="djflx_megaDemo" main="Main" version="0.1.0" company="johndimi" />
+	
+	<app preloader="flixel.system.FlxBasePreloader"/>
+	
+	<!-- WINDOW SETTINGS- --->
+	
+	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
+	
+	<!-- PATHS --------------------------------->
+	
+	<set name="BUILD_DIR" value="build/" />
+	
+	<!-- Source Files ------>
+	<classpath name="source" />
+	<classpath name="../common" />
+	
+	<!-- Load these external projects :: -->
+	<!-- Special occasion hack, let's me include multiple master `params.json` files -->
+	<classpath name="../GuiDemos/source" />
+	<assets path="../GuiDemos/assets/data">
+		<text path="params.json" id="guidemo.json"/>
+	</assets>
+	<classpath name="../FxDemos/source" />
+	<assets path="../FxDemos/assets/data">
+		<text path="params.json" id="fxdemo.json"/>
+	</assets>
+	<classpath name="../FlxMenu/source" />
+	<assets path="../FlxMenu/assets/data">
+		<text path="params.json" id="flxmenu.json"/>
+	</assets>
+	<!--------------------------------------------->
+	
+	<!--Own project assets-->
+	<assets path="assets"/>
+	
+	<!--Graphics and Data-->
+	<assets path="../assets" rename="assets" include="*.png"/>
+	
+	<!-- SOUNDS -->
+	<assets path="../assets/sounds" rename="sounds" inlude="*.mp3" if="flash"/>
+	<!--No sounds at desktop targets currently-->
+	
+	<!-- MUSIC -->
+	<assets path="../assets/music" inlude="*.mp3" if="flash">
+		<music path="track1.mp3" id="track1"/>
+	</assets>
+	
+	<!-- FONTS -->
+	<assets path="../assets/fonts">
+		<font path="mozart.ttf" id="fonts/mozart"/>
+		<font path="blocktopia.ttf" id="fonts/blocktopia"/>
+		<font path="pixelarial.ttf" id="fonts/pixelarial"/>
+	</assets>
+	
+	
+	<!-- DJFLIXEL -------------->
+	
+	<!--Notify the external demos that they are build for the megademo-->
+	<haxedef name="MEGADEMO" />
+
+	<set name="DJFLX_ICONS_8"/>
+	<set name="DJFLX_ICONS_12"/>
+	<set name="DJFLX_ICONS_16"/> 
+	<set name="DJFLX_ICONS_24"/>
+	
+	<set name="DJFLX_UIBTN_24"/>
+	<set name="DJFLX_UIBTN_32"/>
+	
+	<haxedef name="EXTERNAL_LOAD" if="flash debug"/>
+
+	<!-- FLIXEL ---------------->
+	
+	<section if="desktop">
+		<haxedef name="FLX_NO_SOUND_SYSTEM"/> <!-- I don't have any .ogg sounds ready :-(, so temporarily off -->
+	</section>
+	
+	<section if="html5">
+		<set name="canvas"/> <haxedef name="canvas"/>
+	</section>
+	
+	<!--Neko doesn't work with `next`, perhaps CPP too, but I haven't tested-->
+	<set name="next" unless="neko"/> 
+	
+	<!-- LIBRARIES ------------->
+	<haxelib name="djFlixel"/>s
+	<haxelib name="flixel"/>
+	
+	<!-- Note: 	Many common defines are being declared in the "djflixel/source/include.xml" file
+				This is to save space and streamline the project.xml file a bit -->
+
+</project>

@@ -8,6 +8,7 @@ import flixel.util.FlxArrayUtil;
 import flixel.util.FlxTimer;
 
 
+// NOTE: Really immature, Needs updating
 
 /**
  * Particle Group for Generic particles
@@ -20,7 +21,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 {
 	
 	// Keep this many particles in a pool for quick retrieval
-	var BUFFER_LEN:Int = 4;
+	var BUFFER_LEN:Int = 6;
 
 	// The node object describing the particles
 	var info:_ParticleJsonParams;
@@ -35,7 +36,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	 * @param	particleInfoNode The node name in the JSON params file
 	 * @param	buffer Options, create this many particles for recycling
 	 */
-	public function new(particleInfoNode:String, buffer:Int = -1)
+	public function new(InfoNode:Dynamic, buffer:Int = -1)
 	{
 		super();
 
@@ -45,7 +46,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			BUFFER_LEN = buffer;
 		}
 		
-		info = Reflect.getProperty(Reg.JSON, particleInfoNode);
+		info = InfoNode;
 		
 		// Create some buffer particles
 		for (i in 0...BUFFER_LEN)
@@ -55,8 +56,8 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 			add(p);
 		}
 
-		trace("Created particlegroup +++");
-		trace("Length = ", length);
+		// trace("Created particlegroup +++");
+		// trace("Length = ", length);
 		
 		timers = [];
 		
@@ -86,6 +87,7 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 
 	
 	/**
+	 * Coordinates are NOT centered
 	 * 
 	 * @param	x World Coords
 	 * @param	y World Coords
@@ -98,32 +100,48 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	public function createManyRandomAt(x:Float, y:Float, radius:Float, type:String, total:Int, 
 										freq:Float = 0.14, ?soundID:String, ?onComplete:Void->Void)
 	{
-		var timer:FlxTimer = new FlxTimer();
-		timers.push(timer);
-		timer.start(freq, function(_) {
-			createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
-			if (soundID != null) SND.play(soundID);
-			if (timer.loopsLeft == 0) {
-				if (onComplete != null) onComplete();
-			}
-		},total - 1);
+		if (total > 1) {
+			var timer:FlxTimer = new FlxTimer();
+			timers.push(timer);
+			timer.start(freq, function(_) {
+				createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+				if (soundID != null) SND.play(soundID);
+				if (timer.loopsLeft == 0) {
+					timers.remove(timer);
+					if (onComplete != null) onComplete();
+				}
+			},total - 1);
+		}
 		// The first particle should start now
 		createOneAt(x + FlxG.random.float(radius), y + FlxG.random.float(radius), type, false);
+		if (soundID != null) SND.play(soundID);
 	}//---------------------------------------------------;
 	
 
 	// --
+	// Popup effect for one particle. e.g. Score popup.
+	// TODO:
+	// THIS IS NOT GENERALIZED. I NEED TO FIX THIS.
 	public function popup(x:Float, y:Float, frame:Int, scale:Float = 1)
 	{
 		var p = createOneAt(x, y, null, true);
-		p.velocity.set(0, Reg.JSON._popup.speed);
+		p.velocity.set(0, FLS.JSON._popup.speed);
 		p.animation.frameIndex = frame;
 		p.scale.set(scale, scale);
 		var timer:FlxTimer = new FlxTimer();
-		timer.start(Reg.JSON._popup.timer1, function(_) {
+		timers.push(timer);
+		timer.start(FLS.JSON._popup.timer1, function(_) {
 			p.velocity.set(0, 0);
-			FlxFlicker.flicker(p, Reg.JSON._popup.timer2, 0.03, true, true, function(_) { p.kill(); p.scale.set(1, 1); } );
-		});
+			timers.remove(timer);
+			FlxFlicker.flicker(p, FLS.JSON._popup.timer2, 0.04, true, true, function(_) { 
+				if (p == null || !p.exists) {
+					trace("warning: Popup callbacks to a dead sprite. Cancelled");
+					return;
+				}
+				p.kill();
+				p.scale.set(1, 1); 
+			});// end flicker callback
+		});// end timer callback
 	}//---------------------------------------------------;
 	
 	
@@ -161,22 +179,30 @@ class ParticlesGroup extends FlxTypedGroup<ParticleGeneric>
 	 */
 	public function reset():Void 
 	{
+		trace(" - Resetting particles Group - ");
 		for (i in timers) {
-			i.destroy();
+			i.cancel();
 			i = null;
 		}
 		timers = [];
 		
 		for (b in this) {
+			// FlxFlicker.stopFlickering(b);
 			b.kill();
 		}
 		
-		// Free up some memory
-		// Clear objects exceeding target buffer length.
+		// Destroy any objects exceeding buffer length
 		if (length > BUFFER_LEN) {
-			members.splice(BUFFER_LEN, length);
-			length = BUFFER_LEN;
+			var delta:Int = length - BUFFER_LEN;
+			for (i in 0...delta) { members.pop().destroy(); }
+			length = members.length;
 		}
+	}//---------------------------------------------------;
+	
+	//--
+	public function pauseTimers(on:Bool = true)
+	{
+		for (i in timers) if (i != null) i.active = !on;
 	}//---------------------------------------------------;
 	
 	

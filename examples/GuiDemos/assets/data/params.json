@@ -1,0 +1,160 @@
+{
+	"sys" : {
+		"NAME" : "guiDemos",
+		"VERSION" : "0.1",
+		"ANTIALIASING" : false,
+		"FULLSCREEN" : false,
+		"VOLUME" : 0.6
+	},
+	
+	"soundFiles":[
+		{"file":"short1", "vol":0.7},
+		{"file":"short2", "vol":0.7},
+		{"id":"c_tick", "file":"cursor_tick" },
+		{"id":"c_sel",  "file":"cursor_high" },
+		{"id":"c_back", "file":"cursor_low" },
+		{"id":"c_err",  "file":"cursor_error" }
+	],
+	
+	
+	"COMMON":{
+		"infoBox":{
+			"colorBG":"@DB32[0]","colorText":"@DB32[22]",
+			"colorT1":"@DB32[19]","colorT2":"@DB32[8]",
+			"padOut":8
+		},
+		"footer":{
+			"align":"left-top","pad":-1
+		}
+	},
+	
+	
+	"State_Main": {
+		
+		"scroller":
+		{	
+			"colorA" : "0xFF111111", 
+			"colorB" : "0xFF222222", 
+			"x" : -0.4, "y" : 0.6, "bg" : 2
+		},
+		
+		"infoText" : "Some Demos from objects in the $djflixel.gui$ package.",
+		
+		"menu" : { "x":64, "y":55 ,
+			"style" : {
+				"color_accent" 	: "@DB32[18]",
+				"color_focused" : "@A16[8]",
+				"color_border"  : "@A16[3]",
+				"color" : "@A16[2]",
+				"fontSize":16
+			},
+			"header" : {
+				"deco_line" : 3
+			}
+		}
+	},
+	
+	
+	
+	"State_FlxAutoText" : {
+		"colorBG" : "@DB32[14]",
+		"infoText":"$gui/FlxAutoText.hx$ example. Autotypes a string of text, support inline $tags$ to add pauses, speed change and more.\nPress #[ESC]# or #[START]# to go back.",
+		"contText" : "Press #[K]# or #[click]# to continue.",
+		
+		"x" : 64, "y" : 94, "width" : 170, "maxLines" : 4,
+		"text" : "(c40)FlxAutotext(f=hello)...\nVersatile autotype system with a simple tagging system, (c50)Change the (c3)speed (c20)on the fly.\nAdd (w4)Pauses,(w4)(c20)Autocalculate linebreaks, overflow management with pages, carrier sprites and more.(w0) ",
+		"carrier" : "_",	
+		"style" : {
+			"color":"@DB32[20]",
+			"color_border":"@DB32[1]",
+			"border_size":2
+		}
+	},
+	
+	
+	"State_PanelPop" : {
+		"yoffset": -16,
+		"size" : {
+			"w0" : 64, "w1" : 200,
+			"h0" : 64, "h1" : 128
+		},
+		"updateTick" : 0.12,
+		"colorBG" : "@DB32[2]",
+		"infoText" : "$gui/PanelPop.hx$ example, a panel box with customizable borders that opens with an animation\nPress #[K]# or #[click]# to create a random panel,\n#[ESC]# to go back."
+		
+	},
+	
+	"State_ToastTest" : {
+		"scroller": {
+			"colorA":"@DB32[1]",
+			"colorB":"@DB32[2]",
+			"x":1.5,"y":0,"bg":3
+		},
+		"colorText" : "@DB32[14]",
+		"colorBack" : "@DB32[21]",
+		"infoText" : "$gui/Toast.hx$ example, Simple non-modal notification that slides into the screen from the edges and then auto-hides. \nPRESS #[K]# or #[click]# to fire a toast notification,\nPress #[ESC]# to go back.",
+		"MSG" : [
+			"Hello world.",
+			"Curreently Supports $TWO$ color #TAGS#",
+			"Variable box height, depending on how long the text string is, in this case the box should be taller",
+			"Checkout the $source code$ , it's really simple to use and #customize#",
+			"Like $position$, $colors$, animation $speed$ , $tween type$ and #width#."
+		]
+	},
+	
+	
+	"State_UIButtons" : {
+		"scroller": {
+			"bg":5,
+			"colorA":"@DB32[18]",
+			"colorB":"@DB32[19]",
+			"x":0.2,"y":-0.2
+		},
+		
+		"buttonStyle1":{
+			"icon" : "heart",
+			"colorBG"  : [ "@DB32[1]", "@DB32[7]", "@DB32[8]", "@DB32[21]" ],
+			"colorFG" : [ "@DB32[27]", "@DB32[8]", "@DB32[21]" ]
+		},
+		
+		"buttonStyle2" : {
+			"icon" : "options",
+			"colorBG"  : [ "@A16[5]", "@A16[9]", "@A16[10]", "@A16[11]" ],
+			"colorFG" : [ "0xFFFFFFFF" ]
+		},
+		
+		"buttonStyle3" : {
+			"icon" : "home",
+			"colorBG"  : [ "@DB32[1]", "@DB32[20]", "@DB32[27]", "@DB32[29]" ],
+			"colorFG" : [ "@DB32[20]","@DB32[2]","@DB32[27]" ]
+		},
+		
+		"buttonStyle4" : {
+			"icon" : "X",
+			"size" : 32,
+			"colorBG"  : [ "@DB32[1]", "@DB32[12]", "@DB32[5]", "@DB32[7]" ],
+			"colorFG" : [ "0xFFFFFFFF","0xFFFFFF00","0xFFFF0000" ]
+		},
+		
+		"infoText" : "$gui/UIButton.hx$ example, Simple buttons with customizable #colors# using $built in djFlixel Assets and Icons$ .\nSupports $3$ states , $default$, $hover$, $clicked$.\n-INDEVELOPMENT- and will support $setting text$ in the future\nUse the #mouse# to interact, press #[ESC]# to go back."
+	},
+	
+	
+	
+	
+	"State_VListBase" : {
+		
+		"colorBG" : "@DB32[3]",
+		"infoText" : "$gui/VListBase.hx$ example, Simple vertical list of custom items, In this case simple box with a label. This list just scrolls the elements. Check $VListNav$ for interaction..\nPress #[UP]# to scroll up, #[DOWN]# to scroll down, press #[ESC]# to go back. "
+
+	},
+		
+	
+	"State_VListNav" : {
+		
+		"colorBG" : "@DB32[2]",
+		"infoText" : "$gui/VListNav.hx$ example, Simple vertical list of custom items $WITH item interaction and cursor$, \nPress #[UP]# to go up, #[DOWN]# to go down, #[K]# to interact, press #[ESC]# to go back. "
+
+	}
+	
+}

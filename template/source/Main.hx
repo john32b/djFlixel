@@ -1,20 +1,13 @@
 package;
 
-import djFlixel.tool.DynAssets;
+import djFlixel.FLS;
 import djFlixel.MainTemplate;
-import flash.Lib;
 
 class Main extends MainTemplate
 {
-	public function new()
+	override function init() 
 	{
-		// MainTemplate.framerate = 60; // Optional set custom framerate
-		DynAssets.FILE_LOAD_LIST = [Reg.PARAMS_FILE];
-		super(State_Main);
-	}//---------------------------------------------------;
-	// --
-	public static function main():Void
-	{	
-		Lib.current.addChild(new Main());
-	}//---------------------------------------------------;
+		FLS.extendedClass = Reg;
+		INITIAL_STATE = State_Main;
+	}
 }// --

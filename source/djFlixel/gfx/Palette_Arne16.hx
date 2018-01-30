@@ -8,7 +8,8 @@ package djFlixel.gfx;
  */
 class Palette_Arne16
 {
-	public static var COL:Array<Int> = [
+	// All the colors of the palette
+	public static var COL(default, never):Array<Int> = [
 		0xFF000000,
 		0xFF9D9D9D,
 		0xFFFFFFFF,
@@ -26,6 +27,18 @@ class Palette_Arne16
 		0xFF31A2F2,
 		0xFFB2DCEF
 	];
+	
+	// How many colors
+	public inline static var length:Int = 16;
+	
+	/**
+	 * Return a random color, but not black!
+	 * @return
+	 */
+	public static function random():Int
+	{
+		return COL[1 + Std.random(COL.length - 2)];
+	}//---------------------------------------------------;
 	
 }// -- end -- //
 

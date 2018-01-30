@@ -1,46 +1,11 @@
 /**
- * General purpose TiledMap loader
- * =======================
- * 
- * Example
- * ========
- *
- * var mapData = new TiledLoader();
- *     mapData.load("assets/map.tmx");
- * 
- * Notes:
- * ========
- *
- * .Usage example in  RD52 game project
- * 
- *----------------------------------------------------------*/
-
-
-package djFlixel.map;
-
-import djFlixel.tool.DynAssets;
-import flixel.util.FlxDestroyUtil.IFlxDestroyable;
-import haxe.xml.Fast;
-import openfl.Assets;
-
-
-// Data structure for a floating map entity
-typedef MapEntity = {
-	x:Int,
-	y:Int,
-	id:Int,
-	?type:String,
-	?uid:Int
-};
-
-
-/**
  * Easy Customizable TiledMap Editor Loader.
  * Just the DATA.
  * 
  * NOTES:
  * -----
- * Assumes ONE image per Layer, else it WILL break.
+ * - Assumes ONE image per Layer, else it WILL break.
+ * - If EXTERNAL_LOAD flag is set, it will load the map from the disk USE IF FOR DEBUGGING ONLY!
  * 
  * USAGE:
  * -------
@@ -51,9 +16,33 @@ typedef MapEntity = {
  * 
  * @author JohnDimi, @jondmt
  */
+
+ package djFlixel.map;
+
+import djFlixel.tool.DynAssets;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
+import haxe.xml.Fast;
+import openfl.Assets;
+
+
+/**
+ * Data structure for a floating map entity
+ */
+typedef MapEntity = {
+	x:Int,			// Tile position if it's tile data, Word Pos if object
+	y:Int,			// --
+	id:Int,			// As it is on the TILED editor
+	?type:String,	// Optional and only available in Map Objects
+	?uid:Int		// MapTemplate.hx uses it to handle streamingData
+};
+
+/**
+ * 
+ */
 class TiledLoader implements IFlxDestroyable
 {
 	
+	// TODO: I might need to change this and put it elsewhere
 	static var ASSETS_PATH:String = "assets/";
 	
 	public var layerTiles:Map<String,Array<Array<Int>>>;	// LayerName=> Array
@@ -193,7 +182,7 @@ class TiledLoader implements IFlxDestroyable
 	{
 		if (!dataNode.hasNode.object)
 		{
-			trace("Waning: Entity layer contains NO entities");
+			trace("Warning: Entity layer contains NO entities");
 			return null;
 		}
 		
