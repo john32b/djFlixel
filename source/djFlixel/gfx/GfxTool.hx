@@ -152,14 +152,14 @@ class GfxTool
 	 */
 	public static function stitchBitmaps(ar:Array<BitmapData>):BitmapData
 	{
-		var final:BitmapData = new BitmapData((ar.length * ar[0].width), ar[0].height, true, 0x00000000);
+		var f:BitmapData = new BitmapData((ar.length * ar[0].width), ar[0].height, true, 0x00000000);
 		var rect = new Rectangle(0, 0, ar[0].width, ar[0].height);
 		var p = new Point(0, 0);
 		for (i in 0...ar.length) {
-			final.copyPixels(ar[i], rect, p);
+			f.copyPixels(ar[i], rect, p);
 			p.x += ar[i].width;
 		}
-		return final;
+		return f;
 	}//---------------------------------------------------;
 		
 	/**

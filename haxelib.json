@@ -8,8 +8,7 @@
   "classPath": "source/",
   "releasenote": "2018 Improved Release",
   "contributors": ["JohnDimi"],
-  "dependencies":
-  {
-    "flixel": "4.3.0"
+  "dependencies": {
+    "flixel": ""
   }
 }

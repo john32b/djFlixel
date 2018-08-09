@@ -33,8 +33,11 @@ import flixel.util.FlxDestroyUtil;
  * K: Type of Child Data
  * 
  */
-
+#if (haxe_ver >= "4.0.0")
+class VListBase<T:IListItem<K> & FlxSprite, K> extends FlxGroup
+#else
 class VListBase<T:(IListItem<K>,FlxSprite),K> extends FlxGroup
+#end
 {	
 	
 	// -- Some Static Defaults ::

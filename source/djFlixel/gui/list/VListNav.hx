@@ -22,7 +22,11 @@ import flixel.tweens.misc.VarTween;
  *  new VListNav<GraphicElement,DataElement>
  * 
  */
+#if (haxe_ver >= "4.0.0")
+class VListNav<T:IListItem<K> & FlxSprite,K> extends VListBase<T,K>
+#else
 class VListNav<T:(IListItem<K>,FlxSprite),K> extends VListBase<T,K>
+#end
 {
 	// When animating the cursor start from this alpha to 1
 	static inline var CURSOR_START_ALPHA:Float = 0.5;
