@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<!-- APPLICATION SETTINGS -->
+	
+	<app title="djFlixel Demo" version="0.4" package="" company="JohnDimi" />
+	<app preloader="flixel.system.FlxBasePreloader"/>
+	<app main="Main" file="djflx_demo" path="bin\" />
+	<app path="a:\djflx\" if="ramdisk"/>
+	
+	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
+	
+	<haxelib name="flixel"/>
+	<haxelib name="djFlixel"/>
+	<haxelib name="djA"/>
+	<haxelib name="djFL"/>
+	
+	<source path="source" />
+	
+	<!--<assets path="assets"/>-->
+	<library name="default" type="pak" if="hl" unless="debug"/>
+	<assets path="assets/fonts" type="font" include="*.ttf|*.otf" rename="fnt"/>
+	<assets path="assets" type="image" include="*.png|*.jpg" rename="im"/>
+	<assets path="assets/sound_mp3" type="sound" include="*.mp3" rename="snd" if="flash"/>
+	<assets path="assets/sound_ogg" type="sound" include="*.ogg" rename="snd" unless="flash"/>
+	
+	<!--Because I am doing bitmap manipulation HTML5 Webgl is buggy, So I am using canvas -->
+	<haxedef name="canvas" if="html5"/>
+	
+	<!--<haxedef name="FLX_NO_GAMEPAD"/>-->
+	<haxeflag name="-dce" value="std"/>
+	
+	<!-- djflixel -->
+	<haxedef name="DYN_ASSETS" if="debug flash"/>
+	
+</project>

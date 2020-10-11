@@ -1,0 +1,5 @@
+This file is going to be reloaded on [F12] keypress. 
+The state will be reset. Checkout the source code. in `MAIN.hx`
+~ Only works in FLASH DEBUG ~
+
+Change this text press [F12] and see the trace output : 1000040404404_test

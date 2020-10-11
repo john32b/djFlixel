@@ -1,0 +1,10 @@
+{
+  "name": "djFlixel",
+  "version": "0.4.0",
+  "releasenote": "2020 Release",
+  "description": "Set of tools and helpers for HaxeFlixel",
+  "url" : "https://github.com/johndimi/djFlixel",
+  "license": "MIT",
+  "tags": ["flixel"],
+  "contributors": ["JohnDimi"]
+}

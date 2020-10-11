@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+
+	<!-- General -------->
+	<set name="SWF_VERSION" value="40"/> <!-- default is 11.8 -->
+	<window if="html5" resizable="false" />
+	<haxedef name="next" />	<!--I don't know if this is required, but I am declaring anyway-->
+	
+	<!-- DJFlixel --------->
+	<haxedef name="DJFLX_VER" value="0.4.0"/>
+	<assets path="assets/ui_atlas.png" embed="true"/>
+	
+	<!-- Flixel Defines ------->
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />	
+	<haxedef name="FLX_NO_TOUCH" unless="mobile"/> 
+	<haxedef name="FLX_NO_MOUSE" 	if="mobile"/>
+	<haxedef name="FLX_NO_KEYBOARD" if="mobile"/>
+
+	<!-- Haxe -->
+	<haxeflag name="--no-traces" unless="debug"/>
+	
+</project>
