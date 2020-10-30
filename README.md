@@ -2,6 +2,13 @@
 
 **DJFLIXEL** is a set of tools and helpers for [HaxeFlixel](https://github.com/HaxeFlixel/flixel). This is **NOT** a framework, you can easily use the parts you need in your existing or new projects.
 
+
+### Install
+
+```sh
+haxelib install git djFlixel https://github.com/johndimi/djFlixel.git
+```
+
 ##  VERSION 0.4 (2020) :pushpin:
 
 [DOWNLOAD SHOWCASE DEMO HERE, FOR WINDOWS](https://1drv.ms/u/s!AodMzJWOMf3gmRlISOGsYfaQMIdh?e=zrdmSV)
