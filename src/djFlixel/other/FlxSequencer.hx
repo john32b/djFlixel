@@ -1,9 +1,22 @@
 /**
-   - Call a function at manual time intervals
-   - Create and add to a state
-   - Listen to <onStep> or <callback> 
-   - Call next step with next(time);
-**/
+	- FlxSequencer calls a function at manual time intervals
+	- Listen to <onStep> or <callback> 
+	- Useful in making short sequences of code execution
+	- Example for doing a sequence:
+  
+	add(new FlxSequencer((s)->{ 
+		switch(s.step){
+			case 1:
+				something(); s.next(); // Go to next step now
+			case 2:
+				something(); s.next(300);	// wait 0.3 seconds and go to next step
+			case 3:
+				something();
+				-- 
+			case _: 
+		}
+	});
+*******************************************************/
 
 package djFlixel.other;
 import flixel.FlxBasic;
@@ -12,15 +25,15 @@ class FlxSequencer extends FlxBasic
 {
 	public var onStep:Int->Void;
 	public var callback:FlxSequencer->Void;
-	
 	public var step(default, null) = 0;
+	
 	var _timer:Float = 0;
 	var _waitTime:Float = 0;
 	
 	/**
 	   You can set CB or you can set onStep manually
 	   @param	CB callback 
-	   @param	autoStart if >=0 will call call next(autoStart)
+	   @param	autoStart Milliseconds. if >=0 will call next(autoStart time)
 	**/
 	public function new(?CB:FlxSequencer->Void, autoStart:Float = -1)
 	{
@@ -61,7 +74,8 @@ class FlxSequencer extends FlxBasic
 		active = true;
 	}//---------------------------------------------------;
 	
-	/** Useful to use as a void callback */
+	/** Useful to pass as void callback function to things 
+	 * DEV: You can also do next.bind(0) */
 	public function nextV()
 	{
 		next();

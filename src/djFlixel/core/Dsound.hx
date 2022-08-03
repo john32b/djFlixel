@@ -1,60 +1,54 @@
 /**
-	DjFlixel SOUND Core
+	DjFlixel Sound Helpers
 	===================
 	
 	- Accessible from D.snd
 	- Handles sound metadata (volumes, grouping, quickIDs)
-	- Sound helpers
    
+	- Play sounds with custom volumes
+	- Sound Groups
+	
 	Usage:
 	-------
-		
-		// If you have put/declared your sound folder, you NEED to declare it here. e.g.
-		D.snd.ROOT_SND  = "snd/";
-		D.snd.ROOT_MSC  = "mus/
-		
-		// To play something
-		// >> This will play "/snd/player_jump.mp3"	or ".ogg" depending on the platform
-		D.snd.play('player_jump');	
-**/
-
+		>> You MUST declare in <project.xml> where to look for sounds. The default place to look
+			for is "assets/sounds/" and "assets/music/".
+			When you rename the asset when including it, like this:
+				<assets path="assets/sounds" type="sound" include="*.ogg" rename="snd"/>
+			You Must then declare it like so:
+				<haxedef name="DJFLX_SND" value="snd/" />
+				<haxedef name="DJFLX_MUS" value="snd/" />
+			Note that the value must end with "/" 
+	
+		>> To play something
+			// This will play "/snd/player_jump.mp3" or ".ogg" depending on the platform
+			D.snd.play('player_jump');	
+*******************************************/
 package djFlixel.core;
 
+import djA.Macros;
 import flixel.system.FlxSound;
 import flixel.FlxG;
 import haxe.ds.Map;
-import haxe.io.Float32Array;
 
 
 @:dce
 class Dsound
 {
-	static inline var FILE_EXT_MP3:String = ".mp3";
-	static inline var FILE_EXT_OGG:String = ".ogg";
+	// File Extension, based on build target. Currently only flash needs .mp3
+	static inline var FILE_EXT = #if (flash) ".mp3"; #else ".ogg"; #end
 	
-	/** Override and place what is declared as the Asset Root . END WITH '/'
-		e.g. you when can declare the sound assets as :
-			<assets path="assets/sounds" type="sound" rename="snd"/>
-		    you should ROOT_SND = "snd/"
-	**/
-	public var ROOT_SND  = "assets/sounds/";
-	public var ROOT_MSC  = "assets/music/";
-	
-	// Current file extension for sounds (auto-set based on build platform)
-	var FILE_EXT:String;
+	// Declare where to look for sounds. Check header of this file for more info
+	static inline var ROOT_SND = #if (!DJFLX_SND) "assets/sounds/" #else Macros.getDefine("DJFLX_SND") #end;
+	static inline var ROOT_MSC = #if (!DJFLX_MUS) "assets/music/" #else Macros.getDefine("DJFLX_MUS") #end;
 	
 	// Map shortID to full Sound Info as it's on the json node
 	var volumes:Map<String,Float>;
+
+	
 	//====================================================;
 	
 	public function new()
 	{
-		#if (flash)
-			FILE_EXT = FILE_EXT_MP3;
-		#else
-			FILE_EXT = FILE_EXT_OGG;
-		#end
-		
 		volumes = new Map();
 	}//---------------------------------------------------;
 	

@@ -1,14 +1,13 @@
-package djFlixel.ui.menu;
-import djA.DataT;
-
-
-
-/** PageData
+/** 
+	PageData
 	--------
 	Holds a single page data for use in FlxMenu.
 	- Stores `MItemData` serially in an array
 	- Some other page customization options
-**/
+************************************************/
+package djFlixel.ui.menu;
+import djA.DataT;
+
 @:dce
 class MPageData 
 {
@@ -31,8 +30,8 @@ class MPageData
 							// 0 For default menu_width/2
 		
 		// -- Style Overrides :
-		stI:null,	// Can override fields of 'MItemStyle'
-		stL:null,	// Can override fields of 'VListStyle'
+		stI:null,	// Object, Can override fields of 'MItemStyle' | e.g. { text:{f:"pixel8.ttf", s:16, bt:2} }
+		stL:null,	// Object, Can override fields of 'VListStyle' | e.g. { loop:true }
 		
 		// -- The following are used internally :
 		lastIndex:-1,		// Remember the last selected index when the page becomes unfocused
@@ -64,7 +63,13 @@ class MPageData
 		return this;
 	}//---------------------------------------------------;
 	
-	/** Add Many, in an Array, Encoded Strings ONLY. `MItemData.hx`
+	/** Add Many, in an Array, Encoded Strings ONLY. See `MItemData.hx`
+		e.g. 
+		addM([
+			"Toggle Music|toggle|id=sound",
+			"Graphic Style|list|list=old,new",
+			"Back|link|@back" 
+			]);
 	**/
 	public function addM(it:Array<String>):MPageData
 	{

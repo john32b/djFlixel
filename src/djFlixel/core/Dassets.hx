@@ -1,30 +1,33 @@
-/*******************************************************************************
-  Dynamic Assets Helper
+/**
+  Dynamic Assets Helper -- HOT LOADING --
   ==========================
  
- - Requires : <haxedef name="DYN_ASSETS"/>  to be set.
+ - Requires : <haxedef name="HOT_LOAD"/> to be set.
  - Accessible from (D.assets)
  
  - This is a helper class useful for debugging
-   It keeps a list of path to files that can be reloaded at runtime.
-   e.g. Reload some JSON or MAP files to quickly test out new things.
+   It keeps a list of path to files that can be reloaded at runtime (hotloaded)
+	e.g. Reload some JSON or MAP files to quickly test out new things
  
- - You can safely use this class to load files on production just make sure to
-   remove the "DYN_ASSETS" def and then it will load all the files from the internal assets
-   and not seek them externally
- 
- - Use Example:
+ - Changed in V0.5 : Managing the HotLoaded files is now more manual
+	It is advised you handle the code with preprocessors and leave
+	the final build loading from FlxAssets normally
+   
+ - Example:
 	
-	D.assets.DYN_FILES = ['assets\config.json'];
-	D.assets.onAssetLoad = ()->{
-		REG.json = D.assets.json.get('assets\config.json');
+		// Declare which files are to be hotloaded
+	D.assets.HOT_LOAD = ['assets\config.json']
+	
+		// Whenever you press [F12] and the state resets, this get auto called
+		// you can manage your stuff here.
+	D.assets.onLoad = ()->{
+		REG.json = D.assets.files.get('assets\config.json');
 	}
-	D.assets.reload( ()->{ new FlxGame(....); } );
-
-	//-> Enable `debug-keys` in D.init() to enable F12 reloading
 	
 ********************************************************************************/
  
+
+// ::TODO. Make it ERROR when not HOT_LOAD and loading from this
  
 package djFlixel.core;
 
@@ -35,81 +38,98 @@ import openfl.Assets;
 @:dce
 class Dassets
 {
-	/** Asset Contents, (asset, content) */
+	/** Hotloaded assets (assetID, content) 
+	 *  Read this after a hotload to get data
+	 */
 	public var files(default, null):Map<String,String>;
 	
 	// #USERSET
 	// Asset/File List that will be dynamically reloaded in runtime
 	// - e.g. "assets/data/map.json
-	public var DYN_FILES:Array<String> = [];
+	public var HOT_LOAD:Array<String> = [];
 
 	// #USERSET 
 	// Gets called whenever it loads the dynamic assets
-	public var onAssetLoad:Void->Void;
+	public var onLoad:Void->Void;
 	
 	//====================================================;
 	public function new() {}
 		
 	/**
-	 * Resets and Reloads everything in [DYN_FILES] from the start
+	 * Resets and Reloads everything in [HOT_LOAD] from the start
 	 */
 	public function reload(?cb:Void->Void):Void
 	{
-		trace(" = Dynamic Asset Reload :: ");
-		
-		var _onLoad = ()->{
-			if (onAssetLoad != null) onAssetLoad();
-			if (cb != null) cb();
-		};
-		
-		if (DYN_FILES.length == 0) {
-			trace('Info: No files to load');
-			return _onLoad();
-		}
+		trace(" = HOT_LOAD :: reload() ");
 		
 		files = [];
 		
-		var AXS = new ArrayExecSync(DYN_FILES);
-		AXS.onComplete = _onLoad;
-		AXS.onItem = (A)->{
-			#if (DYN_ASSETS) // ------------------------
-				var get = new djfl.net.DataGet();
-				get.url = Macros.getProjectPath() + A; // Assumes A is a real path
-				trace("Dynamic Load -->> ", get.url);
-				get.onLoad = (g)->{
-					trace("[OK]");
-					files.set(A, g.data);
-					//trace('Loaded file "$A"..',A,g.data);
-					AXS.next();
-				};
-				get.onError = ()->{ 
-					trace('Error: Could not handle [${A}] DYNAMICALLY, trying to load from STATIC ASSETS..');
-					_staticLoadAsset(A);
-					AXS.next();
-				};
-				get.load();
-			#else // Just load the files from the assets
-				_staticLoadAsset(A);
-				AXS.next();
-			#end
+		var _onLoad = ()->{
+			trace('HOTLOAD: Loaded :', HOT_LOAD.length);
+			if (onLoad != null) onLoad();
+			if (cb != null) cb();
 		};
 		
-		AXS.start();
+		ArrayExecSync.run(HOT_LOAD, (it, next)->{
+			if (it == null) return _onLoad();
+			
+			var get = new djfl.net.DataGet();
+				get.url = Macros.getProjectPath() + it; // Assumes A is a real path
+				trace(" Loading :: ", get.url);
+				get.onLoad = (g)->{
+					trace("[OK]");
+					files.set(it, g.data);
+					next();
+				};
+				get.onError = ()->{ 
+					trace('Error: Could not hotload [${it}], trying to load from STATIC ASSETS..');
+					_staticLoadAsset(it);
+					next();
+				};
+				get.load();
+		});
+		
+		
+		//var AXS = new ArrayExecSync(HOT_LOAD);
+		//AXS.onComplete = _onLoad;
+		//AXS.onItem = (A)->{
+			//#if (HOT_LOAD) // ------------------------
+				//var get = new djfl.net.DataGet();
+				//get.url = Macros.getProjectPath() + A; // Assumes A is a real path
+				//trace("Dynamic Load -->> ", get.url);
+				//get.onLoad = (g)->{
+					//trace("[OK]");
+					//files.set(A, g.data);
+					//AXS.next();
+				//};
+				//get.onError = ()->{ 
+					//trace('Error: Could not HOT LOAD [${A}], trying to load from STATIC ASSETS..');
+					//_staticLoadAsset(A);
+					//AXS.next();
+				//};
+				//get.load();
+			//#else // Just load the files from the assets
+				//_staticLoadAsset(A);
+				//AXS.next();
+			//#end
+		//};
+		//
+		//AXS.start();
 	}//---------------------------------------------------;
 	
 	
 	/**
 	 * Dynamically load a file from real path 
 	 * - path must be in relation to project path
-	 * - This is for loading files outside the main "DYN_FILES"
+	 * - This is for loading files outside the main "HOT_LOAD"
 	 * @param	path Path of file to load e.g. "assets/maps/level1.tmx"
 	 * @param	onComplete Called when the file is loaded. String param is the file contents
 	 * 
 	 */
 	public function getTextFile(path:String, onComplete:String->Void)
 	{
-		#if (DYN_ASSETS)
-		trace(' [DYNAMIC_ASSETS] - Loading "$path" as Text...');
+		#if (HOT_LOAD)
+		trace(' [HOT_LOAD] - Loading "$path" as Text...');
 		
 		var get = new djfl.net.DataGet();
 			get.url = Macros.getProjectPath() + path;
@@ -123,7 +143,7 @@ class Dassets
 			get.load();
 			
 		#else
-			trace("Info: <DYN_ASSETS> is not set, getting " + path + " from STATIC ASSETS");
+			trace("Info: <HOT_LOAD> is not set, getting " + path + " from STATIC ASSETS");
 			onComplete(Assets.getText(path));
 		#end
 	}//---------------------------------------------------;

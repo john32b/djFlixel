@@ -1,4 +1,4 @@
-/*****************************************************************************
+/**
  * Platform Example 01
  * Jump on enemies like Super Mario
  * ------------------------------------
@@ -10,7 +10,7 @@
  * 
  ******************************************************************************/
 
-package ;
+package game1;
 
 import djFlixel.D;
 import flixel.FlxG;
@@ -83,7 +83,7 @@ class State_Game1 extends FlxState
 		}else
 		if (FlxG.keys.justPressed.TWO)
 		{
-			Main.create_add_8bitLoader(0.7, State_01);
+			Main.create_add_8bitLoader(0.7, State_Menu);
 		}
 		// Keep checking for a gamepad
 		D.ctrl.gamepad_poll();

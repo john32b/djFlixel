@@ -1,11 +1,9 @@
 package;
 
 import djFlixel.D;
-import djFlixel.gfx.RainbowStripes;
 import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.TextScroller;
 import djFlixel.gfx.pal.Pal_DB32;
-import djFlixel.other.DelayCall;
 import djFlixel.other.FlxSequencer;
 
 import flixel.FlxG;
@@ -14,11 +12,10 @@ import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.util.FlxColor;
 
-class State_Balls extends FlxState
+class State_TextScroll extends FlxState
 {
-	var NEXTSTATE = State_01;
-	var SCROLLER_TEXT = 
-	"djFlixel - Tools and helpers for HaxeFlixel   ";
+	var NEXTSTATE = State_Menu;
+	var SCROLLER_TEXT =  "djFlixel - Tools and helpers for HaxeFlixel   "; // keep it short
 	
 	override public function create():Void 
 	{

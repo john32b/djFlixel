@@ -1,10 +1,13 @@
 /**
- * Bitmap Utilities
- * ================
- * 
- * - Bitmap Utilities for use in FLIXEL
- * - More bitmap utilities at <D.bmu>
- */
+	DJFlixel Bitmap Utilities
+	================
+
+	- Accessible from (D.gfx)
+	- Generic Bitmap Utilities for use in FLIXEL
+	- The most useful thing here is palCol()
+		which returns a color value based on pallete index
+ 
+*******************************************/
 
  
 package djFlixel.core;

@@ -1,5 +1,6 @@
 package ;
 import djA.ArrayExecSync;
+import djA.types.SimpleCoords;
 import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.PanelPop;
@@ -20,6 +21,8 @@ import flixel.system.FlxAssets;
 import flixel.text.FlxText;
 import lime.system.System;
 import openfl.geom.Rectangle;
+import openfl.text.TextFormat;
+import openfl.text.TextLineMetrics;
 
 
 /** 
@@ -42,8 +45,10 @@ class State_Test extends FlxState
 		//sub_staticNoise();
 		//sub_spriteeffects();
 		//sub_slice9();
-		sub_panelpop();
+		//sub_panelpop();
 		//sub_buttons();
+		
+		sub_text_metric();
 	}//---------------------------------------------------
 	
 	override public function update(elapsed:Float):Void 
@@ -51,6 +56,55 @@ class State_Test extends FlxState
 		super.update(elapsed);
 		if (upd != null) upd();
 	}//---------------------------------------------------;
+	
+	
+	function sub_text_metric()
+	{
+		// HTML5 Text metrics test
+		// Conclusion. When building from HaxeDevelop it breaks
+		// Build from command line `lime build project.xml html5`
+		
+		function ADJ(T:FlxText, lead:Int)
+		{
+			var f = T.textField.getTextFormat();
+			f.leading += lead;
+			T.textField.setTextFormat(f);
+		}
+		
+		var T1 = D.text.get("TEST 01", {f:"fnt/mozart.ttf", s:16});
+		add(T1);
+		#if (html5) 
+		ADJ(T1, -6);
+		#end
+		T1.text = ".height:" + T1.height + "   .textField.textHeight:" + T1.textField.textHeight;
+		
+		var T2 = D.text.get("", {f:"fnt/mozart.ttf", s:16});
+		add(D.align.down(T2, T1));
+		
+		T2.fieldWidth = 300;
+		T2.text = "TEXT THAT WILL WRAP TO\nNEW LINE --\nAnother one\nagain.\nAnd another one --";
+		trace("TEXT HEIGHT is ", T2.textField.textHeight);
+		
+		// FLASH : Textheight is 65
+		// HTML5 : Textheight is 94.96 !!!
+
+		function LS(n:Int)
+		{
+			var tm:TextLineMetrics = T2.textField.getLineMetrics(n);
+			trace('h:' + tm.height, 'a:' + tm.ascent, 'desc:' + tm.descent, 'lead:' + tm.leading);
+			var lh = tm.height;
+			var O = new FlxSprite( T2.x + 2 , T2.y + 2 + (lh * n) );
+				O.makeGraphic(cast tm.width, cast lh, 0x3300FF33);
+				add(O);
+		}
+
+		for (i in 0...(T2.textField.numLines))
+		{
+			LS(i);
+		}
+		
+	}//---------------------------------------------------;
+	
 	
 	function sub_buttons()
 	{
@@ -60,8 +114,6 @@ class State_Test extends FlxState
 		add(new UIButton(100, 64, 20, 20));
 		add(new UIButton(132, 64, 20, 32));
 	}//---------------------------------------------------;
-	
-	
 	
 	// OK WORKS
 	function sub_panelpop()
@@ -119,8 +171,9 @@ class State_Test extends FlxState
 	function sub_staticNoise()
 	{
 		var st = new StaticNoise(20, 20, 90, 90);
-		st.color_custom([0xFF334455, 0xFF998899]);
+		st.color_custom([0xFF334455, 0xFF998899, 0xFF221199]);
 		add(st);
+		
 	}//---------------------------------------------------;
 
 	// OK WORKS

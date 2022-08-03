@@ -15,16 +15,16 @@ import openfl.display.BitmapData;
 
 typedef MItemStyle = {
 	
-	text:DTextStyle,	// Text style, to use on all ITEMS
-						// All Items will use colors from (col_t,col_b)
+	?text:DTextStyle,	// Text style, to use on all ITEMS
+						// All Items will use colors from (col_t, col_b)
 						// MUST SET : bt
 
-	col_t:StateColors,	// Text Colors. You should set ALL states
-	col_b:StateColors,	// Border Colors. You can only set 'idle' and all states will get that color.
+	?col_t:StateColors,	// Text Colors. You should set ALL states
+	?col_b:StateColors,	// Border Colors. You can only set 'idle' and all states will get that color.
 	
 	// :: ADVANCED ::
 	
-	part2_pad:Int,		// Push the second part of items (toggle,list,range) to the right by this many pixels
+	?part2_pad:Int,		// Push the second part of items (toggle,list,range) to the right by this many pixels
 						// Applicable in left/center/center2 alignments.
 						// NOTE: In 'center2' the list arrows padding will not be applied, so make sure this is big enough to accomodate
 						

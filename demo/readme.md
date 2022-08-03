@@ -19,3 +19,6 @@ e.g. to build for HashLink:
 
 #### MUSIC:
 - **Deep Horizons** by DvD - https://www.youtube.com/watch?v=B49GBo7ezYg
+	
+#### SPRITES
+- **refreshgames** - https://opengameart.org/content/early-80s-arcade-pixel-art-dungeonsslimes-walls-power-ups-etc

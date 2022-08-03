@@ -2,11 +2,7 @@ package ;
 import djFlixel.D;
 import djFlixel.gfx.RainbowStripes;
 import djFlixel.gfx.SpriteEffects;
-import djFlixel.gfx.StaticNoise;
-import djFlixel.gfx.TextScroller;
 import djFlixel.gfx.TextBouncer;
-import djFlixel.gfx.BoxFader;
-import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.gfx.statetransit.Stripes;
 import djFlixel.other.DelayCall;
@@ -14,13 +10,11 @@ import djFlixel.other.FlxSequencer;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.math.FlxRect;
-import flixel.text.FlxText;
 
 
 class State_Logos extends FlxState
 {
-	var NEXTSTATE = State_Balls;
+	var NEXTSTATE = State_TextScroll;
 	var logoWidth = 200;
 	var logoHeight = 160;
 	var COLOR_BG = Pal_DB32.COL[0];

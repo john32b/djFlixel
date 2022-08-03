@@ -31,46 +31,56 @@ typedef VListStyle = {
 
 	// How many pixels to the right to animate the highlighted element at (scroll_time) speed
 	focus_nudge:Int,
+	
 	// Loop at edges
 	loop:Bool,
+	
 	// Start scrolling the view before reaching the edges by this much.
+	// - Applicable when the list has more items than slots -
 	scroll_pad:Int,
+	
 	// How fast to scroll elements in and out, 0 for instant scroll, Also selected item nudge time
 	scroll_time:Float,	
+	
 	// How much padding between the elements in pixels. Can use negative values
 	item_pad:Int,
+	
 	// How to align the elements vertically in the List
 	// [ left | center | justify ]
 	// center2: only available in MItems
 	align:String,
 	
 	// == View Tweens ------------------------------
-	// - Behavior of the elements if they are to enter/exit the view
-	// - Used at viewOn() and viewOff()
+	// Behavior of the elements if they are to enter/exit the view
+	// - DEV: Used at viewOn() and viewOff()
 	
-		// "Speed:Delay" applies to each element .e.g. "0.15:0.2"
+		// "Speed:Delay" applies to each element e.g. "0.15:0.2"
 		// "0:0" for all slots instant in
 		vt_in_times:String,	
-		// "x:y" Start Offsets in relation to item position
+		
+		// "x:y" Start Offsets in relation to item position e.g. "0:-10"
 		vt_in_offset:String,
-		// "Speed:Delay" applies to each element .e.g. "0.15:0.2"
+		
+		// "Speed:Delay" applies to each element e.g. "0.15:0.2"
 		// "0:0" for all slots instant in
 		vt_out_times:String,
-		// "x:y" Exit Offsets in relation to item position
+		
+		// "x:y" Exit Offsets in relation to item position e.g. "0:10"
 		vt_out_offset:String,
 		
 		// Name of the ease function found in "FlxEase.hx"
 		// e.g : bounceOut, SineIn, backInOut
 		vt_in_ease:String,
-		// vt_out_ease is fixed "quadOut"
+		// - DEV: vt_out_ease not implemented and is fixed to "quadOut", found at viewOff() -
 	
 	// == Scroll Indicators ---------------------
 	// - Arrows at the top and bottom of the list to indicate that there are more items to scroll
 	// - Will always use the build-in djFlixel icons (ar_down,ar_up)
+	
 		sind_size:Int,			 // which icon size to use. Be sure to call D.ui.initIcons(size); beforehand
-		sind_anim:String,		 // Type,Steps,Time, Type(1=repeat,2=loop,3=blink), Steps=int, Time=Float=step time
-		sind_color:Int,		 	 // Colorize the scroll indicator with this color.
-		sind_offx:Int			 // Offset X axis for the arrows
+		sind_anim:String,		 // Type,Steps,Time |  Type(1=repeat,2=loop,3=blink), Steps:Int, Time:Float=Step time | e.g. "2,3,0.2"
+		sind_color:Int,		 	 // Colorize the scroll indicator with this color
+		sind_offx:Int			 // Offset X axis for the arrows, if you want to adjust the horizontal position
 }
 
 

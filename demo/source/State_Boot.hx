@@ -5,11 +5,13 @@
  
 package;
 import djFlixel.D;
+import djFlixel.core.Ddest;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.StaticNoise;
 import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.ui.FlxAutoText;
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.FlxState;
 
 class State_Boot extends FlxState
@@ -26,21 +28,35 @@ class State_Boot extends FlxState
 			add(st);
 
 		// -- Some text
-		var t = new FlxAutoText(4, 4);
+		var t = new FlxAutoText(4, 4, -1);
 			add(t);
-		t.sound.char = "bleep0";
-		t.setCarrier("_");
+
+		// DEV REMINDER:
+		// bleep0 is short asset name. Real asset name is `snd/bleep0.ogg` D.sound handles it.
+		// Real Real asset path is `assets/sound_ogg/bleep0.ogg`. Renamed in project.xml
+		t.sound.char = "bleep0"; 
+		
+		t.setCarrier("|");
+		//t.setCarrier(new FlxSprite(D.ui.getIcon(8, "minus")));
+		
 		t.style = {
 			f:'fnt/mozart.ttf',
 			s:16,
 			c:Pal_DB32.COL[9],
 			bc:Pal_DB32.COL[14]
 		};
+		
 		t.onComplete = ()->{
 			D.snd.play('bleep1');
 			new FilterFader(()->{Main.goto_state(NEXTSTATE);});
 		};
-		t.setText('{w:8,c:32}djFlixel ' + D.DJFLX_VER + '\n{w:4}Starting Demo{c:4}....{w:10}');
 		
+		// Set text and autostart
+		//t.setText('{w:8,c:2}DJ${D.DJFLX_VER}\n{w:4}Sta\nrting\nDemo{c:4}....{w:5}');
+		t.setText('{w:8,c:33}djFlixel ${D.DJFLX_VER}\n{w:4}Starting Demo{c:5}....{w:5}');
+		
+		t.onEvent = (e:AutoTextEvent) -> {
+			trace(e);
+		};
 	}//---------------------------------------------------;
 }// --

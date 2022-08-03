@@ -32,7 +32,6 @@ import flixel.FlxSprite;
 import flixel.FlxSubState;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
-import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxTimer;
 

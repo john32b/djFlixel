@@ -1,6 +1,6 @@
-/***********************************************************
- *  Easy, streamlined input checks.
- * 
+/**
+ *  DJFlixel - Easy, streamlined input checks
+ *  =========================================
  * - Accessible from (D.ctrl)
  * - Unified keyboard and controller inputs
  * - Cursor-like behavior support
@@ -140,12 +140,15 @@ class Dcontrols
 	**/
 	public function flush()
 	{
+		#if (FLX_KEYBOARD)
 		FlxG.keys.reset();
+		#end
 		
 		if (gamepad != null) {
 			gamepad.reset();
 		}
 	}//---------------------------------------------------;	
+	
 	/**
 	 * Get a timed button press, (like a cursor on a text editor)
 	 * Holding a button example:
@@ -373,17 +376,23 @@ class Dcontrols
 	// --
 	function _keyPressed(id:DButton):Bool
 	{
+		#if (FLX_KEYBOARD)
 		return FlxG.keys.anyPressed(MAP_KEYS[cast id]);
+		#else return false; #end
 	}//---------------------------------------------------;	
 	// --
 	function _keyJustPressed(id:DButton):Bool
 	{
+		#if (FLX_KEYBOARD)
 		return FlxG.keys.anyJustPressed(MAP_KEYS[cast id]);
+		#else return false; #end
 	}//---------------------------------------------------;
 	// --
 	function _keyJustReleased(id:DButton):Bool
 	{
+		#if (FLX_KEYBOARD)
 		return FlxG.keys.anyJustReleased(MAP_KEYS[cast id]);
+		#else return false; #end
 	}//---------------------------------------------------;
 	
 	

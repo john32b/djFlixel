@@ -59,7 +59,6 @@ import djFlixel.other.DelayCall;
 import djFlixel.other.StepTimer;
 import flixel.FlxG;
 import flixel.FlxObject;
-import flixel.util.FlxTimer;
 import openfl.filters.ColorMatrixFilter;
 import openfl.filters.BitmapFilter;
 
@@ -86,7 +85,7 @@ class FilterFader extends FlxObject
 	   This will automatically be added to the active state
 	   @param	TOBLACK True to fade to black, False to fade from black
 	   @param	CB On Complete callback
-	   @param	PAR Parameters, Overrude `DEF_PAR` fields check class code
+	   @param	PAR Parameters, Overrides `DEF_PAR` fields. Check code inside
 	**/
 	public function new(?TOBLACK:Bool = true, ?CB:Void->Void, ?PAR:Dynamic)
 	{
@@ -95,6 +94,7 @@ class FilterFader extends FlxObject
 		active = moves = false;
 		toBlack = TOBLACK;
 		callback = CB;
+		
 		//-- Backup if any filters are set? Because they are going to be overwritten?
 		backupFilters = camera.flashSprite.filters;
 		st = new StepTimer(_stepTimerTick);

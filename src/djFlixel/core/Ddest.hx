@@ -1,11 +1,13 @@
 /**
-
- Object DESTroyer
- ================
- Kind of like the FlxDestroyUtil class
- But destroys more specific objects like timers and tweens
+	DJFlixel Object DESTroyer
+	================
+	
+	- Accessible from (D.dest)
+	
+	- This is like the FlxDestroyUtil class
+	  But destroys more specific objects like timers and tweens
  
- ------------------------------------------------------ */
+*******************************************/
 
  
 package djFlixel.core;

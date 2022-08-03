@@ -1,19 +1,21 @@
+/**
+	Alignment related Functions used to place FlxObjects
+	==========================
+	- Accessible from (D.align)
+	
+*******************************************/
 package djFlixel.core;
+
 import djA.DataT;
 import djA.types.SimpleRect;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
-/**
- * Align functions used for FLX Objects
- */
 @:dce
 class Dalign 
 {
-	public function new() 
-	{
-	}
+	public function new() {}
 	
 	/**
 	 Align an object using the screen viewport as a guide
@@ -86,7 +88,7 @@ class Dalign
 	}//---------------------------------------------------;
 	
 	/**
-	 Place an object to the RIGHT of another object
+	 Place an object to the RIGHT of another object. Same Y pos
 	 @param	o Object to Align
 	 @param	t Guide Object
 	 @param	offX Offset X
@@ -101,7 +103,7 @@ class Dalign
 	}//---------------------------------------------------;
 	
 	/** 
-	 Place an object to the LEFT of another object
+	 Place an object to the LEFT of another object. Same Y pos
 	 @param	o Object to Align
 	 @param	t Guide Object
 	 @param	offX Offset X
@@ -116,7 +118,7 @@ class Dalign
 	}//---------------------------------------------------;
 	
 	/**
-	 Place an object on TOP of another object
+	 Place an object on TOP of another object. Same X pos
 	 @param	o Object to Align
 	 @param	t Guide Object
 	 @param	offX Offset X
@@ -131,16 +133,18 @@ class Dalign
 	}//---------------------------------------------------;
 	
 	/**
-	 Place an object BELOW another object
+	 Place an object BELOW another object. Same X pos
 	 @param	o Object to Align
 	 @param	t Guide Object
+	 @param center If true will center it horizontally. OPTIONAL means you can skip
 	 @param	offX Offset X
 	 @param	offY Offset Y
 	 @return  Placed Object
 	 */
-	public function down(o:FlxSprite, t:FlxSprite, offX:Float = 0, offY:Float = 0):FlxSprite
+	public function down(o:FlxSprite, t:FlxSprite, ?center:Bool, offX:Float = 0, offY:Float = 0):FlxSprite
 	{
 		o.x = t.x + offX;
+		if(center) o.x += ((t.width - o.width) / 2);
 		o.y = t.y + t.height + offY;
 		return o;
 	}//---------------------------------------------------;
@@ -148,6 +152,7 @@ class Dalign
 	/**
 	 Places an object below another object and centers it in the middle of it
 	 */
+	@:deprecated("Use down(), it has a new `center` argument")
 	public function downCenter(o:FlxSprite, t:FlxSprite, offY:Float = 0):FlxSprite
 	{
 		o.x = t.x + ((t.width - o.width) / 2);
@@ -175,7 +180,7 @@ class Dalign
 	 @param	width Width of the Line, 0: Rest of the screen, -1: Center of the screen mirror to X
 	 @param	elements Array of elements to align
 	 @param	align l r j c (left right justify center)
-	 @param pad if align="c,l,r" use padding between elements in pixels
+	 @param pad if align is [c,l,r] use padding between elements in pixels
 	 */
 	public function inLine(x:Float, y:Float, width:Float, els:Array<FlxSprite>, align:String = "c", pad:Float = 0)
 	{
@@ -275,15 +280,17 @@ class Dalign
 	
 	
 	/****************************************************************
-	 * == PLACER functions
+	 * == PLACER functions (A thing that places objects?)
 	 * 
-	 * - Define an area on the screen for placing sprites/text
-	 * - Can define columns and then align to those columns
-	 * - Can quickly create text using built-in calls
+	 * - Place elements in an area without worrying coordinates
+	 * - Elements are placed automatically one below another
+	 * - Defines an area on the screen for placing sprites/text
+	 * - Can define columns and then place to them
+	 * - Following a bunch of functions with the `p` prefix
 	 * 
 	 * == EXAMPLE :
-	 *  ; Initialize the area
-	 *  	D.align.pInit()
+	 *  ; Initialize the placer area 
+	 *  	D.align.pInit() // No params to define screen
 	 *  ; Place a sprite
 	 * 		D.align.p(new FlxSprite(..), {a:"c"});
 	 * 	; Create place text
@@ -301,12 +308,12 @@ class Dalign
 	@:noCompletion var __p_no_new_obj:Bool = false;
 
 	var _DEF_PLACE = {
-		c:0,		// column to place elemnet, 0 for no column
+		c:0,		// column to place element, 0 for no column
 		ox:0,		// offset x
 		oy:0,		// offset y
 		next:false, // overrides all rules and just places right next to the previous element
-		a:"l",      // l:left, c:center, r:right
-		ta:"l"		// l:left, c:center, r:right
+		a:"l",      // Align - l:left, c:center, r:right
+		ta:"l"		// TextAlign - l:left, c:center, r:right
 	};
 	
 	/** The defined area for the placer */
@@ -353,7 +360,7 @@ class Dalign
 	
 	/**
 	  Prepare some columns for item placement
-	  @param C "columWidth,Leftpad|colum2,leftpad" e.g. "100,1|100,16"
+	  @param C "columWidth,Leftpad|column2,leftpad" e.g. "100,1|100,16"
 	  @param XPos if -1 All columns will be centered to area. Else will be positioned to this value.
 	**/
 	public function pCol(C:String, XPos:Int = -1, clear:Bool = true)
@@ -508,7 +515,7 @@ class Dalign
 	
 	
 	/**
-	   Place Multiple using D.align.inLine()
+	   Place Multiple in one Line using D.align.inLine()
 	   @param	ar Array of elements
 	   @param	P a:(c,l,r,j) 
 	**/

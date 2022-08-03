@@ -1,25 +1,21 @@
-/************************************************************
- * UI Helper
- * 
- * ICONS : 
- * 	- Available sizes 8,12,16,24
- *  - Atlas ID = "ic.8","ic.12' .....
- *  - Available INDEXES = 0..22
- * 
- * 
- * PANEL:
- * 	- get with D.ui.atlas.get_bn('panel')
- * 
- * BUTTON:
- * 	- get with D.ui.atlas.get_bn('btn') // returns 3 tiles 24x24 
- * 
- *********************************************************/
-
+/**
+	DJFlixel UI helper
+	===================
+	
+	- Accessible from (D.ui)
+	
+	- Currently used mostly to get icons 
+		, like the default FLXMenu icons, (arrows, boxes)
+		
+	- The default tiles are in `djflixel_source/assets/ui_atlas.png`
+		, you can use it as a template and create your own
+		, then use it with loadUIAtlas("customatlas.png");
+		
+*******************************************/
 package djFlixel.core;
 
 import djfl.util.Atlas;
 import flash.display.BitmapData;
-import flash.filters.BitmapFilterType;
 
 
 @:dce
@@ -61,9 +57,8 @@ class Dui
 	}//---------------------------------------------------;
 	
 	/**
-	   To Save Memory, You can Initialize just the icon sizes
-	   that you intend to use
-	   @param	sizes Valid: 8,12,16,24
+	   To Save Memory, Initialize just the icon sizes that you intend to use
+	   @param sizes Valid {8, 12, 16, 24}
 	**/
 	public function initIcons(sizes:Array<Int>)
 	{

@@ -1,7 +1,12 @@
-/*****************************
- - FlxMenu 
- - BoxScroller
-******************************/
+/**
+	Menu State
+	===================
+	
+	- This is the main menu state
+	- FLXMenu practical example
+	
+*******************************************/
+ 
 package ;
 import djA.DataT;
 import djFlixel.D;
@@ -20,13 +25,18 @@ import flixel.system.FlxAssets;
 import flixel.text.FlxText;
 
 
-class State_01 extends FlxState
+class State_Menu extends FlxState
 {
+	// Scroller ID, used to select asset for the background
 	var scid = 0;
+	// Animated background
 	var sc:BoxScroller;
+
+	/** The main menu object */
 	var menu:FlxMenu;
 
-	// DB32 color combinations for the background
+	// <gfx.Pal.PAL_DB32> color indexes 
+	// The animated background image is going to be colorized with these palette indexes
 	var BGCOLS = [
 		[1,2],
 		[24,25],
@@ -40,11 +50,11 @@ class State_01 extends FlxState
 	{
 		super.create();
 		
-		// --
+		// -- animated background
 		sc = new BoxScroller('im/bg01.png', 0, 0, FlxG.width, FlxG.height);
 		sc.autoScrollX = 0.2;
 		sc.autoScrollY = 0.2;
-		scroller_next();
+		scroller_next();	// This changes the asset and also colorizes it
 		add(sc);
 		
 		// -- the menu
@@ -55,22 +65,32 @@ class State_01 extends FlxState
 		// -- infos
 		var bg1 = new FlxSprite();
 			bg1.makeGraphic(FlxG.width, 18, 0xFF000000);
-			add(D.align.screen(bg1, '-', 'b'));
-		D.text.fix({c:Pal_DB32.COL[21], bc:Pal_DB32.COL[1], bt:2});
-		var t1 = D.text.get('DJFLIXEL ' + D.DJFLX_VER + ', by John32B.');
-			add(D.align.screen(t1, 'l', 'b', 2));
+			add(D.align.screen(bg1, '' , 'b')); // '' to leave it alone in the X axis
+			
+		// text.fix(style), makes all following text.get(..) calls to apply a specific style
+		// useful if you want to create a style on the fly and use it multiple times
+		// Check the typedef for the style object in <Dtext.h>
+ 		D.text.fix({c:Pal_DB32.COL[21], bc:Pal_DB32.COL[1], bt:2});
+		var t1 = D.text.get('DJFLIXEL ${D.DJFLX_VER} by John32B.');
+			add(D.align.screen(t1, 'l', 'b', 2)); // Add and Align to screen in one call
+			
+		// Note that I can overlay a style here. This will use the fixed style and
+		// also apply a new color
 		var t2 = D.text.get('Music "DvD - Deep Horizons"', {c:Pal_DB32.COL[22]});
 			add(D.align.screen(t2, 'r', 'b', 2 ));
+		
+		// Unfix the text style. text.get() will now return unstyled text
 		D.text.fix();
 		
-		var t3 = D.text.get('Mouse | [ARROW,WASD] move | [K,V] select | [J,C] cancel', {c:0xFF000000,bc:0xFF727268,bt:2});
+		var t3 = D.text.get('Mouse | [ARROW,WASD] move | [K,V] select | [J,C] cancel', {c:0xFF000000, bc:0xFF727268, bt:2});
 		add(D.align.up(t3, bg1));
 		
 		// --
 		D.snd.playV('fx2');
 	}//---------------------------------------------------;
 	
-	// -- Change the background scrolle graphic/color
+	
+	// -- Change the background scroll graphic/color
 	function scroller_next()
 	{
 		var C = DataT.arrayRandom(BGCOLS).copy();
@@ -87,7 +107,7 @@ class State_01 extends FlxState
 	
 	function create_get_menu()
 	{
-		// -- MENU
+		// -- Create
 		var m = new FlxMenu(32, 32, 140);
 		
 		// -- Customize fonts and colors:
@@ -151,7 +171,9 @@ class State_01 extends FlxState
 		]);
 		
 		//---------------------------------------------------;
+		// Example :
 		// Customize the ItemStyle and ListStyle for this specific page
+		
 		p.params.stI = {
 			text : {f:"fnt/wc.ttf", s:16, bt:2},
 			box_bm : [ // Custom checkbox icons
@@ -213,9 +235,9 @@ class State_01 extends FlxState
 				case "winmode":
 					D.setWindowed(b.data.c);
 					m.item_update(0, (t)->{t.data.c = FlxG.fullscreen; });
-				case "sdemo": Main.goto_state(State_02);
-				case "autot": Main.goto_state(State_03);
-				case "game1": Main.goto_state(State_Game1);
+				case "sdemo": Main.goto_state(State_Slides);
+				case "autot": Main.goto_state(State_Autotext);
+				case "game1": Main.goto_state(game1.State_Game1);
 				case _:
 			};
 			

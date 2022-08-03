@@ -1,10 +1,21 @@
-/********************************************************************
- * DJFLIXEL Main Static Helper Class
- * ---------------------------------
- * 
- * - Call D.init() before creating the FlxGame()
- * - Provides general purpose tools
- * 
+/**
+	
+	DJFLIXEL Main Static Helper Class
+	=================================
+	- Provides general purpose tools
+	- Acessible globally with (D)
+	
+	= Usage =
+		
+		- Call D.init() before creating the FlxGame()
+		- Checkout <DSound.hx> on how to init sounds 
+		- On DEBUG builds, _debug_keys() is enabled
+		
+	= COMPILE =
+	
+		- You can set a custom BUILD dir with {OUT} | lime build project.xml hl -DOUT=A:\tmp\
+		
+		
  *******************************************************************/
 
 package djFlixel;
@@ -14,13 +25,10 @@ import djfl.util.BitmapUtil;
 import djA.DataT;
 import djA.Macros;
 import flixel.FlxG;
-import flixel.FlxObject;
 import openfl.Lib;
-import openfl.display.Preloader.DefaultPreloader;
-import openfl.filters.BitmapFilterShader;
-import haxe.Log;
 
 #if ( !flash && !canvas)
+	// TODO: I need to fix this
 	import openfl.filters.BitmapFilter;
 	import openfl.filters.BlurFilter;
 	import openfl.filters.ConvolutionFilter;
@@ -29,26 +37,23 @@ import haxe.Log;
 
 class D
 {
-	/** Defined in djFlixel `include.xml` */
-	public inline static var DJFLX_VER:String = Macros.getDefine("DJFLX_VER");
+	/** Defined in djFlixel `haxelib.json` */
+	public inline static var DJFLX_VER:String = Macros.getDefine("djFlixel");
 	
-	/** Application info and starting parameters.
-	    Set new ones with D.init(..)
+	/** Init Parameters , you can set your own when you call D.init(..);
 	**/
-	public static var INFO(default,null) = {
+	public static var IP(default, null) = {
 		name:"djflixel_app",	// Used for log infos
 		version:"0.1",			// Used for log infos
-		website:"",				// General Purpose, not used
+		web:"",					// Custom Use
 		// ------
 		volume: -1,				// float (0 to 1), if >0 Will set global flixel volume to this 
 		fullscreen:false,		// Start fullscreen
 		smoothing:false,		// Soft pixels
-		savename:"",			// OPTIONAL - Savegame ID, make sure it is unique among djflixel projects
-		// ------
-		debug_keys:false		// Enable `D._debug_keys()` 
+		savename:""				// OPTIONAL - Savegame ID, make sure it is unique among djflixel projects
 	};
 	
-	/** Sound System */
+	/** Sound Helpers */
 	public static var snd(default, null):Dsound;
 	/** Control System */
 	public static var ctrl(default, null):Dcontrols;
@@ -84,15 +89,15 @@ class D
 	public static var SMOOTHING(default, set):Bool = false;
 	
 	/** 
-	 * Initialize this static class
-	 * @param O You can override fields of `D.INFO` check in code
+	 * Initialize this static class. Call this before creating FlxGame();
+	 * @param O You can override fields of `IP` check in code
 	 **/
 	public static function init(?O:Dynamic)
 	{
 		if (dest != null) return; // Check if is already inited
 			
-		DataT.copyFields(O, INFO);
-		trace('\n:: DjFlixel v$DJFLX_VER\n:: ${INFO.name}, ${INFO.version}\n:: ----------------------------');
+		DataT.copyFields(O, IP);
+		trace('\n:: DjFlixel v$DJFLX_VER\n:: ${IP.name}, ${IP.version}\n:: ----------------------------');
 			var c = Lib.current.stage.window.context;
 			trace(':: Renderer :', c.type, c.attributes);
 		
@@ -104,8 +109,8 @@ class D
 		ui = new Dui();
 		bmu = new BitmapUtil();
 		
-		if (INFO.savename != "") {
-			save = new Dsave(INFO.savename);
+		if (IP.savename != "") {
+			save = new Dsave(IP.savename);
 		}
 		
 		#if ( !flash && !canvas)
@@ -117,20 +122,20 @@ class D
 		FlxG.signals.gameResized.add(onResize);
 		
 		// :: Some code that needs to run after flxgame is created
-		FlxG.signals.preGameStart.addOnce(()->{
+		FlxG.signals.preGameStart.addOnce( ()-> 
+		{
 			MAX_WINDOW_ZOOM = Math.floor(Lib.current.stage.fullScreenWidth / FlxG.width) - 1;
-			SMOOTHING = INFO.smoothing;
-			if (INFO.volume >= 0) snd.setVolume(null, INFO.volume);
+			SMOOTHING = IP.smoothing;
+			if (IP.volume >= 0) snd.setVolume(null, IP.volume);
 			FlxG.mouse.useSystemCursor = true;
-			FlxG.fullscreen = INFO.fullscreen;
+			FlxG.fullscreen = IP.fullscreen;
 			ctrl = new Dcontrols(); // This needs to init after new FlxGame
 		});
 		
-		#if debug
-		if (INFO.debug_keys) {
+		#if (debug && FLX_KEYBOARD)
+			// CHANGE: Always add debug keys for debug builds
 			trace('Debug : Enabling Debug keys');
 			FlxG.signals.postUpdate.add(_debug_keys);
-		}
 		#end
 	}//---------------------------------------------------;
 	
@@ -162,7 +167,7 @@ class D
 			SMOOTHING = SMOOTHING;
 		#end
 		
-		#if debug
+		#if (debug && FLX_KEYBOARD)
 			DEBUG_RELOADED = false;
 		#end
 	}//---------------------------------------------------;
@@ -186,7 +191,7 @@ class D
 	
 	
 	/**
-	   Set Windows mode, Disabled fullscreen
+	   Set Windowed Scale, automatically disables Fullscreen
 	   @param	zoom 1,2,3,4...
 	**/
 	public static function setWindowed(zoom:Int)
@@ -199,15 +204,15 @@ class D
 	
 	
 	
-	#if debug
+	#if (debug && FLX_KEYBOARD)
 	
 	/** Read this var to check whether the current state was reloaded with F12, useful in some cases */
 	public static var DEBUG_RELOADED:Bool = false;
 	/**
 	 * Debug keys, autocalled on update.
-	 * F12 : Reload external files and reset state
-	 * SHIFT F12 : Reset Game
 	 * F9 : Antialiasing toggle
+	 * F12 : Hot Reload declared files and reset state <Dassets.hx>
+	 * SHIFT F12 : Reset Game
 	 */
 	static function _debug_keys()
 	{
@@ -215,7 +220,7 @@ class D
 			if (FlxG.keys.pressed.SHIFT){
 				FlxG.resetGame();
 			}else{
-				#if DYN_ASSETS
+				#if HOT_LOAD
 				FlxG.signals.preStateSwitch.addOnce( ()->{ DEBUG_RELOADED = true; });
 				assets.reload( FlxG.resetState );
 				#end

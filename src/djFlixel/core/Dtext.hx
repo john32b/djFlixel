@@ -1,6 +1,15 @@
 /**
- == Text generation Helpers
- ------------------------------------ */
+	DJFlixel Text Generation Helpers
+	===================
+	
+	- Accessible from (D.text)
+	
+	- Introducing the struct of "DTextStyle" which describes the 
+		style of a text object.
+		
+	- The most useful function is get()
+		
+*******************************************/
  
 package djFlixel.core;
 
@@ -8,7 +17,10 @@ import djA.DataT;
 import flixel.text.FlxText;
 
 
+/* Text Style Objects are used mainly in .get(..)
+ * Provides a quick way to stylize text */
 typedef DTextStyle = {
+	
 	?f:String,	// FONT
 	?s:Int,		// SIZE
 	?c:Int,		// COLOR
@@ -17,7 +29,6 @@ typedef DTextStyle = {
 	?bt:Int,	// BORDER TYPE | (0-3) [0:NONE. 1:SHADOW, 2:OUTLINE, 3:OUTLINE_FAST] | Default is 1 if bc is set
 	?bs:Int,	// BORDER SIZE | Default is 1. For shadow style just use (so) shadow offset
 	?so:Array<Int>,	// SHADOW OFFSET | Default is (1,1) is multiplied by bordersize. e.g. [1,0] or [0,1]
-	
 	
 	// --
 	?x:Float,	// X
@@ -31,18 +42,20 @@ typedef DTextStyle = {
 
 class Dtext 
 {
-	// Table (Int to border style) for quick lookup
+	// Table (Int to border style) for quick lookup in {DTextStyle.bt}
 	var __borderStyles:Array<FlxTextBorderStyle>;
 	
-	/** Store custom textstyles for quick reference by id anywhere.
-	 *  -- Manually add the styles here -- */
-	public var styles:Map<String,DTextStyle>;
+	/** Holds Global Styles
+	 * Put things here MANUALLY | styles.set("customID", {style...});
+	 * then you can use these in | .text.get("Text","customID"); */
+	public var styles:Map<String, DTextStyle>;
 	
-	// Style to be applied to all new generated text
+	// Style to be applied to all new generated text. Set with fix()
 	@:noCompletion
 	public var _fixStyle(default,null):DTextStyle = null;
 	
-	// Global use textformats
+	// Global use textformats. This is the thing where it uses tags to put multiple styles on FlxText
+	// .formatAdd() and .getF()
 	var textFormats:Array<FlxTextFormatMarkerPair>;
 	
 	public function new() 
@@ -60,7 +73,8 @@ class Dtext
 	}//---------------------------------------------------;
 	
 	
-	/** Clear all defined text formats */
+	/** Clear all defined text formats 
+	 **/
 	public function formatClear()
 	{
 		textFormats = [];
@@ -76,13 +90,22 @@ class Dtext
 		textFormats.push(new FlxTextFormatMarkerPair(format, symbol));
 	}//---------------------------------------------------;
 	
+	/** Apply a markup previously declared in formatAdd() in a text object
+	 */
+	public function applyMarkup(t:FlxText, str:String):FlxText
+	{
+		return t.applyMarkup(str, textFormats);
+	}//---------------------------------------------------;
+	
 	
 	/**
-	   Get a new FlxText with an applied custom style. Multiply style sources can be applied. Meaning you can 
+	   Get a new FlxText with an applied custom style. Multiple style sources can be applied. Meaning you can 
 	   use a predefined style by id, and append fields to it with an object.
+	   - Text Objects returned are best fitted for SINGLE-LINE use
+	   - If you want multiline/wordwrap later just set the FlxText.fieldWidth to >0
 	   @param	str Text String
-	   @param	o Check `dui.hx` for the DTextStyle definition. Will always apply last
-	   @param	id Style ID, will only get applied when fixedStyle is null
+	   @param	o   Overlay Text Style that will always apply last
+	   @param	id  Style ID, will only get applied if fixedStyle is nulle
 	**/
 	public function get(str:String, ?X:Float = 0, ?Y:Float = 0, ?o:DTextStyle = null, ?id:String = null):FlxText
 	{
@@ -112,8 +135,10 @@ class Dtext
 
 	
 	/**
-	   Use a predefined format (declared with formatAdd).
-	   e.g. "red text <r>here<r> and this is <b>blue<b>"
+	   Get text like .get() but also apply a predefined format
+	   that was previously declared with formatAdd(..)
+		- This is the kind of text that supports inner tags
+		  like "red text <r>here<r> and this is <b>blue<b>"
 	**/
 	public function getF(str:String, ?X:Float = 0, ?Y:Float = 0, ?o:DTextStyle = null, ?id:String = null):FlxText
 	{
@@ -124,11 +149,11 @@ class Dtext
 	
 	
 	/**
-	   Fix a TextStyle to be applied to all following GenText calls
-	   !! VERY IMPORTANT !! To disable this after you are done call it again with no params
-	   You can either fix from ID or a new TextStyle 
-	   Call with no params to clear.
+	   ::EXPERIMENTAL::
+	   Fix a TextStyle to be applied to all following get() calls
+	   !! VERY IMPORTANT !! To disable this after you are done - call this fn with no params -
 	   @param	id a styleID that you have previously set
+	   @param	st text style object
 	**/
 	public function fix(?id:String, ?st:DTextStyle)
 	{
@@ -139,12 +164,6 @@ class Dtext
 		}
 		
 		// note: if both are null, then then _fixstyle will be set to null
-	}//---------------------------------------------------;
-
-	
-	public function applyMarkup(t:FlxText, str:String):FlxText
-	{
-		return t.applyMarkup(str, textFormats);
 	}//---------------------------------------------------;
 	
 	

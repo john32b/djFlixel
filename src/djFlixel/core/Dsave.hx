@@ -1,24 +1,22 @@
+/**
+	DJFlixel General purpose Save Manager
+	===================
+	
+	- Accessible from (D.save)
+	- Basicallt a wrapper for FlxSave
+	- Incorporates the concept of save slots; there are 10 Save Slots 0-9
+	- Usage:
+		  D.save.setSlot(1);
+		  D.save.save("lives", player.lives);
+		  D.save.setSlot(2);
+		  if(D.save.exists("ammo")) pl.ammo = D.save.load("ammo");
+		  
+*******************************************/
 package djFlixel.core;
 
 import flixel.util.FlxSave;
 import haxe.Json;
 
-/**
-   General purpose Save Manager, using slots
-   - Accessible from D.save
-   - 9 Save Slots
-   
-   - Usage:
-	  D.save.setSlot(1);
-	  D.save.save("lives",player.lives);
-	  
-	  D.save.setSlot(2);
-	  if(D.save.exists("ammo")) pl.ammo = D.save.load("ammo");
-	  
-   - Future:
-	  . Gameapi Intergration and automatic saving to APIs that support saving (gamejolt).
-      . Backup save to a file, and option to load file.
-**/
 
 @:dce
 class Dsave

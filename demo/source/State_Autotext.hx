@@ -1,30 +1,18 @@
 /*****************************
- FlxAutotext Demo
+	- FlxAutotext demo
 ******************************/
-
 package ;
-import djA.DataT;
+
 import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
-import djFlixel.gfx.StarfieldSimple;
-import djFlixel.gfx.pal.Pal_DB32;
-import djFlixel.gfx.statetransit.Stripes;
-import djFlixel.other.DelayCall;
-import djFlixel.other.FlxSequencer;
 import djFlixel.ui.FlxAutoText;
-import djFlixel.ui.FlxMenu;
-import djFlixel.ui.FlxSlides;
 import djFlixel.ui.UIIndicator;
-import djFlixel.ui.menu.MPageData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.math.FlxRect;
-import flixel.system.FlxAssets;
-import flixel.text.FlxText;
 
 
-class State_03 extends FlxState
+class State_Autotext extends FlxState
 {
 	var AT:FlxAutoText;
 
@@ -72,10 +60,11 @@ class State_03 extends FlxState
 		
 		AT.setText(
 			'{c:30}FLXAUTOTEXT ::{w:5}\n' + 
-			'{w:1}Provides a simple way to create and control auto-typing text with custom tags like {wm:3,c:100}changing the characters per second on the fly.{w:10,c:60}Waiting custom times, etc.\n' +
-			'{w:10,wm:0,c:40}The carrier symbol is optional and you can turn it off even in a tag like so{sp:0}. Also linebreaks are autocalculated from beforehand so no weird text jumping when the text reaches the end of the area.\n' +
+			'{w:1}Provides a simple way to create and control auto-typing text with custom tags like {c:50}changing the characters per second {c:4}on the fly.{w:10,c:30}Pausing {w:8}tags {w:7}wherever.{w:8}\n' +
+			'It even has a {w:5,c:70,wm:3}word mode, where a pause is added after each word. Like this{wm:0}\n' + 
+			'{w:10,c:30}The carrier symbol is optional and you can turn it off even in a tag like so.{w:7,sp:0,c:35} Also linebreaks are autocalculated from beforehand so no weird text jumping when the text reaches the end of the area.\n' +
 			'- Press [J,V] or CLICK for next page -'+
-			'{w:0,np}Can also be used as a bare-bones dialog box, as it supports some preliminary dialog box functions like <newpage> and <pausing>.\n' +
+			'{w:0,np}Can also be used as a bare-bones dialog box,\nas it supports some preliminary dialog box functions like <newpage> <pausing> and even <custom callbacks>. More info on the comments inside <FlxAutotext.hx>\n' +
 			'- Press [J,V] or CLICK to return -'
 		);
 		
@@ -102,7 +91,7 @@ class State_03 extends FlxState
 			{
 				if (t == 1) return;
 				t = 1;
-				Main.create_add_8bitLoader(0.6, State_01);
+				Main.create_add_8bitLoader(0.6, State_Menu);
 			}
 		}
 			

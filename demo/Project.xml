@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
+	<haxeflag name="-dce" value="std"/>
+	
 	<app title="djFlixel Demo" version="0.4" package="" company="John32B" />
 	<app preloader="flixel.system.FlxBasePreloader"/>
-	<app main="Main" file="djflx_demo" path="bin\" />
-	
-	<!--START:>
-		<!--These are mainly for my own development setup-->
-		<!-- example : `lime build hl -Dramdisk` -->
-		<section if="ramdisk"> 
-			<app path="a:\djflx\"/>
-			 <!--<haxelib name="djA"/> -->
-			 <!--<haxelib name="djFL"/> -->
-		</section>
-	<!--END-->
+	<app main="Main" file="djflx_demo" path="bin/" />
 	
 	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
 	
+	<source path="source" />
+	
+	<!-- Flixel default is webgl -->
+	<!--<haxedef name="canvas" if="html5"/>-->
+
 	<haxelib name="flixel"/>
 	<haxelib name="djFlixel"/>
-	<source path="source" />
 	
 	<!--<assets path="assets"/>-->
 	<library name="default" type="pak" if="hl" unless="debug"/>
@@ -27,14 +23,17 @@
 	<assets path="assets" type="image" include="*.png|*.jpg" rename="im"/>
 	<assets path="assets/sound_mp3" type="sound" include="*.mp3" rename="snd" if="flash"/>
 	<assets path="assets/sound_ogg" type="sound" include="*.ogg" rename="snd" unless="flash"/>
+		
+	<!-- flixel related -->
+	<haxedef name="FLX_NO_GAMEPAD"/>
 	
-	<!--Because I am doing bitmap manipulation HTML5 Webgl is buggy, So I am using canvas -->
-	<haxedef name="canvas" if="html5"/>
+	<!-- djflixel related. Put these after including DJFLIXEL -->
+	<haxedef name="HOT_LOAD" if="debug flash"/>
 	
-	<!--<haxedef name="FLX_NO_GAMEPAD"/>-->
-	<haxeflag name="-dce" value="std"/>
-	
-	<!-- djflixel -->
-	<haxedef name="DYN_ASSETS" if="debug flash"/>
+		<!-- NEW: Tell DSound.hx, where to look for sounds and music. 
+			`snd` is the asset ID path I declared earlier -->
+		<haxedef name="DJFLX_SND" value="snd/"/>
+		<haxedef name="DJFLX_MUS" value="snd/"/>
+		
 	
 </project>

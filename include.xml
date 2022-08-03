@@ -9,8 +9,10 @@
 	<haxedef name="next" />	<!--I don't know if this is required, but I am declaring anyway-->
 	
 	<!-- DJFlixel --------->
-	<haxedef name="DJFLX_VER" value="0.4.2"/>
 	<assets path="assets/ui_atlas.png" embed="true"/>
+
+	<!-- Override the build dir, useful if you want to build on /tmp/ or a ramdisk on windows -->
+	<app path="${OUT}" if="OUT"/>
 	
 	<!-- Flixel Defines ------->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />	

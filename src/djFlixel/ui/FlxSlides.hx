@@ -92,6 +92,7 @@ class FlxSlides extends FlxGroup
 		super.update(elapsed);
 		if (index ==-1) return;	// nothing is set yet
 		
+		#if (FLX_KEYBOARD)
 		if (D.ctrl.justPressed(DButton.LEFT)) {
 			if (index > 0) {
 				goto(index - 1); onEvent('previous');
@@ -112,6 +113,7 @@ class FlxSlides extends FlxGroup
 				onEvent('close');
 			}
 		}
+		#end
 		
 		if (params.mouse)
 		{

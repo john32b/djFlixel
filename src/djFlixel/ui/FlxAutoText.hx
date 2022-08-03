@@ -1,43 +1,37 @@
 /**
   ++ FlxAutoText
-  ++ Updated:2020.02
   
   - Autotype Effect with a simple in-string tag system.
   
   TAGS::
   
   - Put tags in curly brackets, like so {key:value}
-  - Supports multiple keys in brackets {key1:val,key2:val}
-  - Codes
+  - Supports multiple keys in brackets {key1:val, key2:val}
+  
+  - Codes {
+  
   		c:INT		: set Characters Per Second
   		w:INT		: Wait for (100*INT Seconds). So w:10 waits for one second
  		wm:INT		: Enable word mode. Writes a word at current CPS and Waits for (INT*100 Seconds). 0 to DISABLE
   		call:String	: Calls onEvent(call(customcall)) when encountered
   		np			: Force a new page -- DON'T COMBINE WITH SP on the same {} . No Parameter, you can even write {np} 
   		sp:INT		: Special Codes ::
-  					: 0,1 Turn Carrier on/off
+						0,1 Turn Carrier on/off
+	}
   
-  DEV ::
+  DEV NOTES ::
 	- The {np} tag is stored in the .sp field on the metadata as (100)
-  
-  EXAMPLE ::
-	var textBoot = new FlxAutoText(0, 0, 300);
-		add(textBoot);
-		textBoot.style = {f:"fonts/pixel.ttf", s:16, c:0xFFFF00};
-		textBoot.onComplete = ()->{ trace("Text complete"); };
-		textBoot.setCarrier('-', 0.15);
-		textBoot.setText( '{c:10,sp:0}HELLO WORLD{w:10,sp:1,c:4}!!!!{w:3}' );
-  
-   TODO ::
- 	
-   - stop() function should show the final text accounting for future linebreaks etc
-   
-   TIP ::
-   
-	- Call `height` after creating for the height getter to trigger and report correct height??
-	  Forces flxtext regen graphic 
-	  autotext.textObj.height;
+	- In case the height is not reporting  I can just call `autotext.textObj.height` to force an flxtext regen ??
 	
+	
+  EXAMPLE ::
+  
+	var AT = new FlxAutoText(0, 0, 300);
+		AT.style = { f:"fonts/pixel.ttf", s:16, c:0xFFFF00};
+		AT.onComplete = ()->{ trace("Text complete"); };
+		AT.setCarrier('-', 0.15);
+		AT.setText( '{c:10,sp:0}HELLO WORLD{w:10,sp:1,c:4}!!!!{w:3}' );
+		add(AT);
  **/
 
 package djFlixel.ui;
@@ -68,7 +62,6 @@ class FlxAutoText extends FlxSpriteGroup
 	static inline var DEFAULT_CARRIER_SMB = "_";
 	
 	// :: The markup tags
-	// The chars go inside parenthesis + integer .e.g. (c3)
 	inline static var TAG_CPS= 		'c';	// cps
 	inline static var TAG_WAIT= 	'w';	// wait
 	inline static var TAG_WORD= 	'wm';	// word mode
@@ -78,11 +71,7 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	// Limit text update to this time as the lowest value
 	public static var MIN_TICK = 0.10;
-	
-	/** Default time to wait before -NEWPAGE- , set 0 to pause */
-	public var newpageWait:Int = 9;
 
-	
 	var TAGS:Array<AutoTextMeta>; // Hold ALL the MetaData objs
 	var nextTagIndex:Int;
 	
@@ -95,14 +84,13 @@ class FlxAutoText extends FlxSpriteGroup
 	var wordNextSpace:Int;  // hold the index of the next space, used if wordWait is enabled
 	
 	var lineBreaks:Array<Int>;	// Store the indexes of all line breaks
-	var linesMax:Int;			// If the textbox has a max number of lines
+	var linesMax:Int;			// If the textbox has a max number of lines. SET in constructor
 	var lineCurrent:Int;		// The line index (starting at 1) that the text is being drawn at
 	
 	var textStart:Int;			// Start drawing from this character. This is to manage multiple lines and newpages
 	var textIndex:Int;			// Up to which index characters are to be rendered (0 means none)
 	
 	var newpageFlag:Bool;		// If true it will cut the text to currentIndex at the next update cycle, newpage
-	
 	
 	// -- Carrier
 	var carrierEnabled:Bool = false;
@@ -123,7 +111,7 @@ class FlxAutoText extends FlxSpriteGroup
 	/* Is it currently done displaying all text */
 	public var isComplete(default, null):Bool;
 
-	/** Final text to be displayed (no metadata, it has been processed) */
+	/** Final text to be displayed (with no tags, they are processed and stored elsewhere) */
 	public var text(default, null):String;
 	
 	/** Broadcast Events, usually set by a dialogBox */
@@ -136,30 +124,30 @@ class FlxAutoText extends FlxSpriteGroup
 	public var sound = {
 		char:null,	// On character being typed
 		wait:null,	// On a Wait
-		pause:null  // On a pause
+		pause:null  // On a Pause
 	};
+	
+	/** When the text flow reaches end of a page, wait this amount of time 
+	 *  to go to the next page. Set 0 to WAIT. Value is *100ms, so 9 is 900ms */
+	public var newpageWait:Int = 9;
 	
 	//====================================================;
 	
 	/**
 	   @param	X Screen Pos
 	   @param	Y Screen Pos
-	   @param	FieldWidth 0 For single line
+	   @param	FieldWidth 0 For Single Line | -1 For rest of the view area, mirrored x margin amount
 	   @param	Lines How many lines to use 0 for infinite - Also see `overflowrule`
 	**/
 	public function new(X:Float = 0, Y:Float = 0, FieldWidth:Float = 0, Lines:Int = 0)
 	{
 		super(X, Y);
 		linesMax = Lines;
-		textObj = new FlxText(0, 0, FieldWidth, null);
+		if (FieldWidth ==-1) FieldWidth = FlxG.width - (x * 2);
+		textObj = new FlxText(0, 0, FieldWidth, null); // DEV setting 0 to FieldWidth makes wordwrap=false
 		add(textObj);
 		active = false;
-		// DEV: setCPS is here because I don't want it to reset between runs
-		//      you can use the same object to display basic text over and over with the same speeds
 		setCPS(DEFAULT_CPS);
-		
-		// Trigger this to report correct height?
-		//autotext.textObj.height;
 	}//---------------------------------------------------;
 	
 	override function get_width():Float 
@@ -188,6 +176,7 @@ class FlxAutoText extends FlxSpriteGroup
 		// -- Update Text
 		if ( !isPaused && (timer += elapsed) >= tw)
 		{
+			
 			// First thing first, check for linecuts
 			if (newpageFlag)
 			{	
@@ -222,7 +211,7 @@ class FlxAutoText extends FlxSpriteGroup
 			}
 			
 			// :: Check for TAGS and stop if jumped
-			if (nextTagIndex >-1 && textIndex >= nextTagIndex)
+			if (nextTagIndex >-1 && textIndex > nextTagIndex)
 			{
 				textIndex = nextTagIndex;
 			}
@@ -230,7 +219,7 @@ class FlxAutoText extends FlxSpriteGroup
 			// :: Check for linebreaks
 			if (lineBreaks.length > 0)
 			{
-				while (textIndex >= lineBreaks[0]) // Doing while loop, In case it jumps more than one line break
+				while (textIndex > lineBreaks[0]) // Doing while loop, In case it jumps more than one line break
 				{
 					var breakIndex = lineBreaks.shift();
 					if (linesMax > 0 && lineCurrent >= linesMax) // -- overflow --
@@ -248,6 +237,7 @@ class FlxAutoText extends FlxSpriteGroup
 					if (lineBreaks.length == 0) break;
 				}
 			}
+
 				
 			// :: Check for Text End	
 			if (textIndex >= text.length)
@@ -271,19 +261,17 @@ class FlxAutoText extends FlxSpriteGroup
 			}
 			
 			// :: RE-Check for tags at current
-			if (textIndex == nextTagIndex)
-			{
-				tags_apply(TAGS.shift());
-				calcNextTagIndex();	
-			}
+			tags_check_and_apply();
 
 			// :: Render
-			textObj.text = text.substr(textStart, textIndex - textStart);
+			textObj.text = text.substr(textStart, textIndex - textStart);	// substr is by length
+			trace("TextIndex", textIndex, 'Char + "${text.charAt(textIndex)}"');
+			trace("Whole" , textObj.text, "Len", textObj.text.length);
 			if (sound.char != null) D.snd.playV(sound.char);
 			
 			if (carrierEnabled)
 			{
-				carrier_update_pos();
+				carrier_update();
 				carrierTimer = 0;		// Reset the time, wait a full (TICK) again
 				carrier.visible = true;	// This is for effect, show the carrier, this is the default behavior on every text editor
 			}
@@ -293,7 +281,7 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	/**
 	   Prepare a string to be animated
-	   String supports tags, also if you want to manually call 
+	   String supports tags -- Check this doc header for more info
 	   - Call WAIT functions after setting this
 	   - Resets already going text
 	   @param	source String
@@ -302,6 +290,7 @@ class FlxAutoText extends FlxSpriteGroup
 	public function setText(source:String, start:Bool = true)
 	{
 		text = tags_parse(source); // Will also set TAG[] to new data
+		//trace("TAGS", TAGS);
 		
 		// Init vars
 		isPaused = isComplete = false;
@@ -313,7 +302,8 @@ class FlxAutoText extends FlxSpriteGroup
 		lineCurrent = 1;
 		textStart = 0;
 			
-		calcNextTagIndex();
+		tags_calc_next();
+		tags_check_and_apply();
 		
 		// -- Fix Line Brakes
 		textObj.visible = false;
@@ -333,8 +323,17 @@ class FlxAutoText extends FlxSpriteGroup
 				lineBreaks.push(i);
 			}
 		}
+		//trace("Linebreaks",lineBreaks);
+		
+		#if debug
+			if (lineBreaks.length > 0 && !textObj.wordWrap) 
+				FlxG.log.error("FlxAutoText with fieldwidth 0 is only for single line texts");
+		#end
 		
 		if (start) active = true;
+		
+		
+		
 	}//---------------------------------------------------;
 	
 	
@@ -343,28 +342,28 @@ class FlxAutoText extends FlxSpriteGroup
 	   e.g.
 			setCarrier('_',0.2);
 			setCarrier(new FlxSprite(...));
-	 @param offsets [x,y]
+	 @param offsets [x,y] offsets in Array
+	 @param tick Override Blinking Time Interval
 	**/
-	public function setCarrier(symbol:String = DEFAULT_CARRIER_SMB, spr:FlxSprite = null, offsets:Array<Int> = null, tick:Float = DEFAULT_CARRIER_TICK)
+	public function setCarrier(?symbol:String = DEFAULT_CARRIER_SMB, ?spr:FlxSprite = null, 
+							offsets:Array<Int> = null, tick:Float = DEFAULT_CARRIER_TICK)
 	{
 		#if debug
-		if (text != null){
-			trace("Warning: Set the carrier before setting text.");
-		}
+			if (text != null) FlxG.log.error("Warning: Set the carrier before setting text.");
 		#end
+		
 		var C:FlxSprite;
 		if (spr == null) {
 			C = cast D.text.get(symbol, style);	
 		}else{
 			C = spr;
 		}
-		
-		if (offsets == null) offsets = [0, 0];
+		if (offsets == null) offsets = [0, 0];	// DEV: I can't put it as default function argument.
 		add(carrier = C);
 		carrierEnabled = true;
 		carrierBlinkRate = tick;
 		carrierTimer = 0;
-		carrier.visible = false; // Start off as not visible so it only start updating after the first start();
+		carrier.visible = false;
 		carrierOffsets = offsets;
 	}//---------------------------------------------------;	
 	
@@ -414,7 +413,7 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	/**
 	  Hold the flow for a predefined set of time.
-	  In 10 Milliseconds. 1 is 100ms, 2 is 200ms, 10 is 1sec, 20 is 2seconds, 100 is 10 seconds. etc
+	  In 100 Milliseconds. 1 is 100ms, 2 is 200ms, 10 is 1sec, 20 is 2seconds, 100 is 10 seconds. etc
 	  Set 0 to WAIT, resume with resume()
 	 */
 	public function wait(value:Int = 5)
@@ -467,15 +466,6 @@ class FlxAutoText extends FlxSpriteGroup
 		wordNextSpace = -1;
 	}//---------------------------------------------------;
 	
-	function calcNextTagIndex()
-	{
-		if (TAGS.length == 0) {
-			nextTagIndex = -1; 
-			return; 
-		}	
-		nextTagIndex = TAGS[0].index;
-	}//---------------------------------------------------;
-	
 
 	/**
 	   - Fills the TAGS[] array with the tag data from the string
@@ -524,10 +514,14 @@ class FlxAutoText extends FlxSpriteGroup
 		return source;
 	}//---------------------------------------------------;
 	
-	
-	function tags_apply(t:AutoTextMeta)
+	/** Check if current textIndex has a TAG and applies
+	 */
+	function tags_check_and_apply()
 	{
+		if (textIndex != nextTagIndex) return;
+		var t:AutoTextMeta = TAGS.shift();	// This is guaranteed to have elements
 		//trace('>> Applying tags', t);
+		
 		if (t.call != null) {
 			event_c(call(t.call));
 		}
@@ -549,27 +543,61 @@ class FlxAutoText extends FlxSpriteGroup
 			wordWait = t.word;
 			calcNextWordSpace();
 		}
+		
+		tags_calc_next();
+	}//---------------------------------------------------;
+
+	
+	/**
+	   Checks to see the upcoming TAG and fills `nextTagIndex`
+	**/
+	function tags_calc_next()
+	{
+		if (TAGS.length == 0)
+			nextTagIndex = -1; 
+		else
+			nextTagIndex = TAGS[0].index;
 	}//---------------------------------------------------;
 	
 	
-
-	
-	
-	
+	#if (!flash)
+	var _lastknownlineheight = 0.0;
+	#end
 	
 	/**
-	 * Update Position of the carrier sprite if any
+	 * - Called on update(); updates carrier pos
 	 */
-	function carrier_update_pos()
+	function carrier_update()
 	{
-		if (!carrierEnabled) return;
 		var tm:TextLineMetrics = textObj.textField.getLineMetrics(textObj.textField.numLines - 1);
-		carrier.x = this.x + tm.width + carrierOffsets[0];
-		carrier.y = this.y + carrierOffsets[1] + (textObj.textField.numLines - 1) * (tm.height + tm.leading);
-		if (carrier.x >= this.x + textObj.width) {
-			carrier.x = this.x;
-			carrier.y += (tm.height + tm.leading);
+		
+		// An empty line reports height as 0, all targets do it but not Flash
+		#if (!flash)
+		if (tm.height == 0) {
+			tm.height = _lastknownlineheight;
+		}else{
+			_lastknownlineheight = tm.height;
 		}
+		#end
+		//trace("textObj.textField.numLines", textObj.textField.numLines);
+		//trace("linecurrent", lineCurrent);
+		//trace("TM", tm);
+		
+		// DEV:
+		// There was a bug. sometimes textObj.textField.numLines would report one more line?
+		// I don't know why, even if the string only had one \n at the end, if it was the last symbol
+		// That's why I am using (linecurrent) here, should be safe
+		
+		carrier.y = this.y + 2 + carrierOffsets[1] + ((lineCurrent - 1) * (tm.height));
+		carrier.x = this.x + 2 + tm.width + carrierOffsets[0];
+		
+		if (carrier.x > this.x + textObj.width) {
+			// carrier.x = this.x + 2;
+			// carrier.y += tm.height;
+		}
+		
+		// CHANGED: removed tm.leading from calculations
+		//			Flash text adds a 2 pixel gutter to the whole text object
 	}//---------------------------------------------------;
 	
 	/**
@@ -581,7 +609,7 @@ class FlxAutoText extends FlxSpriteGroup
 		carrier.visible = enabled;
 		carrierEnabled = enabled;
 		carrierTimer = 0;
-		//if(enabled) carrier_update_pos(); // NO: when it is called from a TAG, the position will be updated on the same function later
+		//if(enabled) carrier_update(); // NO: when it is called from a TAG, the position will be updated on the same function later
 	}//---------------------------------------------------;
 	
 	
@@ -593,11 +621,10 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	
 	/**
-	 * HELPER
 	 * Reads the textfield, bakes the linebreaks and returns a string with linebreaks (\n) in it.
 	 * PRE: TextField MUST be set to the final text
 	 * NOTE: Also shifts the TAGS indexes
-	 * This is really useful to not have words jump on the line below if they get out of width.
+	 * This is really useful to not have words jump on the line below if they get out of area width.
 	 * ----
 	 * http://troyworks.com/blog/2011/06/09/flash-as3-detect-undesired-line-break-in-textfield-wordwrap-is-true/
 	 */

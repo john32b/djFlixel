@@ -1,30 +1,20 @@
 /*****************************
- - FlxSlides 
- - AL
+	- FlxSlides Demo
+	- D.align Demo
 ******************************/
- 
-
 package ;
+
 import djA.DataT;
 import djFlixel.D;
-import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.StarfieldSimple;
 import djFlixel.gfx.pal.Pal_DB32;
-import djFlixel.gfx.statetransit.Stripes;
-import djFlixel.other.DelayCall;
-import djFlixel.other.FlxSequencer;
-import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxSlides;
-import djFlixel.ui.menu.MPageData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.math.FlxRect;
-import flixel.system.FlxAssets;
-import flixel.text.FlxText;
 
 
-class State_02 extends FlxState
+class State_Slides extends FlxState
 {
 
 	override public function create() 
@@ -45,7 +35,7 @@ class State_02 extends FlxState
 		SL.setArrows(12, 12, 80, 300);
 		SL.onEvent = (e)->{
 			if (e == "close") {
-				Main.create_add_8bitLoader(0.7, State_01);
+				Main.create_add_8bitLoader(0.7, State_Menu);
 			}else
 			if (e == "next" || e == "previous") {
 				D.snd.play('hihat');

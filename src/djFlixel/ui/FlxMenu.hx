@@ -1,13 +1,17 @@
 /**
   = FlxMenu
   - Multi-page menu system 
-  - Version 0.4 (2020_03)
   ----------------------------------------------
   
   - Every menu page is a datastructure of <MPageData>
   - <MPage> is a sprite group that takes <MPageData> and creates a single page menu based on that data
   - FlxMenu is a system that handles multiple <MPages>
-  - Handles calling pages from other pages, menu item callbacks, etc
+  - it handles calling pages from other pages, menu item callbacks, pooling etc
+  
+  - A Menu Page <MPage> (Sprite)
+	- can be open or closed
+	- can have focus or not (keyboard focus)
+	- once closed it will hang around in the pool, in case it is needed again
   
   
   Simple use example :
@@ -49,6 +53,7 @@ import djFlixel.ui.menu.MPage;
 import djFlixel.ui.menu.MPageData;
 import djFlixel.ui.IListItem.ListItemEvent;
 import djFlixel.ui.VList.VListStyle;
+import flixel.FlxG;
 import flixel.FlxSprite;
 
 import flixel.text.FlxText;
@@ -56,7 +61,7 @@ import flixel.group.FlxGroup;
 import flixel.util.typeLimit.OneOfTwo;
 
 
-// Menu Events that are sent with <FlxMenu.onMenuEvent>
+// Menu Events that are sent to <FlxMenu.onMenuEvent>
 enum MenuEvent
 {
 	page;		// A page is shown
@@ -71,47 +76,27 @@ enum MenuEvent
 }
 
 
-// --
+
 class FlxMenu extends FlxGroup
 {
+
 	public var x(default, null):Float;
 	public var y(default, null):Float;
 	
-	// There are going to be passed to all created MPAGES
-	var def_width:Int;
-	var def_slots:Int;	
-	
 	public var isFocused(default, null):Bool = false;
 	
-	// Pointer to the PageData that is currently on screen
+	/** Pointer to the PageData that is currently on screen */
 	public var pageActive(default, null):MPageData;	
 	
+	/** FlxMenu can create pages with createPage(), it will store them here for quick retrieval */
 	public var pages(default, null):Map<String,MPageData>;
 	
-	// Pointer to the current active MenuPage Sprite
+	/** Pointer to the current active MenuPage Sprite */
 	public var mpActive(default, null):MPage;
-	
-	var history:Array<MPageData>;
-	
-	var pool_max = 4;
-	
-	var pool:Array<MPage>;
-	
-	// An icon generator shared for all Menu Pages
-	var iconcache:MIconCacher;
-	
-	/// DEV: Shortened names for {styleItem, styleList, styleCursor}
-	/** USERSET- Set style for the Menu Items. Starts with default values, you can modify fields */
-	public var stI:MItemStyle;
-	/** USERSET - Set style for the Vertical List. Starts with default values, you can modify fields */
-	public var stL:VListStyle;
-	/** USERSET - Set style for Menu Cursor, you can modify fields. */
-	public var stC:MCursorStyle;
-	/** USERSET - Set the textstyle for the Header Text */
-	public var stHeader:DTextStyle;
 	
 	/** Some functionality flags. Set these right after new() */
 	public var PARAMS = {
+		pool_max:4,					// How many MPages to keep in the pool
 		enable_mouse:true,  		// Enable mouse interaction in general
 		start_button_fire:false,	// True will make the start button fire to items
 		page_anim_parallel:false,	// Page-on-off will run in parallel instead of waiting
@@ -123,16 +108,41 @@ class FlxMenu extends FlxGroup
 		line_time:0.4
 	};
 	
-	/** Menu Callbacks to the user */
-	public var onMenuEvent:MenuEvent->String->Void;			// MenuEvent:Page ID
-	public var onItemEvent:ListItemEvent->MItemData->Void;	// ItemEvent:ItemData
+	/** USERSET - If set will callback for menu Events | fn(MenuEvent, Page ID) */
+	public var onMenuEvent:MenuEvent->String->Void;
 	
-	// :: Text Header
+	/** USERSET - if set will callback for item Events | fn(ItemEvent, itemData) */
+	public var onItemEvent:ListItemEvent->MItemData->Void;
+	
+	/** USERSET - Set setyle for Menu Items. Starts with default values, you can modify fields */
+	public var stI:MItemStyle; // (ST)yle (Item)
+	
+	/** USERSET - Set style for the Vertical List. Starts with default values, you can modify fields */
+	public var stL:VListStyle; // (St)yle (L)ist
+	
+	/** USERSET - Set style for Menu Cursor, you can modify fields. */
+	public var stC:MCursorStyle; // (St)yle (C)ursor
+	
+	/** USERSET - Set the textstyle for the Header Text */
+	public var stHeader:DTextStyle;
+	
+	var history:Array<MPageData>;
+	
+	var pool:Array<MPage>;
+	
+	// An icon generator shared with all Menu Pages
+	var iconcache:MIconCacher;
+	
+	// Text Header
 	var headerText:FlxAutoText;
 	var decoLine:DecoLine;
 	
-	// HELPER. Used in goto(); I don't want to add a function parameter.
+	// HELPER. Used in goto();
 	var __backreq:Bool = false;	
+	
+		// There are going to be passed to all created MPAGES
+	var def_width:Int;
+	var def_slots:Int;	
 	
 	//====================================================;
 	
@@ -140,24 +150,23 @@ class FlxMenu extends FlxGroup
 	/**
 	   @param	X Screen X
 	   @param	Y Screen Y
-	   @param	WIDTH 0 To autocalculate based on item length (default) -1 To mirror X to the rest of the screen
+	   @param	WIDTH 0 To autocalculate based on item length (default) -1 Rest of screen, mirrored X Margin
 	   @param	SLOTS How many vertical slots for items to show. If a menu has more items, it will scroll.
 	**/
 	public function new(X:Float=0, Y:Float=0, WIDTH:Int=0, SLOTS:Int = 6)
 	{
 		super();
-		x = X; y = Y;
-		def_width = WIDTH; def_slots = SLOTS;
-		
+		x = X; 
+		y = Y;
+		def_width = WIDTH; 
+		def_slots = SLOTS;
 		history = [];
 		pages = [];
-		pool_clear();
-		
+		pool = [];
 		stI = DataT.copyDeep(MItem.DEFAULT_STYLE);	// STI needs deep copy
 		stL = Reflect.copy(VList.DEFAULT_STYLE);
 		stC = {};
 	}//---------------------------------------------------;
-	
 	
 	override public function destroy():Void 
 	{
@@ -165,6 +174,28 @@ class FlxMenu extends FlxGroup
 		super.destroy();
 		pool_clear();	// To destroy these objects as well
 	}//---------------------------------------------------;
+	
+	
+	/**
+	   Overlay fields of MItemStyle
+	   @param	o You can define just the fields that you want e.g. { text:{f:12,c:0xFF00FF} }
+	**/
+	public function overlayStL(o:VListStyle)
+	{
+		stI = DataT.copyFields(o, stL);
+		trace("WARNING: EXPERIMENTAL - Does this work?");
+	}//---------------------------------------------------;
+	
+	/**
+	   Overlay fields of MItemStyle
+	   @param	o You can define just the fields that you want e.g. { text:{f:12,c:0xFF00FF} }
+	**/
+	public function overlayStI(o:MItemStyle)
+	{
+		stI = DataT.copyFields(o, stI);
+		trace("WARNING: EXPERIMENTAL - Does this work?");
+	}//---------------------------------------------------;
+	
 	
 	/** Create a MenuPage, add it and return it */
 	public function createPage(id:String, ?title:String):MPageData
@@ -220,7 +251,7 @@ class FlxMenu extends FlxGroup
 		_mev(MenuEvent.close, pageActive.ID);
 	}//---------------------------------------------------;
 	
-	
+	/** Focus the Menu, gives keyboard focus, visual feedback */
 	public function focus()
 	{
 		if (isFocused) return;
@@ -231,7 +262,7 @@ class FlxMenu extends FlxGroup
 		_mev(MenuEvent.focus, pageActive.ID);
 	}//---------------------------------------------------;
 	
-	
+	/** Unfocus the Menu, removes keyboard focus, visual feedback */
 	public function unfocus()
 	{
 		if (!isFocused) return;
@@ -245,10 +276,12 @@ class FlxMenu extends FlxGroup
 	
 	
 	/**
-	   - Will always focus the new page
+	   Open a page and give it focus. Can goto an already created page
+	   that was previously pushed to the pages Map with .createPage()/addPage
+	   or you can give a new external PageData (e.g. on-the-fly create Pages with Dynamic Data)
 	   @param	P Page ID that is already in pages list or a new PageData
 	**/
-	public function goto(SRC:OneOfTwo<String,MPageData>)
+	public function goto(SRC:OneOfTwo<String, MPageData>)
 	{
 		var pdata:MPageData;
 		if (Std.isOfType(SRC, MPageData)) {
@@ -257,8 +290,9 @@ class FlxMenu extends FlxGroup
 			pdata = pages.get(cast SRC);
 		}
 
-		if (pdata == null){
-			throw "USER ERROR: Could not get pagedata from input parameter";
+		if (pdata == null) {
+			FlxG.log.error("Could not get pagedata");
+			return;
 		}
 	
 		if (pageActive == pdata) {
@@ -270,11 +304,11 @@ class FlxMenu extends FlxGroup
 		pageActive = pdata;
 		isFocused = true;
 		
-		// Search if this page is in history, if it is remove it and all after it
+		// Search if this page is in history, if it is remove it and everything after it
 		var i = history.length;
 		while (i--> 0) {
 			if (history[i] == pdata) {
-				history.splice(i, history.length - i); // Remove from i to end
+				history.splice(i, history.length - i); // Remove `from i to end
 				break;
 			}
 		}
@@ -298,7 +332,7 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 
-	// Go to the previous page on history
+	/** Go to the previous page in history */
 	public function goBack()
 	{
 		// Can go back no more, notify user and return
@@ -314,7 +348,8 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	// Go to the first page of history queue	
+	/** Go to the furst page of the history queue,
+	 * Useful when you are in a nested menu and want to go to the root */
 	public function goHome()
 	{
 		if (history.length <= 1) return;
@@ -323,20 +358,23 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/**
-	   Change an item's data or parameters, (label,disabled)
+	   Change an item's data or parameters e.g. (label, disabled)
 	   The changes you make to the item will apply immediately on the menus
 	   e.g.
-			; Make the Second Item toggle the disabled state
+			- Make the Second Item (index 1) toggle its disabled state
 	   		menu.item_update(1, (i)->{i.disabled = !i.disabled;});
 			
-			; In Page "options" select item with id "audio" and set its range value to 0
+			- In Page "options" select item with id "audio" and set its range value to 0
 			menu.item_update("options","audio", (i)->{i.data.c=0;});
+			
+		This function gets the item you need and passes it to a function, 
+		so you must modify it from there. 
 			
 	   @param	pageID If Null will search the active page
 	   @param	idOrIndex Item INDEX starting from 0 or ID
-	   @param	fn Alter the item in this function
+	   @param	modifyFN Alter the item in this function
 	**/
-	public function item_update(?pageID:String, idOrIndex:OneOfTwo<String,Int>, fn:MItemData->Void)
+	public function item_update(?pageID:String, idOrIndex:OneOfTwo<String,Int>, modifyFN:MItemData->Void)
 	{
 		// :: Get pagedata
 		var pg:MPageData;
@@ -359,7 +397,7 @@ class FlxMenu extends FlxGroup
 		}
 		
 		// :: User manipulation
-		fn(item);
+		modifyFN(item);
 		
 		// -- Search created MPages for this page/item
 		
@@ -387,9 +425,9 @@ class FlxMenu extends FlxGroup
 	
 	
 	
-	// Called right after a new page
-	// - Creates/Updates the header text
-	// - Make sure `pageActive` is set
+	/** Automatically called, every time FlxMenu goes to a new Page 
+		- creates or updates the Header Text (if enabled in PARAMS)
+	*/
 	function headerText_show()
 	{
 		if (!PARAMS.header_enable) return;
@@ -438,9 +476,11 @@ class FlxMenu extends FlxGroup
 	{
 		if (!PARAMS.header_enable || headerText == null) return;
 		headerText.visible = decoLine.visible = false;
-		
 	}//---------------------------------------------------;
 	
+	
+	/** Called by MPage.onListEvent 
+	 **/
 	function on_list_event(msg:String)
 	{
 		if (msg == "back") {
@@ -454,8 +494,8 @@ class FlxMenu extends FlxGroup
 		}
 	}//---------------------------------------------------;
 	
-	// Handle callbacks from the VLIST, process what is to be processed
-	// and then report back to user
+	/** Called by MPage.onItemEvent 
+	 **/
 	function on_item_event(type:ListItemEvent, it:MItemData)
 	{
 		if (type == fire && it.type == "link")
@@ -471,7 +511,7 @@ class FlxMenu extends FlxGroup
 					return;
 				case 2:	// Call - Confirm Popup
 					mpActive.active = false;
-					D.ctrl.flush();	// <-- It is important to flush, otherwise it will register an input immediately
+					D.ctrl.flush();	// <-- It is important to flush, otherwise it will register an input immediately after
 					var P = MPageData.getConfirmationPage(it);
 						P.params.stI = {text:DataT.copyFields(it.data.tStyle, Reflect.copy(stI.text))};
 					var MP = pool_get(P);	// -> Will create a new page every time, because `noPool=true`
@@ -537,7 +577,10 @@ class FlxMenu extends FlxGroup
 		if (onMenuEvent != null) onMenuEvent(e, d);
 	}//---------------------------------------------------;
 	
-
+	
+	/** Tries to get from POOL, and if it can't 
+		it will create a new MPage object and return that
+	**/
 	function pool_get(PD:MPageData):MPage
 	{
 		// - Does it exist in the pool?
@@ -577,7 +620,7 @@ class FlxMenu extends FlxGroup
 		// DEV: The page is guaranteed that does not exist in the pool since
 		//      when it was created the pool was checked first.
 		pool.push(P);
-		if (pool.length > pool_max)
+		if (pool.length > PARAMS.pool_max)
 		{
 			pool.shift().destroy();
 		}
@@ -590,4 +633,4 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-}// --
+}// -- end class

@@ -1,13 +1,26 @@
-package djFlixel.ui.menu;
-
 /**
-  ENCODED STRING GUIDELINES:
-  - You can use short encoded string to add menu items on the page
+	Menu Item Data, stores data/metadata of a single menu element
+	that is going to be used in creating a Page in a FlxMenu
+	
+	- <MItemData> objects live inside a <MPageData>
+	- Then <MPageData> gets feed to a FlxMenu and it creates the actual menu pages
+	- You create <MItemData> from within a <MPageData>
+	-------
+	- Polymorphic Object, means that one class instance is for everything
+	- Specific data is being stored in the Dynamic .data field
+	- The code is a mess, and needs heavy refactoring, but it works...
+
+
+
+ Encoded String Guidelines for the fromStr(.)
+  ---------------------------
+  
+  - You can use short encoded strings to add menu items on the page
   - Both add() and addM() take these encoded strings
   
-  = Links
-	"Custom Text|link|linkdata"
-	linkData = 
+  = Links =
+ 
+	Format : "Label Text|link|linkdata"
 		- Plain string will callback with this string
 		- String starts with : Followed with a string
 			`@` => Menu will go to pageID e.g. `@pageID`
@@ -16,26 +29,16 @@ package djFlixel.ui.menu;
 		- `@back` will make the menu go back one page
 		
 	Examples:
+		"Quit|link|!quit|cfm=Really quit?:Get me out:Stay" // ! means open in a new page
+		"Quit|link|#quit|cfm=:yes:no"		// You can skip the question like so, # short question popup
+		"Fullscreen|toggle|c=false|id=fs"	// Sets the ID of this link to "fs"
 	
-		"Quit|link|!quit|cfm=Do you really want to quit?:Get me out:Stay",
-		"Quit|link|#quit|cfm=:yes:no"	// You can skip the question like so<
-		"Fullscreen|toggle|c=false|id="
-
-	
-  
-**/
-  
+		
 
 
-
-
-
-
-
-/**
-
-Data Guidelines
-----------------
+		
+ Item .data field guide
+ ---------------------------------------
 
 -link
 	link:String		;	Page ID or callback ID
@@ -76,7 +79,7 @@ Data Guidelines
 
 */
 	
-
+package djFlixel.ui.menu;
 
 class MItemData 
 {
@@ -84,7 +87,7 @@ class MItemData
 	inline static var LINK_TAG_CONF_POPUP  = "#";
 	inline static var LINK_TAG_CONF_PAGE   = "!";
 	
-	// All the available functionality types the menuItem Offers
+	// All the available functionalal types menuItem offers
 	public static var AVAILABLE_TYPES(default, never):Array<String> = [
 		"link", "range", "list", "toggle", "label", "label2"
 	];
@@ -113,9 +116,14 @@ class MItemData
 	
 	// Holds all the internal data
 	// Also can include custom user data in this object
-	// ~ Guidelines at the bottom of this file ~
+	// ~ Guidelines at the header of this file ~
 	public var data:Dynamic = {};
 	
+	/**
+	   Creates a new Item Data from EITHER {encoded string} or {Object}
+	   @param	encStr Check fromStr() for more info
+	   @param	O Checklk fromObj() for more info
+	**/
 	public function new(?encStr:String,?O:Dynamic) 
 	{
 		if (encStr != null) fromStr(encStr);
@@ -125,15 +133,15 @@ class MItemData
 	
 	/**
 	   Push data based on a special formated string:
-		"label|type|loop=true|c=3"
+		e.g. "label|type|property=true|propertyB=3"
 	   - NO SAFEGUARDS - STRINGS MUST BE CORRECT !
 	   - Separate fields with `|`, do not end or start with it, no whitespace (labels are ok)
 	   - Field (1) MUST be Label
 	   - Field (2) MUST be Type, ["link", "range", "list", "toggle", "label", "label2"]
-	   - Fields 3 and on are optional
-	   - Valid fields:
+	   - Fields (3..+) are optional
+	   - Valid fields for (3..+)
 			id=String | desc=description | range=min,max | list=a,b,v | loop=Bool | c=Int | step=Float
-			cfm=Question:yes:no // for links
+			cfm=Question:yes:no		>> (for links only)
 			Any other field will be stored in data as string e.g. |custom=one| => data.custom = "one"
 			Links can have a field with no '=' and it will count as link data e.g. `@options`
 	**/
@@ -202,7 +210,9 @@ class MItemData
 	   You can set these fields
 	   id, type, desc, label, disabled, selectable
 	   Other fields will be copied to data{}
+	   - Check header for `Item .data field guide`
 	**/
+	@:deprecated("I am going to delete this")
 	function fromObj(o:Dynamic)
 	{
 		for (f in Reflect.fields(o)) 
@@ -311,7 +321,8 @@ class MItemData
 	}//---------------------------------------------------;
 	
 	
-	
+	/** Get the major element data according to type
+		* e.g. index for lists, value for ranges, linkdata for links */
 	public function get():Any
 	{
 		return switch(type){
