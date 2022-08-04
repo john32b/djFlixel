@@ -25,16 +25,16 @@ class MItemToggle extends MItem
 	{
 		super(MP);
 		
-		if (mp.styleIt.box_offy != null) offy = mp.styleIt.box_offy;
-		if (mp.styleIt.box_bm != null)
+		if (st.box_offy != null) offy = st.box_offy;
+		if (st.box_bm != null)
 		{
 			// It is important to fill out the sprite for it to get aligned on init() later.
 			// Also this bitmap will not go to waste, it will be cached
-			box = new FlxSprite(0, 0, mp.iconcache.get(mp.styleIt.box_bm[0], 'idle').clone());
+			box = new FlxSprite(0, 0, mp.iconcache.get(st.box_bm[0], 'idle').clone());
 			D.align.YAxis(box, label, 'c', offy);
 		}else{		
-			if (mp.styleIt.box_txt == null) throw "Style error, you must set text or bitmap";
-			boxt = D.text.get("", mp.styleIt.text);
+			if (st.box_txt == null) throw "Style error, you must set text or bitmap";
+			boxt = D.text.get("", st.text);
 			box = cast boxt;
 			// No alignment when text, the box text should be the same style as labels text
 		}
@@ -45,9 +45,9 @@ class MItemToggle extends MItem
 	function data_refresh()
 	{
 		if (boxt != null) {
-			boxt.text = mp.styleIt.box_txt[data.data.c?1:0];
+			boxt.text = st.box_txt[data.P.c?1:0];
 			// Hack, text needs to be aligned every time it changes
-			if (mp.style.align == "justify") {
+			if (mp.STP.align == "justify") {
 				box.x = x + mp.menu_width - box.width;
 			}
 		}else{
@@ -65,12 +65,12 @@ class MItemToggle extends MItem
 		
 		data_refresh();
 		
-		switch(mp.style.align) 
+		switch(mp.STP.align) 
 		{
 			case "justify":
 				box.x = x + mp.menu_width - box.width;
 			default:
-				box.x = label.x + label.width + mp.styleIt.part2_pad;
+				box.x = label.x + label.width + st.part2_pad;
 		}
 	}//---------------------------------------------------;
 	
@@ -79,7 +79,7 @@ class MItemToggle extends MItem
 	{
 		switch(inp) {
 			case click(_) | fire:
-			data.data.c = !data.data.c;
+			data.P.c = !data.P.c;
 			data_refresh();
 			_setBox(lastState); // This is mainly to redraw the correct bitmap 
 			callback(fire);
@@ -100,14 +100,14 @@ class MItemToggle extends MItem
 	// Set current state , StateColors
 	// Reads and applies current state to bitmap
 	// Changes COLOR of either text/box to set state from {StateColors}
-	function _setBox(st:String)
+	function _setBox(str:String)
 	{
-		lastState = st;
+		lastState = str;
 		if (boxt != null) {
-			_ctext(st, boxt);
+			_ctext(str, boxt);
 		}else{
 			// DEV: If I don't put clone, sometimes this crashes. Very weird.
-			box.pixels = mp.iconcache.get(mp.styleIt.box_bm[data.data.c?1:0], st).clone();
+			box.pixels = mp.iconcache.get(st.box_bm[data.P.c?1:0], str).clone();
 			box.dirty = true;
 		}
 	}//---------------------------------------------------;

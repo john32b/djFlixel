@@ -21,14 +21,14 @@ class MItemLink extends MItem
 	{
 		super.on_newdata();
 		
-		if (data.data.type == 0 && data.data.link != "back")
+		if (data.P.type == 0 && data.P.link != "back")
 		{
 			deco_enable();
-			switch(mp.style.align) {
+			switch(mp.STP.align) {
 				case "justify": 
 					deco.x = label.x + mp.menu_width - deco.width;
 				default: 
-					deco.x = label.x + label.width + mp.styleIt.part2_pad;
+					deco.x = label.x + label.width + st.part2_pad;
 			}
 		}else {
 			deco_enable(false);
@@ -81,7 +81,7 @@ class MItemLink extends MItem
 		if (hasDeco = en)
 		{
 			if (deco == null) {
-				deco = D.text.get(dArr[dArr.length - 1], mp.styleIt.text);
+				deco = D.text.get(dArr[dArr.length - 1], st.text);
 				_ctext('focus', deco);	// Will stay to that color forever
 				add(deco);
 			}

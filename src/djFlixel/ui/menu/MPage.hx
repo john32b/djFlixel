@@ -1,54 +1,59 @@
 /**
- * Specialized VLIST to hold MenuItems
+ *  Specialized VLIST to hold MenuItems
  * 
- * - MenuItems can be of various classes, but all deriving from `MItem`
+ * - MenuItems can be of various classes, but all deriving from <MItem>
  * - FlxMenu creates MPages to display menus
  * 
  * =========================================== */
 
-
 package djFlixel.ui.menu;
 
 import djA.DataT;
+import djFlixel.ui.UIDefaults;
 import djFlixel.ui.VList;
 import djFlixel.ui.menu.*;
 import djFlixel.ui.menu.MItem.MItemStyle;
 import djFlixel.core.Dtext.DTextStyle;
-import flixel.util.typeLimit.OneOfTwo;
-
-import flixel.FlxSprite;
 import openfl.display.BitmapData;
 
 
-// If not set will default to a text cursor
+/**
+   Properties for styling the Cursor
+   (The graphic indicator showing which item is selected)
+**/
 typedef MCursorStyle = {
 	
-	?disable:Bool,		// Do not use a cursor graphic at all
-	?icon:String,		// Use a standard D.UI icon. CSV : "size:name" .e.g. "12:heart"
-	?text:String,		// Character to use for cursor, uses same style as MItemStyle
-	?bitmap:BitmapData, // Use this white bitmap for a cursor, will be colorized according to MItemStyle
-	?color:DTextStyle,	// Colorize the Text/Bitmap with this. valid:{c,bc,bt,so}
-	?offset:Array<Int>,	// [x,y] Cursor Offset (x+ moves right, y+ moves down)
-	?tmult:Float,		// Cursor tween time multiplier. 0 for no animation	
+	?text:String,		// Character to use for cursor, uses the same style as the Menu Items
+	?icon:String,		// Use a standard D.UI icon string format : "size:name" .e.g. "12:heart"
+	?bitmap:BitmapData, // Use this white bitmap for a cursor (must be 255,255,255 white)
+	?color:DTextStyle,	// Colorize the Text/Bitmap with this. valid:{c,bc,bt,so} | null to get MItem Color
+	offset:Array<Int>,	// [x,y] Cursor Offset
+	tmult:Float,		// Cursor tween time multiplier | 0:Instant tween.
+}
+
+
+/** Parameters/Styles for a MenuPage.
+ *  It includes the VList and MItem styles 
+ */
+typedef MPageStyle = {
+	
+	> VListStyle,			// Defined in "VList.hx" | Appends all fields of VListStyle
+	
+	item:MItemStyle,		// Defined in "MItem.hx"
+	
+	?cursor:MCursorStyle	// Defined in this file | Null for no cursor
 }
 
 
 
 class MPage extends VList<MItem,MItemData>
 {
-	static inline var DEFAULT_CURSOR_TEXT_OFFX = 3;	// Only applies to TEXT cursor, if offset is not set
-	static inline var DEFAULT_CURSOR_SYMB = '>';
-	//====================================================;
+		
+	// Style Page. Includes all the styles. FlxMenu will set this to something
+	public var STP:MPageStyle;
 	
 	// Hold the page data
 	public var page(default, null):MPageData;
-	
-	// Optional Cursor style 
-	public var styleC:MCursorStyle;
-	
-	// This is the style to use for all children elements
-	// WARNING: No field override here, make sure you copy the default style <MItem.DEFAULT_STYLE>
-	public var styleIt:MItemStyle;
 	
 	// This is responsible for creating and caching of icons used in items
 	// MItem will access this to get icons
@@ -60,16 +65,16 @@ class MPage extends VList<MItem,MItemData>
 	/**
 	 * @param	X
 	 * @param	Y
-	 * @param	MENU_WIDTH 0 for rest of the screen, <0 for mirrored padding from X to the right
+	 * @param	MENU_WIDTH 0 for rest of the screen, <0 for mirrored margin from X to the right
 	 * @param	SLOTS 0 for default
 	 */
 	public function new(X:Float, Y:Float, WIDTH:Int = 0, SLOTS:Int = 0)
 	{
 		super(MItem, X, Y, WIDTH, SLOTS);
 		scrollFactor.set(0, 0);
-		inputMode = 2;
+		inputMode = 2; // + cursor
 		FLAGS.fire_simple = false;
-		
+		STP = UIDefaults.MPAGE;
 	}//---------------------------------------------------;
 	
 	
@@ -77,82 +82,83 @@ class MPage extends VList<MItem,MItemData>
 	{
 		super.unfocus();
 		if (indexData >= 0) {
-			page.params.lastIndex = indexData;
+			page.PAR.lastIndex = indexData;
 		}
 	}//---------------------------------------------------;
 	
 	
-	// 
 	public function setPage(p:MPageData)
 	{
-		if (iconcache == null) {
-			trace("Error: ICONCACHE was not defined, defining now");
-			iconcache = new MIconCacher(MItem.DEFAULT_STYLE);
-		}
-		
 		if (page != null) {
 			throw "Re-setting data not supported";
 		}
 		
-		// Rare, because FLXMENU will always provide styles
-		if (styleIt == null) styleIt = Reflect.copy(MItem.DEFAULT_STYLE);
-		if (styleC == null) styleC = {};
-		
-		if (p.params.width != 0) menu_width = p.params.width;
-		if (p.params.slots > 0) slotsTotal = p.params.slots;
-		
-		if (p.params.stI != null)
-		{
-			// Note styleIT is already a unique
-			styleIt = DataT.copyFields(p.params.stI, styleIt);
-		}
-		
-		if (p.params.stL != null)
-		{
-			// Note style is already a unique
-			style = DataT.copyFields(p.params.stL, style);
-		}
-		
-		if (p.params.part1W == 0) {
-			p.params.part1W = Std.int(menu_width / 2);
-		}
-		
+		STL = STP;	// Make VListStyle work with MPageStyle parameters
 		page = p;
 		
-		// :: Set data and init the items
+		if (p.PAR.width != 0) menu_width = p.PAR.width;
+		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;
+
+		// TODO: Extra PAGE STYLE OVERRIDES ?? >>>>>
+		
+			//if (p.PAR.stI != null)
+			//{
+				// Note styleIT is already unique, so it is not overwriting anything shared
+				//styleIt = DataT.copyFields(p.PAR.stI, styleIt);
+			//}
+			
+			//if (p.PAR.stL != null)
+			//{
+				// Note style is already a unique
+				//style = DataT.copyFields(p.PAR.stL, style);
+			//}
+			
+		if (p.PAR.part1W == 0) {
+			p.PAR.part1W = Std.int(menu_width / 2);
+			// TODO: Why am I writing back to the Page Style?
+		}
+		
+		// FLXMenu creates this and passes it to MPage.
+		// But for any case where MPage is used elsewhere I must it, before setDataSource()
+		if (iconcache == null) {
+			trace("Warning: ICONCACHE was not defined, defining now");
+			iconcache = new MIconCacher(STP.item);
+		}
+		
+		// Set data and init the items
 		setDataSource(page.items);
 		
-		if (styleC.disable) return;
+		//====================================================;
+		// SET CURSOR if it set in the Style 
+		//====================================================;
 		
+		if (STP.cursor == null) return;
+		
+		var C:MCursorStyle = STP.cursor;	// Write less
 		var b:BitmapData = null;
+		var col:DTextStyle;	// Final Cursor color
 		
-		// :: Cursor init
-		if (styleC.bitmap != null) {
-			b = styleC.bitmap.clone();
-		}else if (styleC.icon != null) {
-			var ic = styleC.icon.split(':');
+		if (C.color == null) {
+			col = Reflect.copy(STP.item.text);
+			col.bc = STP.item.col_b.idle;	// modify it a bit to match better
+		}else{
+			col = C.color;
+		}
+		
+		// -- Is it a bitmap with (direct bitmap) or (icon) ??
+		if (C.bitmap != null) {
+			b = C.bitmap.clone();
+		}else if (C.icon != null) {
+			var ic = C.icon.split(':');
 			b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1]);	
 		}
 		
 		if (b != null) {
-			b = D.gfx.colorizeBitmapWithTextStyle(b, styleC.color); // .color can be null
-			// TODO. automatic Y offset?, I know both the heights.
-			setCursor(b, styleC.offset); // .offset can be null 
-		}else
-		{
-			// Make the cursor text style the same as the items
-			if (styleC.color == null) {
-				// WARNING: I might want a deepcopy here, but I don't know 
-				styleC = Reflect.copy(styleC);
-				styleC.color = Reflect.copy(styleIt.text);
-				styleC.color.bc = styleIt.col_b.idle;
-			}
-			
-			// Text Cursor is default
-			var char = DataT.existsOr(styleC.text, DEFAULT_CURSOR_SYMB);
-			var offs = DataT.existsOr(styleC.offset, [ DEFAULT_CURSOR_TEXT_OFFX, 0]);
-			var tmult = DataT.existsOr(styleC.tmult, -1);	// -1 is for default value
-			setCursor(cast D.text.get(char, styleC.color), offs, tmult);
+			b = D.gfx.colorizeBitmapWithTextStyle(b, col);
+			setCursor(b, C.offset, C.tmult); // DEV: offset can be null OK
+			// TODO: Automatic Y offset?, I know both the heights.
+		}else {
+			setCursor(cast D.text.get(C.text, col), C.offset, C.tmult);
 		}
 		
 	}//---------------------------------------------------;
@@ -227,16 +233,16 @@ class MPage extends VList<MItem,MItemData>
 	}//---------------------------------------------------;
 	
 	
-	// --
+	// Create actual Menu Items based on the MItemData that is stored in the List
 	override function item__createInstance(dataIndex:Int):MItem
 	{
 		return switch(data[dataIndex].type){
-			case "link":new MItemLink(this);
-			case "range":new MItemRange(this, true); // 'True' is a hacky way to check for more icons
-			case "list":new MItemList(this);
-			case "toggle":new MItemToggle(this);
-			case "label":new MItemLabel(this);
-			case "label2":new MItemLabel2(this);
+			case link  :new MItemLink(this);
+			case range :new MItemRange(this, true); // 'True' is a hacky way to check for more icons
+			case list  :new MItemList(this);
+			case toggle:new MItemToggle(this);
+			case label :new MItemLabel(this);
+			//case "label2":new MItemLabel2(this);
 			default: new MItem(this);
 		}
 	}//---------------------------------------------------;

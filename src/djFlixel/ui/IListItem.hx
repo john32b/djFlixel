@@ -1,14 +1,19 @@
 package djFlixel.ui;
 
-
+/**
+   Events that Items emit. Readable from {VList.onItemEvent}
+**/
 enum ListItemEvent
 {
 	focus;		// Item received focus
-	fire;		// Item was activated
+	fire;		// Item was activated ( for FLXMenu this fires for list,range,toggle as well )
 	invalid;	// Whenever a disabled item receives input. Useful for producing sound effects
-	change;		// Item data changed, applicable in Toggle,List,Range
+	change;		// Item data changed  -- UNUSED FOR NOW -- range, list and toggle produce a fire event
 }
 
+/**
+   Items get user input states with this.
+**/
 enum ListItemInput
 {
 	fire;
@@ -53,36 +58,3 @@ interface IListItem<T>
 	 */
 	public function isSame(data:T):Bool;
 }// --
-
-
-/**
-
-	public var callbacks:String->Void;
-	public var isFocused(default, null):Bool
-	
-	public function new() 
-	{
-		
-	}
-	public function setData(data:T):Void
-	{
-		
-	}
-	public function onInput(type:String):Void
-	{
-		
-	}
-	public function focus():Void
-	{
-	
-	}
-	public function unfocus():Void
-	{
-		
-	}
-	public function isSame(data:T):Bool
-	{
-		
-	}
-
-*/

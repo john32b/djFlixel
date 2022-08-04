@@ -15,10 +15,6 @@
 	st.color_custom([0xFF333344,0xFF998855]);	// custom colors
 	add(st);
 	
-	
-   == BUGS :
-	DOES NOT WORK IN HTML
-	
 ======================================= */
 
 package djFlixel.gfx;

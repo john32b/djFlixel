@@ -3,6 +3,13 @@
 	
 	<haxeflag name="-dce" value="std"/>
 	
+
+	<!--
+	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
+	<window vsync="true" antialiasing="4" if="cpp" />
+	<window orientation="portrait" /> || <window orientation="landscape" if="cpp"/>
+	-->
+	
 	<app title="djFlixel Demo" version="0.4" package="" company="John32B" />
 	<app preloader="flixel.system.FlxBasePreloader"/>
 	<app main="Main" file="djflx_demo" path="bin/" />

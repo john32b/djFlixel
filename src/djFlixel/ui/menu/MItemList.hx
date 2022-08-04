@@ -9,7 +9,7 @@ import flixel.FlxSprite;
 import flixel.text.FlxText;
 
 /**
- * ...
+ * MItemRange extends this as they share functionality
  */
 class MItemList extends MItem
 {
@@ -34,29 +34,29 @@ class MItemList extends MItem
 	{
 		super(MP);
 		
-		if (mp.styleIt.ar_offy != null) offy = mp.styleIt.ar_offy;
+		if (st.ar_offy != null) offy = st.ar_offy;
 		
 		// -- List Text
-		label2 = D.text.get("", mp.styleIt.text);
+		label2 = D.text.get("", st.text);
 		label2.y = label.y;
 		add(label2);
 		
 		// -- Create Arrows
 		var o = 0;
 				
-		if (mp.styleIt.ar_bm != null) {
-			if (check34 && mp.styleIt.ar_bm[3] != null) o = 2;
-			ar0 = new FlxSprite(mp.iconcache.get(mp.styleIt.ar_bm[0 + o], 'focus').clone());
-			ar1 = new FlxSprite(mp.iconcache.get(mp.styleIt.ar_bm[1 + o], 'focus').clone());
+		if (st.ar_bm != null) {
+			if (check34 && st.ar_bm[3] != null) o = 2;
+			ar0 = new FlxSprite(mp.iconcache.get(st.ar_bm[0 + o], 'focus').clone());
+			ar1 = new FlxSprite(mp.iconcache.get(st.ar_bm[1 + o], 'focus').clone());
 			D.align.YAxis(ar0, label, 'c', offy);
 			offx = 1;	// TODO: parameterize this?
 			ar1.y = ar0.y;
 			
 		}else {
-			if (check34 && mp.styleIt.ar_txt[3] != null) o = 2;
-			if (mp.styleIt.ar_txt == null) throw "Style error, you must set text or bitmap";
-			var t0 = D.text.get(mp.styleIt.ar_txt[0 + o], mp.styleIt.text);
-			var t1 = D.text.get(mp.styleIt.ar_txt[1 + o], mp.styleIt.text);
+			if (check34 && st.ar_txt[3] != null) o = 2;
+			if (st.ar_txt == null) throw "Style error, you must set text or bitmap";
+			var t0 = D.text.get(st.ar_txt[0 + o], st.text);
+			var t1 = D.text.get(st.ar_txt[1 + o], st.text);
 			_ctext('focus', t0);
 			_ctext('focus', t1);
 			ar0 = cast t0;
@@ -67,7 +67,7 @@ class MItemList extends MItem
 		add(ar1);
 		
 		// -- Move arrows
-		var def:String = DataT.existsOr(mp.styleIt.ar_anim, DEFAULT_AR_ANIM);
+		var def:String = DataT.existsOr(st.ar_anim, DEFAULT_AR_ANIM);
 		var c = def.split(','); 
 		stimer = new StepLoop(Std.parseInt(c[0]), Std.parseInt(c[1]), Std.parseFloat(c[2]), update_arrowNudge);
 	}//---------------------------------------------------;
@@ -82,15 +82,15 @@ class MItemList extends MItem
 	{
 		super.on_newdata();
 		
-		if (data.data.loop){
+		if (data.P.loop){
 			arStat[0] = arStat[1] = true;
 		}
 		refresh_data();
-		switch(mp.style.align) {
+		switch(mp.STP.align) {
 			case "justify": 
 			label2.x = x + mp.menu_width - label2.width;
 			default: 
-			label2.x = label.x + label.width + mp.styleIt.part2_pad + Math.max(ar0.width - mp.styleIt.part2_pad, 0);
+			label2.x = label.x + label.width + st.part2_pad + Math.max(ar0.width - st.part2_pad, 0);
 			// pad + if the arrow is width, the difference of pixels to make the arrow fit
 			
 		}	
@@ -124,11 +124,11 @@ class MItemList extends MItem
 		
 		if (inp == right)
 		{
-			var c = Std.int(data.data.c) + 1;
-			if (c >= data.data.list.length){
-				if (data.data.loop) c = 0; else return;
+			var c = Std.int(data.P.c) + 1;
+			if (c >= data.P.list.length){
+				if (data.P.loop) c = 0; else return;
 			}
-			data.data.c = c;
+			data.P.c = c;
 			refresh_data();
 			stimer.fire();	// note this updates arrow x pos
 			callback(fire);
@@ -136,11 +136,11 @@ class MItemList extends MItem
 		}
 		if (inp == left)
 		{
-			var c = Std.int(data.data.c) - 1;
+			var c = Std.int(data.P.c) - 1;
 			if (c < 0){
-				if (data.data.loop) c = cast data.data.list.length - 1; else return;
+				if (data.P.loop) c = cast data.P.list.length - 1; else return;
 			}
-			data.data.c = c;
+			data.P.c = c;
 			refresh_data();
 			stimer.fire();	// note this updates arrow x pos
 			callback(fire);
@@ -169,14 +169,14 @@ class MItemList extends MItem
 	**/
 	function refresh_data()
 	{
-		if (!data.data.loop){
-			arStat[0] = (data.data.c > 0);
-			arStat[1] = (data.data.c < data.data.list.length - 1);
+		if (!data.P.loop){
+			arStat[0] = (data.P.c > 0);
+			arStat[1] = (data.P.c < data.P.list.length - 1);
 		}
 		
-		label2.text = data.data.list[data.data.c];
+		label2.text = data.P.list[data.P.c];
 		
-		if (mp.style.align == "justify") {
+		if (mp.STP.align == "justify") {
 			label2.x = x + mp.menu_width - label2.width;
 		}
 		

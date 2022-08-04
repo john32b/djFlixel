@@ -17,7 +17,7 @@ class MItemRange extends MItemList
 	
 	override function on_newdata() 
 	{
-		isFloat = (data.data.step % 1 != 0);
+		isFloat = (data.P.step % 1 != 0);
 		super.on_newdata();
 	}//---------------------------------------------------;
 	override function handleInput(inp:ListItemInput)
@@ -26,19 +26,19 @@ class MItemRange extends MItemList
 		
 		if (inp == left)
 		{
-			var c:Float = data.data.c;
-			var lim:Float = data.data.range[0];
-			if (c == lim && !data.data.loop) return;
+			var c:Float = data.P.c;
+			var lim:Float = data.P.range[0];
+			if (c == lim && !data.P.loop) return;
 			#if (neko || hl)
-			c -= data.data.step;
+			c -= data.P.step;
 			#else
-			c -= Std.parseFloat(data.data.step);
+			c -= Std.parseFloat(data.P.step);
 			#end
 			if (isFloat) c = roundFloat(c);
 			if (c < lim){
-				if (data.data.loop) c = data.data.range[1]; else c = lim;
+				if (data.P.loop) c = data.P.range[1]; else c = lim;
 			}
-			data.data.c = c;
+			data.P.c = c;
 			refresh_data();
 			stimer.fire();
 			callback(fire);
@@ -47,21 +47,21 @@ class MItemRange extends MItemList
 		
 		if (inp == right)
 		{
-			var c:Float = data.data.c;
-			var lim:Float = data.data.range[1];
-			if (c == lim && !data.data.loop) return;
+			var c:Float = data.P.c;
+			var lim:Float = data.P.range[1];
+			if (c == lim && !data.P.loop) return;
 			#if (neko || hl)
-			c += data.data.step;	
+			c += data.P.step;	
 			#else
-			c += Std.parseFloat(data.data.step); // Dev, parsefloat is needed, but it shouldnt?
+			c += Std.parseFloat(data.P.step); // Dev, parsefloat is needed, but it shouldnt?
 			#end
 			if (isFloat) c = roundFloat(c);
 			if (c > lim) 
 			{
-				if (data.data.loop) c = data.data.range[0]; else c = lim;
+				if (data.P.loop) c = data.P.range[0]; else c = lim;
 			}
 			
-			data.data.c = c;
+			data.P.c = c;
 			refresh_data();
 			stimer.fire();
 			callback(fire);
@@ -72,13 +72,13 @@ class MItemRange extends MItemList
 	
 	override function refresh_data() 
 	{
-		if (!data.data.loop){
-			arStat[0] = (data.data.c > Std.int(data.data.range[0]));
-			arStat[1] = (data.data.c < Std.int(data.data.range[1]));
+		if (!data.P.loop){
+			arStat[0] = (data.P.c > Std.int(data.P.range[0]));
+			arStat[1] = (data.P.c < Std.int(data.P.range[1]));
 		}
 		
-		label2.text = '${data.data.c}';
-		if (mp.style.align == "justify") {
+		label2.text = '${data.P.c}';
+		if (mp.STP.align == "justify") {
 			label2.x = x + mp.menu_width - label2.width;
 		}
 		

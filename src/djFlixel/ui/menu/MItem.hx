@@ -1,3 +1,13 @@
+/**
+   Menu Item
+   ---------
+   
+   - This is a base class and the more specific Menu Items will derive from this
+   - Used as items in a <MPage>
+   
+**/
+
+
 package djFlixel.ui.menu;
 
 import flixel.FlxSprite;
@@ -12,19 +22,20 @@ import djFlixel.ui.menu.MItemData;
 import openfl.display.BitmapData;
 
 
+// NOTE 2022: This thing is a mess.
 
 typedef MItemStyle = {
 	
-	?text:DTextStyle,	// Text style, to use on all ITEMS
+	text:DTextStyle,	// Text style, to use on all ITEMS
 						// All Items will use colors from (col_t, col_b)
 						// MUST SET : bt
 
-	?col_t:StateColors,	// Text Colors. You should set ALL states
-	?col_b:StateColors,	// Border Colors. You can only set 'idle' and all states will get that color.
+	col_t:StateColors,	// Text Colors. You should set ALL states
+	col_b:StateColors,	// Border Colors. You could only set 'idle' and all states will share that color
 	
 	// :: ADVANCED ::
 	
-	?part2_pad:Int,		// Push the second part of items (toggle,list,range) to the right by this many pixels
+	part2_pad:Int,		// Push the second part of items (toggle,list,range) to the right by this many pixels
 						// Applicable in left/center/center2 alignments.
 						// NOTE: In 'center2' the list arrows padding will not be applied, so make sure this is big enough to accomodate
 						
@@ -36,16 +47,16 @@ typedef MItemStyle = {
 	// Must set either {ar_txt} or {ar_bm}
 	// NEW: the 3rd and 4th slot can be used to use in `MItemRange`
 	//      else it will use the 0 and 1 slots
+	// 		NOTE 2022. Why do I need more icons for MItemRange? For using - + ?
 	// Element Arrows, that show up in List and Range items
 	?ar_txt:Array<String>,		// Text instead of graphic e.g. '<' '>'
 	?ar_bm:Array<BitmapData>,	// Left,Right Arrows Bitmaps
 	?ar_offy:Int,				// In case of arrow bitmap icon, offset it this much on the y axis (def=1)	
 	?ar_anim:String,			// "type,steps,time" Type=1 repat, 2 loop. Every steps is a pixel moved. Time for each tick
-								// <defaults in MItemList>
 	?bm_no_col:Bool,			// If true will NOT colorize the bitmaps in [ar_bm, box_bm] use this for custom pre-colored graphics
 };
 
-
+// These must match the `FocusState` names
 private typedef StateColors = {
 	?idle:Int,	// Default/Idle
 	?focus:Int,	
@@ -63,34 +74,34 @@ enum FocusState
 	dis_f;
 }
 
-
-
 /**
  * Generalized Item that can go in a MPage
  */
 class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 {
-	static public var DEFAULT_STYLE:MItemStyle = {
-		text:{bt:1},
-		col_t:{idle:0xFFF4F4F4, focus:0xFFFFFF00, accent:0xFFFF8000, dis:0xFF5C5C5C, dis_f:0xFF909090},
-		col_b:{idle:0xFF222222},
-		box_txt:["( )","(X)"],
-		ar_txt:["<", ">"],
-		part2_pad:10
-	}
-		
-	/** Pointer to the menu this item belongs to */
+	// Pointer to the menu this item belongs to
 	var mp:MPage;
 
-	// Pointer to data
+	// Pointer to the data object.
 	public var data:MItemData;
 	
-	// This will ALWAYS be set
+	// This will ALWAYS be set to VList.on_itemCallback. 
 	public var callback:ListItemEvent->Void;
 	
+	// -
 	public var isFocused(default, null):Bool = false;
 	
-	var label:FlxText;			// This is the left portion of the item, the label
+	// Every MItem is just a sprite group 
+	// This label is common to all Menu Items and it is the left portion of the whole thing
+	// example
+	//		__label__      < 10 >		; for a {MItemRange}
+	// 		__label__	    [X] 		; for a {MItemToggle}
+	// 		__label__ ...				; for a {MitemLink} 
+	var label:FlxText;
+	
+	// Pointer to the current MItemStyle to use
+	// This is usually a pointer to MPage.STP.item;
+	var st:MItemStyle;
 	
 	//====================================================;
 	
@@ -103,14 +114,18 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 			if (mp.iconcache == null) throw "Forgot to initialize ICONCACHE";
 		#end
 		
+		st = MP.STP.item;
+		
 		label = new FlxText();
 		label.wordWrap = false;
-		// This is mainly for the size/font/borders. Coloring will take place later:
-		D.text.applyStyle(label, mp.styleIt.text);
+		
+		// This is mainly for generating a sprite for size calculations 
+		// Actual coloring will take place later:
+		D.text.applyStyle(label, st.text);
 				
-		if (mp.style.align == "center2")
+		if (mp.STP.align == "center2")	// TODO: What is center2 ?
 		{
-			label.fieldWidth = mp.page.params.part1W;
+			label.fieldWidth = mp.page.PAR.part1W;
 			label.alignment = "right";
 		}else{
 			label.fieldWidth = 0;
@@ -125,7 +140,7 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 		on_newdata();
 		state_refresh();
 	}//---------------------------------------------------;
-	/** Receives input IDs from the container
+	/** Receives input IDs from <VList>
 	 *  @param	type [ fire , left , right , click ]
 	 */
 	public function onInput(type:ListItemInput):Void
@@ -151,8 +166,9 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 	public function isSame(d:MItemData):Bool
 	{
 		return data == d;
-	}//---------------------------------------------------;
-	//====================================================;
+	}//---------------------------------------------------;\
+	
+	
 	//-- Height reported to parent for spacing vertically 
 	override function get_height():Float 
 	{
@@ -171,12 +187,11 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 	}//---------------------------------------------------;
 	#end
 	
-	//====================================================;
 	
 	/**
 	  - Called right after setting new data.
 	  - Can be called multiple times.
-	  - ! Override to initialize other objects
+	  ! Override to initialize other objects
 	**/
 	function on_newdata()
 	{
@@ -204,13 +219,13 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 		}	
 	}//---------------------------------------------------;
 	
+	// -- Override this to manage state on extra sprites
 	function state_set(id:FocusState)
 	{
 		_ctext(id.getName());
 	}//---------------------------------------------------;
 	
-	
-	// -- Override this to manage input --
+	// -- Override this to manage input
 	function handleInput(type:ListItemInput) {}
 	
 	/** Colorize Text/Border from style fields
@@ -219,13 +234,13 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 	function _ctext(f:String,?T:FlxText)
 	{
 		if (T == null) T = label;
-		if(Reflect.hasField(mp.styleIt.col_t, f)) {
-			T.color = cast(Reflect.field(mp.styleIt.col_t, f), Int);
+		if(Reflect.hasField(st.col_t, f)) {
+			T.color = cast(Reflect.field(st.col_t, f), Int);
 		}
-		if (Reflect.hasField(mp.styleIt.col_b, f)) {
-			T.borderColor = cast(Reflect.field(mp.styleIt.col_b, f), Int);
+		if (Reflect.hasField(st.col_b, f)) {
+			T.borderColor = cast(Reflect.field(st.col_b, f), Int);
 		}else{
-			T.borderColor = cast(Reflect.field(mp.styleIt.col_b, 'idle'), Int);
+			T.borderColor = cast(Reflect.field(st.col_b, 'idle'), Int);
 		}
 	}//---------------------------------------------------;
 	

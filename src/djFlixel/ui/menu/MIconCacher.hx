@@ -1,13 +1,20 @@
+/**
+ * Helper class for MITEMS
+ * 
+ * - Caches Generated Bitmaps like arrows and dots (colorized + shadow applied)
+ * 
+ ******************/
 package djFlixel.ui.menu;
 
 import djFlixel.ui.menu.MItem;
 import flash.display.BitmapData;
 
-/**
- * Helper class for MITEMS
- * - Cache Generated Bitmaps (colorized + shadow applied)
- * - this is so the program doesn't generate new colored icons every time they are needed
- */
+
+// --
+private enum IconCombo {
+	combo(a:BitmapData, b:String); // Bitmap data , state type (focus,access,idle...)
+}
+
 class MIconCacher 
 {
 	static inline var COLOR_KEY = 0xFFFFFFFF;
@@ -62,8 +69,3 @@ class MIconCacher
 	}//---------------------------------------------------;
 		
 }// --
-
-// --
-private enum IconCombo {
-	combo(a:BitmapData, b:String); // Bitmap data , state type (focus,access,idle...)
-}

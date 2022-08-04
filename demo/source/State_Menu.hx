@@ -11,7 +11,7 @@ package ;
 import djA.DataT;
 import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
-import djFlixel.gfx.pal.Pal_DB32;
+import djFlixel.gfx.pal.Pal_DB32 as DB32; // Cool Haxe Feature
 import djFlixel.gfx.statetransit.Stripes;
 import djFlixel.other.DelayCall;
 import djFlixel.other.FlxSequencer;
@@ -29,6 +29,7 @@ class State_Menu extends FlxState
 {
 	// Scroller ID, used to select asset for the background
 	var scid = 0;
+	
 	// Animated background
 	var sc:BoxScroller;
 
@@ -60,7 +61,7 @@ class State_Menu extends FlxState
 		// -- the menu
 		var m = create_get_menu();
 		add(m);
-		m.goto('main');
+		m.goto('main');	// Will goto that page and open the menu
 		
 		// -- infos
 		var bg1 = new FlxSprite();
@@ -70,13 +71,13 @@ class State_Menu extends FlxState
 		// text.fix(style), makes all following text.get(..) calls to apply a specific style
 		// useful if you want to create a style on the fly and use it multiple times
 		// Check the typedef for the style object in <Dtext.h>
- 		D.text.fix({c:Pal_DB32.COL[21], bc:Pal_DB32.COL[1], bt:2});
+ 		D.text.fix({c:DB32.COL[21], bc:DB32.COL[1], bt:2});
 		var t1 = D.text.get('DJFLIXEL ${D.DJFLX_VER} by John32B.');
 			add(D.align.screen(t1, 'l', 'b', 2)); // Add and Align to screen in one call
 			
 		// Note that I can overlay a style here. This will use the fixed style and
 		// also apply a new color
-		var t2 = D.text.get('Music "DvD - Deep Horizons"', {c:Pal_DB32.COL[22]});
+		var t2 = D.text.get('Music "DvD - Deep Horizons"', {c:DB32.COL[22]});
 			add(D.align.screen(t2, 'r', 'b', 2 ));
 		
 		// Unfix the text style. text.get() will now return unstyled text
@@ -94,8 +95,8 @@ class State_Menu extends FlxState
 	function scroller_next()
 	{
 		var C = DataT.arrayRandom(BGCOLS).copy();
-		C[0] = Pal_DB32.COL[C[0]];	// Convert index to real color
-		C[1] = Pal_DB32.COL[C[1]];
+		C[0] = DB32.COL[C[0]];	// Convert index to real color
+		C[1] = DB32.COL[C[1]];
 		
 		//--
 		scid++; if (scid > 5) scid = 1;
@@ -110,118 +111,138 @@ class State_Menu extends FlxState
 		// -- Create
 		var m = new FlxMenu(32, 32, 140);
 		
-		// -- Customize fonts and colors:
-		m.stI.text = {
+		// -- Create some pages
+		// Note: Haxe supports multiline strings, this is OK:
+		m.createPage('main','This is an FlxMenu').add('
+			-|Slides Demo 		|link|sdemo
+			-|Menu Demo			|link|@mdemo
+			-|FlxAutotext Demo	|link|autot
+			-|Simple Game Demo	|link|game1
+			-|Options			|link|@options
+			-|Reset				|link|rst|?pop=:YES:NO');
+			 
+		m.createPage('options', 'Options').add('
+			-|Fullscreen	|toggle|fs
+			-|Smoothing		|toggle|sm
+			-|Volume		|range|vol| 0,100 | step=5'+
+			#if(desktop) // preprocessors don't work inside a string
+			'-|Windowed Mode	|range|winmode|1,${D.MAX_WINDOW_ZOOM}' + 
+			#end
+			'-|Change Background	|link|bgcol
+			 -|Back			| link | @back');
+			 
+			 
+		// -- Styling
+		// STP is the object that holds STYLE data for the Menu Pages
+		// Every FlxMenu comes with a predefined default
+		// Here I am overriding some fields.
+		// I could also use overlayStyle();
+		m.STP.item.text = {
 			f:"fnt/blocktopia.ttf",
 			s:16,
-			bt:1, so:[1, 1]
+			bt:1, 		// Border Type 1:Shadow
+			so:[1, 1]	// Shadow Offset (1,1) pixels
 		};
-		m.stI.col_t = {
-			idle:Pal_DB32.COL[21],
-			focus:Pal_DB32.COL[28],
-			accent:Pal_DB32.COL[29],
-			dis:Pal_DB32.COL[25],	// Disabled
-			dis_f:Pal_DB32.COL[23], // Disabled focused
-			
-		};
-		m.stI.col_b = {
-			idle:Pal_DB32.COL[1],
-			focus:Pal_DB32.COL[0]
-		};
-		m.stHeader = {
-			f:"fnt/blocktopia.ttf",
-			s:16,bt:2,bs:1,
-			c:Pal_DB32.COL[8],
-			bc:Pal_DB32.COL[27]
-		};
-		m.PARAMS.header_CPS = 30;
-		m.PARAMS.page_anim_parallel = true;
-			
-		// -- Create some pages
-		m.createPage('main','This is an FlxMenu').addM([
-			'Slides Demo |link|sdemo',
-			'Menu Demo|link|@mdemo',
-			'FlxAutotext Demo|link|autot',
-			'Simple Game Demo|link|game1',
-			'Options|link|@options',
-			'Reset|link|#rst'	// # will create a popup confirmation
-		]);
-		m.createPage('options', "Options").addM([
-			'Fullscreen|toggle|id=fs',
-			'Smoothing|toggle|id=sm',
-			'Volume|range|id=vol|range=0,100|step=5',
-			#if(desktop)
-			'Windowed Mode|range|id=winmode|range=1,${D.MAX_WINDOW_ZOOM}',
-			#end
-			'Change Background|link|bgcol',
-			'Back|link|@back'
-		]);
 		
-		var p = m.createPage('mdemo').addM([
-			'Mousewheel to scroll|link|0', // Putting 0 as id, because it needs an ID
-			'or buttons to navigate as normal|link|0',
-			':test label:|label',
-			'Disabled - |link|dtest',
-			'Toggle above ^|link|dtog',
-			'----|link|0',
-			'Toggle Item|toggle|c=false|id=0', // Note. I need to specify "id=0", unlike links which don't need "id="
-			'List Item|list|list=one,two,three,four,five|c=0|id=0',
-			'Range Item|range|range=0,1|step=0.1|c=0.5|id=0',
-			'BACK|link|@back'
-		]);
+		// Text Color
+		m.STP.item.col_t = {
+			idle:DB32.COL[21],
+			focus:DB32.COL[28],
+			accent:DB32.COL[29],
+			dis:DB32.COL[25],		// Disabled
+			dis_f:DB32.COL[23], 	// Disabled focused
+		};
+		
+		// Border Color
+		m.STP.item.col_b = {
+			idle:DB32.COL[1],
+			focus:DB32.COL[0]
+		};
+		
+		
+		//m.stHeader = {
+			//f:"fnt/blocktopia.ttf",
+			//s:16,bt:2,bs:1,
+			//c:DB32.COL[8],
+			//bc:DB32.COL[27]
+		//};
+		//m.PARAMS.header_CPS = 30;
+		//m.PARAMS.page_anim_parallel = true;
+			
+
+		
+
+		//var p = m.createPage('mdemo').add('
+			//'Mousewheel to scroll|link|0', // Putting 0 as id, because it needs an ID
+			//'or buttons to navigate as normal|link|0',
+			//':test label:|label',
+			//'Disabled - |link|dtest',
+			//'Toggle above ^|link|dtog',
+			//'----|link|0',
+			//'Toggle Item|toggle|c=false|id=0', // Note. I need to specify "id=0", unlike links which don't need "id="
+			//'List Item|list|list=one,two,three,four,five|c=0|id=0',
+			//'Range Item|range|range=0,1|step=0.1|c=0.5|id=0',
+			//'BACK|link|@back'
+		//]);
 		
 		//---------------------------------------------------;
 		// Example :
 		// Customize the ItemStyle and ListStyle for this specific page
 		
-		p.params.stI = {
-			text : {f:"fnt/wc.ttf", s:16, bt:2},
-			box_bm : [ // Custom checkbox icons
-				D.ui.getIcon(12, 'ch_off'), D.ui.getIcon(12, 'ch_on')
-			], 
-			ar_bm : [ // Custom Slider/List Arrows
-				D.ui.getIcon(12, 'ar_left'), D.ui.getIcon(12, 'ar_right')
-			],
-			ar_anim : "2,2,0.5"
-		};
-		p.params.stL = {
-			align:'justify',
-			other:'yes'
-		}
+		//p.params.stI = {
+			//text : {f:"fnt/wc.ttf", s:16, bt:2},
+			//box_bm : [ // Custom checkbox icons
+				//D.ui.getIcon(12, 'ch_off'), D.ui.getIcon(12, 'ch_on')
+			//], 
+			//ar_bm : [ // Custom Slider/List Arrows
+				//D.ui.getIcon(12, 'ar_left'), D.ui.getIcon(12, 'ar_right')
+			//],
+			//ar_anim : "2,2,0.5"
+		//};
+		//p.params.stL = {
+			//align:'justify',
+			//other:'yes'
+		//}
 		//---------------------------------------------------;
 
 		// More initialization of some items 
-		m.pages.get('mdemo').get('dtest').disabled = true;
-		m.pages.get('main').get('rst').data.tStyle = {bt:2, s:8, f:null}; // < Change the popup text style
+		//m.pages.get('mdemo').get('dtest').disabled = true;
+		//m.pages.get('main').get('rst').data.tStyle = {bt:2, s:8, f:null}; // < Change the popup text style
 		
-		m.onMenuEvent = (a, b)->{
+		
+		/** Handle Page Events, keep track when I am going in and out of pages 
+		 * (MenuEvent->PageID) */
+		m.onMenuEvent = (ev, id)->{
 			
-			if (a == pageCall) {
-				D.snd.playV('cursor_high',0.6);
+			if (ev == pageCall) {
+				D.snd.playV('cursor_high', 0.6);
 			}else
-			if (a == back){
+			if (ev == back){
 				D.snd.playV('cursor_low');
 			}
 			
 			// Just went to the options page
-			if (a == page && b == "options") {
-				// Alter the menu items data, to reflect current environment
+			// I want to alter the Item Datas to reflect the current settings
+			if (ev == page && id == "options") {
 				// (2) , is the index starting from 0, I could pass the ID to get the item also
-				m.item_update(0, (t)->{t.data.c = FlxG.fullscreen; });
-				m.item_update(1, (t)->{t.data.c = D.SMOOTHING; });
-				m.item_update(2, (t)->{t.data.c = Std.int(FlxG.sound.volume * 100); });	
+				m.item_update(0, (t)->t.set(FlxG.fullscreen) );
+				m.item_update(1, (t)->t.set(D.SMOOTHING) );
+				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );	
 			}
 		};
 		
-		m.onItemEvent = (a, b)->{
-			// 
-			if (a == fire) switch(b.ID){
+		/** Handle Item events. When you interact with items they will fire here
+		 * (ItemEvent->Item) */
+		m.onItemEvent = (ev, item)->{
+			
+			// -
+			if (ev == fire) switch(item.ID){
 				case "fs":
-					FlxG.fullscreen = b.data.c;
+					FlxG.fullscreen = item.get();
 				case "sm":
-					D.SMOOTHING = b.data.c;
+					D.SMOOTHING = item.get();
 				case "vol":
-					FlxG.sound.volume = b.data.c / 100;
+					FlxG.sound.volume = cast(item.get(),Float) / 100;
 				case "rst":
 					Main.goto_state(State_Logos);
 				case "bgcol":
@@ -233,15 +254,16 @@ class State_Menu extends FlxState
 						it.label = it.disabled?'Disabled :-(':'Enabled - :-)';
 					});
 				case "winmode":
-					D.setWindowed(b.data.c);
-					m.item_update(0, (t)->{t.data.c = FlxG.fullscreen; });
+					D.setWindowed(item.get());
+					m.item_update(0, (t)->{t.P.c = FlxG.fullscreen; });
 				case "sdemo": Main.goto_state(State_Slides);
 				case "autot": Main.goto_state(State_Autotext);
 				case "game1": Main.goto_state(game1.State_Game1);
 				case _:
 			};
 			
-			switch(a) {
+			// -- Sounds
+			switch(ev) {
 				case fire:
 					D.snd.playV('cursor_high',0.7);
 				case focus:
@@ -252,8 +274,8 @@ class State_Menu extends FlxState
 			};
 		}//
 		
-		
 		return m;
-		
 	}//---------------------------------------------------;
+	
+	
 }// --

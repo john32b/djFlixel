@@ -7,7 +7,7 @@ class MItemLabel extends MItem
 {
 	override function state_set(id:FocusState) 
 	{
-		_ctext('accent'); // Force this color
+		_ctext('accent'); // Force this StateColors color 
 	}//---------------------------------------------------;
 	
 }// --

@@ -27,7 +27,7 @@ class MItemLabel2 extends MItem
 	override function on_newdata() 
 	{
 		super.on_newdata();
-		part2.text = data.data.text;
+		part2.text = data.P.text;
 		part2.x = label.x + label.width + mp.styleIt.part2_pad;
 	}//---------------------------------------------------;
 	

@@ -27,8 +27,9 @@ import openfl.display.Sprite;
 class Main extends Sprite
 {
 	inline static var FPS = 60;
-	//inline static var START_STATE = State_Boot;
-	inline static var START_STATE = State_Autotext;
+	inline static var START_STATE = State_Boot;
+	//inline static var START_STATE = State_Menu;
+	//inline static var START_STATE = menu1.State_Menu1;
 	
 	public function new() 
 	{

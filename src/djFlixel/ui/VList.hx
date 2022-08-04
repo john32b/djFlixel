@@ -14,6 +14,7 @@ import djA.DataT;
 import djFlixel.core.Dcontrols;
 import djFlixel.other.StepLoop;
 import djFlixel.ui.IListItem;
+import djFlixel.ui.UIDefaults;
 import flixel.util.typeLimit.OneOfTwo;
 import flixel.group.FlxSpriteGroup;
 import flixel.FlxG;
@@ -26,20 +27,25 @@ import openfl.display.BitmapData;
 
 
 
-
+/**
+ * Additional List Parameters Object
+ * stored in {VList.STL}
+ * -
+ */
 typedef VListStyle = {
 
-	// How many pixels to the right to animate the highlighted element at (scroll_time) speed
+	// How many pixels to the right to tween an item when it is highlighted
 	focus_nudge:Int,
 	
-	// Loop at edges
+	// Loop at the edges
 	loop:Bool,
 	
 	// Start scrolling the view before reaching the edges by this much.
 	// - Applicable when the list has more items than slots -
 	scroll_pad:Int,
 	
-	// How fast to scroll elements in and out, 0 for instant scroll, Also selected item nudge time
+	// How fast to scroll elements when they come in / out of the view when scrolling
+	// use 0 for instant scroll. This time is also applied to {focus_nudge}
 	scroll_time:Float,	
 	
 	// How much padding between the elements in pixels. Can use negative values
@@ -51,27 +57,23 @@ typedef VListStyle = {
 	align:String,
 	
 	// == View Tweens ------------------------------
-	// Behavior of the elements if they are to enter/exit the view
-	// - DEV: Used at viewOn() and viewOff()
+	// Item Tweens when the menu opens/closes
 	
-		// "Speed:Delay" applies to each element e.g. "0.15:0.2"
-		// "0:0" for all slots instant in
-		vt_in_times:String,	
+		// Encoded String : "x:y|speed:delay"
+		// 	x:y are offsets to start from in relation to the item original position
+		// 	speed:delay are times and apply to each item
+		// 	e.g. "0:-10|0.13:0.2"
+		// 		^ 	start items at x,y (0,-10), Every item takes 0.13 seconds to tween it
+		//			and it starts at 0.2 seconds * index from the the moment viewOn() is called
+		vt_IN:String,
+		// Same as vt_IN but for exiting the view
+		vt_OUT:String,
 		
-		// "x:y" Start Offsets in relation to item position e.g. "0:-10"
-		vt_in_offset:String,
-		
-		// "Speed:Delay" applies to each element e.g. "0.15:0.2"
-		// "0:0" for all slots instant in
-		vt_out_times:String,
-		
-		// "x:y" Exit Offsets in relation to item position e.g. "0:10"
-		vt_out_offset:String,
-		
-		// Name of the ease function found in "FlxEase.hx"
+		// Name of the ease function found in <FlxEase.hx>
 		// e.g : bounceOut, SineIn, backInOut
 		vt_in_ease:String,
-		// - DEV: vt_out_ease not implemented and is fixed to "quadOut", found at viewOff() -
+		
+		// DEV: vt_out_ease not implemented and is fixed to "quadOut", found at viewOff() -
 	
 	// == Scroll Indicators ---------------------
 	// - Arrows at the top and bottom of the list to indicate that there are more items to scroll
@@ -79,8 +81,9 @@ typedef VListStyle = {
 	
 		sind_size:Int,			 // which icon size to use. Be sure to call D.ui.initIcons(size); beforehand
 		sind_anim:String,		 // Type,Steps,Time |  Type(1=repeat,2=loop,3=blink), Steps:Int, Time:Float=Step time | e.g. "2,3,0.2"
-		sind_color:Int,		 	 // Colorize the scroll indicator with this color
+		sind_color:Int,		 	 // Colorize the scroll indicator with this color ARGBA format "0xFFE0E0E0"
 		sind_offx:Int			 // Offset X axis for the arrows, if you want to adjust the horizontal position
+	
 }
 
 
@@ -93,8 +96,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 {	
 	static inline var DEFAULT_SLOTS = 3;
 	static inline var DEFAULT_POOL_MAX = 6;
-	// Cursor tween in time is (Style.scroll_time) * this mutliplier. Just a bit shorter than the element tween itself.
-	static inline var DEFAULT_CURSOR_TWEEN_MULT = 0.9;
 	// When animating the cursor start from this alpha to 1
 	static inline var CURSOR_START_ALPHA = 0.5;
 	// Pad the scrolling indicators this much in when "left" alignment
@@ -102,47 +103,26 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// When mouse checking on element overlap, check this more to the left and right
 	static inline var MOUSE_X_CHECK_PAD = 1;
 	// ----------------------
-	
-	/**Default Style for all VLists,
-	   you can replace this or set the style of each VList
-	**/
-	public static var DEFAULT_STYLE:VListStyle = {
-		align:"left",
-		loop:false,
-		item_pad:-2,				// You can use negative values here
-		focus_nudge:4,				// Push elements 4 pixels when they are focused
-		scroll_pad:1,				// Initiate scroll when cursor is at an offset from the edge.
-		scroll_time:0.125,
 		
-		vt_in_times:"0.12:0.08",	// 0.12 Speed for each item slot in. 0.08 delay between each slot
-		vt_out_times:"0.08:0.04",	// 
-		vt_in_offset:"0:-10",		// Enter offsets
-		vt_out_offset:"12:2",		// Exit offsets
-		vt_in_ease:"quadOut",
-		
-		// : Scroll Indicator -- (Make sure you have initialized the correct icon size with D.ui.initIcons()
-		sind_size:8,
-		sind_anim:"2,3,0.2",		// 2=Type Loop, 3 Steps, 0.2 millisecs for each step
-		sind_color:0xFFE0E0E0,
-		sind_offx:0
-	};
-	// ----------------------
-	
 	/** Some functionality flags. Set these right after new()
+	 * These are somewhat Advanced and not exposed to the Styling Object
+	 * To be used internally by extended objects etc.
 	 */
 	public var FLAGS = {
 		// Enable mouse interaction in general
 		enable_mouse:true,
-		// If true, when selecting an element it will fire to callback regardless
-		//    false, pushes the "fire" event to the item itself ( Used in FLXMENU )
+		
+		//  True  : When (pushing fire) on an element it will call callback("fire") immediately
+		//  False : pushes the "fire" event to the item itself ( Used in FLXMENU )
 		fire_simple:true,
+		
 		// If true will make the START button fire to the items
 		// False will callback a "start" status
 		start_button_fire:false,
 	}
 	
-	/** The List Style, it points to DEFAULT_STYLE on new. */
-	public var style:VListStyle;
+	/** (STyle List), it points to the DEFAULT_STYLE on now */
+	public var STL:VListStyle;
 	
 	/** Standard menu width, used in mouse collisions and scroll indicator positioning */
 	public var menu_width(default, null):Int;
@@ -185,13 +165,15 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var isScrolling:Bool;	// Is it scrolling now
 	public var overflows(default, null):Bool;	// More elements than slots
 	
-	var inputMode:Int;				// 0:No Input, 1:Scroll Only, 2:Cursor. | see setInputMode()
+	// Interaction level
+	// 0:None 1:Scroll Only 2:Cursor | see setInputMode()
+	var inputMode:Int;
 	
 	// -- Sprite Cursor
 	var cursor:FlxSprite;
 
 	// - Cursor Variables
-	//   All these are autogenerated based on `style`
+	//   All these are autogenerated based on `STL`
 	var cur = {
 		fix:0.0,			// hack, cursor placement fix
 		tween_time:0.0,		// Time the cursor tween lasts
@@ -206,12 +188,13 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var sind_el:Array<FlxSprite>;
 
 	
-	/** This pushes Item Events */
+	/** This pushes Item Events , (eventID, Item) 
+	 */
 	public var onItemEvent:ListItemEvent->K->Void = null;
 	
 	/** Pushes List related events
 	    `back`	: Back button pressed
-		`start` : Start button pressed. Will be pushed if flag start_button_fire is false
+		`start` : Start button pressed. Works ONLY IF flag start_button_fire is false
 	*/
 	public var onListEvent:String->Void = null;
 	
@@ -244,7 +227,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		itemSlots = new Array<T>();
 		itemSlotsXOrigin = [];
 		itemHeight = -1;
-		style = DEFAULT_STYLE;
+		STL = cast UIDefaults.MPAGE;
 		inputMode = 0;
 		tween_map = [];
 		poolSet();	// Set pooling with default parameters
@@ -256,7 +239,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		clear_tween_slot();
 		clear_tween_map();
 		data = null;
-		style = null;
+		STL = null;
 		itemSlots = null;
 		FlxDestroyUtil.destroyArray(pool);
 		super.destroy();
@@ -342,11 +325,13 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (sind_el != null){
 			sind_el[0].visible = sind_el[1].visible = false;
 		}
-		tween_allSlots([0, 1], style.vt_in_offset, "0:0", instant?"0:0":style.vt_in_times,
+		// DEV: Put in an Array [ offset_str , time_str ] e.g. [ "2:3" ,"3.4:2"]
+		var vt_IN = STL.vt_IN.split('|');
+		tween_allSlots([0, 1], vt_IN[0], "0:0", instant?"0:0":vt_IN[1],
 						()->{
 							if (focusAfter) focus();
 							if (onComplete != null) onComplete(this); 
-						}, style.vt_in_ease, true);
+						}, STL.vt_in_ease, true);
 	}//---------------------------------------------------;
 	
 	/** Animates the menu to viewOff
@@ -355,7 +340,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		unfocus();
 		on_scrollComplete(null); // For when if the list is currently scrolling, 
-		tween_allSlots([0.9, 0], "0:0", style.vt_out_offset, instant?"0:0":style.vt_out_times,
+		var vt_OUT = STL.vt_OUT.split('|');
+		tween_allSlots([0.9, 0], "0:0", vt_OUT[0], instant?"0:0":vt_OUT[1],
 						()->{
 							active = false;
 							if (onComplete != null) onComplete(this); 
@@ -363,7 +349,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	
-	/** 0 None | 1 Scroll | 2 Cursor
+	/**
+	   0 : Accept No Input.
+	   1 : Input scrolls the list. No active element
+	   2 : Selectable elements with a cursor
 	**/
 	public function setInputMode(m:Int)
 	{
@@ -392,7 +381,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	 @param	Offset [x,y] Resting Offset, For manual centering. e.g. [4,4] to move right-down
 	 @param TWEEN_TIME_MULTIPLIER 0 For No tween. Other for a multiplier to a tween time
 	**/
-	public function setCursor(S:OneOfTwo<FlxSprite,BitmapData>, ?OFFSET:Array<Int>, TWEEN_TIME_MULTIPLIER:Float = -1):Void
+	public function setCursor(S:OneOfTwo<FlxSprite,BitmapData>, ?OFFSET:Array<Int>, TWEEN_TIME_MULTIPLIER:Float):Void
 	{
 		if (cursor != null) {
 			remove(cursor); cursor.destroy();
@@ -410,8 +399,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		add(cursor);
 		
 		// It can be 0, then the tween will render instantly
-		if (TWEEN_TIME_MULTIPLIER < 0) TWEEN_TIME_MULTIPLIER = DEFAULT_CURSOR_TWEEN_MULT;
-		cur.tween_time = style.scroll_time * TWEEN_TIME_MULTIPLIER;
+		cur.tween_time = STL.scroll_time * TWEEN_TIME_MULTIPLIER;
 		cur.enter_travel = cursor.width * 0.75;
 		
 		// User manual centering fix
@@ -428,7 +416,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	/**
 	   Sets a new data source AND INITIALIZES
-	   Be sure to have any initialization or styles done up to this point
+	   Be sure to have any initialization of styles done up to this point
 	**/
 	public function setDataSource(arr:Array<K>)
 	{
@@ -443,7 +431,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		indexItem = null;   // Nothing is selected
 		
 		data = arr;
-		scrollPadding = style.scroll_pad;	// I set this here to trigger the setter
+		scrollPadding = STL.scroll_pad;	// I set this here to trigger the setter
 		scrollRatio = 0;
 		scrollOffset = -1;	// -1 needed for setScroll to work
 		scrollMax = data.length - slotsTotal;
@@ -453,9 +441,9 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		// Also, Set the starting positions of all the slots
 		if (itemHeight < 0) {
 			_itm = item__createInstance(0);
-			itemHeight = Std.int(_itm.height) + style.item_pad;
+			itemHeight = Std.int(_itm.height) + STL.item_pad;
 			_itm.destroy();
-			menu_height = (slotsTotal * itemHeight) - style.item_pad;
+			menu_height = (slotsTotal * itemHeight) - STL.item_pad;
 		}
 		
 		if (inputMode == 2){
@@ -629,9 +617,9 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			// :: Now check if mouse is actually over an item
 			// :: Check for highlight
 			if ( my > _itm.y && 
-				 my < (_itm.y + _itm.height + style.item_pad) &&
+				 my < (_itm.y + _itm.height + STL.item_pad) &&
 				 mx >= x + itemSlotsXOrigin[c] - MOUSE_X_CHECK_PAD &&
-				 mx <= x + itemSlotsXOrigin[c] + _itm.width + MOUSE_X_CHECK_PAD + style.focus_nudge
+				 mx <= x + itemSlotsXOrigin[c] + _itm.width + MOUSE_X_CHECK_PAD + STL.focus_nudge
 			  )  
 			  {
 				if (!_itm.isFocused) 
@@ -686,12 +674,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		var _cnt = 0;
 		while (_cnt < slotsTotal)
 		{
-			if (style.scroll_time==0) {
+			if (STL.scroll_time==0) {
 				itemSlots[_cnt].y -= itemHeight;
 			}else {
 				var pr = { y:itemSlots[_cnt].y - itemHeight };
 				if (_cnt == 0) Reflect.setField(pr, "alpha", 0); // Fade the first element only
-				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, style.scroll_time));
+				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, STL.scroll_time));
 			}
 			itemSlots[_cnt] = itemSlots[_cnt + 1];
 			_cnt++;
@@ -699,7 +687,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		_cnt--; // Point to the last slot
 		
-		if (style.scroll_time == 0) {
+		if (STL.scroll_time == 0) {
 			_itm = item_getAndPlace(_cnt , scrollOffset + _cnt + 1);
 			_itm.alpha = 1;
 			scrollOffset++;
@@ -713,7 +701,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			scrollOffset++;
 			itemSlots[_cnt] = _itm;
 			isScrolling = true;
-			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y - itemHeight }, style.scroll_time, 
+			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y - itemHeight }, STL.scroll_time, 
 					{ onComplete:on_scrollComplete } ));
 		}
 
@@ -735,12 +723,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 
 		var _cnt = _i1; // last index
 		while (_cnt >= 0) {
-			if (style.scroll_time==0) {
+			if (STL.scroll_time==0) {
 				itemSlots[_cnt].y += itemHeight; // itemHeight includes padding
 			}else {
 				var pr = { y:itemSlots[_cnt].y + itemHeight };
 				if (_cnt == _i1) Reflect.setField(pr, "alpha", 0);
-				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, style.scroll_time));
+				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, STL.scroll_time));
 			}
 			itemSlots[_cnt] = itemSlots[_cnt - 1];
 			_cnt--;
@@ -748,7 +736,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		_cnt++; // Fix count to point to the new slot
 		
-		if (style.scroll_time==0)
+		if (STL.scroll_time==0)
 		{
 			_itm = item_getAndPlace(_cnt, scrollOffset - 1);
 			_itm.alpha = 1;
@@ -763,7 +751,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			itemSlots[0] = _itm;
 			isScrolling = true;
 			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y + itemHeight }, 
-				style.scroll_time, { onComplete:on_scrollComplete } ));
+				STL.scroll_time, { onComplete:on_scrollComplete } ));
 		}
 		
 		return true;
@@ -774,7 +762,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	function selectionUp1()
 	{
 		if (indexData == 0) {
-			if (style.loop) {
+			if (STL.loop) {
 				setSelection(data.length - 1); 
 			}
 			return;
@@ -820,7 +808,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		// Sometimes when not the entire slots are filled,
 		// prevent scrolling to an empty slot by checking this.
 		if (indexData == data.length - 1) {
-			if (style.loop) {
+			if (STL.loop) {
 				setSelection(0); 
 			}
 			return;
@@ -871,14 +859,14 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (indexItem == null) return;
 		indexItem.focus();
 		
-		if (style.focus_nudge != 0)
+		if (STL.focus_nudge != 0)
 		{
 			if (tween_map.exists(indexItem)) { // Cancel any previous tween
 				tween_map.get(indexItem).cancel();
 				// Note : do not remove it will be replaced below
 			}
 			tween_map.set(indexItem, FlxTween.tween( indexItem, 
-				{ x:x + get_itemStartX(indexItem) + style.focus_nudge }, style.scroll_time, { ease:FlxEase.cubeOut } ));
+				{ x:x + get_itemStartX(indexItem) + STL.focus_nudge }, STL.scroll_time, { ease:FlxEase.cubeOut } ));
 		}		
 		cursor_updatePos();
 	}//---------------------------------------------------;	
@@ -891,14 +879,14 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (indexItem == null) return;
 		indexItem.unfocus();
 		
-		if (style.focus_nudge != 0) 
+		if (STL.focus_nudge != 0) 
 		{
 			if (tween_map.exists(indexItem)) { // Cancel any previous tween
 				tween_map.get(indexItem).cancel();
 				// Note : do not remove it will be replaced below
 			}	
 			tween_map.set(indexItem, FlxTween.tween(indexItem, 
-				{ x:x + get_itemStartX(indexItem) }, style.scroll_time));
+				{ x:x + get_itemStartX(indexItem) }, STL.scroll_time));
 		}
 	}//---------------------------------------------------;
 	
@@ -922,16 +910,16 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			tween_map.get(cursor).cancel();
 		}
 		if (cur.tween_time == 0) {
-			cursor.x = zeroline + style.focus_nudge;
+			cursor.x = zeroline + STL.focus_nudge;
 		}else{
 			cursor.x = zeroline - cur.enter_travel;
-			tween_map.set(cursor, FlxTween.tween( cursor, { x: zeroline + style.focus_nudge, alpha:1},
+			tween_map.set(cursor, FlxTween.tween( cursor, { x: zeroline + STL.focus_nudge, alpha:1},
 				cur.tween_time, {ease:FlxEase.cubeOut }));
 		}
 		
 		if (isScrolling) {
 			// NOTE: Vertical movement is handled at the update function
-			cur.fix = style.scroll_time + 0.1;
+			cur.fix = STL.scroll_time + 0.1;
 		}		
 
 	}//---------------------------------------------------;
@@ -962,7 +950,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	function scroll_ind_tick(v:Int)
 	{
 		if (sind_ty < 3) {
-			sind_el[0].y = this.y - style.sind_size - v;
+			sind_el[0].y = this.y - STL.sind_size - v;
 			sind_el[1].y = this.y + menu_height + v;
 		}else{
 			if (get_hasMoreDown()) sind_el[1].visible = ! sind_el[1].visible;
@@ -976,21 +964,21 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (create)
 		{
 			function cs(name) {
-				var a = new FlxSprite(0, 0, D.bmu.replaceColor(D.ui.getIcon(style.sind_size, name), 0xFFFFFFFF, style.sind_color));
+				var a = new FlxSprite(0, 0, D.bmu.replaceColor(D.ui.getIcon(STL.sind_size, name), 0xFFFFFFFF, STL.sind_color));
 				a.scrollFactor.set(0, 0);
 				a.active = false;
-				a.offset.x = -style.sind_offx;
+				a.offset.x = -STL.sind_offx;
 				return a;
 			};
 			if (sind_el != null) return;	
-			var s = style.sind_anim.split(',');	// Read the CSV data
+			var s = STL.sind_anim.split(',');	// Read the CSV data
 				sind_ty = Std.parseInt(s[0]);	// Type
 				sind_el = [ cs('ar_up'), cs('ar_down') ];
-				sind_el[0].x = sind_el[1].x = switch(style.align) {
+				sind_el[0].x = sind_el[1].x = switch(STL.align) {
 					case "center", "justify", "center2" : (menu_width / 2) - (sind_el[0].width / 2);
 					case _: SC_IND_INWARDS;
 				};
-			sind_el[0].y = -style.sind_size;
+			sind_el[0].y = -STL.sind_size;
 			sind_el[1].y = menu_height;
 			add(sind_el[0]); add(sind_el[1]);
 			sind_loop = new StepLoop(sind_ty, Std.parseInt(s[1]), Std.parseFloat(s[2]), scroll_ind_tick);
@@ -1070,14 +1058,14 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	**/
 	function get_itemStartX(el:T):Float
 	{
-		if (style.align == "center") {
+		if (STL.align == "center") {
 			return (menu_width - el.width) / 2;
 		}else {
 			return 0;
 		}
 	}//---------------------------------------------------;
 	
-	/** -- Mainly for flxmenu --
+	/** -- Mainly for FLXMenu/MPage --
 	 * Get the next selectable item index, starting and including &fromIndex 
 	 * @param	fromIndex Starting index to search from
 	 * @param	direction >0 to search downwards, <0 to search upwards
@@ -1086,8 +1074,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	function get_nextSelectableIndex(fromIndex:Int, direction:Int = 1):Int
 	{
 		// -- OVERRIDE THIS --
-		// Currently is being overriden in VListMenu and it checks for MenuItems
-		// Generic elements are all selectable
 		return fromIndex;
 	}//---------------------------------------------------;
 	
@@ -1097,6 +1083,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	   Mainly used for the viewOn,viewOff animations
 	   NOTE :	- Starting offsets from current pos ( will directly move the elements there )
 	    		- Ending offsets from the initial positions (so 0,0 will end at init pos)
+				
+		@param hardstart Place/Snap the elements at the starting offset and go from there
 	**/
 	function tween_allSlots(	Alpha:Array<Float>, StartOffs:String, EndOffs:String, times:String,
 								onComplete:Void->Void, ease:String, hardstart:Bool )
