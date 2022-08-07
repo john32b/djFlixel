@@ -37,7 +37,7 @@ class UIDefaults
 		},
 		box_txt: [ "( )", "(X)" ],
 		ar_txt : [ "<", ">" ],
-		part2_pad : 10
+		part2_pad : 10			// X pixel padding between Label and Other part| Volume ....... <30> |
 	}//---------------------------------------------------;
 	
 
@@ -52,8 +52,8 @@ class UIDefaults
 		scroll_pad:1,				// Initiate scroll when cursor is at an offset from the edge.
 		scroll_time:0.125,
 		// : View Tweens
-		vt_IN:"0:-10|0.12:0.08",
-		vt_OUT:"12:2|0.08:0.04",
+		vt_IN:"0:-10|0.12:0.08",	// x:y|speed:delay
+		vt_OUT:"12:2|0.08:0.04",	// x:y|speed:delay
 		vt_in_ease:"quadOut",
 		// : Scroll Indicator
 		sind_size:8,			// (Make sure you have initialized the icon size with D.ui.initIcons(..)

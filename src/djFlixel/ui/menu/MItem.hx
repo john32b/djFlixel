@@ -125,7 +125,7 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 				
 		if (mp.STP.align == "center2")	// TODO: What is center2 ?
 		{
-			label.fieldWidth = mp.page.PAR.part1W;
+			//label.fieldWidth = mp.page.PAR.part1W;
 			label.alignment = "right";
 		}else{
 			label.fieldWidth = 0;

@@ -24,33 +24,37 @@ import openfl.geom.Rectangle;
 
 
 class PanelPop extends FlxSprite
-{
-	static var DEF_PAR = {
-		bm:null,			// Custom BitmapData to use. Null for DJFlixel default
+{	
+	var P = {
+		bm:null,			// Slice9 compatible custom BitmapData to use. Null for DJFlixel default 
 		sizes:[8,8,8,8],	// Slice Rectangle sized, x,y,width,height of the center
-		colorBG:0xFF8B8B8B,	// Colorize the BG color of the default graphic. 0 for none
+		colorBG:0xFF639BFF,	// Colorize the BG color of the default graphic | 0 for no colorization
 		
 		// Growing Steps, Ratio of the final width/size. Make sure the have same length
 		stepW:[0.15, 1, 1, 1],
 		stepH:[0.25, 0.5, 0.7, 1],
-		time:0.5,					// Time to take to open the panel
+		time:0.5			// Total time to take to open the panel
 	};
 	
-	var P:Dynamic;		// Running parameters
 	var sb:BitmapData;	// Current source slice9 compatible bitmap.
 	var sr:Rectangle;	// Slice Rect.
 	var steps:Int;		// stepW.length
 	var timer:StepTimer;
+	
 	/**
 	   @param	WIDTH Final Width
 	   @param	HEIGHT Final Height
-	   @param	PAR Parameters, check <DEF_PAR> field of this class
+	   @param	PAR Parameter overrides. Check <P> fields
 	**/
 	public function new(WIDTH:Int, HEIGHT:Int, ?PAR:Dynamic)
 	{
 		super();
-		makeGraphic(WIDTH, HEIGHT, 0x00000000);
-		P = DataT.copyFields(PAR, Reflect.copy(DEF_PAR));
+		moves = false;
+		
+		P = DataT.copyFields(PAR, P);
+		
+		makeGraphic(WIDTH, HEIGHT, 0x00000000, true);
+		
 		sb = P.bm;
 		if (sb == null) {
 			sb = D.ui.atlas.get_bn('panel');

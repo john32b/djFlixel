@@ -21,7 +21,7 @@ class MItemLink extends MItem
 	{
 		super.on_newdata();
 		
-		if (data.P.type == 0 && data.P.link != "back")
+		if (data.P.ltype == 0 && data.P.link != "back")
 		{
 			deco_enable();
 			switch(mp.STP.align) {
@@ -31,6 +31,8 @@ class MItemLink extends MItem
 					deco.x = label.x + label.width + st.part2_pad;
 			}
 		}else {
+			// DEV: Doing this, because new data could remove the deco state
+			// All Links go here however. But they will do nothing
 			deco_enable(false);
 		}
 	}//---------------------------------------------------;

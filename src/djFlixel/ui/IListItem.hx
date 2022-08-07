@@ -8,7 +8,7 @@ enum ListItemEvent
 	focus;		// Item received focus
 	fire;		// Item was activated ( for FLXMenu this fires for list,range,toggle as well )
 	invalid;	// Whenever a disabled item receives input. Useful for producing sound effects
-	change;		// Item data changed  -- UNUSED FOR NOW -- range, list and toggle produce a fire event
+	change;		// Item value changed  -- UNUSED FOR NOW -- FLXMenu range, list and toggle produce a fire event
 }
 
 /**
@@ -27,6 +27,10 @@ enum ListItemInput
  */
 interface IListItem<T>
 {
+	/**
+	 * Useful flag that is used by the parent menu
+	 */
+	public var isFocused(default, null):Bool;
 	/**
 	 * You might need the list items to push callbacks to the parent menu. 
 	 * VList autosets this.
@@ -48,13 +52,48 @@ interface IListItem<T>
 	 * Visually unfocus the element. (Resting state)
 	 */
 	public function unfocus():Void;
-	/**
-	 * Useful flag that is used by the parent menu
-	 */
-	public var isFocused(default, null):Bool;
+
 	/**
 	 * Returns true if the parameter data is the same as the current data this item has. 
 	 * This is used for pooling.
 	 */
 	public function isSame(data:T):Bool;
 }// --
+
+
+/** QUICK COPY/PASTE
+
+class MyListItem extends FlxSprite implements IListItem<String>
+{
+	
+	public var isFocused(default, null):Bool = false;
+	
+	public var callback:ListItemEvent->Void;
+	
+	public function new()
+	{
+		super();
+	}
+	
+	public function setData(_data:String):Void
+	{
+	}
+	
+	public function onInput(_type:ListItemInput):Void
+	{
+	}
+	
+	public function focus():Void
+	{
+	}
+	
+	public function unfocus():Void
+	{
+	}
+	
+	public function isSame(_data:T):Bool 
+	{
+	}
+}
+
+*/

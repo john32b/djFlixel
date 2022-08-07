@@ -232,8 +232,8 @@ class FlxSlides extends FlxGroup
 	public function setArrows(size:Int, x:Float, y:Float, width:Float)
 	{
 		arrows = [];
-		arrows.push(new UIIndicator('$size:ar_left', x - size, y).setAnim(2, {axis:"-x", time:0.3, steps:3}));
-		arrows.push(new UIIndicator('$size:ar_right', x + width, y).setAnim(2, {axis:"x", time:0.3, steps:3}));
+		arrows.push(new UIIndicator(D.ui.getIcon(size,"ar_left"), x - size, y).setAnim(2, {axis:"-x", time:0.3, steps:3}));
+		arrows.push(new UIIndicator(D.ui.getIcon(size,"ar_right"), x + width, y).setAnim(2, {axis:"x", time:0.3, steps:3}));
 		add(arrows[0]);
 		add(arrows[1]);
 	}//---------------------------------------------------;

@@ -1,17 +1,20 @@
 /**
- - Loops integer numbers and callbacks at each tick()
+ - Loops integer numbers and callbacks on each tick()
+ - Loop and PingPong Modes
  - Must call update() manually
  
  = EXAMPLE
  
-	var st = new StepLoop(2,5,3,(t)->{
+	var st = new StepLoop(2,5,3, (t)->{
 		trace(t);
 	});
-	// output : 0,1,2,3,4,5,4,3,2,1,0,1,2,3,4,5 .......
+	>> output : 0,1,2,3,4,5,4,3,2,1,0,1,2,3,4,5 .......
  
- Dev : This could be an object, but I want to be able to use this on an FlxSpriteGroup as well
-       But they don't support adding objects, hence the manual nature of this
-========================================== */
+ DEV : This could be an object, but I want to be able to use this on an 
+		FlxSpriteGroup as well but they don't support adding objects (just sprites)
+		So I am doing it manually (plus more lightweight)
+	   
+***************************************/
 
 package djFlixel.other;
 
@@ -55,6 +58,7 @@ class StepLoop
 		m = 1;
 	}//---------------------------------------------------;
 	
+	// Can be useful sometimes?
 	public function fire()
 	{
 		onTick(c);

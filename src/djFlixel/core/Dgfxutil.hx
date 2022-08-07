@@ -49,6 +49,8 @@ class Dgfxutil
 	/**
 	   Make sure the bitmap is WHITE 0xFFFFFFFF, and alpha masked
 	   Operates on source, so use .clone() if you must
+	   - Applies Text Color and Shadow from TextStyle to 
+	   - Useful for making small icons share style with text
 	**/
 	public function colorizeBitmapWithTextStyle(src:BitmapData, st:djFlixel.core.Dtext.DTextStyle):BitmapData
 	{

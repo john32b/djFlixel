@@ -146,7 +146,7 @@ class FlxAutoText extends FlxSpriteGroup
 		if (FieldWidth ==-1) FieldWidth = FlxG.width - (x * 2);
 		textObj = new FlxText(0, 0, FieldWidth, null); // DEV setting 0 to FieldWidth makes wordwrap=false
 		add(textObj);
-		active = false;
+		moves = active = false;
 		setCPS(DEFAULT_CPS);
 	}//---------------------------------------------------;
 	
@@ -265,8 +265,8 @@ class FlxAutoText extends FlxSpriteGroup
 
 			// :: Render
 			textObj.text = text.substr(textStart, textIndex - textStart);	// substr is by length
-			trace("TextIndex", textIndex, 'Char + "${text.charAt(textIndex)}"');
-			trace("Whole" , textObj.text, "Len", textObj.text.length);
+			//trace("TextIndex", textIndex, 'Char + "${text.charAt(textIndex)}"');
+			//trace("Whole" , textObj.text, "Len", textObj.text.length);
 			if (sound.char != null) D.snd.playV(sound.char);
 			
 			if (carrierEnabled)
@@ -357,6 +357,7 @@ class FlxAutoText extends FlxSpriteGroup
 			C = cast D.text.get(symbol, style);	
 		}else{
 			C = spr;
+			C.moves = false;
 		}
 		if (offsets == null) offsets = [0, 0];	// DEV: I can't put it as default function argument.
 		add(carrier = C);

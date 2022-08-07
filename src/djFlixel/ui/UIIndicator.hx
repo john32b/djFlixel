@@ -1,47 +1,37 @@
 /**
   Sprite with purpose to be used as an Indicator UI Element
+  
    - blinking
    - traveling, looping (for arrows)
-   - can initialize self using djFlixel icons
+   - You must give it a Bitmap
 	
-== Examples: ------
-  
-*  var a = new UIIndicator(10,10,{ic:"8:heart"}).applyFX({c:0xFF334455,sc:0xFF223322,so:[2,2]});
-  
-*  var b = new UIIndicator(20,20);
-	  b.loadGraphic("customGraphic");
-	  b.applyFx({...}); // You can still apply fx to a custom graphic
-	  
-*  var a = new UIIndicator(40, 140, "12:heart")
-	 .applyFX({c:Palette_DB32.COL_28, sc:Palette_DB32.COL_02, so:[1, 2]})
-	 .setAnim(1, {travel:"y:-4", steps:4, time:0.5});
-	 add(a);
+* EXAMPLE:  
 	
-	 
-== TIP: Use a TEXT character
-	// > This way will get the text in white color
-	var a = new UIIndicator();
-		a.pixels = D.text.get("->").pixels;
-		a.setAnim(1, {travel:"x:4");
-	// > Use this to get an flxtext + colors + borders
-		a.fromFlxText(..);
-	 
- ==========================================================================*/
+	var b = new UIIndicator(20,20);
+		b.loadGraphic( D.ui.getIcon(8,"heart") );
+		b.setAnim(1, {travel:"y:-4", steps:4, time:0.5});
+		b.setEnabled();
+		add(b);
+	
+* Using TEXT as character
+
+	- use ind.fromFlxText(..);
+	- use ind.loadGraphic(D.text.get(">").pixels );
+	
+***********************************************************/
 	 
 package djFlixel.ui;
+
 import djA.DataT;
 import djFlixel.other.StepLoop;
-import flash.display.BitmapData;
+import openfl.display.BitmapData;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
-
  
 class UIIndicator extends FlxSprite
 {
 	// Special separator for parameters like {travel:"y:4"}
 	inline static var CSV_SEP = ":";
-	
-	var stimer:StepLoop;
 	
 	var param = {
 		axis:"x", 		// Axis to move "-x", "-y" for negatives
@@ -55,26 +45,25 @@ class UIIndicator extends FlxSprite
 	var startX:Float;
 	var startY:Float;
 	
+	var stimer:StepLoop;
+	
 	/**
 	   You can use `IC` parameter to quickly load a standard icon, 
 	   or you can load custom graphic with .loadGraphic()
-	   @param   IC Set Icon, CSV: "size:iconName" or "size:iconIndex"
+	   - Starts off as Disabled. So you must setEnabled() later
+	   - If you don't set X,Y now, and do it later, you MUST then call lockPos()
+	   @param   b Set a custom bitmap
 	   @param	X 
 	   @param	Y
 	**/
-	public function new(?IC:String, X:Float = 0, Y:Float = 0)
+	public function new(?b:BitmapData, X:Float = 0, Y:Float = 0)
 	{
 		super(X, Y);
-		scrollFactor.set(0, 0);
-		// - Parse the icon data
-		if (IC!=null) {
-			var ic = IC.split(CSV_SEP);
-			var b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1], Std.parseInt(ic[1]));
+		if (b != null){
 			loadGraphic(b);
 		}
 		lockPos();
-		active = false;
-		visible = false;
+		moves = active = visible = false;
 	}//---------------------------------------------------;	
 	// --
 	override public function update(elapsed:Float):Void 
@@ -85,32 +74,11 @@ class UIIndicator extends FlxSprite
 		}
 	}//---------------------------------------------------;
 	
-	/** Use this to get the full graphic from a FlxText Color+Borders **/
+	/** Use this to get the full graphic from a FlxText, Color+Borders **/
 	public function fromFlxText(f:FlxText)
 	{
 		makeGraphic(f.pixels.width, f.pixels.height, 0x00000000, true);
 		stamp(f);
-	}//---------------------------------------------------;
-	
-	/**
-	   Apply Color + Shadow Color + Shadow Offset
-	   DEV : Applying shadow, changes the sprite size
-	   @param  O { c:Int|color, sc:Int|shadow Color, so:Array<Int>|shadow offset [x,y] }
-	   @return Self
-	**/
-	public function applyFX(O:Dynamic):UIIndicator
-	{
-		if (O.so == null) O.so = [1, 1];
-		var b = pixels;
-		if (O.c != null) {
-			D.bmu.replaceColor(b, 0xFFFFFFFF, O.c);
-		}
-		if (O.sc != null) {
-			b = D.bmu.applyShadow(b, O.sc, O.so[0], O.so[1]);
-		}
-		pixels = b;
-		dirty = true;
-		return this;
 	}//---------------------------------------------------;
 	
 	/**
@@ -136,31 +104,36 @@ class UIIndicator extends FlxSprite
 		param = DataT.copyFields(P, Reflect.copy(param));
 		// If it is to blink, just alter the parameters
 		if (type >= 3) {
-			param.steps = 2;
+			param.steps = 2; // on, off steps
 			stimer = new StepLoop(1, param.steps, param.time, on_timer_blink);
 		}else{
 			if (param.axis.charAt(0) == "-") param._neg = -1;
 			param._ax = (param.axis.charAt(param.axis.length - 1) == "x");
 			stimer = new StepLoop(type, param.steps, param.time, on_timer_move);
 		}
+		
 		stimer.start();
-		//setEnabled();
-		// fire?
+		//setEnabled(); -- no user will --
 		return this;
 	}//---------------------------------------------------;
 	
+	/** You need to call this, to make the current X,Y positions as 
+	 * the starting positions, So animations will run from there 
+	 **/
 	public function lockPos()
 	{
 		startX = x;
 		startY = y;
 	}//---------------------------------------------------;
 	
+	/**
+	   Sync Blinking of this Indicator to another Indicator
+	**/
 	public function syncFrom(U:UIIndicator)
 	{
 		stimer.syncFrom(U.stimer);
 		stimer.fire();
 	}//---------------------------------------------------;
-	
 	
 	// --
 	function on_timer_blink(v:Int)

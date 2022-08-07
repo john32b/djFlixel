@@ -1,8 +1,26 @@
 /**
  == Vertical List
+ 
  - A general purpose listbox that handles custom sprites in a vertical scrollable list. 
  - Element highlight and cursor support 
  - Mouse support is very basic, primarily built for button inputs
+ 
+ - Use Example:
+ 
+	var list = new VList<MyListItem,String>(MyListItem);
+	add(list);
+	list.setInputMode(2);
+	list.onItemEvent = (a, b)->{
+			trace("Item Event", a, b);
+	}
+	list.setDataSource([1,2,3,4,5,6......]);
+	list.focus();
+	
+	
+ - VLists start off as unfocused so you must call focus();
+ - Call SetInputMode(.) before setting a data source
+ - Calling viewOn() is optional, VList starts already visible
+
  
 ============================= */
  
@@ -89,8 +107,8 @@ typedef VListStyle = {
 
 
 /**
- T: Type Element of Child, must be or derive from FlxSprite and implement IListItem
- K: Type of Child Data 
+ T: Type Element of Child, Must derive be FlxSprite and implement IListItem
+ K: Type of Child Data. Can be anything like String,Int or a custom Data Type
  */
 class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 {	
@@ -149,8 +167,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var indexData:Int; 	// Current highlighted index on the data array
 	var indexSlot:Int;	// Current highlighted slot index
 	
-	var tween_slot:Array<VarTween>;			// Keep all the tweens created, so that I may remove them
-	var tween_map:Map<FlxSprite,VarTween>;  // Store all the item tweens when they get focused.
+	var tween_slot:Array<VarTween>;			// This is used exclusively for item slots tweens. ViewOn/Scrolling In
+	var tween_map:Map<FlxSprite,VarTween>;  // Stores generic tweens. Items being focused, Cursor.
 	
 	// :: Helpers
 	var _itm:T; 		// Temp element pointer
@@ -193,6 +211,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	public var onItemEvent:ListItemEvent->K->Void = null;
 	
 	/** Pushes List related events
+		`focus`  : 
+		`unfocus`:
 	    `back`	: Back button pressed
 		`start` : Start button pressed. Works ONLY IF flag start_button_fire is false
 	*/
@@ -215,7 +235,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	public function new(ObjClass:Class<T>, X:Float = 0, Y:Float = 0, MENU_WIDTH:Int = 0, SLOTSTOTAL:Int = 0)
 	{
 		super();
-		x = X; y = Y; menu_width = MENU_WIDTH;
+		moves = false;
+		x = X; 
+		y = Y; 
+		menu_width = MENU_WIDTH;
 		itemClass = ObjClass;
 		slotsTotal = SLOTSTOTAL;
 		if (slotsTotal < 1) slotsTotal = DEFAULT_SLOTS;
@@ -273,8 +296,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 				
 			if (!exists) return;	// Simple solution for above  ^^^^
 			
+			#if (FLX_MOUSE)
 			if (FLAGS.enable_mouse)
 				processMouse();
+			#end
 		}
 		
 	}//---------------------------------------------------;
@@ -283,6 +308,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		if (isFocused || isScrolling) return;
 		isFocused = true;
+		if (onListEvent != null) onListEvent("focus");
 		
 		if (FLAGS.enable_mouse && _camMouseXFix < 0)
 		{
@@ -305,6 +331,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		if (!isFocused) return;
 		isFocused = false;
+		if (onListEvent != null) onListEvent("unfocus");
+		
 		currentItem_Unfocus();
 		cursor_setEnabled(false);
 		
@@ -394,8 +422,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		}
 		
 		cursor.active = false;
-		cursor.scrollFactor.set(0, 0);
-		cursor.cameras = [camera];
+		cursor.moves = false;
 		add(cursor);
 		
 		// It can be 0, then the tween will render instantly
@@ -604,6 +631,9 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		var mx = FlxG.mouse.x - _camMouseXFix;
 		var my = FlxG.mouse.y - _camMouseYFix;
 		
+		if (inputMode == 2)
+		{
+			
 		// :: Check only when it is inside the general area of the menu box
 		// Off, because this can cause bugs when the arrow is at the rightest edge.
 		// Also, not much CPU is gained, because it's the same as if the cursor is always ON the menu, 
@@ -642,21 +672,30 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			}
 		}// --
 		
+		}
+		
 		// :: Wheel Check
-		if (overflows) {
-			if (FlxG.mouse.wheel < 0){
-				if (scrollDown1()){
+		
+		if (FlxG.mouse.wheel < 0) {
+		if (overflows && inputMode > 0) {
+			if (scrollDown1())
+			{
+				if(inputMode==2) {
 					indexData++;
 					on_dataIndexChange();
 				}
 			}
-			if (FlxG.mouse.wheel > 0){
-				if (scrollUp1()){
+		}}else
+		if (FlxG.mouse.wheel > 0) {
+		if (overflows && inputMode > 0) {
+			if (scrollUp1())
+			{
+				if(inputMode==2) {
 					indexData--;
-					on_dataIndexChange();
+					on_dataIndexChange(); 
 				}
 			}
-		}//--
+		}}
 		
 	}//---------------------------------------------------;
 	
@@ -965,7 +1004,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		{
 			function cs(name) {
 				var a = new FlxSprite(0, 0, D.bmu.replaceColor(D.ui.getIcon(STL.sind_size, name), 0xFFFFFFFF, STL.sind_color));
-				a.scrollFactor.set(0, 0);
+				//a.scrollFactor.set(0, 0);
 				a.active = false;
 				a.offset.x = -STL.sind_offx;
 				return a;
@@ -1044,6 +1083,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	/** Utility, goes through all viewOn items and returns the maximum width found */
+	@:deprecated("Relic of an old version. Seems unused")
 	function get_maxItemWidthInView():Float
 	{
 		var m:Float = 0;
@@ -1267,10 +1307,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		// Did not find anything in the pool (keep or recycle)
 		// Create a new one, also initialize some fields
 		_itm = item__createInstance(ind);
-		_itm.cameras = [camera];
 		_itm.setData(data[ind]);
-		_itm.scrollFactor.set(0, 0);
-		_itm.moves = _itm.solid = false;
+		//_itm.cameras = [camera];
+		//_itm.scrollFactor.set(0, 0);
+		_itm.moves = false;
 		_itm.callback = on_itemCallback;
 		return _itm;
 	}//---------------------------------------------------;

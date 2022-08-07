@@ -2,8 +2,7 @@
 	PageData
 	--------
 	- Holds multiple <MItemData> items
-	- Handled my <MPages> which is the Group Sprite of a Menu Page
-	- Offers some extra page customization options
+	- Handled by <MPages> which is responsible of displaying the menu items
 	- You can use add(..) to create Items in a Page
 	
 ************************************************/
@@ -11,6 +10,7 @@
 package djFlixel.ui.menu;
 import djA.DataT;
 import djFlixel.ui.menu.MItemData;
+import flash.display3D.IndexBuffer3D;
 import haxe.macro.Expr.Var;
 
 @:dce
@@ -28,19 +28,21 @@ class MPageData
 	// Data holder, Store the items serially
 	public var items(default, null):Array<MItemData>;
 	
-	/** Optional Parameters */
-	public var PAR:Dynamic = {
+	/** MPage STP overlay. Set this to override fields of the MPage style */
+	public var STPo:Dynamic;
+	
+	/** Optional Parameters | Skip Dynamic to make an anonymous struct with autocompletion*/
+	public var PAR = {
 		width:0,			// Override the FLXMENU width for this page
 		slots:0,			// Override the FLXMENU slots for this page
-		part1W:0,			// Used in "center2" alignment. The length of the label1 in Mitems.
+		//part1W:0,			// Used in "center2" alignment. The length of the label1 in Mitems.
 							// 0 For default menu_width/2
-		
-		// -- Style Overrides :
-		stI:null,	// Object, Can override fields of 'MItemStyle' | e.g. { text:{f:"pixel8.ttf", s:16, bt:2} }
-		stL:null,	// Object, Can override fields of 'VListStyle' | e.g. { loop:true }
-		
+
 		// -- The following are used internally :
-		lastIndex:-1,		// Remember the last selected index when the page becomes unfocused
+		
+		indexStash:-1,		// Stores last selected index when unfocus(). Helps FlxMenu remember selected 
+							// indexes when going back() | Also used on some other cases
+							
 		noBack:false,		// Do not send a 'back' signal if a back button is pressed
 		noPool:false		// Will not pool the MPage, Used in dynamic pages.
 	};
@@ -73,12 +75,19 @@ class MPageData
 		- for single elements just do
 			.add( "Player Lives | range | idlives | 1,9 | c=4 ");
 		  it will be appended to the items Array of this page
+		@param STR The encoded string that constructs the item
+		@param at The index to add the new items to | -1 (default) add at the end 
 	**/
-	public function add(STR:String):MPageData
+	public function add(STR:String, at:Int =-1):MPageData
 	{
 		var S = STR.split('-|').map((i)->StringTools.trim(i)).filter((i)->i.length > 0);
 		for (s in S) {
-			items.push(new MItemData(s));
+			var it = new MItemData(s);
+			if (at >= 0) {
+				items.insert(at++, it);
+			}else{
+				items.push(it);
+			}
 		}
 		return this;
 	}//---------------------------------------------------;
@@ -114,14 +123,17 @@ class MPageData
 	}//---------------------------------------------------;
 	
 	
+	
+	
 	/**
 	   Quickly construct a pagedata with the confirmation options of the Link Item
 	   - For use in an FLXMENU
+	   - The MPAGE that is create has an id of "ask:link_id"
 	   @param	item Must be a link type
 	**/
 	public static function getConfirmationPage(item:MItemData):MPageData
 	{
-		var P = new MPageData('dyn_conf_${item.P.link}');	// construct a dynamic ID
+		var P = new MPageData('ask:${item.P.link}');
 		var Q = item.P.ask;
 		
 		// DEV: 
@@ -133,6 +145,7 @@ class MPageData
 		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back');
 		P.PAR.noBack = true;
 		P.PAR.noPool = true;
+		P.PAR.indexStash = P.items.length - 1;	// Select the last index. Must also enable a FlxMenu _flag
 		return P;
 	}//---------------------------------------------------;
 	

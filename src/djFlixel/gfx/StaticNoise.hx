@@ -55,7 +55,7 @@ class StaticNoise extends FlxSprite
 		
 		if (WIDTH == 0) WIDTH = FlxG.state.camera.width - Std.int(X);
 		if (HEIGHT == 0) HEIGHT = FlxG.state.camera.height - Std.int(Y);
-		makeGraphic(WIDTH, HEIGHT, 0xFF002200);
+		makeGraphic(WIDTH, HEIGHT, 0xFF002200, true);
 		setPosition(X, Y);
 		centerOffsets();
 		moves = false;

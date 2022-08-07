@@ -3,17 +3,21 @@
  * 
  * - MenuItems can be of various classes, but all deriving from <MItem>
  * - FlxMenu creates MPages to display menus
+ * - an <MPage> is a representation of <MPageData>
  * 
  * =========================================== */
 
 package djFlixel.ui.menu;
 
 import djA.DataT;
+import djFlixel.ui.FlxMenu;
 import djFlixel.ui.UIDefaults;
 import djFlixel.ui.VList;
 import djFlixel.ui.menu.*;
 import djFlixel.ui.menu.MItem.MItemStyle;
 import djFlixel.core.Dtext.DTextStyle;
+import flixel.FlxSprite;
+import flixel.tweens.FlxTween;
 import openfl.display.BitmapData;
 
 
@@ -24,8 +28,8 @@ import openfl.display.BitmapData;
 typedef MCursorStyle = {
 	
 	?text:String,		// Character to use for cursor, uses the same style as the Menu Items
-	?icon:String,		// Use a standard D.UI icon string format : "size:name" .e.g. "12:heart"
-	?bitmap:BitmapData, // Use this white bitmap for a cursor (must be 255,255,255 white)
+	?icon:String,		// Use a standard D.UI icon string format : "size:name" .e.g. "12:heart" | Auto color and shadow
+	?bitmap:BitmapData, // Use this bitmap for a cursor - Will be used as is, no colorization or shadow -
 	?color:DTextStyle,	// Colorize the Text/Bitmap with this. valid:{c,bc,bt,so} | null to get MItem Color
 	offset:Array<Int>,	// [x,y] Cursor Offset
 	tmult:Float,		// Cursor tween time multiplier | 0:Instant tween.
@@ -41,14 +45,16 @@ typedef MPageStyle = {
 	
 	item:MItemStyle,		// Defined in "MItem.hx"
 	
-	?cursor:MCursorStyle	// Defined in this file | Null for no cursor
+	?cursor:MCursorStyle,	// Defined in this file | Null for no cursor
+	
+	?background:Int			// If set will create a solid color background
+	
 }
 
 
 
 class MPage extends VList<MItem,MItemData>
 {
-		
 	// Style Page. Includes all the styles. FlxMenu will set this to something
 	public var STP:MPageStyle;
 	
@@ -62,6 +68,9 @@ class MPage extends VList<MItem,MItemData>
 	@:allow(djFlixel.ui.FlxMenu)
 	var iconcache:MIconCacher;
 	
+	// Optional Background
+	var bg:FlxSprite;
+	
 	/**
 	 * @param	X
 	 * @param	Y
@@ -71,7 +80,6 @@ class MPage extends VList<MItem,MItemData>
 	public function new(X:Float, Y:Float, WIDTH:Int = 0, SLOTS:Int = 0)
 	{
 		super(MItem, X, Y, WIDTH, SLOTS);
-		scrollFactor.set(0, 0);
 		inputMode = 2; // + cursor
 		FLAGS.fire_simple = false;
 		STP = UIDefaults.MPAGE;
@@ -82,7 +90,8 @@ class MPage extends VList<MItem,MItemData>
 	{
 		super.unfocus();
 		if (indexData >= 0) {
-			page.PAR.lastIndex = indexData;
+			// The last focused index is auto stashed
+			page.PAR.indexStash = indexData;
 		}
 	}//---------------------------------------------------;
 	
@@ -97,26 +106,21 @@ class MPage extends VList<MItem,MItemData>
 		page = p;
 		
 		if (p.PAR.width != 0) menu_width = p.PAR.width;
-		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;
+		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;	
 
-		// TODO: Extra PAGE STYLE OVERRIDES ?? >>>>>
-		
-			//if (p.PAR.stI != null)
-			//{
-				// Note styleIT is already unique, so it is not overwriting anything shared
-				//styleIt = DataT.copyFields(p.PAR.stI, styleIt);
-			//}
-			
-			//if (p.PAR.stL != null)
-			//{
-				// Note style is already a unique
-				//style = DataT.copyFields(p.PAR.stL, style);
-			//}
-			
-		if (p.PAR.part1W == 0) {
-			p.PAR.part1W = Std.int(menu_width / 2);
-			// TODO: Why am I writing back to the Page Style?
+		// -- Style Overlay
+		if (p.STPo != null)
+		{
+			// FlxMenu gave this a link
+			// I need to make a copy
+			STP = DataT.copyDeep(STP);
+			STP = DataT.copyFields(p.STPo, STP);
 		}
+		
+		//if (p.PAR.part1W == 0) {
+			//p.PAR.part1W = Std.int(menu_width / 2);
+			//// TODO: Why am I writing back to the Page Style?
+		//}
 		
 		// FLXMenu creates this and passes it to MPage.
 		// But for any case where MPage is used elsewhere I must it, before setDataSource()
@@ -151,18 +155,56 @@ class MPage extends VList<MItem,MItemData>
 		}else if (C.icon != null) {
 			var ic = C.icon.split(':');
 			b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1]);	
+			b = D.gfx.colorizeBitmapWithTextStyle(b, col);
 		}
 		
 		if (b != null) {
-			b = D.gfx.colorizeBitmapWithTextStyle(b, col);
 			setCursor(b, C.offset, C.tmult); // DEV: offset can be null OK
 			// TODO: Automatic Y offset?, I know both the heights.
 		}else {
 			setCursor(cast D.text.get(C.text, col), C.offset, C.tmult);
 		}
 		
+		
+		// -- Experimental --
+		// Check for BG
+		// Mostly used for popup questions for now.
+		if (STP.background != null )
+		{
+			// TODO:
+			// Make the cursor + focus_nudge fit + some air?
+			//  |  MENU ITEM   |
+			//  | >> MENU ITEM |
+			var CW = (cursor != null)?cursor.width:0;
+			bg = new FlxSprite(STP.focus_nudge - CW);
+			
+			// The width I want = itemWidth + nudge + cursor_width - nudge 
+			var W = menu_width + CW;	
+			
+			bg.makeGraphic(cast W, cast height, STP.background);
+			insert(0, bg);
+			
+			// DEVNOTE:
+			// I could make it work with events? Something like:
+			// onEvent("viewOn",()->{
+			// 		tween_map.set(bg, FlxTween....{ __getInViewAlpha, __ getInViewTimes });
+			// ? So that I don't have to override tween_allSlots later?
+		}
+		
 	}//---------------------------------------------------;
 	
+	// DEVNOTE: All this code just to fade the bg in and out..
+	override function tween_allSlots(Alpha:Array<Float>, StartOffs:String, EndOffs:String, times:String, onComplete:Void->Void, ease:String, hardstart:Bool):Void 
+	{
+		super.tween_allSlots(Alpha, StartOffs, EndOffs, times, onComplete, ease, hardstart);
+		if (bg == null) return;
+		var tt:Array<Float> = times.split(':').map((s)->Std.parseFloat(s));
+		if (tween_map.exists(bg)) { 
+			tween_map.get(bg).cancel();
+		}
+		bg.alpha = Alpha[0];
+		tween_map.set(bg, FlxTween.tween( bg, {alpha:Alpha[1]} , tt[0]));
+	}//---------------------------------------------------;
 	
 	// Initializes the emenu, and focuses the first available
 	public function selectFirstAvailable()

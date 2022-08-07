@@ -31,9 +31,10 @@ typedef DTextStyle = {
 	?so:Array<Int>,	// SHADOW OFFSET | Default is (1,1) is multiplied by bordersize. e.g. [1,0] or [0,1]
 	
 	// --
-	?x:Float,	// X
-	?y:Float,	// Y
-	?w:Int,		// WIDTH fieldwidth
+	//?x:Float,	// X	-- Why would a style change the position? Removed V0.5
+	//?y:Float,	// Y	-- Why would a style change the position? Removed V0.5
+	
+	?w:Int,		// WIDTH fieldwidth , >0 (wordwrap, no autoexpand) =0 (no wordwrap, autoexpand)
 	?a:String	// ALIGNMENT | left,right,center,justify
 
 }// --
@@ -55,7 +56,7 @@ class Dtext
 	public var _fixStyle(default,null):DTextStyle = null;
 	
 	// Global use textformats. This is the thing where it uses tags to put multiple styles on FlxText
-	// .formatAdd() and .getF()
+	// .markupAdd() and .getF()
 	var textFormats:Array<FlxTextFormatMarkerPair>;
 	
 	public function new() 
@@ -68,34 +69,35 @@ class Dtext
 		];
 		
 		styles = [];
-		
 		textFormats = [];
 	}//---------------------------------------------------;
 	
 	
-	/** Clear all defined text formats 
-	 **/
-	public function formatClear()
-	{
-		textFormats = [];
-	}//---------------------------------------------------;
 	
 	/** Add a text format to be used in .getF() 
 	 * symbols can be tags like <g> or <r> but also symbols like $,@
 	 * <tags> are the most compatible?
 	 * */
-	public function formatAdd(symbol:String, TextColor:Int, ?BorderColor:Int)
+	public function markupAdd(symbol:String, TextColor:Int, ?BorderColor:Int)
 	{
+		for (t in textFormats) {
+			if (t.marker == symbol) {
+				trace("Warning: Duplicate Markup Symbol. Ignoring.");
+				return;
+			}
+		}
 		var format = new FlxTextFormat(TextColor, false, false, BorderColor);
 		textFormats.push(new FlxTextFormatMarkerPair(format, symbol));
 	}//---------------------------------------------------;
 	
-	/** Apply a markup previously declared in formatAdd() in a text object
-	 */
-	public function applyMarkup(t:FlxText, str:String):FlxText
+	
+	/** Clear all defined text formats 
+	 **/
+	public function markupClear()
 	{
-		return t.applyMarkup(str, textFormats);
+		textFormats = [];
 	}//---------------------------------------------------;
+
 	
 	
 	/**
@@ -105,7 +107,7 @@ class Dtext
 	   - If you want multiline/wordwrap later just set the FlxText.fieldWidth to >0
 	   @param	str Text String
 	   @param	o   Overlay Text Style that will always apply last
-	   @param	id  Style ID, will only get applied if fixedStyle is nulle
+	   @param	id  Style ID, will only get applied if fixedStyle is null
 	**/
 	public function get(str:String, ?X:Float = 0, ?Y:Float = 0, ?o:DTextStyle = null, ?id:String = null):FlxText
 	{
@@ -124,7 +126,8 @@ class Dtext
 			}
 		}
 		if (o != null) {
-			s = DataT.copyFields(o, s);
+			// DEV: s is now a new copy, so I can override it
+			 s = DataT.copyFields(o, s);	
 		}
 		
 		if (s != null){
@@ -136,7 +139,7 @@ class Dtext
 	
 	/**
 	   Get text like .get() but also apply a predefined format
-	   that was previously declared with formatAdd(..)
+	   that was previously declared with markupAdd(..)
 		- This is the kind of text that supports inner tags
 		  like "red text <r>here<r> and this is <b>blue<b>"
 	**/
@@ -177,8 +180,8 @@ class Dtext
 		if (s.s != null) T.size = s.s;
 		if (s.c != null) T.color = s.c;
 		
-		if (s.x != null) T.x = s.x;
-		if (s.y != null) T.y = s.y;
+		//if (s.x != null) T.x = s.x;
+		//if (s.y != null) T.y = s.y;
 		if (s.w != null) T.fieldWidth = s.w;
 		if (s.a != null) T.alignment = s.a;
 		
@@ -196,5 +199,11 @@ class Dtext
 	}//---------------------------------------------------;
 	
 	
+	/** Apply a markup previously declared in markupAdd() in a text object
+	 */
+	public function applyMarkup(t:FlxText, str:String):FlxText
+	{
+		return t.applyMarkup(str, textFormats);
+	}//---------------------------------------------------;
 		
 }// --

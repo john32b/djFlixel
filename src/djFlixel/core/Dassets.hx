@@ -44,12 +44,12 @@ class Dassets
 	public var files(default, null):Map<String,String>;
 	
 	// #USERSET
-	// Asset/File List that will be dynamically reloaded in runtime
+	// Asset/File List that will be dynamically reloaded at runtime
 	// - e.g. "assets/data/map.json
 	public var HOT_LOAD:Array<String> = [];
 
 	// #USERSET 
-	// Gets called whenever it loads the dynamic assets
+	// Gets called whenever it loads all of the HOT_LOAD[] assets
 	public var onLoad:Void->Void;
 	
 	//====================================================;

@@ -1,13 +1,18 @@
 /**
- *  DJFlixel - Easy, streamlined input checks
- *  =========================================
- * - Accessible from (D.ctrl)
- * - Unified keyboard and controller inputs
- * - Cursor-like behavior support
- * - Read inputs based on the 360 controller layout
- * - Maps keyboard to 360 controller
- * - Check `MAP_KEYS` for keyboard keys, it can be reconfigured
- * 
+  DJFlixel - Easy, streamlined input checks
+  =========================================
+ - Accessible from (D.ctrl)
+ - Unified keyboard and controller inputs
+ - Cursor-like behavior support with timePress()
+ - Read inputs based on the XBOX controller layout
+ - To use a custom Keyboard layout, use keymap_set()
+ 
+== In short ==
+
+ - Make your game with the XBOX Controller Layout in mind
+ - All control checks for XBOX buttons
+ - And this will get both keyboard + controller inputs
+ 
  ************************************************************/
 
 package djFlixel.core;
@@ -76,13 +81,9 @@ class Dcontrols
 	// This is the actual array the object reads
 	var MAP_KEYS:Array<Array<FlxKey>>;
 	
-	/// TODO ?
-	/// Make arrows + sdfg the default keys ? which are the same in (FR,GR,UK,US) 
-	/// ESDF is also the same IJKL are the same., CVBF
-	
-	// -- Default keys for new programs., Copied over to `MAP_KEYS`
-	// DO NOT CHANGE THE ORDERING OF THIS !
-	// Uses same ordering as Enum DButton
+	/** Default keys - This is copied to {MAP_KEYS}
+	 *  When you edit/declare new keys, keep the ordering, it is important 
+	 */
 	var MAP_KEYS_DEFAULT = [
 		[FlxKey.W, FlxKey.UP],		// UP
 		[FlxKey.D, FlxKey.RIGHT],	// RIGHT
@@ -97,15 +98,15 @@ class Dcontrols
 		[FlxKey.SHIFT],			// xbox (LB)
 		[FlxKey.CONTROL],		// xbox (RB)
 		
-		[],	// START + A	-- Automatically generated -- On user  edit call generateSpecialKeys()
-		[], // ANY			-- Automatically generated -- On user  edit call generateSpecialKeys()
+		// -- The following are auto-generated, are not to be set manually
+		[],	// START + A
+		[], // ANY
 		[]	// NONE
 	];	
 
 	
-	
 	/**
-	   This needs to be created AFTER flxGame has been added
+	   This needs to be created AFTER FlxGame has been added
 	**/
 	public function new()
 	{
@@ -121,14 +122,21 @@ class Dcontrols
 		generateSpecialKeys();
 	}//---------------------------------------------------;
 	
-	/** Replace all keys with these new ones */
+	/**
+	   
+	   Replace Keyboard keys with new ones
+	   Expects an Array of 12 Entries with the same order as <DButton> Enum
+	   For NULL keys put a -1, also you can end the Array short
+	   @param	KEYS e.g. [ FlxKey.A, FlxKey.B, FlxKey.Y .... ]
+	**/
 	public function keymap_set(KEYS:Array<Int>)
 	{
-		for (i in 0...MAP_KEYS.length)
+		for (i in 0...12)
 		{
-			if (i >= KEYS.length || KEYS[i] ==-1) MAP_KEYS[i] = []; 
+			if (i >= KEYS.length || KEYS[i] ==-1)
+				MAP_KEYS[i] = []; // No key for that 
 			else
-			MAP_KEYS[i] = [KEYS[i]];
+				MAP_KEYS[i] = [KEYS[i]];
 		}
 		generateSpecialKeys();
 	}//---------------------------------------------------;
@@ -419,6 +427,7 @@ class Dcontrols
 			MAP_KEYS[cast X].concat(
 			MAP_KEYS[cast Y])))));
 			
+		MAP_KEYS[cast DButton._NONE] = [];
 	}//---------------------------------------------------;
 
 }// -- end --//

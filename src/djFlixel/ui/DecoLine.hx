@@ -21,6 +21,7 @@ class DecoLine extends FlxSprite
 		super(X, Y);
 		if (HEIGHT == 0) return;
 		C = COLOR; 
+		moves = false;
 		makeGraphic(WIDTH, HEIGHT, 0x00000000);
 	}//---------------------------------------------------;
 	

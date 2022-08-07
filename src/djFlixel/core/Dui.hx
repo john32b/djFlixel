@@ -52,7 +52,7 @@ class Dui
 		}
 		atlas = new Atlas(s);
 		
-		atlas.dtile('panel', 0, 112, 24, 24);
+		atlas.dtile('panel', 0, 112, 24, 24);		// Slice9 Square
 		atlas.darea('btn', 0, 80, 24, 24, 0, 0, 3);	
 	}//---------------------------------------------------;
 	

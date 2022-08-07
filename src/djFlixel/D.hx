@@ -108,6 +108,7 @@ class D
 		align = new Dalign();
 		ui = new Dui();
 		bmu = new BitmapUtil();
+		gfx = new Dgfxutil();
 		
 		if (IP.savename != "") {
 			save = new Dsave(IP.savename);
