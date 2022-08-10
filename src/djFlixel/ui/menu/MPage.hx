@@ -31,13 +31,23 @@ typedef MCursorStyle = {
 	?icon:String,		// Use a standard D.UI icon string format : "size:name" .e.g. "12:heart" | Auto color and shadow
 	?bitmap:BitmapData, // Use this bitmap for a cursor - Will be used as is, no colorization or shadow -
 	?color:DTextStyle,	// Colorize the Text/Bitmap with this. valid:{c,bc,bt,so} | null to get MItem Color
-	offset:Array<Int>,	// [x,y] Cursor Offset
-	tmult:Float,		// Cursor tween time multiplier | 0:Instant tween.
+	offset:Array<Int>,	// [x,y] Cursor Offset | [0,0] default
+	tmult:Float,		// Cursor tween time multiplier | 0:Instant tween. 0.9: Default
+	
+	?anim:String,		// Animated Cursor. You need to have (bitmap) set with a tilesheet
+						// "size,fps,frame0,frame1,frame2,frame3....."
+						// e.g. "16,10,10,11,12,13,13,11"
+	
 }
 
 
 /** Parameters/Styles for a MenuPage.
  *  It includes the VList and MItem styles 
+ * 
+ *  - If you are coming here to check out how it works:
+ *  - Read on <VListStyle> first, it styles a generic VerticalList (which MPage extends)
+ *  - Read on <MItemStyle>, it is the style that all menu items will take (menu items, are links, toggles, etc)
+ *  - Each FlxMenu holds one <MPageStyle> style object that shares with all the Pages it creates
  */
 typedef MPageStyle = {
 	
@@ -48,6 +58,13 @@ typedef MPageStyle = {
 	?cursor:MCursorStyle,	// Defined in this file | Null for no cursor
 	
 	?background:Int			// If set will create a solid color background
+	
+	
+	#if (html5)
+	// Some fonts in HTML5 don't report their height correctly and they are too tall
+	// This TRIES to fix that somewhat. Try to combine it with .item_pad
+	,item_height_fix:Int
+	#end
 	
 }
 
@@ -80,7 +97,7 @@ class MPage extends VList<MItem,MItemData>
 	public function new(X:Float, Y:Float, WIDTH:Int = 0, SLOTS:Int = 0)
 	{
 		super(MItem, X, Y, WIDTH, SLOTS);
-		inputMode = 2; // + cursor
+		inputMode = 2; // Mode 2 = selectable items + cursor
 		FLAGS.fire_simple = false;
 		STP = UIDefaults.MPAGE;
 	}//---------------------------------------------------;
@@ -105,8 +122,10 @@ class MPage extends VList<MItem,MItemData>
 		STL = STP;	// Make VListStyle work with MPageStyle parameters
 		page = p;
 		
+		if (p.PAR.isPopup) menu_width = 0;	// Force Auto width for popups. (Fixes popups for center alignment)
+		
 		if (p.PAR.width != 0) menu_width = p.PAR.width;
-		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;	
+		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;
 
 		// -- Style Overlay
 		if (p.STPo != null)
@@ -116,11 +135,6 @@ class MPage extends VList<MItem,MItemData>
 			STP = DataT.copyDeep(STP);
 			STP = DataT.copyFields(p.STPo, STP);
 		}
-		
-		//if (p.PAR.part1W == 0) {
-			//p.PAR.part1W = Std.int(menu_width / 2);
-			//// TODO: Why am I writing back to the Page Style?
-		//}
 		
 		// FLXMenu creates this and passes it to MPage.
 		// But for any case where MPage is used elsewhere I must it, before setDataSource()
@@ -139,30 +153,48 @@ class MPage extends VList<MItem,MItemData>
 		if (STP.cursor == null) return;
 		
 		var C:MCursorStyle = STP.cursor;	// Write less
-		var b:BitmapData = null;
-		var col:DTextStyle;	// Final Cursor color
 		
-		if (C.color == null) {
-			col = Reflect.copy(STP.item.text);
-			col.bc = STP.item.col_b.idle;	// modify it a bit to match better
+		if (C.anim != null)
+		{
+			var dat = C.anim.split(',');
+			var size = Std.parseInt(dat.shift());
+			var fps = Std.parseInt(dat.shift());
+			var cur = new FlxSprite();
+			cur.loadGraphic(C.bitmap, true, size, size);
+			cur.animation.add("m", [for(i in dat) Std.parseInt(i)], fps);
+			cur.animation.play("m");
+			setCursor(cur, C.offset, C.tmult);
+			
 		}else{
-			col = C.color;
-		}
-		
-		// -- Is it a bitmap with (direct bitmap) or (icon) ??
-		if (C.bitmap != null) {
-			b = C.bitmap.clone();
-		}else if (C.icon != null) {
-			var ic = C.icon.split(':');
-			b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1]);	
-			b = D.gfx.colorizeBitmapWithTextStyle(b, col);
-		}
-		
-		if (b != null) {
-			setCursor(b, C.offset, C.tmult); // DEV: offset can be null OK
-			// TODO: Automatic Y offset?, I know both the heights.
-		}else {
-			setCursor(cast D.text.get(C.text, col), C.offset, C.tmult);
+			
+			if (C.bitmap != null) {
+				C.bitmap.clone();
+				setCursor(C.bitmap.clone(), C.offset, C.tmult);
+			}
+			
+			else{
+				
+				var col:DTextStyle;	// Final Cursor color
+				
+				if (C.color == null) {
+					col = Reflect.copy(STP.item.text);
+					col.bc = STP.item.col_b.idle;	// modify it a bit to match better
+				}else{
+					col = C.color;
+				}
+				
+				if (C.icon != null) {
+					var b:BitmapData = null;
+					var ic = C.icon.split(':');
+						b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1]);	
+						b = D.gfx.colorizeBitmapWithTextStyle(b, col);
+					setCursor(b, C.offset, C.tmult); // DEV: offset can be null OK
+					
+				}else{
+					// Text cursor
+					setCursor(cast D.text.get(C.text, col), C.offset, C.tmult);
+				}
+			}
 		}
 		
 		
@@ -175,13 +207,19 @@ class MPage extends VList<MItem,MItemData>
 			// Make the cursor + focus_nudge fit + some air?
 			//  |  MENU ITEM   |
 			//  | >> MENU ITEM |
-			var CW = (cursor != null)?cursor.width:0;
-			bg = new FlxSprite(STP.focus_nudge - CW);
 			
-			// The width I want = itemWidth + nudge + cursor_width - nudge 
-			var W = menu_width + CW;	
+			bg = new FlxSprite();
+			var W:Int = menu_width;
+			if (STP.align == "left")
+			{
+				var CW = (cursor != null)?cursor.width:0;	
+				bg.x = STP.focus_nudge - CW;
+				// DEV: The width I want = itemWidth + nudge + cursor_width - nudge 
+				W += cast CW;
+			}
 			
-			bg.makeGraphic(cast W, cast height, STP.background);
+			bg.makeGraphic(W, cast overflows?menu_height:height, STP.background);
+			
 			insert(0, bg);
 			
 			// DEVNOTE:
@@ -284,7 +322,6 @@ class MPage extends VList<MItem,MItemData>
 			case list  :new MItemList(this);
 			case toggle:new MItemToggle(this);
 			case label :new MItemLabel(this);
-			//case "label2":new MItemLabel2(this);
 			default: new MItem(this);
 		}
 	}//---------------------------------------------------;

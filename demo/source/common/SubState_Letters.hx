@@ -1,13 +1,12 @@
+
 /**
  * A full screen effect that displays a string letter by letter
- *
  * - Will run as soon as it starts
- * 
- * TODO: Put in djflixel?
  * 
  ************************************************************/
 
- 
+package common;
+
 import djA.DataT;
 import djFlixel.D;
 import djFlixel.core.Dtext.DTextStyle;
@@ -22,9 +21,12 @@ import flixel.tweens.misc.VarTween;
 
 class SubState_Letters extends FlxSubState
 {
-	var P:Dynamic;				// Running params
-	var DEF_PAR = {
-		colorBG:0xFF000000,		// Background color, (-1) for NO background
+	var P = {
+		text:{					// DTextStyle
+			s:128,
+			c:0xFFFFFFFF,
+		},
+		bg:0xFF000000,			// Background color, (-1) for NO background
 		tLetter:0.14,			// Time to spend on each letter
 		tWait:0.04,				// Time to pause after each letter
 		tPre:0,					// Time to wait before starting the FX
@@ -34,12 +36,6 @@ class SubState_Letters extends FlxSubState
 		ease:"elasticOut",		// Letter ease type
 		ofEnd   : [0, 0],		// The state tries to center the letters, but you can apply an offset
 		ofStart : [0,-16]		// Start from these positions
-	};
-	
-	var TS:DTextStyle = {
-		f:null,
-		s:128,
-		c:0xFFFFFFFF
 	};
 	
 	var TEXT:String;
@@ -54,17 +50,16 @@ class SubState_Letters extends FlxSubState
 	/**
 	 * Fullscreen Effect Show huge letters in the center of the screen one by one
 	 * @param	TXT The Text to show, letter by letter
-	 * @param	CB Once it ends
-	 * @param	TEXTST Text Style
+	 * @param	CB  Once it ends
 	 * @param	PAR Check <DEF_PAR> for overrides
 	 */
-	public function new(TXT:String, CB:Void->Void, ?TEXTST:DTextStyle, ?PAR:Dynamic)
+	public function new(TXT:String, CB:Void->Void, ?PAR:Dynamic)
 	{
 		super();
 		TEXT = TXT;
 		callback = CB;
-		P = DataT.copyFields(PAR, Reflect.copy(DEF_PAR));
-		TS = DataT.copyFields(TEXTST, Reflect.copy(TS));
+		P = DataT.copyFields(PAR, P);
+		FlxG.state.openSubState(this);
 	}//---------------------------------------------------;
 
 	// --
@@ -73,13 +68,13 @@ class SubState_Letters extends FlxSubState
 		super.create();
 		
 		// -- Background
-		if (P.colorBG !=-1) {
+		if (P.bg !=-1) {
 			var box = new FlxSprite();
-			box.makeGraphic(FlxG.width, FlxG.height, P.colorBG);
+			box.makeGraphic(FlxG.width, FlxG.height, P.bg);
 			add(box);
 		}
 		// -
-		letter = D.text.get('', 0, 0, TS);
+		letter = D.text.get('', 0, 0, P.text);
 		add(letter);
 		// -
 		flag_next_ON = true; 	// next update new letter
@@ -103,10 +98,10 @@ class SubState_Letters extends FlxSubState
 				if (current == TEXT.length)
 				{
 					nextTime = 999; // HACK, don't update again
-					this.add(new DelayCall(false,function(){
+					this.add(new DelayCall(false, P.tPost, ()->{
 						if (P.autoRemove) close();
 						if (callback != null) callback();
-					}, P.tPost));
+					}));
 					return;
 				}
 				

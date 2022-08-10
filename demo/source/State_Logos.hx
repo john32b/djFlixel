@@ -7,6 +7,7 @@ import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.gfx.statetransit.Stripes;
 import djFlixel.other.DelayCall;
 import djFlixel.other.FlxSequencer;
+import djFlixel.ui.FlxToast;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -87,9 +88,9 @@ class State_Logos extends FlxState
 				D.snd.play('fx4', 0.5);
 				// DEV: There is a bug with the wave effect. Somehow for a frame it draws the whole thing
 				//      This is why I am delaying the adding a bit
-				new DelayCall(()->{
+				new DelayCall(0.1, ()->{
 					add(D.align.screen(logo));
-				}, 0.1);
+				});
 				
 			case 10:
 				var tb = new TextBouncer("HAXEFLIXEL", 0, 0, {
@@ -107,7 +108,7 @@ class State_Logos extends FlxState
 				// Stripes Substate
 				persistentUpdate = true;
 				openSubState(new Stripes( ()->{
-						Main.goto_state(NEXTSTATE);
+					Main.goto_state(NEXTSTATE);
 					}, {
 						mode:"on-right",
 						color:0xFFFFFFFF,

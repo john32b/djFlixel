@@ -28,9 +28,10 @@ class MItemToggle extends MItem
 		if (st.box_offy != null) offy = st.box_offy;
 		if (st.box_bm != null)
 		{
-			// It is important to fill out the sprite for it to get aligned on init() later.
-			// Also this bitmap will not go to waste, it will be cached
-			box = new FlxSprite(0, 0, mp.iconcache.get(st.box_bm[0], 'idle').clone());
+			// DEV:
+			// It is important to fill out the sprite for it so it gets a size and gets aligned properly
+			box = new FlxSprite(0, 0);
+			box.makeGraphic(st.box_bm[0].width, st.box_bm[0].height, 0, true);
 			D.align.YAxis(box, label, 'c', offy);
 		}else{		
 			if (st.box_txt == null) throw "Style error, you must set text or bitmap";
@@ -100,14 +101,16 @@ class MItemToggle extends MItem
 	// Set current state , StateColors
 	// Reads and applies current state to bitmap
 	// Changes COLOR of either text/box to set state from {StateColors}
-	function _setBox(str:String)
+	function _setBox(state:String)
 	{
-		lastState = str;
+		lastState = state;
 		if (boxt != null) {
-			_ctext(str, boxt);
+			_ctext(state, boxt);
 		}else{
-			// DEV: If I don't put clone, sometimes this crashes. Very weird.
-			box.pixels = mp.iconcache.get(st.box_bm[data.P.c?1:0], str).clone();
+			D.bmu.copyOn(mp.iconcache.get(st.box_bm[data.P.c?1:0], state), box.pixels);
+			// DEV:
+			// > I could also do
+			// > box.pixels = mp.iconcache.get(st.box_bm[data.P.c?1:0], str).clone();
 			box.dirty = true;
 		}
 	}//---------------------------------------------------;

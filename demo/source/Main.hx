@@ -16,20 +16,28 @@
 package;
 
 import djFlixel.D;
+import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.RainbowStripes;
 import djFlixel.other.DelayCall;
+import djFlixel.ui.FlxMenu.MenuEvent;
+import djFlixel.ui.FlxToast;
+import djFlixel.ui.IListItem.ListItemEvent;
+import djFlixel.ui.UIButton;
 import flixel.FlxG;
 import flixel.FlxGame;
 import flixel.FlxState;
+import flixel.system.FlxAssets;
 import openfl.display.Sprite;
 
 
 class Main extends Sprite
 {
 	inline static var FPS = 60;
-	inline static var START_STATE = State_Boot;
+	//inline static var START_STATE = State_Boot;
+	//inline static var START_STATE = State_TextScroll;
 	//inline static var START_STATE = State_Menu;
-	//inline static var START_STATE = menu1.State_Menu1;
+	inline static var START_STATE = menu1.State_Menu2;
+	//inline static var START_STATE = State_Test;
 	
 	public function new() 
 	{
@@ -56,6 +64,15 @@ class Main extends Sprite
 		// > None of that now. The FlxGame is created at once, and the HOTRELOAD
 		//   code is to be managed manually. Check more in <Dassets.hx>
 		
+		
+		// -- Some post init things
+		FlxG.signals.postStateSwitch.add( ()->{
+			
+			// FlxToast uses a static object with color properties that can be shared between states
+			// I want to reset the properties after each state switch
+			FlxToast.INIT(true);
+		});
+		
 	}//---------------------------------------------------;
 	
 	
@@ -67,14 +84,16 @@ class Main extends Sprite
 	}//---------------------------------------------------;
 	
 	
-	/** Apply load effect and then change state **/
+	/** Apply load effect and then (change state OR callback)
+	 **/
 	static public function create_add_8bitLoader(duration:Float = 0.5, ?cb:Void->Void, ?S:Class<FlxState>):RainbowStripes
 	{
-		var r = new RainbowStripes(); FlxG.state.add(r);
+		var r = new RainbowStripes(); 
+			FlxG.state.add(r);
 			r.setMode(FlxG.random.int(1, 3));
 			r.setOn();
 		var sound = D.snd.play('8bitload'); // keep the sound reference so I can kill it later
-		new DelayCall(()->{
+		new DelayCall(duration, ()->{
 			sound.stop();
 			if(S!=null){
 				goto_state(S);
@@ -83,8 +102,78 @@ class Main extends Sprite
 				r.destroy();
 				if (cb != null) cb();
 			}
-		}, duration);
+		});
 		return r;
+	}//---------------------------------------------------;
+	
+	
+	/**
+	   Universal Sound Handler for menus. Handles both types of events in one place
+	   @param	ev Either this
+	   @param	me Or this, can't be both
+	**/
+	static public function handle_menu_sound(?ev:ListItemEvent, ?me:MenuEvent)
+	{
+			if (me != null)
+			{
+				if (me == pageCall) {
+					D.snd.playV('cursor_high', 0.6);
+				}else
+				if (me == back){
+					D.snd.playV('cursor_low');
+				}
+				return;
+			}
+		
+			if(ev!=null)
+			switch(ev) {
+				case fire:
+					D.snd.playV('cursor_high',0.7);
+				case focus:
+					D.snd.playV('cursor_tick',0.33);
+				case invalid:
+					D.snd.playV('cursor_error');
+				default:
+			};
+	}//---------------------------------------------------;
+
+	
+	/**
+	   Add a footer text + scroller, used in some states
+	**/
+	public static function add_footer_01(col:Int = 0xFF0c0c0c)
+	{
+		var b = new djFlixel.gfx.BoxScroller("im/stripe_01.png", 0, FlxG.height - 24, FlxG.width);
+			b.color = col;
+			b.autoScrollX = 1;
+			b.randomOffset();
+			FlxG.state.add(b);
+			
+		var t = D.text.get('djFlixel ${D.DJFLX_VER}', {c:0xff3a4466});
+			FlxG.state.add(D.align.screen(t, "r", "b"));
+	}//---------------------------------------------------;
+	
+	
+	
+	/**
+	   - Add background scroller
+	   - Or change settings
+	**/
+	public static var bgsc:BoxScroller;
+	public static function bg_scroller(index:Int, C:Array<Int>)
+	{
+		if (bgsc == null || !bgsc.exists)
+		{
+			bgsc = new BoxScroller('im/bg01.png', 0, 0, FlxG.width, FlxG.height);
+			bgsc.autoScrollX = 0.2;
+			bgsc.autoScrollY = 0.2;
+			FlxG.state.insert(0, bgsc);
+		}
+		if (index > 6) index = 6;	// bg01-bg06.png in assets dir
+		
+		var b = FlxAssets.resolveBitmapData('im/bg0${index}.png');
+			b = D.bmu.replaceColors(b.clone(), [0xFFFFFFFF, 0xFF000000], C);
+		bgsc.loadNewGraphic(b);
 	}//---------------------------------------------------;
 	
 

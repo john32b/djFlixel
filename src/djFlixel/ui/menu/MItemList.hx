@@ -13,8 +13,6 @@ import flixel.text.FlxText;
  */
 class MItemList extends MItem
 {
-	static inline var DEFAULT_AR_ANIM = '1,2,0.33';	// Type 1 Repeat | 2 Steps | 0.33 Tick Time
-	
 	// Displayed text
 	var label2:FlxText;
 	
@@ -46,6 +44,9 @@ class MItemList extends MItem
 				
 		if (st.ar_bm != null) {
 			if (check34 && st.ar_bm[3] != null) o = 2;
+			// DEV:
+			// I just need to clone(), else if I pass ownership to FlxSprite it 
+			// will delete the bitmap from the cache forever on sprite destroy
 			ar0 = new FlxSprite(mp.iconcache.get(st.ar_bm[0 + o], 'focus').clone());
 			ar1 = new FlxSprite(mp.iconcache.get(st.ar_bm[1 + o], 'focus').clone());
 			D.align.YAxis(ar0, label, 'c', offy);
@@ -67,8 +68,7 @@ class MItemList extends MItem
 		add(ar1);
 		
 		// -- Move arrows
-		var def:String = DataT.existsOr(st.ar_anim, DEFAULT_AR_ANIM);
-		var c = def.split(','); 
+		var c = st.ar_anim.split(','); 
 		stimer = new StepLoop(Std.parseInt(c[0]), Std.parseInt(c[1]), Std.parseFloat(c[2]), update_arrowNudge);
 	}//---------------------------------------------------;
 	

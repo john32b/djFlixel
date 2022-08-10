@@ -35,16 +35,14 @@ class MPageData
 	public var PAR = {
 		width:0,			// Override the FLXMENU width for this page
 		slots:0,			// Override the FLXMENU slots for this page
-		//part1W:0,			// Used in "center2" alignment. The length of the label1 in Mitems.
-							// 0 For default menu_width/2
 
 		// -- The following are used internally :
 		
 		indexStash:-1,		// Stores last selected index when unfocus(). Helps FlxMenu remember selected 
 							// indexes when going back() | Also used on some other cases
 							
-		noBack:false,		// Do not send a 'back' signal if a back button is pressed
-		noPool:false		// Will not pool the MPage, Used in dynamic pages.
+		noPool:false,		// Will not pool the MPage, Used in dynamic pages.
+		isPopup:false		// True for confirmation popups.
 	};
 	
 	/**
@@ -124,7 +122,6 @@ class MPageData
 	
 	
 	
-	
 	/**
 	   Quickly construct a pagedata with the confirmation options of the Link Item
 	   - For use in an FLXMENU
@@ -143,8 +140,9 @@ class MPageData
 		}
 		
 		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back');
-		P.PAR.noBack = true;
+		P.PAR.isPopup = true;
 		P.PAR.noPool = true;
+		P.PAR.slots = P.items.length;
 		P.PAR.indexStash = P.items.length - 1;	// Select the last index. Must also enable a FlxMenu _flag
 		return P;
 	}//---------------------------------------------------;

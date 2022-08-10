@@ -168,7 +168,7 @@ class Stripes extends FlxSubState
 			forceSet(true);
 		}
 		
-		new DelayCall(startAnimation, P.timePre);
+		new DelayCall(P.timePre, startAnimation);
 		
 	}//---------------------------------------------------;
 	
@@ -238,15 +238,12 @@ class Stripes extends FlxSubState
 	//--
 	function _transitionComplete()
 	{
-		new DelayCall(()->{
-			
+		new DelayCall(P.timePost, ()->{
 			// There is no point on keeping it onscreen
 			if (runMode == "off")
 				close();
-
 			if (onComplete != null) onComplete();
-			
-		}, P.timePost);
+		});
 		
 	}//---------------------------------------------------;
 	

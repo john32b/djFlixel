@@ -63,6 +63,7 @@ import flixel.FlxBasic;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.typeLimit.OneOfTwo;
 
 
@@ -94,7 +95,7 @@ class FlxMenu extends FlxGroup
 	public var pageActive(default, null):MPageData;	
 	
 	/** FlxMenu can create pages with createPage(), it will store them here for quick retrieval */
-	public var pages(default, null):Map<String,MPageData>;
+	public var pages(default, null):Map<String,MPageData> = [];
 	
 	/** The Menu Page that is currently on screen,
 	 *  if null then the menu is closed nothing is on screen */
@@ -107,12 +108,6 @@ class FlxMenu extends FlxGroup
 		start_button_fire:false,	// True will make the start button fire to items
 		page_anim_parallel:false,	// Page-on-off will run in parallel instead of waiting
 		camera_lock:true,			// Sets scrollfactor to 0 for all children added here
-		// --
-		header_enable:true,			// Show an animated text title for each menu page
-		header_offset_y:0,			// Offset Y position of the header
-		header_CPS:18,				// Header Text, CPS for animation 0 for instant
-		line_height:1,				// Decorative line color = stHeader.color
-		line_time:0.4
 	};
 	
 	/** If set will callback for menu Events | fn(MenuEvent, Page_ID) 
@@ -123,24 +118,18 @@ class FlxMenu extends FlxGroup
 	public var onItemEvent:ListItemEvent->MItemData->Void;
 	
 	/** Page Style, used in all <MPages> 
-	 *  For a guide checkout "UIDefaults.hx":MPAGE */
+	 *  For an example on how to initialize it checkout {MPAGE} in "UIDefaults.hx" */
 	public var STP:MPageStyle;
 	
-	/** Set the textstyle for the Header Text */
-	public var stHeader:DTextStyle;
 	
 	// Stores the order of the Pages as they open
 	// The last element of history is always the current page
-	var history:Array<MPageData>;
+	var history:Array<MPageData> = [];
 	
-	var pool:Array<MPage>;
+	var pool:Array<MPage> = [];
 	
 	// An icon generator shared with all <MPage> objects
 	var iconcache:MIconCacher;
-	
-	// Text Header
-	var headerText:FlxAutoText;
-	var decoLine:DecoLine;
 	
 	// When you are about to GOTO a page. 
 	// If this is TRUE, will restore the selected item index or whatever is stored in MPageData property
@@ -149,6 +138,9 @@ class FlxMenu extends FlxGroup
 	// There are going to be passed to all created MPAGES
 	var def_width:Int;
 	var def_slots:Int;	
+	
+	// Experimental plugins?
+	var plugs:Array<IFlxMenuPlug> = [];
 	
 	/**
 	   @param	X Screen X
@@ -163,14 +155,12 @@ class FlxMenu extends FlxGroup
 		y = Y;
 		def_width = WIDTH; 
 		def_slots = SLOTS;
-		history = [];
-		pages = [];
-		pool = [];
 		STP = DataT.copyDeep(UIDefaults.MPAGE);
 	}//---------------------------------------------------;
 	
 	override public function destroy():Void 
 	{
+		for (pl in plugs) pl.destroy();
 		if (iconcache != null) iconcache.clear();
 		super.destroy();
 		pool_clear();	// To destroy these objects as well
@@ -184,6 +174,19 @@ class FlxMenu extends FlxGroup
 	public function overlayStyle(st:Dynamic)
 	{
 		STP = DataT.copyFields(st, STP);
+	}//---------------------------------------------------;
+	
+	
+	/**
+	 * Attach a `plugin`
+	 * - Special objects that exist alongside the FlxMenu
+	 * - Doing it like this to offload code from this file
+	 * - Plugins are automatically destroyed
+	 */
+	public function plug(pl:IFlxMenuPlug)
+	{
+		pl.attach(this);
+		plugs.push(pl);
 	}//---------------------------------------------------;
 	
 	
@@ -214,7 +217,6 @@ class FlxMenu extends FlxGroup
 		mpActive = pool_get(pageActive);
 		add(mpActive);
 		mpActive.viewOn(true, instant);	// > always focus the new page.
-		headerText_show();
 		
 		//_mev(MenuEvent.focus, pageActive.ID); // DEV: Should it?
 		_mev(MenuEvent.open, pageActive.ID);
@@ -243,7 +245,6 @@ class FlxMenu extends FlxGroup
 		}
 		
 		isFocused = false;
-		headerText_hide();
 	}//---------------------------------------------------;
 	
 	/** Focus the Menu, gives keyboard focus, visual feedback */
@@ -423,67 +424,13 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	
-	/** Automatically called, every time FlxMenu goes to a new Page 
-		- creates or updates the Header Text (if enabled in PAR)
-	*/
-	function headerText_show()
-	{
-		if (!PAR.header_enable) return;
-		
-		if (headerText == null) // :: Create it
-		{
-			if (pageActive.title == null) return;	// No need to create it right now
-			
-			if (stHeader == null) {
-				stHeader = {bt:2};	// outline style
-			}
-			stHeader.a = STP.align; // alignment always copies from list style
-			
-			if (stHeader.c == null) stHeader.c = STP.item.col_t.accent;
-			if (stHeader.bc == null) stHeader.bc = STP.item.col_b.accent != null?STP.item.col_b.accent:STP.item.col_b.idle;
 
-			headerText = new FlxAutoText(0, 0, mpActive.menu_width, 1);
-			headerText.scrollFactor.set(0, 0);
-			headerText.style = stHeader;
-			headerText.setCPS(PAR.header_CPS);
-			headerText.textObj.height; // HACK: Forces flxtext regen graphic to get proper height
-			add(headerText);
-			//--
-			decoLine = new DecoLine(0, 0, mpActive.menu_width, PAR.line_height, STP.item.col_t.idle);
-			decoLine.scrollFactor.set(0, 0);
-			if (PAR.line_height > 0) // Hacky way to disable the line if you don't need it
-				add(decoLine);
-		}
-		
-		if (pageActive.title == null)
-		{
-			headerText.visible = decoLine.visible = false;
-			return;
-		}
-		
-		headerText.visible = decoLine.visible = true;
-		headerText.setText(pageActive.title);
-		
-		headerText.x = x;
-		headerText.y = y - (mpActive.overflows?STP.sind_size:0) - headerText.height + PAR.header_offset_y - PAR.line_height;
-		decoLine.setPosition(x, headerText.y + headerText.height);
-		decoLine.start(PAR.line_time);
-	}//---------------------------------------------------;
-	
-	function headerText_hide()
-	{
-		if (!PAR.header_enable || headerText == null) return;
-		headerText.visible = decoLine.visible = false;
-	}//---------------------------------------------------;
-	
-	
 	/** Called by MPage.onListEvent 
 	 **/
 	function on_list_event(msg:String)
 	{
 		if (msg == "back") {
-			if (pageActive != null && pageActive.PAR.noBack) return;
+			if (pageActive != null && pageActive.PAR.isPopup) return;
 			goBack(); 
 		}
 		else if (msg == "start")
@@ -513,12 +460,17 @@ class FlxMenu extends FlxGroup
 					return;
 					
 				case 2:	// Call - Confirm Popup
+					//if (mpActive.cursor != null && mpActive.cursor.animation.exists("m")) {
+						mpActive.cursor.animation.frameIndex = 0;
+					//}
 					mpActive.active = false;
 					D.ctrl.flush();	// <-- It is important to flush, otherwise it will register an input immediately after
 					var P = MPageData.getConfirmationPage(it);
-						P.PAR.width = 0; // Automatic width always. Otherwise will get default_width
 						P.STPo = {
-							background:0x88000000 // black background, some opacity
+							background: 0xBB000000
+								// STP.background != null?STP.background:
+								// (STP.item.text.bc!=null?STP.item.text.bc:0xFF000000)
+								// Either page BG, or TextBorder BG, or BLACK ?
 						};
 					
 					var MP = pool_get(P);	// -> Will create a new page every time, because `noPool=true`
@@ -538,7 +490,7 @@ class FlxMenu extends FlxGroup
 					};
 					MP.x = mpActive.indexItem.x + mpActive.indexItem.width + STP.focus_nudge;
 					MP.y = mpActive.indexItem.y;
-					_flag_restore_selected_index = true;
+					MP.setSelection(P.PAR.indexStash);	// Always set
 					MP.viewOn();
 					add(MP);
 					_mev(pageCall, "?pop");
@@ -575,7 +527,6 @@ class FlxMenu extends FlxGroup
 			mpActive.selectFirstAvailable();
 		}
 		mpActive.viewOn(true);	// > always focus the new page.
-		headerText_show();
 		_mev(MenuEvent.page, pageActive.ID);
 	}//---------------------------------------------------;
 	
@@ -583,6 +534,9 @@ class FlxMenu extends FlxGroup
 	// -
 	function _mev(e:MenuEvent, ?d:String)
 	{
+		for (pl in plugs) {
+			pl.onMEvent(e, d);
+		}
 		if (onMenuEvent != null) onMenuEvent(e, d);
 	}//---------------------------------------------------;
 	
@@ -609,7 +563,6 @@ class FlxMenu extends FlxGroup
 		
 		// - Create a new Page
 		p = new MPage(x, y, def_width, def_slots);
-		//p.cameras = [camera];
 		p.FLAGS.enable_mouse = PAR.enable_mouse;
 		p.FLAGS.start_button_fire = PAR.start_button_fire;
 		p.STP = STP;
@@ -617,7 +570,6 @@ class FlxMenu extends FlxGroup
 		p.onItemEvent = on_item_event;
 		p.onListEvent = on_list_event;
 		p.setPage(PD);
-		p.scrollFactor.set(0, 0);
 		return p;		
 	}//---------------------------------------------------;
 	
@@ -651,3 +603,15 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 }// -- end class
+
+
+
+// -- Experimental
+// - Used to attach things to a menu
+interface IFlxMenuPlug extends IFlxDestroyable
+{
+	@:allow(djFlixel.ui.FlxMenu)
+	private function attach(m:FlxMenu):Void;
+	@:allow(djFlixel.ui.FlxMenu)
+	private function onMEvent(ev:MenuEvent, pid:String):Void;
+}

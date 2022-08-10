@@ -21,11 +21,11 @@ class DelayCall extends FlxBasic
 	// --
 	/**
 	 * Delay call to a function. TIP: You can use function.bind(..) to predefine parameters
-	 * @param	Callback The function to call
+	 * @param	autoAdd If true will add to the FlxG.state | Mostly (false) to manually add to a substate
 	 * @param	time Call it after this much time has passed
-	 * @param	state The state to add this, Useful if running from a substate where the main state is paused
+	 * @param	Callback The function to call
 	 */
-	public function new(?autoAdd:Bool = true, Callback:Void->Void, time:Float = 0)
+	public function new(?autoAdd:Bool = true, ?time:Float = 1, Callback:Void->Void)
 	{
 		super();
 		callback = Callback;

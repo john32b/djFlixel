@@ -116,7 +116,7 @@ class BoxFader extends FlxSprite
 			alpha = tickFadeAmount * s;
 			if(end){
 				setOff();
-				dc = new DelayCall(CB, P.delayPost);
+				dc = new DelayCall(P.delayPost, CB);
 				if (P.autoRemove) FlxG.state.remove(this);
 			}
 		});
@@ -143,7 +143,7 @@ class BoxFader extends FlxSprite
 			alpha = tickFadeAmount * s;
 			if(end) {
 				alpha = 1;
-				dc = new DelayCall(CB, P.delayPost);
+				dc = new DelayCall(P.delayPost, CB);
 			}
 		});
 		st.start(0, P.steps, P.time);		

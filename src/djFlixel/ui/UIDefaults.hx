@@ -37,6 +37,7 @@ class UIDefaults
 		},
 		box_txt: [ "( )", "(X)" ],
 		ar_txt : [ "<", ">" ],
+		ar_anim : "1,2,0.33",	// Type 1 Repeat | 2 Steps | 0.33 Tick Time
 		part2_pad : 10			// X pixel padding between Label and Other part| Volume ....... <30> |
 	}//---------------------------------------------------;
 	
@@ -70,6 +71,11 @@ class UIDefaults
 			offset:[3, 0],
 			tmult:0.9	// 0 for instant tween, Other float to tweak tween time
 		}
+		
+		#if (html5)
+		,item_height_fix:0
+		#end
+		
 	}//---------------------------------------------------;
 	
 	

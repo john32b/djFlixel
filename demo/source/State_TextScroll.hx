@@ -1,16 +1,16 @@
 package;
 
-import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.TextScroller;
 import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.other.FlxSequencer;
-
+import djFlixel.ui.FlxToast;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.util.FlxColor;
+
 
 class State_TextScroll extends FlxState
 {
@@ -40,6 +40,7 @@ class State_TextScroll extends FlxState
 						b.y = (inc * i) - 24;
 						add(b);
 				}
+				
 				s.next(0.6);
 			case 3:
 				// -- Particles
@@ -51,6 +52,7 @@ class State_TextScroll extends FlxState
 					em.start(false, 0.3);
 					em.lifespan.set(99); // Large lifespan, the particle will killself on offsreen
 					add(em);
+				FlxToast.FIRE("press ESC to skip", {bg:0x00000000, screen:"top:right" });
 				s.next(1);
 			case 4:
 				// -- Text scroller
@@ -71,9 +73,12 @@ class State_TextScroll extends FlxState
 				add(ts);
 			case 5:
 				for (i in this) remove(i);
-				var s = new SubState_Letters("DJFLIXEL", s.nextV,
-				{c:Pal_DB32.COL[29]}, {snd:"cursor_low", tPre:0.4, tPost:0.2, colorBG:Pal_DB32.COL[1]} );
-				openSubState(s);
+				new common.SubState_Letters(
+					"DJFLIXEL", 
+					s.nextV, {
+						text:{c:Pal_DB32.COL[29]}, 
+						snd:"cursor_low", tPre:0.4, tPost:0.2, bg:Pal_DB32.COL[1]
+					});
 			case 6:
 				Main.goto_state(NEXTSTATE);
 			case _:
@@ -81,6 +86,15 @@ class State_TextScroll extends FlxState
 		
 	}//---------------------------------------------------;
 
+	
+	override public function update(elapsed:Float):Void 
+	{
+		super.update(elapsed);
+		if (FlxG.keys.justPressed.ESCAPE){
+			Main.goto_state(NEXTSTATE);
+		}
+	}//---------------------------------------------------;
+	
 	
 }// -- end class --
 

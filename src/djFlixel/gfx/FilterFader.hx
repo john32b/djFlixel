@@ -110,10 +110,10 @@ class FilterFader extends FlxObject
 	{
 		applyFilterStep(step);
 		if (finished){
-			dc = new DelayCall(()->{
+			dc = new DelayCall(P.delayPost, ()->{
 				if (!toBlack && P.autoRemove) kill();
 				if (callback != null) callback(); 
-			}, P.delayPost);
+			});
 		}
 	}//---------------------------------------------------;
 	// --

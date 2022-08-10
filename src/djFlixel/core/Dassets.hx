@@ -88,33 +88,6 @@ class Dassets
 				};
 				get.load();
 		});
-		
-		
-		//var AXS = new ArrayExecSync(HOT_LOAD);
-		//AXS.onComplete = _onLoad;
-		//AXS.onItem = (A)->{
-			//#if (HOT_LOAD) // ------------------------
-				//var get = new djfl.net.DataGet();
-				//get.url = Macros.getProjectPath() + A; // Assumes A is a real path
-				//trace("Dynamic Load -->> ", get.url);
-				//get.onLoad = (g)->{
-					//trace("[OK]");
-					//files.set(A, g.data);
-					//AXS.next();
-				//};
-				//get.onError = ()->{ 
-					//trace('Error: Could not HOT LOAD [${A}], trying to load from STATIC ASSETS..');
-					//_staticLoadAsset(A);
-					//AXS.next();
-				//};
-				//get.load();
-			//#else // Just load the files from the assets
-				//_staticLoadAsset(A);
-				//AXS.next();
-			//#end
-		//};
-		//
-		//AXS.start();
 	}//---------------------------------------------------;
 	
 	

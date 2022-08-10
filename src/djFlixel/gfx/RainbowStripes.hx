@@ -59,7 +59,7 @@ class RainbowStripes extends FlxSprite
 	/**
 	   @param	Width 0 for Full Width
 	   @param	Height 0 for Full height
-	   @param	Zoom
+	   @param	Zoom Scales the bitmap data effect so it is faster to render
 	**/
 	public function new(Width:Float = 0, Height:Float = 0, Zoom:Int = 2)
 	{
@@ -72,10 +72,9 @@ class RainbowStripes extends FlxSprite
 		
 		makeGraphic(Std.int(width / zoom), Std.int(height / zoom), 0xFFFFFFFF, true);
 		
-		scale.x = zoom;
-		scale.y = zoom;
+		scale.x = scale.y = zoom;
+
 		origin.set(0, 0);
-		
 		updateHitbox();
 		
 		_rc = new Rectangle();

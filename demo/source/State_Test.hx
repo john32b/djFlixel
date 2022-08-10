@@ -2,6 +2,7 @@ package ;
 import djA.ArrayExecSync;
 import djA.types.SimpleCoords;
 import djFlixel.D;
+import djFlixel.core.Dcontrols.DButton;
 import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.PanelPop;
 import djFlixel.gfx.SpriteEffects;
@@ -11,6 +12,7 @@ import djFlixel.gfx.TextBouncer;
 import djFlixel.gfx.BoxFader;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.pal.Pal_CPCBoy;
+import djFlixel.ui.FlxToast;
 import djFlixel.ui.UIButton;
 import flash.display.BitmapData;
 import flixel.FlxG;
@@ -19,10 +21,12 @@ import flixel.FlxState;
 import flixel.math.FlxRect;
 import flixel.system.FlxAssets;
 import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
 import lime.system.System;
 import openfl.geom.Rectangle;
 import openfl.text.TextFormat;
 import openfl.text.TextLineMetrics;
+import djFlixel.ui.UIIndicator;
 
 
 /** 
@@ -38,23 +42,61 @@ class State_Test extends FlxState
 	{
 		super.create();
 		
-		bgColor = Pal_CPCBoy.COL[5];
+		bgColor = Pal_CPCBoy.COL[1];
+		
+		sub_buttons();
+		//sub_toast();
+		//sub_panelpop();
+		//sub_infobox();
 		//sub_testPixelFader();
 		//sub_testLetterBounce();
 		//sub_testLetterScroll();
 		//sub_staticNoise();
 		//sub_spriteeffects();
 		//sub_slice9();
-		//sub_panelpop();
-		//sub_buttons();
+		//sub_text_metric();
 		
-		sub_text_metric();
 	}//---------------------------------------------------
 	
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
 		if (upd != null) upd();
+		
+	}//---------------------------------------------------;
+	
+	function sub_toast()
+	{
+		// HACK. access does not work? make it public
+		FlxG.watch.add(FlxTween.globalManager._tweens, "length", "Global Tweens");
+		
+		var t = FlxToast.FIRE("PRESS $ESC$ TO EXIT");
+		
+		upd = ()->{
+			if (D.ctrl.justPressed(DButton.Y))
+			{
+				t.destroy();
+			}else
+			if (D.ctrl.justPressed(DButton.A))
+			{
+				t = FlxToast.FIRE("ANOTHER $ONE NEW$ and #FRESH#" + Math.random() * 10);
+			}else
+			
+			if (D.ctrl.justPressed(DButton.START))
+			{
+				trace("NEW STATE BY SWITCH");
+				Main.goto_state(State_Test);
+				// Ok resets FlxTweens
+			}
+		}
+	}//---------------------------------------------------;
+	
+	function sub_infobox()
+	{
+		var b = new common.InfoBox("Hello world this is a test\nMultiline $also$. Will this work? I don't #know#\nThree lines. Does this work? #YES#");
+		add(D.align.screen(b));
+		
+		b.open(true);
 	}//---------------------------------------------------;
 	
 	
@@ -108,11 +150,16 @@ class State_Test extends FlxState
 	
 	function sub_buttons()
 	{
-		var b = new UIButton(64, 16, 64, 32);
-		add(b);
+		var b = new UIButton("djFlixel button with text");
+		add(D.align.screen(b));
 		
-		add(new UIButton(100, 64, 20, 20));
-		add(new UIButton(132, 64, 20, 32));
+		var c = new UIButton(D.ui.getIcon(12, 'heart'), {col1:[0x8C0B0E, 0xF0484D, 0]});
+		add(D.align.right(c, b));
+		
+		c.onPress = (_)->{
+			FlxToast.FIRE("Pressed Heart Button");
+		}
+		
 	}//---------------------------------------------------;
 	
 	// OK WORKS
@@ -120,9 +167,10 @@ class State_Test extends FlxState
 	{
 		var p = new PanelPop(200, 200);
 		add(D.align.screen(p));
+		
 		p.start(()->{trace("first panel complete"); return; });
-		add(D.align.screen(new PanelPop(52, 50,{colorBG:Pal_CPCBoy.COL[9]}).start(), 'l', 'b', 32));
-		add(D.align.screen(new PanelPop(42, 90,{colorBG:Pal_CPCBoy.COL[9]}).start(), 'r', 't', 32));
+		add(D.align.screen(new PanelPop(52, 50,{colorBG:Pal_CPCBoy.COL[9]}).start(),  'l', 'b', 32));
+		add(D.align.screen(new PanelPop(42, 90,{colorBG:Pal_CPCBoy.COL[10]}).start(), 'r', 't', 32));
 	}//---------------------------------------------------;
 	
 	// OK WORKS

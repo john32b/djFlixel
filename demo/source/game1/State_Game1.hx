@@ -1,5 +1,5 @@
 /**
- * Platform Example 01
+ * Quick Game
  * Jump on enemies like Super Mario
  * ------------------------------------
  * 
@@ -7,6 +7,8 @@
  * -------
  *  Author: refreshgames
  * 	Url: http://opengameart.org/content/early-80s-arcade-pixel-art-dungeonsslimes-walls-power-ups-etc
+ * 
+ * This is from a really old version, I don't know if it offers anything, but it is fun
  * 
  ******************************************************************************/
 
@@ -19,8 +21,7 @@ import flixel.FlxState;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tile.FlxTileblock;
-import game1.Player;
-import game1.Enemy;
+import game1.GameSprites;
 
 
 
@@ -39,9 +40,10 @@ class State_Game1 extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		
+		bgColor = 0xFF222255;
 	
 		// -- Player
-		
 		p = new Player(64, startY);
 		add(p);
 		
@@ -62,13 +64,15 @@ class State_Game1 extends FlxState
 		floor.loadTiles("im/g_fl.png", 16, 16, 0);
 		floor.immovable = true;
 		add(floor);
-
+		
+		// DEV: This should be an InfoBox...
 		D.align.pInit(0, 0, FlxG.width, 120);
 		D.align.PLACE_ADD = true;
-		D.align.pT("WASD/Gamepad- Move");
-		D.align.pT("K/Gamepad A - Jump | Hold it to jump off enemies");
-		D.align.pT("[1] to Restart");
-		D.align.pT("[2] to Exit");
+		D.align.pT("~$Arrows/Wasd$:Move $(K)$:Jump - $Gamepad$ supported");
+		D.align.pT("Hold Jump when jumping on enemies to gain height");
+		D.align.pT("~#[1]# to Restart");
+		D.align.pT("~#[2]# to Exit");
+		
 	}//---------------------------------------------------;
 	
 	// --
@@ -83,7 +87,7 @@ class State_Game1 extends FlxState
 		}else
 		if (FlxG.keys.justPressed.TWO)
 		{
-			Main.create_add_8bitLoader(0.7, State_Menu);
+			Main.create_add_8bitLoader(0.7, menu1.State_Menu1);
 		}
 		// Keep checking for a gamepad
 		D.ctrl.gamepad_poll();

@@ -8,7 +8,9 @@ import djA.DataT;
 import djFlixel.D;
 import djFlixel.gfx.StarfieldSimple;
 import djFlixel.gfx.pal.Pal_DB32;
+import djFlixel.other.DelayCall;
 import djFlixel.ui.FlxSlides;
+import djFlixel.ui.FlxToast;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -46,9 +48,10 @@ class State_Slides extends FlxState
 		SL.newSlide();
 		// Note: c:0 means no column defined. place in whole area
 		SL.a(AL.pT('FlxSlides Demo', {c:0, ta:'c', oy:24}, {s:16, c:0xFF3D22D0}));
+		SL.a(AL.pT('FlxSlides is a container that bundles Sprites in pages', {c:0,ta:'c'} ));
+		SL.a(AL.pT('for an effect it tweens the sprites in one by one', {c:0,ta:'c'} ));
 		SL.a(AL.pT('- Press Left and Right to Navigate -', {c:0,ta:'c'} ));
 		SL.a(AL.pT('- You can also use mouse click to go forward -', {c:0,ta:'c'} ));
-		SL.a(AL.pT('- Press [ESC] to exit -', {c:0,ta:'c'} ));
 		SL.finalize(); // Need to call finalize when you are done adding things to a slide
 		//---------------------------------------------------;
 		
@@ -81,7 +84,7 @@ class State_Slides extends FlxState
 		AL.pClear();
 		SL.a(AL.pT("djFlixel was developed as a helper for my projects", {c:0, a:'c', oy:24}));
 		SL.a(AL.pT("It is open sourced under the MIT licence", {c:0, a:'c'}));
-		SL.a(AL.pT("Do whatever you want with it :-)", {c:0, a:'c'}));
+		SL.a(AL.pT("On how to use, checkout the source code", {c:0, a:'c'}));
 		SL.a(AL.pT("_____________", {c:0, a:'c'}));
 		SL.a(AL.pT("Thanks for checking this out.", {c:0, a:'c'}));
 		SL.a(AL.pT("John.", {c:0, a:'c'},{c:0xFF5077C0,bc:0xFF65102E}));
@@ -90,6 +93,10 @@ class State_Slides extends FlxState
 		
 		add(SL);
 		SL.goto(0);
+		
+		new DelayCall(0.7, ()->{
+			FlxToast.FIRE("Press Esc to Exit", {screen:"bottom:left", alpha:1, bg:0xFF222233});
+		});
 	}//---------------------------------------------------;
 	
 }// --

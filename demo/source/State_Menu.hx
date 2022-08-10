@@ -10,70 +10,55 @@
 package ;
 import djA.DataT;
 import djFlixel.D;
-import djFlixel.gfx.BoxScroller;
+import djFlixel.gfx.FilterFader;
+import djFlixel.gfx.SpriteEffects;
 import djFlixel.gfx.pal.Pal_DB32 as DB32; // Cool Haxe Feature
-import djFlixel.gfx.statetransit.Stripes;
 import djFlixel.other.DelayCall;
 import djFlixel.other.FlxSequencer;
 import djFlixel.ui.FlxMenu;
+import djFlixel.ui.FlxToast;
+import djFlixel.ui.MPlug_Header;
+import djFlixel.ui.UIButton;
 import djFlixel.ui.menu.MPageData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import flixel.math.FlxRect;
 import flixel.system.FlxAssets;
 import flixel.text.FlxText;
 
 
 class State_Menu extends FlxState
 {
-	// Scroller ID, used to select asset for the background
-	var scid = 0;
-	
-	// Animated background
-	var sc:BoxScroller;
-
-	/** The main menu object */
-	var menu:FlxMenu;
-
-	// <gfx.Pal.PAL_DB32> color indexes 
-	// The animated background image is going to be colorized with these palette indexes
-	var BGCOLS = [
-		[1,2],
-		[24,25],
-		[14,16],
-		[3,12],
-		[14,25],
-		[2,26]
-	];
+	// I want to keep the text that says "Arrows .. K to select ..." 
+	// so I can change its color
+	var keystext:FlxText;
 	
 	override public function create() 
 	{
 		super.create();
 		
-		// -- animated background
-		sc = new BoxScroller('im/bg01.png', 0, 0, FlxG.width, FlxG.height);
-		sc.autoScrollX = 0.2;
-		sc.autoScrollY = 0.2;
-		scroller_next();	// This changes the asset and also colorizes it
-		add(sc);
+		// -- Nice animated BG
+		Main.bg_scroller(4, [0xff45283c, 0xff76428a ] );
 		
-		// -- the menu
+		// -- The Menu
 		var m = create_get_menu();
 		add(m);
 		m.goto('main');	// Will goto that page and open the menu
 		
-		// -- infos
+		
+		// -- Black strip
 		var bg1 = new FlxSprite();
 			bg1.makeGraphic(FlxG.width, 18, 0xFF000000);
 			add(D.align.screen(bg1, '' , 'b')); // '' to leave it alone in the X axis
+		
 			
 		// text.fix(style), makes all following text.get(..) calls to apply a specific style
 		// useful if you want to create a style on the fly and use it multiple times
 		// Check the typedef for the style object in <Dtext.h>
  		D.text.fix({c:DB32.COL[21], bc:DB32.COL[1], bt:2});
-		var t1 = D.text.get('DJFLIXEL ${D.DJFLX_VER} by John32B.');
+		var t1 = D.text.get('DJFLIXEL ${D.DJFLX_VER} by John32B');
 			add(D.align.screen(t1, 'l', 'b', 2)); // Add and Align to screen in one call
+			
 			
 		// Note that I can overlay a style here. This will use the fixed style and
 		// also apply a new color
@@ -83,43 +68,81 @@ class State_Menu extends FlxState
 		// Unfix the text style. text.get() will now return unstyled text
 		D.text.fix();
 		
-		var t3 = D.text.get('Mouse | [ARROW,WASD] move | [K,V] select | [J,C] cancel', {c:0xFF000000, bc:0xFF727268, bt:2});
-		add(D.align.up(t3, bg1));
+		// --
+		keystext= D.text.get('Mouse / [ARROWS] move / [K] select / [J] cancel', {bc:0xff45283c, c:0xff76428a, bt:2});
+		add(D.align.up(keystext, bg1));
+		
+		// --
+		// Apply an effect to the title
+		var title = D.text.get('djFlixel ${D.DJFLX_VER}', {
+				f:"fnt/blocktopia.ttf",
+				s:32,
+				c:DB32.COL[8],
+				bc:DB32.COL[5],
+				bs:2 });
+				
+		// DEV: title.pixels are small in size, because the scaling is done after
+		//      to get a big bitmap with the text, I need to stamp
+		
+		var b2 = new FlxSprite();
+		b2.makeGraphic(cast title.width,cast title.height, 0x00000000, true);
+		b2.stamp(title);
+
+		var fx1 = new SpriteEffects(b2.pixels);
+		fx1.addEffect("wave", {width:3, height:1.8, time : 2, loopDelay:0});
+		add(D.align.up(fx1, m.mpActive, 0, -8));	// Place above the menu, 8 more to the top
 		
 		// --
 		D.snd.playV('fx2');
-	}//---------------------------------------------------;
-	
-	
-	// -- Change the background scroll graphic/color
-	function scroller_next()
-	{
-		var C = DataT.arrayRandom(BGCOLS).copy();
-		C[0] = DB32.COL[C[0]];	// Convert index to real color
-		C[1] = DB32.COL[C[1]];
 		
-		//--
-		scid++; if (scid > 5) scid = 1;
-		var b = FlxAssets.resolveBitmapData('im/bg0${scid}.png');
-			b = D.bmu.replaceColors(b.clone(), [0xFFFFFFFF, 0xFF000000], C);
-		sc.loadNewGraphic(b);
+		// -- Add some mouse clickable icons
+		
+		var ic1 = new UIButton(
+			D.bmu.getBitmapSquare(FlxAssets.getBitmapData('im/icons.png'), 0, 0, 24, 24));
+		var ic2 = new UIButton(
+			D.bmu.getBitmapSquare(FlxAssets.getBitmapData('im/icons.png'), 48, 0, 24, 24),
+			{bmc:false});
+			
+		add(D.align.screen(ic1, "r", "b", 8));
+		ic1.y -= 14;
+		add(D.align.left(ic2, ic1, -2));
+		
+		ic1.setHover("Github");
+		ic1.onPress = (_)->{
+			FlxG.openURL('https://github.com/john32b/djFlixel');
+		};
+		
+		ic2.setHover("HaxeFlixel");
+		ic2.onPress = (_)->{
+			FlxG.openURL('https://haxeflixel.com/');
+		};
+		
+		// --
+		new DelayCall(1, () -> {
+			FlxToast.FIRE("Hello $:-)$", {screen:"top:right"});
+		});
 	}//---------------------------------------------------;
+	
 	
 	
 	function create_get_menu()
 	{
 		// -- Create
-		var m = new FlxMenu(32, 32, 140);
+		var m = new FlxMenu(32, 72);
 		
-		// -- Create some pages
+		// This makes the [Start/Enter] key fire on menu items
+		// Else if will be handled and pushed as "start" event 
+		// (e.g. when you want to close the menu when you press START button)
+		m.PAR.start_button_fire = true;
+		
+		// -- Create some pages	
 		// Note: Haxe supports multiline strings, this is OK:
-		m.createPage('main','This is an FlxMenu').add('
-			-|Slides Demo 		|link|sdemo
-			-|Menu Demo			|link|@mdemo
-			-|FlxAutotext Demo	|link|autot
-			-|Simple Game Demo	|link|game1
+		m.createPage('main').add('
+			-|FlxMenu Demo		|link|st_menu
+			-|FlxAutotext Demo	|link|st_autot
+			-|Other				|link|@other
 			-|Options			|link|@options
-			-|Reset				|link|rst|?pop=:YES:NO');
+			-|Reset				|link|rst| ?pop=:YES:NO ');
 			 
 		m.createPage('options', 'Options').add('
 			-|Fullscreen	|toggle|fs
@@ -131,6 +154,9 @@ class State_Menu extends FlxState
 			'-|Change Background	|link|bgcol
 			 -|Back			| link | @back');
 			 
+		m.createPage('other').add('
+			-|FlxSlides	| link | st_slides
+			-|Back | link |@back ');
 			 
 		// -- Styling
 		// STP is the object that holds STYLE data for the Menu Pages
@@ -159,67 +185,15 @@ class State_Menu extends FlxState
 			focus:DB32.COL[0]
 		};
 		
-		
-		//m.stHeader = {
-			//f:"fnt/blocktopia.ttf",
-			//s:16,bt:2,bs:1,
-			//c:DB32.COL[8],
-			//bc:DB32.COL[27]
-		//};
-		//m.PARAMS.header_CPS = 30;
-		//m.PARAMS.page_anim_parallel = true;
-			
-
-		
-
-		//var p = m.createPage('mdemo').add('
-			//'Mousewheel to scroll|link|0', // Putting 0 as id, because it needs an ID
-			//'or buttons to navigate as normal|link|0',
-			//':test label:|label',
-			//'Disabled - |link|dtest',
-			//'Toggle above ^|link|dtog',
-			//'----|link|0',
-			//'Toggle Item|toggle|c=false|id=0', // Note. I need to specify "id=0", unlike links which don't need "id="
-			//'List Item|list|list=one,two,three,four,five|c=0|id=0',
-			//'Range Item|range|range=0,1|step=0.1|c=0.5|id=0',
-			//'BACK|link|@back'
-		//]);
-		
-		//---------------------------------------------------;
-		// Example :
-		// Customize the ItemStyle and ListStyle for this specific page
-		
-		//p.params.stI = {
-			//text : {f:"fnt/wc.ttf", s:16, bt:2},
-			//box_bm : [ // Custom checkbox icons
-				//D.ui.getIcon(12, 'ch_off'), D.ui.getIcon(12, 'ch_on')
-			//], 
-			//ar_bm : [ // Custom Slider/List Arrows
-				//D.ui.getIcon(12, 'ar_left'), D.ui.getIcon(12, 'ar_right')
-			//],
-			//ar_anim : "2,2,0.5"
-		//};
-		//p.params.stL = {
-			//align:'justify',
-			//other:'yes'
-		//}
-		//---------------------------------------------------;
-
-		// More initialization of some items 
-		//m.pages.get('mdemo').get('dtest').disabled = true;
-		//m.pages.get('main').get('rst').data.tStyle = {bt:2, s:8, f:null}; // < Change the popup text style
+		// Set a dark background for the menu pages
+		m.STP.background = 0xFF121212;
 		
 		
 		/** Handle Page Events, keep track when I am going in and out of pages 
 		 * (MenuEvent->PageID) */
 		m.onMenuEvent = (ev, id)->{
-			
-			if (ev == pageCall) {
-				D.snd.playV('cursor_high', 0.6);
-			}else
-			if (ev == back){
-				D.snd.playV('cursor_low');
-			}
+			// This is just to produce sounds depending on the type of event
+			Main.handle_menu_sound(ev);
 			
 			// Just went to the options page
 			// I want to alter the Item Datas to reflect the current settings
@@ -229,53 +203,89 @@ class State_Menu extends FlxState
 				m.item_update(1, (t)->t.set(D.SMOOTHING) );
 				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );	
 			}
-		};
+			
+		};//-----
+
 		
 		/** Handle Item events. When you interact with items they will fire here
 		 * (ItemEvent->Item) */
 		m.onItemEvent = (ev, item)->{
 			
+			// This is just to produce sounds depending on the type of event
+			Main.handle_menu_sound(ev);
+			
 			// -
-			if (ev == fire) switch(item.ID){
+			if (ev == fire) switch (item.ID) {
 				case "fs":
 					FlxG.fullscreen = item.get();
+					
 				case "sm":
 					D.SMOOTHING = item.get();
+					
 				case "vol":
-					FlxG.sound.volume = cast(item.get(),Float) / 100;
+					FlxG.sound.volume = cast(item.get(), Float) / 100;
+					
 				case "rst":
 					Main.goto_state(State_Logos);
+					
 				case "bgcol":
-					scroller_next();
-				case "dtog":
-					// Get the disabled item and modify it with this function
-					m.item_update('mdemo', 'dtest', (it)->{
-						it.disabled = !it.disabled;
-						it.label = it.disabled?'Disabled :-(':'Enabled - :-)';
-					});
+					scroller_change();
+					
 				case "winmode":
 					D.setWindowed(item.get());
 					m.item_update(0, (t)->{t.P.c = FlxG.fullscreen; });
-				case "sdemo": Main.goto_state(State_Slides);
-				case "autot": Main.goto_state(State_Autotext);
-				case "game1": Main.goto_state(game1.State_Game1);
+
+				case "st_slides": 
+					Main.goto_state(State_Slides);
+				
+				case "st_autot":	 
+					m.unfocus();
+					new FilterFader( Main.goto_state.bind(State_Autotext) );
+					
+				case "st_menu": 
+					m.unfocus();
+					new FilterFader( Main.goto_state.bind(menu1.State_Menu1) );
+					
 				case _:
 			};
 			
-			// -- Sounds
-			switch(ev) {
-				case fire:
-					D.snd.playV('cursor_high',0.7);
-				case focus:
-					D.snd.playV('cursor_tick',0.4);
-				case invalid:
-					D.snd.playV('cursor_error');
-				case _:
-			};
-		}//
+		};//-----
 		
 		return m;
 	}//---------------------------------------------------;
 	
+	
+	// Scroller ID, used to select asset for the background
+	// Helper for background scroller. Loops through 1-6
+	var bgInd = 0;
+
+	// <gfx.Pal.PAL_DB32> color indexes 
+	// Random colors for the background scroller
+	var BGCOLS = [
+		[1,2],
+		[24,25],
+		[14,16],
+		[3,12],
+		[14,25],
+		[16,15],
+		[10,12],
+		[2,26]
+	];
+	
+	/**
+	 * Change the background graphic/colors
+	 * Also changes the keytext colors
+	 **/
+	function scroller_change()
+	{
+		var C = DataT.arrayRandom(BGCOLS).copy();
+		// C has indexes, convert to real colors
+		C[0] = DB32.COL[C[0]];
+		C[1] = DB32.COL[C[1]];
+		D.text.applyStyle(keystext, {c:C[1], bc:C[0], bt:2});
+		if (++bgInd > 6) bgInd = 1;	// 1 to 6
+		
+		Main.bg_scroller(bgInd, C);
+	}//---------------------------------------------------;
 	
 }// --

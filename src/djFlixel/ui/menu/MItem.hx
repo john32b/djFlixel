@@ -29,6 +29,9 @@ typedef MItemStyle = {
 	text:DTextStyle,	// Text style, to use on all ITEMS
 						// All Items will use colors from (col_t, col_b)
 						// MUST SET : bt
+						
+						
+	// Align { left, center, center2 }
 
 	col_t:StateColors,	// Text Colors. You should set ALL states
 	col_b:StateColors,	// Border Colors. You could only set 'idle' and all states will share that color
@@ -38,7 +41,11 @@ typedef MItemStyle = {
 	part2_pad:Int,		// Push the second part of items (toggle,list,range) to the right by this many pixels
 						// Applicable in left/center/center2 alignments.
 						// NOTE: In 'center2' the list arrows padding will not be applied, so make sure this is big enough to accomodate
-						
+			
+	// == Custom bitmaps for Toggles and Lists ==
+
+	?bm_no_col:Bool,			// If true will NOT colorize the bitmaps in [ar_bm, box_bm] use this for custom pre-colored graphics
+	
 	// Must set either {box_txt} or {box_bm}
 	?box_txt:Array<String>,		// Text instead of graphic e.g. '[ ]' '[x]'
 	?box_bm:Array<BitmapData>,	// off,on checkbox Bitmaps
@@ -53,7 +60,7 @@ typedef MItemStyle = {
 	?ar_bm:Array<BitmapData>,	// Left,Right Arrows Bitmaps
 	?ar_offy:Int,				// In case of arrow bitmap icon, offset it this much on the y axis (def=1)	
 	?ar_anim:String,			// "type,steps,time" Type=1 repat, 2 loop. Every steps is a pixel moved. Time for each tick
-	?bm_no_col:Bool,			// If true will NOT colorize the bitmaps in [ar_bm, box_bm] use this for custom pre-colored graphics
+
 };
 
 // These must match the `FocusState` names
@@ -177,6 +184,10 @@ class MItem extends FlxSpriteGroup implements IListItem<MItemData>
 	// --
 	override public function add(Sprite:FlxSprite):FlxSprite 
 	{
+		#if (html5)
+		Sprite.offset.y = mp.STP.item_height_fix;
+		#end
+		Sprite.moves = false;
 		Sprite.active = false;
 		return super.add(Sprite);
 	}//---------------------------------------------------;

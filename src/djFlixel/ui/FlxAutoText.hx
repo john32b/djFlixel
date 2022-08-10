@@ -137,7 +137,7 @@ class FlxAutoText extends FlxSpriteGroup
 	   @param	X Screen Pos
 	   @param	Y Screen Pos
 	   @param	FieldWidth 0 For Single Line | -1 For rest of the view area, mirrored x margin amount
-	   @param	Lines How many lines to use 0 for infinite - Also see `overflowrule`
+	   @param	Lines How many lines to use 0 for infinite -- New page only on command
 	**/
 	public function new(X:Float = 0, Y:Float = 0, FieldWidth:Float = 0, Lines:Int = 0)
 	{

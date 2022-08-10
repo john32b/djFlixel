@@ -18,17 +18,11 @@
 package djFlixel.gfx;
 
 import flash.display.BitmapData;
-import flash.display.PixelSnapping;
-
-import openfl.Assets;
-import openfl.geom.Matrix;
-import openfl.geom.Point;
-import openfl.geom.Rectangle;
-
 import flixel.FlxG;
 import flixel.FlxSprite;
-import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
 
 
 class BoxScroller extends FlxSprite
@@ -68,6 +62,7 @@ class BoxScroller extends FlxSprite
 	{
 		super(X, Y);
 		
+		moves = false;
 		tr = new Rectangle();
 		dp = new Point();
 		

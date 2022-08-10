@@ -28,31 +28,49 @@ import djFlixel.gfx.pal.Pal_DB32 as DB32;
 class FlxToast extends FlxSpriteGroup 
 {
 	static var toast:FlxToast;
+	static var def_style:Dynamic; // default style for safe-keeping
 	
 	/** Set Global Toast Parameters,
 	 * Overrides default parameters, check FlxToast {P} object
 	 * @param	PAR Overlay parameters for the global Toast. They will persist.
+	 * @param	RESET True will reset the style to the default one.
 	 */
-	public static function init(?PAR:Dynamic)
+	public static function INIT(?PAR:Dynamic, ?RESET:Bool)
 	{
 		if (toast == null || !toast.exists) {
 			toast = new FlxToast();
-		}
+			if (def_style == null) def_style = DataT.copyDeep(toast.P);
+		}	
+		
+		if (RESET) toast.P = DataT.copyDeep(def_style);
 		if (PAR != null) toast.P = DataT.copyFields(PAR, toast.P);
 	}//---------------------------------------------------;
 	
 	/**
 	   Create a ToastSprite Add it to current state and Fire it at once.
 	   - Gets automatically removed
-	   @param	TXT Text supports Markup styles [ # , $ ]
+	   @param	TXT Text supporting Markup styles [ # , $ ] e.g. "Press $ESC$ to Exit"
+	   @param	PAR Overlay toast parameters for CURRENT FIRE ONLY. Will revert style to previous style after.
 	   @return The Toast Object, in case you want to remove/cancel it
 	**/
-	public static function FIRE(TXT:String):FlxToast
+	public static function FIRE(TXT:String,?PAR:Dynamic):FlxToast
 	{
-		init();
+		INIT();
+		
+		var st:Dynamic;
+		if (PAR != null) {
+			st = DataT.copyDeep(toast.P);
+			toast.P = DataT.copyFields(PAR, toast.P);
+		}
+		
 		FlxG.state.add(toast);
 		toast.onEnd = FlxG.state.remove.bind(toast, false);
 		toast.fire(TXT);
+		
+		if (st != null) {
+			toast.P = st;
+		}
+		
 		return toast;
 	}//---------------------------------------------------;
 	
@@ -73,7 +91,7 @@ class FlxToast extends FlxSpriteGroup
 	// Default Running Parameters
 	var P = {
 		
-		screen : "center:top",	// screen X,Y == left,center,right:top,bottom . e.g. "left:top" "right:bottom"
+		screen : "top:center",	// screen Y,X == top,bottom:left,center,right | e.g. "left:top" "right:bottom"
 	
 		minWidth : 32,			// Minimum width for the box
 		maxWidth : 160,			// Maximum width of the box. If text is longer. It will word wrap
@@ -82,17 +100,17 @@ class FlxToast extends FlxSpriteGroup
 		margin: 2,				// Box margin from screen edge
 	
 		timeTween : 0.4,		// Time it takes to tween
-		timeOn	  : 3,			// Time it stays on screen
+		timeOn	  : 2,			// Time it stays on screen
 		
-		easeIn  : "elasticOut",	// Name of EaseFunction for when going in
+		easeIn  : "circOut",	// Name of EaseFunction for when going in
 		easeOut : "circIn",		// Name of EaseFunction for when going out
 		
-		alpha:1,				// Alpha of the background
-		bg: DB32.COL[2],		// Background color
+		bg: 0xFFF0F0F0,			// Background color
 			
-		textStyle:{
-			c:DB32.COL[21],
-			bc:DB32.COL[1]
+		text:{					// <DTextStyle> Structure
+			c:0xFF1b2632,
+			bc:0xFF9d9d9d,
+			bt:0
 		},
 		
 		colF1:DB32.COL[8],		// Format 1 Color #
@@ -109,11 +127,10 @@ class FlxToast extends FlxSpriteGroup
 		// --
 		bg = new FlxSprite();
 		bg.moves = false;
-		bg.alpha = P.alpha;
 		add(bg);
 
 		// --
-		text = D.text.get("", P.padding, P.padding, P.textStyle);
+		text = D.text.get("");
 		add(text);
 		
 		// --
@@ -121,6 +138,7 @@ class FlxToast extends FlxSpriteGroup
 		anim1 = new SimpleVector();
 		
 		// DEV: If those are already set, will do nothing
+		// DEV: This whole thing of keeping global pairs is not ideal ...
 		D.text.markupAdd("#", P.colF1);
 		D.text.markupAdd("$", P.colF2);
 	}//---------------------------------------------------;
@@ -139,15 +157,21 @@ class FlxToast extends FlxSpriteGroup
 	
 	/**
 	 * Fire the toast
-	 * @param	TXT Text supporting Markup styles [ # , $ ] e.g. "Press $ESC$ to Exit"
+	 * @param	
 	 */
-	public function fire(TXT:String)
+	function fire(TXT:String)
 	{
 		
 		// DEV: This is not as fast as keeping the `VarTween` Object. But a toast is not speed critical
 		FlxTween.cancelTweensOf(this);
 		
+		D.text.applyStyle(text, P.text);
 		D.text.applyMarkup(text, TXT);
+		
+		// DEV:
+		// Because this is already on screen setting X,Y will turn to real world coordinates
+		// Adding this.x.y will fix it
+		text.setPosition(this.x + P.padding, this.y + P.padding);
 		
 		text.fieldWidth = 0; // Allow autosize
 		var tmaxw = P.maxWidth - (P.padding * 2);
@@ -164,7 +188,7 @@ class FlxToast extends FlxSpriteGroup
 		// Screen Align (X,Y)
 		var align = P.screen.split(':');
 		
-		switch (align[0]){
+		switch (align[1]){
 			case "left":
 				anim0.x = anim1.x = 0 + P.margin;
 			case "right":
@@ -174,7 +198,7 @@ class FlxToast extends FlxSpriteGroup
 			default: throw "Error";	
 		}
 		
-		switch(align[1]) {
+		switch(align[0]) {
 			case "top":
 				anim0.y = -H + P.margin;
 				anim1.y = 0 + P.margin;
