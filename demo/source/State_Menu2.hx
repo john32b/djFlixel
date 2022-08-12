@@ -5,7 +5,7 @@
  
 ***************************************/
    
-package menu1;
+package;
 
 import common.InfoBox;
 import djFlixel.D;
@@ -54,7 +54,10 @@ class State_Menu2 extends FlxState
 		t1.visible = false;
 		
 		// --
-		var str = "FlxMenu has many customizable properties. From $Text Style$ and how items animate and out, to custom $icons$ and $animated cursors$. Also each #page# on the menu can be #customized# to override the global menu style.";
+		var str = 
+		"FlxMenu has many customizable properties. From $Text Style$ and how items animate and out" +
+		", to custom $icons$ and $animated cursors$. Also each #page# on the menu can be #customized#" +
+		" to override the global menu style.";
 		var box = new InfoBox(str, { width:240, colBG:0xf0f0f0, text:{c:0xff535359, bc:0xffcbdbfc}});
 		add(D.align.screen(box, "c", "b", 30 ));
 		new DelayCall(1.0, box.open.bind());
@@ -174,7 +177,7 @@ class State_Menu2 extends FlxState
 		// --
 		// More examples in functionality
 		var p2 = m.createPage("page2", "page two (2)").add("
-			-| Goto another page | link | @page3
+			-| Goto Page 3| link | @page3
 			-| Dynamic Label (x) | label | id_ch1
 			-| Change Above ^ | range |id_ch2| 10,200 | c=50 | step=12
 			-| This page can loop | label | U
@@ -265,7 +268,7 @@ class State_Menu2 extends FlxState
 					
 					case "id_main":
 						m.unfocus();
-						new FilterFader( Main.goto_state.bind(State_Menu));
+						Main.goto_state(State_Menu, "fade");
 						
 					case "id_root":
 						m.goHome();

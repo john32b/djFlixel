@@ -1,7 +1,7 @@
 /**
-	- FlxSequencer calls a function at manual time intervals
+	- FlxSequencer calls a function on custom time intervals
 	- Listen to <onStep> or <callback> 
-	- Useful in making short sequences of code execution
+	- Useful for making short sequences of code execution
 	- Example for doing a sequence:
   
 	add(new FlxSequencer((s)->{ 

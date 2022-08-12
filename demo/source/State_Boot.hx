@@ -48,7 +48,7 @@ class State_Boot extends FlxState
 		
 		t.onComplete = ()->{
 			D.snd.play('bleep1');
-			new FilterFader(()->{Main.goto_state(NEXTSTATE);});
+			Main.goto_state(NEXTSTATE, "fade");
 		};
 		
 		// Set text and autostart

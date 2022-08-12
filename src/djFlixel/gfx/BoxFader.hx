@@ -12,6 +12,9 @@
 	BLENDMODES:
  	add|alpha|darken|difference|erase|hardlight|invert|layer|lighten|multiply|
  	normal|overlay|screen|shader|subtract
+
+ 
+ - 2022 v0.5 - This is a very old class, prefer Filter Fader
 	
  ============================================================== */
 

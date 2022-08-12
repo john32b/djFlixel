@@ -15,8 +15,10 @@
 
 package;
 
+import djA.DataT;
 import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
+import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.RainbowStripes;
 import djFlixel.other.DelayCall;
 import djFlixel.ui.FlxMenu.MenuEvent;
@@ -33,11 +35,7 @@ import openfl.display.Sprite;
 class Main extends Sprite
 {
 	inline static var FPS = 60;
-	//inline static var START_STATE = State_Boot;
-	//inline static var START_STATE = State_TextScroll;
-	//inline static var START_STATE = State_Menu;
-	inline static var START_STATE = menu1.State_Menu2;
-	//inline static var START_STATE = State_Test;
+	inline static var START_STATE = State_Boot;
 	
 	public function new() 
 	{
@@ -63,24 +61,50 @@ class Main extends Sprite
 		// (e.g parsing a JSON file with settings)
 		// > None of that now. The FlxGame is created at once, and the HOTRELOAD
 		//   code is to be managed manually. Check more in <Dassets.hx>
+
 		
-		
-		// -- Some post init things
+		// FlxToast uses a static object with color properties that can be shared between states
+		// I want to reset the properties after each state switch
 		FlxG.signals.postStateSwitch.add( ()->{
-			
-			// FlxToast uses a static object with color properties that can be shared between states
-			// I want to reset the properties after each state switch
 			FlxToast.INIT(true);
 		});
 		
+
 	}//---------------------------------------------------;
 	
 	
 	
 	/** Shortcut to change state */
-	static public function goto_state(S:Class<FlxState>)
+	static public function goto_state(S:Class<FlxState>, ?effect:String)
 	{
-		FlxG.switchState(Type.createInstance(S, []));
+		
+		switch (effect)
+		{
+			case "fade":
+				new FilterFader( ()->goto_state(S) );
+				
+			case "8bit":
+				create_add_8bitLoader(0.5, S);
+				
+			case "let":
+				var col = DataT.randAr([
+					[0xff181425, 0xff262b44],
+					[0xff180d11, 0xff6d4653],
+					[0xff131c13, 0xfffee761]
+				]);
+				
+				new common.SubState_Letters(
+					"FLIXEL", ()->goto_state(S), {
+						bg:col[0],
+						text:{c:col[1]}, 
+						snd:"bleep0", tPre:0.3, tPost:0.2, 
+						ease:"EaseIn",tLetter:0.12
+					});
+				
+			default:
+				FlxG.switchState(Type.createInstance(S, []));
+		}
+		
 	}//---------------------------------------------------;
 	
 	

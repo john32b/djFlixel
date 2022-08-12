@@ -6,7 +6,7 @@
  
 ***************************************/
    
-package menu1;
+package;
 
 import common.InfoBox;
 import djFlixel.D;
@@ -23,7 +23,6 @@ import flixel.FlxState;
 import game1.State_Game1;
 import haxe.display.Position.Range;
 import haxe.ds.List;
-import menu1.State_Menu2;
 
 class State_Menu1 extends FlxState
 {
@@ -161,7 +160,7 @@ class State_Menu1 extends FlxState
 					// This link has a confirmation attached to it
 					// and will only be fired when user said YES
 					case "id_quit":
-						Main.goto_state(State_Menu);
+						Main.goto_state(State_Menu,"let");
 					
 					case "id_qual":
 						FlxToast.FIRE('Graphics set to: #${item.get()}#', {bg:0xFF868690, screen:"top:right"});

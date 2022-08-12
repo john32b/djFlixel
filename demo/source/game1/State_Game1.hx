@@ -87,7 +87,7 @@ class State_Game1 extends FlxState
 		}else
 		if (FlxG.keys.justPressed.TWO)
 		{
-			Main.create_add_8bitLoader(0.7, menu1.State_Menu1);
+			Main.create_add_8bitLoader(0.7, State_Menu1);
 		}
 		// Keep checking for a gamepad
 		D.ctrl.gamepad_poll();

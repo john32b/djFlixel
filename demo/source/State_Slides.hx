@@ -28,16 +28,18 @@ class State_Slides extends FlxState
 		add(sf);
 		
 		// -- Initialize UI Placer, for quick text generation/placement
-		
 		var AL = D.align; // I don't want to type `D.align` all the time
 		AL.pInit();
+
+		// DEV NOTE 2022:
+		// The D.align placer functions are awkard I don't like them
 		
 		// -- 
 		var SL = new FlxSlides({delay:0.04, time:0.06});
 		SL.setArrows(12, 12, 80, 300);
 		SL.onEvent = (e)->{
 			if (e == "close") {
-				Main.create_add_8bitLoader(0.7, State_Menu);
+				Main.goto_state(State_Menu, "let");
 			}else
 			if (e == "next" || e == "previous") {
 				D.snd.play('hihat');
@@ -83,11 +85,10 @@ class State_Slides extends FlxState
 		SL.newSlide();
 		AL.pClear();
 		SL.a(AL.pT("djFlixel was developed as a helper for my projects", {c:0, a:'c', oy:24}));
-		SL.a(AL.pT("It is open sourced under the MIT licence", {c:0, a:'c'}));
-		SL.a(AL.pT("On how to use, checkout the source code", {c:0, a:'c'}));
+		SL.a(AL.pT("Visit the github page to learn more", {c:0, a:'c'}));
 		SL.a(AL.pT("_____________", {c:0, a:'c'}));
-		SL.a(AL.pT("Thanks for checking this out.", {c:0, a:'c'}));
-		SL.a(AL.pT("John.", {c:0, a:'c'},{c:0xFF5077C0,bc:0xFF65102E}));
+		SL.a(AL.pT("~$Thanks for checking this out.$", {c:0, a:'c'}));
+		SL.a(AL.pT("~$John$", {c:0, a:'c'},{c:0xFF5077C0,bc:0xFF65102E}));
 		SL.finalize();
 		//---------------------------------------------------;		
 		

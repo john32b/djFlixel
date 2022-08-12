@@ -147,15 +147,16 @@ class State_Menu extends FlxState
 		m.createPage('options', 'Options').add('
 			-|Fullscreen	|toggle|fs
 			-|Smoothing		|toggle|sm
-			-|Volume		|range|vol| 0,100 | step=5'+
+			-|Volume		|range|vol| 0,100 | step=5 '+
 			#if(desktop) // preprocessors don't work inside a string
-			'-|Windowed Mode	|range|winmode|1,${D.MAX_WINDOW_ZOOM}' + 
+			'-|Window Size	|range|winmode|1,${D.MAX_WINDOW_ZOOM}' + 
 			#end
 			'-|Change Background	|link|bgcol
 			 -|Back			| link | @back');
 			 
 		m.createPage('other').add('
 			-|FlxSlides	| link | st_slides
+			-|VList| link | st_vlist
 			-|Back | link |@back ');
 			 
 		// -- Styling
@@ -236,16 +237,18 @@ class State_Menu extends FlxState
 					m.item_update(0, (t)->{t.P.c = FlxG.fullscreen; });
 
 				case "st_slides": 
-					Main.goto_state(State_Slides);
+					Main.goto_state(State_Slides, "8bit");
 				
-				case "st_autot":	 
+				case "st_vlist":
+					Main.goto_state(State_VList1, "8bit");
+					
+				case "st_autot":
 					m.unfocus();
-					new FilterFader( ()->Main.goto_state(State_Autotext) );
+					Main.goto_state(State_Autotext, "fade");
 					
 				case "st_menu": 
 					m.unfocus();
-					new FilterFader( ()->Main.goto_state(menu1.State_Menu1) );
-					
+					Main.goto_state(State_Menu1, "fade");
 				case _:
 			};
 			

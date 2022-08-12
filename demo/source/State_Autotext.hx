@@ -22,7 +22,7 @@ class State_Autotext extends FlxState
 	{
 		super.create();
 
-		#if HTML5
+		#if html5
 			// HTML5 fonts are wonky, and report a different height then other targets
 			// I am using a HACK built in D.Text. Forcing a leading value to the textfield
 			D.text.HTML_FORCE_LEADING.set('fnt/mozart.ttf', [16, -5]);
