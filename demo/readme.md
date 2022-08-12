@@ -13,8 +13,8 @@ e.g. to build for HashLink:
 
 #### FONTS:
 
-- **BlockTopia** by Aaron D. Chand -- https://www.dafont.com/blocktopia.font
-- **Mozart NBP** by Nate Halley -- http://www.fontspace.com/total-fontgeek-dtf-ltd/mozart-nbp
+- **BlockTopia** by Aaron D. Chand
+- **Mozart NBP** by Nate Halley *(CC BY-SA 3.0)* -- http://creativecommons.org/licenses/by-sa/3.0/
 - **Windows Command Prompt** by McFood -- https://www.dafont.com/windows-command-prompt.font
 
 #### MUSIC:

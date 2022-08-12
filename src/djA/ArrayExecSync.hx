@@ -15,6 +15,20 @@ package djA;
 
 class ArrayExecSync<T>
 {
+	
+	/**
+	  Executes a function for all elements but only goes to the next element with a callback.
+	   @param	ar The Array to run
+	   @param	cb (element, next())
+	**/
+	public static function run<T>(ar:Array<T>, cb:T->(Void->Void)->Void)
+	{
+		var c = 0;
+		var q:Void->Void = null;
+		q = ()-> cb(ar[c++], q);
+		q();
+	}//---------------------------------------------------;
+	
 	public var items:Array<T>;
 	public var C(default, null):Int; // Current
 	public var onComplete:Void->Void;

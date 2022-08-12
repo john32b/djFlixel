@@ -21,15 +21,16 @@
     <class path="C:\HaxeToolkit\haxe\lib\hscript\2,4,0" />
     <class path="C:\Mega\projects\djFlixel+\src\src" />
     <class path="source" />
+    <class path="C:\HaxeToolkit\haxe\lib\openfl\9,1,0\lib\flash-externs\src" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel=4.11.0&#xA;openfl=9.1.0&#xA;lime=7.9.0&#xA;hscript=2.4.0&#xA;djFlixel=0.5.0&#xA;next&#xA;FLX_NO_GAMEPAD&#xA;howlerjs&#xA;lime-webgl&#xA;lime-dom&#xA;lime-howlerjs&#xA;lime-html5&#xA;HL_PATH=C:\HaxeToolkit\hl&#xA;tools=7.9.0&#xA;lime-canvas&#xA;FLX_NO_DEBUG&#xA;DJFLX_SND=snd/&#xA;DJFLX_MUS=snd/&#xA;no-compilation&#xA;openfl-html5&#xA;FLX_NO_TOUCH&#xA;html5&#xA;web&#xA;html" />
+    <option directives="flixel=4.11.0&#xA;openfl=9.1.0&#xA;lime=7.9.0&#xA;hscript=2.4.0&#xA;djFlixel=0.5.0&#xA;HL_PATH=C:\HaxeToolkit\hl&#xA;next&#xA;FLX_NO_GAMEPAD&#xA;tools=7.9.0&#xA;DJFLX_SND=snd/&#xA;DJFLX_MUS=snd/&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;HOT_LOAD&#xA;openfl-disable-handle-error&#xA;web" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="--macro openfl.utils._internal.ExtraParamsMacro.include()&#xA;--macro lime._internal.macros.DefineMacro.run()&#xA;-dce std&#xA;--remap flash:openfl&#xA;--macro flixel.system.macros.FlxDefines.run()&#xA;--no-traces Main&#xA;--no-output " />
+    <option additional="--macro openfl.utils._internal.ExtraParamsMacro.include()&#xA;--macro lime._internal.macros.DefineMacro.run()&#xA;-dce std&#xA;--macro flixel.system.macros.FlxDefines.run()&#xA;-swf-version 40&#xA;--no-output " />
   </build>
   <!-- haxelib libraries -->
   <haxelib>
@@ -44,7 +45,7 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>"$(CompilerPath)/haxelib" run lime build "$(OutputFile)" $(TargetBuild) -$(BuildConfig) -Dfdb -DOUT=a:\djflx</preBuildCommand>
+  <preBuildCommand>"$(CompilerPath)/haxelib" run lime build "$(OutputFile)" $(TargetBuild) -$(BuildConfig) -Dfdb -DOUT=a:\djflx --connect 6000</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->

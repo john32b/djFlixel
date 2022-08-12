@@ -64,22 +64,19 @@ import openfl.filters.BitmapFilter;
 
 class FilterFader extends FlxObject 
 {
-
-	// - Default Parameters
-	var DEF_PAR = {
+	var P = {
 		time:1.25,		// How much time to take to reach the fade
 		steps:4, 		// How many steps to take to reach the fade
-		delayPost:0.2,	// How much time to wait after fading to callback (if any)
+		delayPost:0.2,	// How much time to wait after fading to trigger onComplete (if any)
 		autoRemove:true	// on FADEOFF() Remove from the state
-	};
+	}
 	
-	var P:Dynamic;	// Current run parameters
 	var toBlack:Bool;
-	var callback:Void->Void;
+	var onComplete:Void->Void;
 	var backupFilters:Array<BitmapFilter>;
 	
-	var st:StepTimer = null;	// I Keep these in case I want to kill them while they are updating
-	var dc:DelayCall = null;
+	var st:StepTimer;	// I Keep these in case I want to kill them while they are updating
+	var dc:DelayCall;
 
 	/**
 	   This will automatically be added to the active state
@@ -90,10 +87,11 @@ class FilterFader extends FlxObject
 	public function new(?TOBLACK:Bool = true, ?CB:Void->Void, ?PAR:Dynamic)
 	{
 		super();
-		P = DataT.copyFields(PAR, Reflect.copy(DEF_PAR));
+		P = DataT.copyFields(PAR, P);
+		
 		active = moves = false;
 		toBlack = TOBLACK;
-		callback = CB;
+		onComplete = CB;
 		
 		//-- Backup if any filters are set? Because they are going to be overwritten?
 		backupFilters = camera.flashSprite.filters;
@@ -103,27 +101,30 @@ class FilterFader extends FlxObject
 		}else{
 			st.start(P.steps, 0, P.time);
 		}
+		
 		FlxG.state.add(this);
 	}//---------------------------------------------------;
+	
 	// --
 	function _stepTimerTick(step:Int, finished:Bool)
 	{
 		applyFilterStep(step);
 		if (finished){
 			dc = new DelayCall(P.delayPost, ()->{
-				if (!toBlack && P.autoRemove) kill();
-				if (callback != null) callback(); 
+				if (!toBlack && P.autoRemove) destroy();
+				if (onComplete != null) onComplete(); 
 			});
 		}
 	}//---------------------------------------------------;
-	// --
-	override public function kill():Void 
+	
+	override public function destroy():Void 
 	{
-		camera.setFilters(backupFilters);
 		if (st != null) st.destroy();
 		if (dc != null) dc.destroy();
+		if (!exists) return;
+		camera.setFilters(backupFilters);
 		FlxG.state.remove(this);
-		super.kill();
+		super.destroy();
 	}//---------------------------------------------------;
 	
 	/**

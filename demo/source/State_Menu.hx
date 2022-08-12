@@ -240,11 +240,11 @@ class State_Menu extends FlxState
 				
 				case "st_autot":	 
 					m.unfocus();
-					new FilterFader( Main.goto_state.bind(State_Autotext) );
+					new FilterFader( ()->Main.goto_state(State_Autotext) );
 					
 				case "st_menu": 
 					m.unfocus();
-					new FilterFader( Main.goto_state.bind(menu1.State_Menu1) );
+					new FilterFader( ()->Main.goto_state(menu1.State_Menu1) );
 					
 				case _:
 			};
@@ -278,7 +278,7 @@ class State_Menu extends FlxState
 	 **/
 	function scroller_change()
 	{
-		var C = DataT.arrayRandom(BGCOLS).copy();
+		var C = DataT.randAr(BGCOLS).copy();
 		// C has indexes, convert to real colors
 		C[0] = DB32.COL[C[0]];
 		C[1] = DB32.COL[C[1]];

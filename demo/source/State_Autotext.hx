@@ -21,6 +21,12 @@ class State_Autotext extends FlxState
 	override public function create() 
 	{
 		super.create();
+
+		#if HTML5
+			// HTML5 fonts are wonky, and report a different height then other targets
+			// I am using a HACK built in D.Text. Forcing a leading value to the textfield
+			D.text.HTML_FORCE_LEADING.set('fnt/mozart.ttf', [16, -5]);
+		#end
 		
 		bgColor = 0xFF040408;
 		
@@ -75,6 +81,8 @@ class State_Autotext extends FlxState
 			'{w:0,np}Can also be used as a bare-bones dialog box,\nas it supports some preliminary dialog box functions like <newpage> <pausing> and even <custom callbacks>. More info on the comments inside <FlxAutotext.hx>\n' +
 			'- Press [K] or CLICK to return -'
 		);
+		
+		#if (html5) AT.y-=8; #end
 		
 		add(AT);
 		

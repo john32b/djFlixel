@@ -21,6 +21,7 @@ class DataT
 	 * @param	into The Target object to copy fields to
 	 * @return	The resulting object
 	 */
+	@:deprecated("Use copyFields")
 	public static function copyFields0(from:Dynamic, into:Dynamic):Dynamic
 	{
 		if (from == null)
@@ -45,10 +46,10 @@ class DataT
 	
 	/**
 	 * - NEW - RECURSIVE - 
-	 * Copy an object's fields into target object. Overwrites the target object's fields. 
-	 * Eorks Recursively for objects inside objects
-	 * Can work with Static Classes as well (as destination)
-	 * NOTE: You need to assign the final object for this to work
+	 * - Copy an object's fields into target object. Overwrites the target object's fields. 
+	 * - Works Recursively for objects inside objects
+	 * - Can work with Static Classes as well (as destination)
+	 * - You need to assign the returned object for this to work
 	 * @param	node The Master object to copy fields from
 	 * @param	into The Target object to copy fields to
 	 * @return	The resulting object
@@ -186,7 +187,7 @@ class DataT
 	/**
 	 * Get a random element from an array
 	 */
-	inline public static function arrayRandom<T>(ar:Array<T>):T 
+	inline public static function randAr<T>(ar:Array<T>):T 
 	{
 		return ar[Std.random(ar.length)];
 	}//---------------------------------------------------;
@@ -217,6 +218,28 @@ class DataT
 	}//---------------------------------------------------;
 	
 	
+	/**
+	   https://github.com/jdegoes/stax/blob/master/src/main/haxe/haxe/util/Guid.hx
+	   @return
+	**/
+	 public static function getGUID(): String 
+	 {
+		var result = "";
+		for (j in 0...32) {
+		if ( j == 8 || j == 12 || j == 16 || j == 20) { result += "-"; }
+		result += StringTools.hex(Math.floor(Math.random() * 16)); }	
+		return result.toUpperCase();
+	}//---------------------------------------------------;
+	
+	/**
+	 * Converts bytes to megabytes. Useful for creating readable filesizes.
+	 * 
+	 * @param	bytes Number of bytes to convert
+	 * @return  The converted bytes to string format.
+	 */
+	public static function bytesToMBStr(bytes:Int):String {
+		return Std.string( Math.ceil( bytes / (1024 * 1024)));
+	}//---------------------------------------------------;
 	
 }// --
 

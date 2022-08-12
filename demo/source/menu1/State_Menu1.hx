@@ -122,6 +122,11 @@ class State_Menu1 extends FlxState
 						
 						CHEATS_ENABLED = !CHEATS_ENABLED;
 						
+						if (CHEATS_ENABLED)
+							FlxToast.FIRE("Cheats $enabled$");
+						else
+							FlxToast.FIRE("Cheats #disabled#");
+						
 						// This is how to alter a property of a menu item and have it reflect on the menu
 						// Ask FlxMenu to get you the item with this function
 						// main is the pageID where the item is in

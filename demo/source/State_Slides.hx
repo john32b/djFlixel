@@ -95,7 +95,7 @@ class State_Slides extends FlxState
 		SL.goto(0);
 		
 		new DelayCall(0.7, ()->{
-			FlxToast.FIRE("Press Esc to Exit", {screen:"bottom:left", alpha:1, bg:0xFF222233});
+			FlxToast.FIRE("Press Esc to Exit", {screen:"bottom:left", text:{c:0xFFDDEEDD}, bg:0xFF000000});
 		});
 	}//---------------------------------------------------;
 	

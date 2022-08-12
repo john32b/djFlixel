@@ -196,6 +196,20 @@ class Dtext
 		if (s.so != null){
 			T.shadowOffset.set(s.so[0], s.so[1]);
 		}
+		
+		#if html5
+		if (s.f != null)
+		{
+			var ar = HTML_FORCE_LEADING.get(s.f);
+			if (ar != null && ar[0] == T.size)
+			{
+				var tf = T.textField.getTextFormat();
+				tf.leading = ar[1];
+				T.textField.defaultTextFormat = tf;
+				trace("HTML5 Force Leading", s.f, ar);
+			}
+		}
+		#end
 	}//---------------------------------------------------;
 	
 	
@@ -205,5 +219,19 @@ class Dtext
 	{
 		return t.applyMarkup(str, textFormats);
 	}//---------------------------------------------------;
+	
+	
+	
+	#if html5
+	
+	
+	// Only works for MULTILINES. like FlxAutoText
+	// Call manually
+	// Font Asset ID -> [FontSize, Leading Offset]
+	// D.text.HTML_HEIGHT_FIX.set('fnt/mozart.ttf', [16, -6]);
+	//			^ for 16 size mozart.ttf, set leading to -6
+	public var HTML_FORCE_LEADING:Map<String,Array<Int>> = [];
+	#end
+	
 		
 }// --

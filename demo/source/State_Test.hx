@@ -1,6 +1,5 @@
 package ;
 import djA.ArrayExecSync;
-import djA.types.SimpleCoords;
 import djFlixel.D;
 import djFlixel.core.Dcontrols.DButton;
 import djFlixel.gfx.BoxScroller;

@@ -49,7 +49,7 @@ class MPlug_Header extends FlxSpriteGroup implements IFlxMenuPlug
 		
 		headerText = new FlxAutoText(0, 0, 0, 1);
 		headerText.setCPS(P.cps);
-		headerText.textObj.height; // HACK?: Forces flxtext regen graphic to get proper height
+		//headerText.textObj.height; // HACK?: Forces flxtext regen graphic to get proper height
 		add(headerText);
 		
 		// --

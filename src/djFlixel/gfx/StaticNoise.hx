@@ -130,7 +130,7 @@ class StaticNoise extends FlxSprite
 		// Fixes HTML5 which was broken, also native targets are faster this way
 		for (y in 0...pixels.height)
 		for (x in 0...pixels.width)
-			pixels.setPixel32(x, y, DataT.arrayRandom(COLORS));
+			pixels.setPixel32(x, y, DataT.randAr(COLORS));
 		#end
 		
 		pixels.unlock();

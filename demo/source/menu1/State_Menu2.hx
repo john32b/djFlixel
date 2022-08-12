@@ -9,6 +9,7 @@ package menu1;
 
 import common.InfoBox;
 import djFlixel.D;
+import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.other.DelayCall;
 import djFlixel.ui.FlxMenu;
@@ -20,6 +21,8 @@ import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets;
 import djFlixel.gfx.FilterFader;
 import djFlixel.ui.MPlug_Header;
+import flixel.util.FlxStringUtil.LabelValuePair;
+import haxe.display.Display.GotoDefinitionResult;
 
 class State_Menu2 extends FlxState
 {
@@ -29,12 +32,20 @@ class State_Menu2 extends FlxState
 	// Custom user update
 	var u:Void->Void = ()->{}; 
 	
+	
+	// For calling Main.bg_scroller;
+	var scrollCombo = [ 
+		[3, 0xff3a4466, 0xff262b44],
+		[6, 0xff4b1d52, 0xff692464],
+		[5, 0xff2f5753, 0xff3b7d4f]
+	];
+	
 	override public function create():Void
 	{
 		super.create();
 		
 		// --
-		Main.bg_scroller(3, [0xff3a4466, 0xff262b44]);
+		Main.bg_scroller(scrollCombo[0][0], [scrollCombo[0][1], scrollCombo[0][2]]);
 		Main.add_footer_01();
 		
 		// --
@@ -43,7 +54,7 @@ class State_Menu2 extends FlxState
 		t1.visible = false;
 		
 		// --
-		var str = "";
+		var str = "FlxMenu has many customizable properties. From $Text Style$ and how items animate and out, to custom $icons$ and $animated cursors$. Also each #page# on the menu can be #customized# to override the global menu style.";
 		var box = new InfoBox(str, { width:240, colBG:0xf0f0f0, text:{c:0xff535359, bc:0xffcbdbfc}});
 		add(D.align.screen(box, "c", "b", 30 ));
 		new DelayCall(1.0, box.open.bind());
@@ -138,13 +149,15 @@ class State_Menu2 extends FlxState
 		m.STP.sind_anim = "1,2,0.2";	// 1:Type repeat | 2 steps | 0.2 tick time
 		m.STP.sind_color = m.STP.item.col_t.accent;
 
-		
 		// -- Done creating a style 
 		// -------------------------------------
 			
+		// -- Create a page with a bunch of menu items
+		//    trying to demo a range of functionalities
+		
 		m.createPage("main", "Main Menu").add("
 			 -| Return to Main | link | id_main | ?pop=:YES:NO
-			 -| New Page Demo| link | @page2
+			 -| Goto Page 2 | link | @page2
 			 -| Close The Menu | link | id_close
 			 -| Label (unselectable) | label|.|U
 			 -| Selectable Label |label
@@ -158,23 +171,94 @@ class State_Menu2 extends FlxState
 		
 		
 		
+		// --
+		// More examples in functionality
+		var p2 = m.createPage("page2", "page two (2)").add("
+			-| Goto another page | link | @page3
+			-| Dynamic Label (x) | label | id_ch1
+			-| Change Above ^ | range |id_ch2| 10,200 | c=50 | step=12
+			-| This page can loop | label | U
+			-| Back | link | @back
+		");
+		
+		
+		// - You can override page specific styles with this
+		// - It will overlay attributes on top of the global FlxMenu style
+		// - NOTE: Best used for small changes; this is just to show that you can change many stuff
+		p2.STPo = {
+			vt_IN:"0:-40|0.5:0.2",
+			vt_OUT:"0:-40|0.4:0.2",
+			vt_in_ease:"backInOut",
+			loop:true,
+			align:"left",
+			background:0x55FFFFFF,
+			item:{
+				text:{
+					f:"fnt/mozart.ttf",
+					s:16,
+					bt:2,
+					bc:0xFF112233
+				}
+			},
+			cursor:{
+				anim:null,
+				bitmap:null,
+				text:">",
+				color:{c:0xFFEEE209}
+			}
+		};
+
+		
+		// --
+		var p3 = m.createPage("page3", "page three (3)").add("
+			-| Less Menu Slots Here | label | .
+			-| Scroll Down | label | .
+			-| One | link | .
+			-| Two | link | .
+			-| Three | link | .
+			-| Four | link | .
+			-| Five | link | .
+			-| Six | link | .
+			-| Go to Root | link | id_root
+			-| Go Back | link | @back
+		");
+		
+		p3.PAR.slots = 3;
+		p3.STPo = {
+			background:null,
+			item:{
+				text:{
+					bt:1,
+					bc:0xFF112211,
+					bs:3
+				},
+				col_t:{
+					idle:0xdef0f0,
+					focus:0xc8d45d,
+					accent:0xcc3f7b
+				},
+			}	
+		}
+		
+		// :: NEW
 		// - FlxMenu Header Title
 		// - It is an FlxAutoText object that displays the Page Title of pages
-		// - You can set the properties of the Text like this, for declared fields
+		// - You can set the properties of the Text like this, for undeclared fields
 		//   it will copy over the properties from the MItem style of the current page
+		// - It used to be built in on FlxMenu, not you have to attach it
 		
 		m.plug(new MPlug_Header({
-			text:{a:"right"},lineHeight:2
+			text:{a:"center"},
+			lineHeight:2
 		}));
 		
-		
+
 		// -----------------------------------------
 		
 		m.onItemEvent = (a, item)->{
 			Main.handle_menu_sound(a);	// custom function to handle sounds based on events
 		
-			if (a == fire) {
-				switch (item.ID){
+			if (a == fire) switch (item.ID) {
 					
 					case "id_close":
 						m.close();
@@ -182,10 +266,20 @@ class State_Menu2 extends FlxState
 					case "id_main":
 						m.unfocus();
 						new FilterFader( Main.goto_state.bind(State_Menu));
+						
+					case "id_root":
+						m.goHome();
+						
+					case "id_ch2":
+						var value = item.get();
+						// Put the range value on the label
+						m.item_update(null, "id_ch1", (it)->{
+							it.label = 'Dynamic Label (${value})';
+						});
 				
 					default:
-				}
-			}	
+			}
+			
 		};
 		
 		// --
@@ -193,8 +287,17 @@ class State_Menu2 extends FlxState
 			Main.handle_menu_sound(ev);	// custom function to handle sounds based on events
 			switch (ev){
 				
+				case page:
+					switch (id) {
+						case "main":
+							Main.bg_scroller(scrollCombo[0][0], [scrollCombo[0][1], scrollCombo[0][2]]);
+						case "page2":
+							Main.bg_scroller(scrollCombo[1][0], [scrollCombo[1][1], scrollCombo[1][2]]);
+						default:	// page 3
+							Main.bg_scroller(scrollCombo[2][0], [scrollCombo[2][1], scrollCombo[2][2]]);
+					}
+				
 				case close:
-					
 					// Show the text to open the menu
 					// Handle input to open it
 					new DelayCall(()->{

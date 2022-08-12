@@ -119,7 +119,6 @@ class MPage extends VList<MItem,MItemData>
 			throw "Re-setting data not supported";
 		}
 		
-		STL = STP;	// Make VListStyle work with MPageStyle parameters
 		page = p;
 		
 		if (p.PAR.isPopup) menu_width = 0;	// Force Auto width for popups. (Fixes popups for center alignment)
@@ -135,6 +134,9 @@ class MPage extends VList<MItem,MItemData>
 			STP = DataT.copyDeep(STP);
 			STP = DataT.copyFields(p.STPo, STP);
 		}
+		
+		// Make VListStyle work with MPageStyle parameters
+		STL = STP;	
 		
 		// FLXMenu creates this and passes it to MPage.
 		// But for any case where MPage is used elsewhere I must it, before setDataSource()

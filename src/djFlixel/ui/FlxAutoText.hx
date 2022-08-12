@@ -312,7 +312,7 @@ class FlxAutoText extends FlxSpriteGroup
 		// -- Prebake linebreakes
 		text = getBakedLineBrakes();
 		
-		textObj.text = ""; 
+		textObj.text = "‎ "; // <-- Invisible character, not space.
 		textObj.visible = true;
 		
 		// -- Calculate linebreaks

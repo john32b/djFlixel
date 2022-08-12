@@ -28,6 +28,13 @@ class DelayCall extends FlxBasic
 	public function new(?autoAdd:Bool = true, ?time:Float = 1, Callback:Void->Void)
 	{
 		super();
+		
+		if (time == 0) 
+		{
+			Callback();
+			return;
+		}
+		
 		callback = Callback;
 		countDown = time;
 		if (autoAdd) {
@@ -40,7 +47,7 @@ class DelayCall extends FlxBasic
 		super.update(elapsed);
 		if ((countDown -= elapsed) <= 0) {
 			destroy();
-			if (callback != null) callback();
+			callback();
 		}
 	}//---------------------------------------------------;	
 	
