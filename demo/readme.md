@@ -1,13 +1,10 @@
 # djFlixel Demo
 
-This is an all around demonstration of the library. Incorporates most of the tools and objects.  
-Currently it **supports** building into **HASHLINK** and **FLASH**.  
-**HTML5** has issues with some per-pixel operations effects.  
+This is an all around demonstration of the library. Incorporates most of the tools and objects. Build normally as you would any other flixel project.
 
-e.g. to build for HashLink:
+e.g. build for **HashLink**:  
 `haxelib run lime build "Project.xml" hl`
 
-> :cake: Native **Windows** and **Linux** builds are untested, but they might work out of the box. 
 
 ## Third Party assets used in the demo :
 
@@ -15,7 +12,7 @@ e.g. to build for HashLink:
 
 - **BlockTopia** by Aaron D. Chand
 - **Mozart NBP** by Nate Halley *(CC BY-SA 3.0)* -- http://creativecommons.org/licenses/by-sa/3.0/
-- **Windows Command Prompt** by McFood -- https://www.dafont.com/windows-command-prompt.font
+- **LycheeSoda** by jeti *(CC BY 4.0)* -- https://creativecommons.org/licenses/by/4.0/ -- https://fontenddev.com/fonts/lychee-soda/
 
 #### MUSIC:
 - **Deep Horizons** by DvD - https://www.youtube.com/watch?v=B49GBo7ezYg

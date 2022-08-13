@@ -2,7 +2,6 @@
 <project>
 	
 	<haxeflag name="-dce" value="std"/>
-	
 
 	<!--
 	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
@@ -42,5 +41,6 @@
 		<haxedef name="DJFLX_SND" value="snd/"/>
 		<haxedef name="DJFLX_MUS" value="snd/"/>
 		
-	
+	<icon path="icon.png" size="64" />
+		
 </project>

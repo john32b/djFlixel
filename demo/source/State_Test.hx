@@ -11,6 +11,7 @@ import djFlixel.gfx.TextBouncer;
 import djFlixel.gfx.BoxFader;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.pal.Pal_CPCBoy;
+import djFlixel.gfx.statetransit.Stripes;
 import djFlixel.ui.FlxToast;
 import djFlixel.ui.UIButton;
 import flash.display.BitmapData;
@@ -43,7 +44,8 @@ class State_Test extends FlxState
 		
 		bgColor = Pal_CPCBoy.COL[1];
 		
-		sub_buttons();
+		sub_stripes();
+		//sub_buttons();
 		//sub_toast();
 		//sub_panelpop();
 		//sub_infobox();
@@ -61,6 +63,18 @@ class State_Test extends FlxState
 	{
 		super.update(elapsed);
 		if (upd != null) upd();
+		
+	}//---------------------------------------------------;
+	
+	
+	function sub_stripes()
+	{
+	
+		Stripes.CREATE(()->{
+			trace("STRIPES COMPLETE");
+		}, {
+			mode:"off,left",color:0xFFFFFFFF
+		});
 		
 	}//---------------------------------------------------;
 	

@@ -4,7 +4,7 @@ import djFlixel.gfx.RainbowStripes;
 import djFlixel.gfx.SpriteEffects;
 import djFlixel.gfx.TextBouncer;
 import djFlixel.gfx.pal.Pal_DB32;
-import djFlixel.gfx.statetransit.Stripes;
+import djFlixel.gfx.Stripes;
 import djFlixel.other.DelayCall;
 import djFlixel.other.FlxSequencer;
 import djFlixel.ui.FlxToast;
@@ -105,17 +105,13 @@ class State_Logos extends FlxState
 				tb.start();
 				s.next(4);
 			case 11:
-				// Stripes Substate
-				persistentUpdate = true;
-				openSubState(new Stripes( ()->{
-					Main.goto_state(NEXTSTATE);
-					}, {
-						mode:"on-right",
+				// Stripes Effect
+				Stripes.CREATE( ()->Main.goto_state(NEXTSTATE), {
+						mode:"on,right",
 						color:0xFFFFFFFF,
 						snd:"hihat"
-					}	
-				));
-				
+					});
+					
 			case _:
 		}}, 0)); // 0 = Start sequencer now.
 		

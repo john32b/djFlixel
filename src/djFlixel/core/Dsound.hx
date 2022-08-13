@@ -107,7 +107,7 @@ class Dsound
 	
 	/**
 	 * Play a sound. Will search for loaded metadata and will apply volumes.
-	 * @param	soundID Asset or Sound ID
+	 * @param	soundID Without extension, must be in "ROOT_SND" | e.g. "bang"
 	 * @param	volumeMultiplier Volume Multiplier applied just for now
 	 * @param	restart
 	 */
@@ -121,12 +121,12 @@ class Dsound
 	/**
 	 * Quick play a sound calling the short filename (! NO FOLDER, NO EXTENSION )
 	 * e.g. playFile("bang"); -> will play "sounds/bang.mp3" and depending on target it will play "sounds/band.ogg" etc
-	 * @param	filename Without extension, must be in "ROOT_SND"
+	 * @param	soundID Without extension, must be in "ROOT_SND"
 	 * @param	customVolume
 	 */
-	public inline function play(fileshort:String, customVolume:Float = 1, Looped:Bool = false, AutoDestroy:Bool = true):FlxSound
+	public inline function play(soundID:String, customVolume:Float = 1, Looped:Bool = false, AutoDestroy:Bool = true):FlxSound
 	{
-		return FlxG.sound.play(ROOT_SND + fileshort + FILE_EXT, customVolume, Looped, null, AutoDestroy);
+		return FlxG.sound.play(ROOT_SND + soundID + FILE_EXT, customVolume, Looped, null, AutoDestroy);
 	}//---------------------------------------------------;
 
 	/**

@@ -36,9 +36,6 @@ class State_Boot extends FlxState
 		// Real Real asset path is `assets/sound_ogg/bleep0.ogg`. Renamed in project.xml
 		t.sound.char = "bleep0"; 
 		
-		t.setCarrier("|");
-		//t.setCarrier(new FlxSprite(D.ui.getIcon(8, "minus")));
-		
 		t.style = {
 			f:'fnt/mozart.ttf',
 			s:16,
@@ -51,8 +48,9 @@ class State_Boot extends FlxState
 			Main.goto_state(NEXTSTATE, "fade");
 		};
 		
+		t.setCarrier("|");	// Set the carrier after setting the text style
+		
 		// Set text and autostart
-		//t.setText('{w:8,c:2}DJ${D.DJFLX_VER}\n{w:4}Sta\nrting\nDemo{c:4}....{w:5}');
 		t.setText('{w:8,c:33}djFlixel ${D.DJFLX_VER}\n{w:4}Starting Demo{c:5}....{w:5}');
 		
 		t.onEvent = (e:AutoTextEvent) -> {

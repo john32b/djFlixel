@@ -36,6 +36,7 @@ class Main extends Sprite
 {
 	inline static var FPS = 60;
 	inline static var START_STATE = State_Boot;
+	//inline static var START_STATE = State_Test;
 	
 	public function new() 
 	{
