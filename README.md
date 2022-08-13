@@ -4,7 +4,7 @@
 **License** : MIT  
 **Requires** : Haxe 4.2, HaxeFlixel 4.11  
 
-# What is it
+# 🔦 What is it
 
 **djFlixel** is a small library with some helpful tools for [HaxeFlixel](https://github.com/HaxeFlixel/flixel). It started as a helper for my personal projects. One of the first things that I implemented was a **menu system** and a **text autoscroller**. Then I kept adding things, like a tool to fade the screen to black, or a unified  keyboard/gamepad checker. Later on I decided to open source and distribute it, why not. 
 
@@ -23,7 +23,7 @@ haxelib git djFlixel https://github.com/john32b/djFlixel
 
 
 
-# Main Features :peach:
+# 🧰 Main Features
 
 ## FlxMenu
 
@@ -71,7 +71,7 @@ In the folder/package `djflixel/gfx` you can find some tools for creating variou
 
 ---
 
-## Other
+## ⛓️ Other
 
 There are other small tools in this libary. Like in the `djflixel/gfx/pal` package you will find some Color Palettes, like DB32. Or a class `DelayCall` which makes it easy to delay a function call. Feel free to explore the codebase and as always read the `demo/` source, which utilizes most of these.
 
@@ -94,7 +94,7 @@ In the tool `D.bmu` you can find a useful **slice9** scaler, that works by tile-
 
 ---
 
-## Notes 
+## 📄 Notes 
 
 ### Project status and future
 Please note that this is just a side project of mine, I cannot guarantee any support or bugfixes. **This library is provided "as-is"**
@@ -102,7 +102,7 @@ Please note that this is just a side project of mine, I cannot guarantee any sup
 ###  Is there any documentation?
 No. For a practical example checkout the `demo/` directory, it is an application that puts many of the components in use; it is heavily commented and I hope it explains things well. Also the library files themselves are commented. So feel free to dive into the codebase.  
 
-**I have no plans to make a wiki or any other form documentation for this library.**
+> **❗ I have no plans to make a wiki or any other form documentation for this library.**
 
 
 ### Notes on some library source files
@@ -126,7 +126,7 @@ Tomb Explorer : https://john0032.itch.io/tombexplorer
 Future Knight Remix : https://john0032.itch.io/futurek  
 :exclamation: *If you have a program that uses this library, pm me and I'll add it here.*   -->
 
-## Changelog
+## ✏️ Changelog
 
 **- V0.5 -- breaking changes from v0.4**
 ```text
@@ -145,9 +145,9 @@ Future Knight Remix : https://john0032.itch.io/futurek
 - General code cleanup, and more that smaller things I don't remember
 ```
 
-## Closing
+## 📮 Closing
 
 I started creating this library in 2015-2016, recently I reseted the commit history to a fresh start. The older versions prior to 0.4 are available in the TAG releases here on GitHub.
 
-Thanks for checking this out :smile_cat:,  
+Thanks for checking this out 😸,  
 John.
