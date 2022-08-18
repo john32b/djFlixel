@@ -35,7 +35,7 @@ class MPlug_Header extends FlxSpriteGroup implements IFlxMenuPlug
 		text:{}				// DTextStyle for the menu Header
 							// If not set will get values from MenuItem Style
 							// - overlays properties
-							// - NOTE: .align works here {left,center,right}
+							// - NOTE: Align (.a) works here {left,center,right}
 	};
 		
 	/**

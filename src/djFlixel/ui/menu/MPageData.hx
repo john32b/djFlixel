@@ -125,7 +125,9 @@ class MPageData
 	/**
 	   Quickly construct a pagedata with the confirmation options of the Link Item
 	   - For use in an FLXMENU
-	   - The MPAGE that is create has an id of "ask:link_id"
+	   - The MPAGE that is created has an id of "ask:link_id
+	   - It can generate multiple labels from the Ask string
+			ask="Line1|Line2";  | is the separator
 	   @param	item Must be a link type
 	**/
 	public static function getConfirmationPage(item:MItemData):MPageData
@@ -133,10 +135,12 @@ class MPageData
 		var P = new MPageData('ask:${item.P.link}');
 		var Q = item.P.ask;
 		
-		// DEV: 
-		// If I don't add the |.| the label will get `ID=U` :-(
+		// Split \n to multiple labels
 		if (Q[0].length > 0) {
-			P.add('${Q[0]}|label|.|U');
+			var str:String = Q[0];
+			for (l in str.split('\n')) {
+				P.add('${l}|label|.|U');	// DEV: I need to add a |.| as an ID
+			}
 		}
 		
 		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back');

@@ -255,11 +255,13 @@ class State_Menu2 extends FlxState
 			lineHeight:2
 		}));
 		
+		
+		// -- Global way to add sounds
+		Main.menu_attach_sounds(m);
 
 		// -----------------------------------------
 		
 		m.onItemEvent = (a, item)->{
-			Main.handle_menu_sound(a);	// custom function to handle sounds based on events
 		
 			if (a == fire) switch (item.ID) {
 					
@@ -287,7 +289,6 @@ class State_Menu2 extends FlxState
 		
 		// --
 		m.onMenuEvent = (ev, id)->{
-			Main.handle_menu_sound(ev);	// custom function to handle sounds based on events
 			switch (ev){
 				
 				case page:

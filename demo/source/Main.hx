@@ -21,9 +21,11 @@ import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.RainbowStripes;
 import djFlixel.other.DelayCall;
+import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxMenu.MenuEvent;
 import djFlixel.ui.FlxToast;
 import djFlixel.ui.IListItem.ListItemEvent;
+import djFlixel.ui.MPlug_Audio;
 import djFlixel.ui.UIButton;
 import flixel.FlxG;
 import flixel.FlxGame;
@@ -36,7 +38,7 @@ class Main extends Sprite
 {
 	inline static var FPS = 60;
 	inline static var START_STATE = State_Boot;
-	//inline static var START_STATE = State_Test;
+	//inline static var START_STATE = State_Menu1;
 	
 	public function new() 
 	{
@@ -52,6 +54,16 @@ class Main extends Sprite
 		D.ui.initIcons([8, 12]); // Prepare those icon sizes to be used. Here FLXMenu will use sizes 8 and 12
 		
 		FlxG.autoPause = false;
+		
+		// Adjust some of the Sound volumes Globally
+		// Everytime a sound is played with `D.snd.playV()`, this custom volume will be applied
+		D.snd.addSoundInfos({
+			cursor_high : 0.6,
+			cursor_tick : 0.33
+			
+			// .. all other sounds will be played at normal volume
+		});
+		
 		
 		addChild(new FlxGame(320, 240, START_STATE, 2, FPS, FPS, true));
 		
@@ -70,7 +82,7 @@ class Main extends Sprite
 			FlxToast.INIT(true);
 		});
 		
-
+		
 	}//---------------------------------------------------;
 	
 	
@@ -132,36 +144,27 @@ class Main extends Sprite
 	}//---------------------------------------------------;
 	
 	
+	
 	/**
-	   Universal Sound Handler for menus. Handles both types of events in one place
-	   @param	ev Either this
-	   @param	me Or this, can't be both
+	   Same sound settings for all menus created in this app
+	   @param	m an FlxMenu
 	**/
-	static public function handle_menu_sound(?ev:ListItemEvent, ?me:MenuEvent)
+	static public function menu_attach_sounds(m:FlxMenu)
 	{
-			if (me != null)
-			{
-				if (me == pageCall) {
-					D.snd.playV('cursor_high', 0.6);
-				}else
-				if (me == back){
-					D.snd.playV('cursor_low');
-				}
-				return;
-			}
+		m.plug(new MPlug_Audio({
+			pageCall:'cursor_high',
+			back:'cursor_low',
+			it_fire:'cursor_high',
+			it_focus:'cursor_tick',
+			it_invalid:'cursor_error'
+		}));
 		
-			if(ev!=null)
-			switch(ev) {
-				case fire:
-					D.snd.playV('cursor_high',0.7);
-				case focus:
-					D.snd.playV('cursor_tick',0.33);
-				case invalid:
-					D.snd.playV('cursor_error');
-				default:
-			};
+		// ^ Note that these sounds will play with `D.snd.playV()` 
+		//   so they will apply any custom volumes set in D.snd
+		
 	}//---------------------------------------------------;
-
+	
+	
 	
 	/**
 	   Add a footer text + scroller, used in some states

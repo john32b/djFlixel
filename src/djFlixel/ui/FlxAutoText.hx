@@ -131,6 +131,12 @@ class FlxAutoText extends FlxSpriteGroup
 	 *  to go to the next page. Set 0 to WAIT. Value is *100ms, so 9 is 900ms */
 	public var newpageWait:Int = 9;
 	
+	
+	#if !flash
+	// An empty line reports height as 0, all targets do it but not Flash
+	var _precalcHeight:Int = 0;
+	#end
+	
 	//====================================================;
 	
 	/**
@@ -147,7 +153,7 @@ class FlxAutoText extends FlxSpriteGroup
 		textObj = new FlxText(0, 0, FieldWidth, null); // DEV setting 0 to FieldWidth makes wordwrap=false
 		add(textObj);
 		moves = active = false;
-		setCPS(DEFAULT_CPS);
+		setCPS(DEFAULT_CPS);		
 	}//---------------------------------------------------;
 	
 	override function get_width():Float 
@@ -560,11 +566,6 @@ class FlxAutoText extends FlxSpriteGroup
 			nextTagIndex = TAGS[0].index;
 	}//---------------------------------------------------;
 	
-	
-	#if (!flash)
-	var _lastknownlineheight = 0.0;
-	#end
-	
 	/**
 	 * - Called on update(); updates carrier pos
 	 */
@@ -575,14 +576,9 @@ class FlxAutoText extends FlxSpriteGroup
 		// An empty line reports height as 0, all targets do it but not Flash
 		#if (!flash)
 		if (tm.height == 0) {
-			tm.height = _lastknownlineheight;
-		}else{
-			_lastknownlineheight = tm.height;
+			tm.height = _precalcHeight;
 		}
 		#end
-		//trace("textObj.textField.numLines", textObj.textField.numLines);
-		//trace("linecurrent", lineCurrent);
-		//trace("TM", tm);
 		
 		// DEV:
 		// There was a bug. sometimes textObj.textField.numLines would report one more line?
@@ -592,10 +588,10 @@ class FlxAutoText extends FlxSpriteGroup
 		carrier.y = this.y + 2 + carrierOffsets[1] + ((lineCurrent - 1) * (tm.height));
 		carrier.x = this.x + 2 + tm.width + carrierOffsets[0];
 		
-		if (carrier.x > this.x + textObj.width) {
+		//if (carrier.x > this.x + textObj.width) {
 			// carrier.x = this.x + 2;
 			// carrier.y += tm.height;
-		}
+		//}
 		
 		// CHANGED: removed tm.leading from calculations
 		//			Flash text adds a 2 pixel gutter to the whole text object
@@ -660,6 +656,13 @@ class FlxAutoText extends FlxSpriteGroup
 	{
 		style = val;
 		D.text.applyStyle(textObj, style);
+		
+		#if (!flash)
+		textObj.text = "A\nB";
+		_precalcHeight = cast textObj.textField.getLineMetrics(1).height;
+		textObj.text = "";
+		#end
+		
 		return val;
 	}//---------------------------------------------------;
 	

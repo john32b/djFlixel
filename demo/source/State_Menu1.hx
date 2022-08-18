@@ -21,8 +21,7 @@ import flash.media.Sound;
 import flixel.FlxG;
 import flixel.FlxState;
 import game1.State_Game1;
-import haxe.display.Position.Range;
-import haxe.ds.List;
+import djFlixel.ui.MPlug_Audio;
 
 class State_Menu1 extends FlxState
 {
@@ -58,6 +57,16 @@ class State_Menu1 extends FlxState
 		// - Position at (x,y) 0 for autowidth and make it display 8 items 
 		// - If the "slots" is lower, then the items will scroll
 		var m = new FlxMenu(32, 32, 0, 8);
+		
+		// - A quick way to add sounds to a menu with the <plugin system>
+		// - Every field of the object is the menu_event, and the value is the soundID to play
+		m.plug(new MPlug_Audio({
+			pageCall:'cursor_high',
+			back:'cursor_low',
+			it_fire:'cursor_high',
+			it_focus:'cursor_tick',
+			it_invalid:'cursor_error'
+		}));
 		
 		m.PAR.start_button_fire = true;
 		add(m);
@@ -104,14 +113,12 @@ class State_Menu1 extends FlxState
 		// - These two are the only ones you can listen 
 		// - This sends menu related events, like {open,focus}
 		m.onMenuEvent = (mev, str)->{
-			Main.handle_menu_sound(mev);	// custom function to handle sounds based on events
 			trace("Menu Event", mev, str);
 		};
 		
 		// This sends item related events,
 		// Like an item was pressed, or changed value
 		m.onItemEvent = (a, item)->{
-			Main.handle_menu_sound(a);	// custom function to handle sounds based on events
 			trace("Item Event ", a, item);
 		
 			if (a == fire) {

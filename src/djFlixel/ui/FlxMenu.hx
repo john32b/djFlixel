@@ -81,6 +81,9 @@ enum MenuEvent
 	start;		// Start button was pressed | Par: The pageID start was pressed on
 	focus;		// Menu was just focused | Par: pageID that got focused
 	unfocus;	// Menu was just unfocused | Par: pageID that got unfocused
+	it_focus;	// An item was focused | Par: itemID | For more complete item event use onItemEvent
+	it_fire;	// An item was fired | Par: itemID | ~~ ^
+	it_invalid;	// An item was fired while disabled | Par: itemID | ~~ ^
 }
 
 
@@ -441,6 +444,9 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	/** Called by MPage.onItemEvent 
+	 * DEV:
+	 * fire on links is being overriden. A true `fire` link event will be sent
+	 * only when it is a direct call, not when going back, or selecting a confirmation
 	 **/
 	function on_item_event(type:ListItemEvent, it:MItemData)
 	{
@@ -502,11 +508,24 @@ class FlxMenu extends FlxGroup
 						goto(P);
 					_mev(pageCall, "?fs");
 					return;
-				default: // This is normal call, do nothing, will be pushed to user 
+				default: 
+					_mev(it_fire, it.ID);
+			}
+		}else{
+			
+			// Links got processed OK
+			// Transform everything else to menu events
+			switch (type)
+			{
+				case focus: _mev(it_focus, it.ID);
+				case fire: _mev(it_fire, it.ID);
+				case invalid: _mev(it_invalid, it.ID);
+				default:
 			}
 		}
 		
 		// Mirror the event to user
+		// DEV: link events have been transformed
 		if (onItemEvent != null) onItemEvent(type, it);
 	}//---------------------------------------------------;
 

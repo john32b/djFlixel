@@ -55,6 +55,19 @@ class Dassets
 	//====================================================;
 	public function new() {}
 		
+	
+	/**
+	   Load the HOT_LOAD files immediately
+	   from Static assets
+	**/
+	public function loadNow()
+	{
+		files = [];
+		for (f in HOT_LOAD) _staticLoadAsset(f);
+		if (onLoad != null) onLoad();
+	}//---------------------------------------------------;
+	
+	
 	/**
 	 * Resets and Reloads everything in [HOT_LOAD] from the start
 	 */

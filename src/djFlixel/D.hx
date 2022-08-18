@@ -50,7 +50,8 @@ class D
 		volume: -1,				// float (0 to 1), if >0 Will set global flixel volume to this 
 		fullscreen:false,		// Start fullscreen
 		smoothing:false,		// Soft pixels
-		savename:""				// OPTIONAL - Savegame ID, make sure it is unique among djflixel projects
+		savename:"",			// OPTIONAL - Savegame ID, make sure it is unique among djflixel projects
+		init:null				// Void->Void | Will call this onPreGameStart
 	};
 	
 	/** Sound Helpers */
@@ -131,6 +132,7 @@ class D
 			FlxG.mouse.useSystemCursor = true;
 			FlxG.fullscreen = IP.fullscreen;
 			ctrl = new Dcontrols(); // This needs to init after new FlxGame
+			if (IP.init != null) IP.init();
 		});
 		
 		#if (debug && FLX_KEYBOARD)

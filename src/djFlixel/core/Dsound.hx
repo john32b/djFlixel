@@ -43,7 +43,6 @@ class Dsound
 	
 	// Map shortID to full Sound Info as it's on the json node
 	var volumes:Map<String,Float>;
-
 	
 	//====================================================;
 	
@@ -68,13 +67,16 @@ class Dsound
 	
 	
 	/**
-	   Declare Sound Volumes from an object with the format
-		{ soundName:soundVolume(float) , soundName2:"soundvolume"(string) }
-	   - So you can easily pass a JSON object here
-	   - Example: 
-			{
+	   Declare Sound Volumes from an object with the format 
+	    { 	
+			soundName :   soundVolume(float) , 
+			soundName2 : "soundvolume"(string) 
+		}
+		
+	   - Example: {
 				"pl_slide" : "0.4", // Strings will be parsed
-				"pl_jump"  : 0.5
+				"pl_jump"  : 0.5,
+				pl_slide   : 0.3,   // Also valid
 			}
 	**/
 	public function addSoundInfos(node:Dynamic)
@@ -85,17 +87,12 @@ class Dsound
 		
 		for (f in Reflect.fields(node)) 
 		{
-			var f = Reflect.field(node, f);
-			if(Std.isOfType(f,String))
-				volumes.set(f, Std.parseFloat(f));
-			else
-				volumes.set(f, cast f);
-			//#if (neko || hl)
-			//volumes.set(f, Reflect.field(node, f));
-			//#else
-			//volumes.set(f, Std.parseFloat(Reflect.field(node, f)));
-			//#end
-			//trace("Sound Volume define for", f, Reflect.field(node, f));
+			var val:Dynamic = Reflect.field(node, f);
+			try{
+				volumes.set(f, Std.parseFloat(val));
+			}catch (_) {
+				volumes.set(f, Math.fround(val * 100) / 100);
+			}
 		}
 		
 		#if debug

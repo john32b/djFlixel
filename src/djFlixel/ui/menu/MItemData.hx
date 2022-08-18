@@ -59,6 +59,11 @@
 		! :TIP: You can skip the question in the "?pop" style by ommiting the question.
 		         e.g. | ?pop=:Yes:No |
 				 
+		! :Supports \n newlines in the ASK string, and it will generate multiple labels
+				e.g. | ?fs=First Line\nSecond Line?:yes:no	
+				> will produce two labels for the question. 
+				> This is for cases where the question does not fit the screen
+				 
 		examples >>>>>>>>>>>>>>>>>>>>
 		
 		"New Game | link | ng "		; simple new game, will callback to user with id`ng`
@@ -76,7 +81,7 @@
 			  
 		"Back|link|@back"	; Simple, if this is a nested page. Go back to the previous page
 							; e.g. From options menu Page, back to the main menu
-		
+
 		-------------------------------------------------------------
 									  
 	>> {range}

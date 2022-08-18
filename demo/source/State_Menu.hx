@@ -189,13 +189,14 @@ class State_Menu extends FlxState
 		// Set a dark background for the menu pages
 		m.STP.background = 0xFF121212;
 		
+		// Apply sounds to the menu
+		// I am using this shortcut because I will be doing this a lot
+		// Normally you would want to inline this function
+		Main.menu_attach_sounds(m);
 		
 		/** Handle Page Events, keep track when I am going in and out of pages 
 		 * (MenuEvent->PageID) */
 		m.onMenuEvent = (ev, id)->{
-			// This is just to produce sounds depending on the type of event
-			Main.handle_menu_sound(ev);
-			
 			// Just went to the options page
 			// I want to alter the Item Datas to reflect the current settings
 			if (ev == page && id == "options") {
@@ -211,10 +212,6 @@ class State_Menu extends FlxState
 		/** Handle Item events. When you interact with items they will fire here
 		 * (ItemEvent->Item) */
 		m.onItemEvent = (ev, item)->{
-			
-			// This is just to produce sounds depending on the type of event
-			Main.handle_menu_sound(ev);
-			
 			// -
 			if (ev == fire) switch (item.ID) {
 				case "fs":
