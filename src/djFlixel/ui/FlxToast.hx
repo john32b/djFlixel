@@ -215,13 +215,11 @@ class FlxToast extends FlxSpriteGroup
 		FlxTween.tween(this, { x:anim1.x, y:anim1.y }, P.timeTween, {
 				ease:Reflect.field(FlxEase, P.easeIn), 
 				onComplete: function(e:FlxTween) {
-					trace('Toast ComeIn - END');
 					// When the toast is on, wait X seconds and anim out
 					FlxTween.tween(this, { x:anim0.x, y:anim0.y }, P.timeTween, {
 						  ease:Reflect.field(FlxEase ,P.easeOut),
 						  startDelay:P.timeOn,
 						  onComplete:function(e:FlxTween) {
-							trace('Toast Backup - END');
 							this.visible = false;
 							if (onEnd != null) onEnd();
 							}

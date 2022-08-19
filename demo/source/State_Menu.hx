@@ -202,7 +202,7 @@ class State_Menu extends FlxState
 			if (ev == page && id == "options") {
 				// (2) , is the index starting from 0, I could pass the ID to get the item also
 				m.item_update(0, (t)->t.set(FlxG.fullscreen) );
-				m.item_update(1, (t)->t.set(D.SMOOTHING) );
+				m.item_update(1, (t)->t.set(Main.BLUR.enabled) );
 				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );	
 			}
 			
@@ -218,7 +218,7 @@ class State_Menu extends FlxState
 					FlxG.fullscreen = item.get();
 					
 				case "sm":
-					D.SMOOTHING = item.get();
+					Main.BLUR.enabled = item.get();
 					
 				case "vol":
 					FlxG.sound.volume = cast(item.get(), Float) / 100;

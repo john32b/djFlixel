@@ -27,13 +27,6 @@ import djA.Macros;
 import flixel.FlxG;
 import openfl.Lib;
 
-#if ( !flash && !canvas)
-	// TODO: I need to fix this
-	import openfl.filters.BitmapFilter;
-	import openfl.filters.BlurFilter;
-	import openfl.filters.ConvolutionFilter;
-#end
-
 
 class D
 {
@@ -49,7 +42,6 @@ class D
 		// ------
 		volume: -1,				// float (0 to 1), if >0 Will set global flixel volume to this 
 		fullscreen:false,		// Start fullscreen
-		smoothing:false,		// Soft pixels
 		savename:"",			// OPTIONAL - Savegame ID, make sure it is unique among djflixel projects
 		init:null				// Void->Void | Will call this onPreGameStart
 	};
@@ -74,20 +66,13 @@ class D
 	public static var bmu(default, null):BitmapUtil;
 	/** Other GFX utilities (flixel/djflixel) specific */
 	public static var gfx(default, null):Dgfxutil;
-	
-	// For hashlink, webgl and other targets do the screen softening with a blurfilter
-	// rather than the builtin Smoothing, because it can lead to some glitches
-	// especially in tilemaps. Flash and HTML Canvas seem to be OK with the build in smoothing method.
-	#if (!flash && !canvas)
-		static var filters:Array<BitmapFilter>;
-		static var bf:BlurFilter;
-	#end
-	
+		
 	/** Depends on fullscreen size, how big the window can get in zoom increments */
 	public static var MAX_WINDOW_ZOOM(default, null):Int = 1;
 	
-	/** Current Antialiasing on/off, comes with a setter that applies to all cameras */
-	public static var SMOOTHING(default, set):Bool = false;
+	/** When DEBUG_KEYS is enabled and F9 is pressed, it calls this function 
+	 *  Use `@:privateAccess` to set something here */
+	static var _cycle_filters:Void->Void;
 	
 	/** 
 	 * Initialize this static class. Call this before creating FlxGame();
@@ -115,19 +100,13 @@ class D
 			save = new Dsave(IP.savename);
 		}
 		
-		#if ( !flash && !canvas)
-			bf = new BlurFilter(1, 1, 1);	// Going to be set properly at "onResize()" which is automatically called
-			filters = [ bf ];
-		#end
-		
 		FlxG.signals.postStateSwitch.add(onStateSwitch);
-		FlxG.signals.gameResized.add(onResize);
+		//FlxG.signals.gameResized.add(onResize);
 		
 		// :: Some code that needs to run after flxgame is created
 		FlxG.signals.preGameStart.addOnce( ()-> 
 		{
 			MAX_WINDOW_ZOOM = Math.floor(Lib.current.stage.fullScreenWidth / FlxG.width) - 1;
-			SMOOTHING = IP.smoothing;
 			if (IP.volume >= 0) snd.setVolume(null, IP.volume);
 			FlxG.mouse.useSystemCursor = true;
 			FlxG.fullscreen = IP.fullscreen;
@@ -143,53 +122,18 @@ class D
 	}//---------------------------------------------------;
 	
 	
-	static function set_SMOOTHING(value:Bool):Bool
-	{
-		SMOOTHING = value;
-		
-		#if (flash || canvas)
-		for (i in FlxG.cameras.list) {
-			i.antialiasing = SMOOTHING;
-		}
-		#else
-			if (SMOOTHING) {
-				FlxG.game.setFilters(filters);
-			}else{
-				FlxG.game.setFilters([]);
-			}
-		#end
-		return value;
-	}//---------------------------------------------------;
-	
 	// --
 	// Gets called right after the new state is created
 	static function onStateSwitch()
-	{
-		#if (flash || canvas)
-			// Force the cameras to use the default smoothing (with setter)
-			SMOOTHING = SMOOTHING;
-		#end
-		
+	{	
 		#if (debug && FLX_KEYBOARD)
 			DEBUG_RELOADED = false;
 		#end
 	}//---------------------------------------------------;
-	
+
+	// --
 	static function onResize(x, y)
 	{
-		// Recalculate the blur filter to match the new window size?
-		#if ( !flash && !canvas)
-			var rx = (x / FlxG.width);
-			var ry = (y / FlxG.height);
-			if (rx <= 1) bf.blurX = 0; else {
-				bf.blurX = rx * 0.5;
-				if (bf.blurX > 1.6) bf.blurX = 1.6;
-			}
-			if (ry <= 1) bf.blurY = 0; else {
-				bf.blurY = ry * 0.5;
-				if (bf.blurY > 1.6) bf.blurY = 1.6;
-			}
-		#end
 	}//---------------------------------------------------;
 	
 	
@@ -228,10 +172,13 @@ class D
 				assets.reload( FlxG.resetState );
 				#end
 			}
-		}else
-		if (FlxG.keys.justPressed.F9) {
-			SMOOTHING = !SMOOTHING;
 		}
+		
+		else if (FlxG.keys.justPressed.F9)
+		{
+			if (_cycle_filters != null) _cycle_filters();
+		}
+		
 	}//---------------------------------------------------;
 	
 	#end 

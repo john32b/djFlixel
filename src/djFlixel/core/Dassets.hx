@@ -73,12 +73,13 @@ class Dassets
 	 */
 	public function reload(?cb:Void->Void):Void
 	{
-		trace(" = HOT_LOAD :: reload() ");
+		#if HOT_LOAD
+		trace("== HOTLOAD.reload() ::");
 		
 		files = [];
 		
 		var _onLoad = ()->{
-			trace('HOTLOAD: Loaded :', HOT_LOAD.length);
+			trace('  loaded : ${HOT_LOAD.length}');
 			if (onLoad != null) onLoad();
 			if (cb != null) cb();
 		};
@@ -90,7 +91,7 @@ class Dassets
 				get.url = Macros.getProjectPath() + it; // Assumes A is a real path
 				trace(" Loading :: ", get.url);
 				get.onLoad = (g)->{
-					trace("[OK]");
+						trace("[OK]");
 					files.set(it, g.data);
 					next();
 				};
@@ -101,6 +102,10 @@ class Dassets
 				};
 				get.load();
 		});
+		
+		#else
+			throw "Not supported, must define HOT_LOAD";
+		#end
 	}//---------------------------------------------------;
 	
 	
@@ -115,7 +120,6 @@ class Dassets
 	public function getTextFile(path:String, onComplete:String->Void)
 	{
 		#if (HOT_LOAD)
-		trace(' [HOT_LOAD] - Loading "$path" as Text...');
 		
 		var get = new djfl.net.DataGet();
 			get.url = Macros.getProjectPath() + path;
@@ -126,11 +130,11 @@ class Dassets
 				trace('Error: Could not get path..');
 				onComplete(null);
 			};
+			trace('== HOTLOAD.getTextFile() :: ${get.url}');
 			get.load();
 			
 		#else
-			trace("Info: <HOT_LOAD> is not set, getting " + path + " from STATIC ASSETS");
-			onComplete(Assets.getText(path));
+			throw "Not supported, must define HOT_LOAD";
 		#end
 	}//---------------------------------------------------;
 		

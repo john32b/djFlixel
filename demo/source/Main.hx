@@ -21,6 +21,7 @@ import djFlixel.gfx.BoxScroller;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.RainbowStripes;
 import djFlixel.other.DelayCall;
+import djFlixel.other.GF_Blur;
 import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxMenu.MenuEvent;
 import djFlixel.ui.FlxToast;
@@ -38,7 +39,9 @@ class Main extends Sprite
 {
 	inline static var FPS = 60;
 	inline static var START_STATE = State_Boot;
-	//inline static var START_STATE = State_Menu1;
+	
+	// Global Filter Blur
+	public static var BLUR:GF_Blur;
 	
 	public function new() 
 	{
@@ -82,7 +85,10 @@ class Main extends Sprite
 			FlxToast.INIT(true);
 		});
 		
-		
+		// This is a simple and quick way to add a blurFilter
+		// Automatically adds event listeners and handles [F9] key (for debug)
+		BLUR = new GF_Blur(0.7, 1.5, 2);
+		BLUR.enabled = true;
 	}//---------------------------------------------------;
 	
 	
