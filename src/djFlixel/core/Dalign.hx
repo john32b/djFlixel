@@ -483,7 +483,7 @@ class Dalign
 	   Gets text with D.text.get();
 	   If you want to get Formated Text put a ~ at the start of the string. (Just make sure you have called D.text.formatAdd() to add formats)
 	   @param	str Starting with ~ will call D.text.getF()
-	   @param	P Check <_DEF_PLACE>
+	   @param	P Parameter overrides. Check {_DEF_PLACE}
 	   @param	st Text Style
 	   @return
 	**/

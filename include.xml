@@ -23,4 +23,7 @@
 	<!-- Haxe -->
 	<haxeflag name="--no-traces" unless="debug"/>
 	
+	<!-- `define` sets a value to be read by Project.xml and also Haxe -->
+	<define name="MP3" if="flash"/>
+	
 </project>

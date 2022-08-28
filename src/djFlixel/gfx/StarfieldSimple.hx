@@ -77,7 +77,7 @@ class StarfieldSimple extends FlxSprite
 			0xFF000000,			// Background color
 			Pal_DB32.COL[2],	// Blinking Stars
 			Pal_DB32.COL[17],	// Normal Main Stars
-			Pal_DB32.COL[8]		// Faster Foregrounf Stars
+			Pal_DB32.COL[8]		// Faster Foreground Stars
 		];
 	//---------------------------------------------------;
 
@@ -98,8 +98,11 @@ class StarfieldSimple extends FlxSprite
 		height = Height > 0 ? Height: FlxG.height;
 		moves = false;
 		
-		// --
-		makeGraphic(cast width, cast height, COLORS[0]);
+		scrollFactor.set(0, 0);
+		
+		// DEV: Non Unique graphics that share the same dimensions, share the same bitmap data
+		makeGraphic(cast width, cast height, COLORS[0], true);
+
 		// Init speeds and angles
 		STAR_ANGLE = DEF_TRAVEL_ANGLE;
 		// --
