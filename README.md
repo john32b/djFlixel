@@ -96,6 +96,10 @@ In the tool `D.bmu` you can find a useful **slice9** scaler, that works by tile-
 
 ## 📄 Notes 
 
+### Games with Source Code
+**NEW**, Checkout the Source Code of **FUTURE KNIGHT DX**, a game that uses djFlixel for the Menu System among other things  
+https://github.com/john32b/futureknightdx
+
 ### Project status and future
 Please note that this is just a side project of mine, I cannot guarantee any support or bugfixes. **This library is provided "as-is"**
 
