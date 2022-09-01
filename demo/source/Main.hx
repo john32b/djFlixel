@@ -89,6 +89,9 @@ class Main extends Sprite
 		// Automatically adds event listeners and handles [F9] key (for debug)
 		BLUR = new GF_Blur(0.7, 1.5, 2);
 		BLUR.enabled = true;
+		
+		
+		FlxG.autoPause = false;
 	}//---------------------------------------------------;
 	
 	

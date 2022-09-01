@@ -177,6 +177,9 @@ class Dsound
 			// DEV: The same music ID is playing (it can't be null)
 			// In case it was altered with a fade or something else:
 			mus.volume = customVolume;
+			if (restart) {
+				mus.play(true);
+			}
 		}
 		
 		if (mus.fadeTween != null) mus.fadeTween.cancel(); // Just in case

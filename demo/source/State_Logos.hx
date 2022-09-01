@@ -115,7 +115,7 @@ class State_Logos extends FlxState
 			case _:
 		}}, 0)); // 0 = Start sequencer now.
 		
-		D.snd.playMusic('track1');
+		D.snd.playMusic('track1',0,true);
 	}//---------------------------------------------------
 	
 }// --

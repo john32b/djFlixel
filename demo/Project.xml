@@ -24,7 +24,7 @@
 	<haxelib name="djFlixel"/>
 	
 	<!--<assets path="assets"/>-->
-	<library name="default" type="pak" if="hl" unless="debug"/>
+	<library name="default" type="gzip" if="desktop" unless="debug"/>
 	<assets path="assets/fonts" type="font" include="*.ttf|*.otf" rename="fnt"/>
 	<assets path="assets" type="image" include="*.png|*.jpg" rename="im"/>
 	<assets path="assets/sound_mp3" type="sound" include="*.mp3" rename="snd" if="flash"/>

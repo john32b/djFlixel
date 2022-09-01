@@ -25,7 +25,7 @@
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel=4.11.0&#xA;openfl=9.1.0&#xA;lime=7.9.0&#xA;hscript=2.4.0&#xA;djFlixel=0.5.0&#xA;HL_PATH=C:\HaxeToolkit\hl&#xA;next&#xA;FLX_NO_GAMEPAD&#xA;tools=7.9.0&#xA;DJFLX_SND=snd/&#xA;DJFLX_MUS=snd/&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;HOT_LOAD&#xA;openfl-disable-handle-error&#xA;web" />
+    <option directives="flixel=4.11.0&#xA;openfl=9.1.0&#xA;lime=7.9.0&#xA;hscript=2.4.0&#xA;djFlixel=0.5.0&#xA;HL_PATH=C:\HaxeToolkit\hl&#xA;next&#xA;FLX_NO_GAMEPAD&#xA;tools=7.9.0&#xA;DJFLX_SND=snd/&#xA;DJFLX_MUS=snd/&#xA;no-compilation&#xA;openfl-flash&#xA;FLX_NO_TOUCH&#xA;MP3&#xA;HOT_LOAD&#xA;openfl-disable-handle-error&#xA;web" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
