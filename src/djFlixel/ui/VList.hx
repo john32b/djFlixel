@@ -33,6 +33,7 @@ import djFlixel.core.Dcontrols;
 import djFlixel.other.StepLoop;
 import djFlixel.ui.IListItem;
 import djFlixel.ui.UIDefaults;
+import flixel.math.FlxPoint;
 import flixel.util.typeLimit.OneOfTwo;
 import flixel.group.FlxSpriteGroup;
 import flixel.FlxG;
@@ -203,6 +204,11 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var sind_ty:Int;		// Type 1 Repeat, 2 Loop, 3 Blink
 	var sind_loop:StepLoop;
 	var sind_el:Array<FlxSprite>;
+	
+	
+	#if (FLX_MOUSE)
+	var mCoords:FlxPoint;
+	#end
 
 	
 	/** This pushes Item Events , (eventID, Item) 
@@ -216,12 +222,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		`start` : Start button pressed. Works ONLY IF flag start_button_fire is false
 	*/
 	public var onListEvent:String->Void = null;
-	
-	
-	// These are used to calculate the correct x/y mouse coordinates. Taking into account current camera
-	// -1 means uninited, will be initialied on focus()
-	var _camMouseXFix:Int = -1;
-	var _camMouseYFix:Int = -1;
 	
 	
 	/**
@@ -308,12 +308,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (isFocused || isScrolling) return;
 		isFocused = true;
 		if (onListEvent != null) onListEvent("focus");
-		
-		if (FLAGS.enable_mouse && _camMouseXFix < 0)
-		{
-			_camMouseXFix = Std.int(camera.x / 2);
-			_camMouseYFix = Std.int(camera.y / 2);
-		}
 		
 		if (inputMode == 2) 
 		{
@@ -627,8 +621,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	function processMouse()
 	{
-		var mx = FlxG.mouse.x - _camMouseXFix;
-		var my = FlxG.mouse.y - _camMouseYFix;
+		// DEV: Just checking the X is enough to know that this menu is locked
+		if (this.scrollFactor.x == 0) {
+			mCoords = FlxG.mouse.getPositionInCameraView(this.camera);
+		}else{
+			mCoords = FlxG.mouse.getWorldPosition(this.camera);
+		}
 		
 		if (inputMode == 2)
 		{
@@ -645,10 +643,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			
 			// :: Now check if mouse is actually over an item
 			// :: Check for highlight
-			if ( my > _itm.y && 
-				 my < (_itm.y + _itm.height + STL.item_pad) &&
-				 mx >= x + itemSlotsXOrigin[c] - MOUSE_X_CHECK_PAD &&
-				 mx <= x + itemSlotsXOrigin[c] + _itm.width + MOUSE_X_CHECK_PAD + STL.focus_nudge
+			if ( mCoords.y > _itm.y && 
+				 mCoords.y < (_itm.y + _itm.height + STL.item_pad) &&
+				 mCoords.x >= x + itemSlotsXOrigin[c] - MOUSE_X_CHECK_PAD &&
+				 mCoords.x <= x + itemSlotsXOrigin[c] + _itm.width + MOUSE_X_CHECK_PAD + STL.focus_nudge
 			  )  
 			  {
 				if (!_itm.isFocused) 
@@ -664,7 +662,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 				// I am doing it this way so I don't have to change the function
 				if (FlxG.mouse.justPressed) {
 					// Sends the input along with xpos, ypos
-					_itm.onInput(click(Std.int(mx - _itm.x), Std.int(my - _itm.y)));
+					_itm.onInput(click(Std.int(mCoords.x - _itm.x), Std.int(mCoords.y - _itm.y)));
 					return;
 				}
 				break;	// No need to check anything else. An element was triggered

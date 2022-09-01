@@ -114,7 +114,7 @@ class D
 			if (IP.init != null) IP.init();
 		});
 		
-		#if (debug && FLX_KEYBOARD)
+		#if (debug)
 			// CHANGE: Always add debug keys for debug builds
 			trace('Debug : Enabling Debug keys');
 			FlxG.signals.postUpdate.add(_debug_keys);
@@ -126,7 +126,7 @@ class D
 	// Gets called right after the new state is created
 	static function onStateSwitch()
 	{	
-		#if (debug && FLX_KEYBOARD)
+		#if (HOT_LOAD)
 			DEBUG_RELOADED = false;
 		#end
 	}//---------------------------------------------------;
@@ -151,10 +151,11 @@ class D
 	
 	
 	
-	#if (debug && FLX_KEYBOARD)
+	#if (debug)
 	
 	/** Read this var to check whether the current state was reloaded with F12, useful in some cases */
 	public static var DEBUG_RELOADED:Bool = false;
+	
 	/**
 	 * Debug keys, autocalled on update.
 	 * F9 : Antialiasing toggle
@@ -163,7 +164,11 @@ class D
 	 */
 	static function _debug_keys()
 	{
+		#if html5
+		if (FlxG.keys.justPressed.DELETE) {
+		#else
 		if (FlxG.keys.justPressed.F12) {
+		#end
 			if (FlxG.keys.pressed.SHIFT){
 				FlxG.resetGame();
 			}else{

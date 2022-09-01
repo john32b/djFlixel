@@ -194,7 +194,8 @@ class FlxMenu extends FlxGroup
 	
 	
 	/** This is a Quick Way to create and return a MenuPage 
-	 *   plus it gets added to the FlxMenu pages DB */
+	 *  plus it gets added to the FlxMenu pages DB 
+	 *  - Check in <MPageData> class on how to create a Menu Page */
 	public function createPage(id:String, ?title:String):MPageData
 	{
 		var p = new MPageData(id, title);

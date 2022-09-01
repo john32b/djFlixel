@@ -26,4 +26,8 @@
 	<!-- `define` sets a value to be read by Project.xml and also Haxe -->
 	<define name="MP3" if="flash"/>
 	
+	
+	<!-- Make hotload permanent? -->
+	<!-- <haxedef name="HOT_LOAD" if="debug desktop"/> -->
+	
 </project>
