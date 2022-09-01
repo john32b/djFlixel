@@ -26,6 +26,8 @@
 	<!-- `define` sets a value to be read by Project.xml and also Haxe -->
 	<define name="MP3" if="flash"/>
 	
+	<!-- Because I am using Reflect to get the easing functions, make sure DCE won't eat them -->
+	<haxeflag name="--macro keep('flixel.tweens.FlxEase')"/>
 	
 	<!-- Make hotload permanent? -->
 	<!-- <haxedef name="HOT_LOAD" if="debug desktop"/> -->
