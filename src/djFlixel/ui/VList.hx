@@ -207,7 +207,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	
 	#if (FLX_MOUSE)
-	var mCoords:FlxPoint;
+	var oCoords:FlxPoint = FlxPoint.weak();
 	#end
 
 	
@@ -619,80 +619,93 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	
+	// Check if point overlaps with an item
+	// DEV: Note that I am not checking for the actual item rectangle
+	//      since the item could be scrolled to the side. I am checking
+	//		the position the item should be when idle
+	function _pointOverlapsWithSlot(cX:Float, cY:Float, cSlot:Int):Bool
+	{
+		_itm = itemSlots[cSlot];
+		if (_itm == null) return false;
+		return ( 
+			cY > _itm.y && cY < (_itm.y + _itm.height + STL.item_pad) &&
+			cX >= x + itemSlotsXOrigin[cSlot] - MOUSE_X_CHECK_PAD &&
+			cX <= x + itemSlotsXOrigin[cSlot] + _itm.width + MOUSE_X_CHECK_PAD + STL.focus_nudge );
+	}//---------------------------------------------------;
+	
 	function processMouse()
 	{
 		// DEV: Just checking the X is enough to know that this menu is locked
+		var mCoords:FlxPoint;
 		if (this.scrollFactor.x == 0) {
 			mCoords = FlxG.mouse.getPositionInCameraView(this.camera);
 		}else{
 			mCoords = FlxG.mouse.getWorldPosition(this.camera);
 		}
 		
-		if (inputMode == 2)
-		{
-			
-		// :: Check only when it is inside the general area of the menu box
-		// Off, because this can cause bugs when the arrow is at the rightest edge.
-		// Also, not much CPU is gained, because it's the same as if the cursor is always ON the menu, 
-		//if (!(mx >= x && mx <= x + menu_width && my >= y && my <= y + menu_height)) return;
-		
-		// :: Rollover, Clicks check
-		for (c in 0...slotsTotal) {
-			_itm = itemSlots[c]; // For readability
-			if (_itm == null) break;	// Few items in many slots.
-			
-			// :: Now check if mouse is actually over an item
-			// :: Check for highlight
-			if ( mCoords.y > _itm.y && 
-				 mCoords.y < (_itm.y + _itm.height + STL.item_pad) &&
-				 mCoords.x >= x + itemSlotsXOrigin[c] - MOUSE_X_CHECK_PAD &&
-				 mCoords.x <= x + itemSlotsXOrigin[c] + _itm.width + MOUSE_X_CHECK_PAD + STL.focus_nudge
-			  )  
-			  {
-				if (!_itm.isFocused) 
-				{
-					if(item_isSelectable(_itm))
-					{
-						indexData += c - indexSlot;	// Point to correct data
-						indexSlot = c;
-						on_dataIndexChange();
-					}
-				}
-				// Send the X,Y Coordinates along with the click status to the item
-				// I am doing it this way so I don't have to change the function
-				if (FlxG.mouse.justPressed) {
-					// Sends the input along with xpos, ypos
-					_itm.onInput(click(Std.int(mCoords.x - _itm.x), Std.int(mCoords.y - _itm.y)));
-					return;
-				}
-				break;	// No need to check anything else. An element was triggered
-			}
-		}// --
-		
+		var mouseMoved = !mCoords.equals(oCoords);
+		if (mouseMoved) {
+			oCoords.put();
+			oCoords = mCoords;
+		}else {
+			mCoords.put();
 		}
 		
-		// :: Wheel Check
+		//mCoords.equals(oCoords);
 		
-		if (FlxG.mouse.wheel < 0) {
-		if (overflows && inputMode > 0) {
-			if (scrollDown1())
+		// :: Check mouse Scroll - 
+		//  Anywhere on the screen for now
+		if (overflows && inputMode > 0) 
+		{
+			if (FlxG.mouse.wheel < 0 && scrollDown1()) 
 			{
 				if(inputMode==2) {
 					indexData++;
 					on_dataIndexChange();
 				}
+				return;
 			}
-		}}else
-		if (FlxG.mouse.wheel > 0) {
-		if (overflows && inputMode > 0) {
-			if (scrollUp1())
+		
+			if (FlxG.mouse.wheel > 0 && scrollUp1()) 
 			{
 				if(inputMode==2) {
 					indexData--;
 					on_dataIndexChange(); 
 				}
+				return;
 			}
-		}}
+		}// --
+		
+		// :: Check for item interaction
+		if (inputMode < 2) return;
+		
+		// :: Rollover, Clicks check
+		for (slot in 0...slotsTotal) 
+		{
+			if (_pointOverlapsWithSlot(mCoords.x, mCoords.y, slot))
+			{
+				if (FlxG.mouse.justPressed) 
+				{
+					_itm.onInput(click(Std.int(mCoords.x - _itm.x), Std.int(mCoords.y - _itm.y)));
+					mouseMoved = true;
+				}
+				
+				if (!mouseMoved) continue;
+				
+				if (!_itm.isFocused) 
+				{
+					if(item_isSelectable(_itm))
+					{
+						indexData += slot - indexSlot;	// Point to correct data
+						indexSlot = slot;
+						on_dataIndexChange();
+					}
+				}
+				
+				break;	// No need to check anything else. An element was triggered
+			}
+			
+		}// --
 		
 	}//---------------------------------------------------;
 	
