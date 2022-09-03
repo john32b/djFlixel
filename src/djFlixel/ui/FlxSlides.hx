@@ -81,9 +81,7 @@ class FlxSlides extends FlxGroup
 	public function new(?P:Dynamic) 
 	{
 		super();
-		if (P != null) {
-			params = DataT.copyFields(P, Reflect.copy(params));
-		}
+		params = DataT.copyFields(P, params);
 	}//---------------------------------------------------;
 	
 	// --

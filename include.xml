@@ -20,8 +20,8 @@
 	<haxedef name="FLX_NO_MOUSE" 	if="mobile"/>
 	<haxedef name="FLX_NO_KEYBOARD" if="mobile"/>
 
-	<!-- Haxe -->
-	<haxeflag name="--no-traces" unless="debug"/>
+	<!-- Disabled. User should decide -->
+	<!-- <haxeflag name="--no-traces" unless="debug"/> -->
 	
 	<!-- `define` sets a value to be read by Project.xml and also Haxe -->
 	<define name="MP3" if="flash"/>
