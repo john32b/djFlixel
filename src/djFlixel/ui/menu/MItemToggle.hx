@@ -83,7 +83,7 @@ class MItemToggle extends MItem
 			data.P.c = !data.P.c;
 			data_refresh();
 			_setBox(lastState); // This is mainly to redraw the correct bitmap 
-			callback(fire);
+			callback(change);  callback(fire);
 			case _:
 		}
 	}//---------------------------------------------------;

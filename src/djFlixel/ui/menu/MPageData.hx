@@ -38,8 +38,8 @@ class MPageData
 
 		// -- The following are used internally :
 		
-		indexStash:-1,		// Stores last selected index when unfocus(). Helps FlxMenu remember selected 
-							// indexes when going back() | Also used on some other cases
+		cindex:-1,			// Remembers cursor index. Helps FlxMenu remember selected 
+							// indexes when going back() | Also used on some other cases.
 							
 		noPool:false,		// Will not pool the MPage, Used in dynamic pages.
 		isPopup:false		// True for confirmation popups.
@@ -144,10 +144,9 @@ class MPageData
 		}
 		
 		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back');
-		P.PAR.isPopup = true;
 		P.PAR.noPool = true;
 		P.PAR.slots = P.items.length;
-		P.PAR.indexStash = P.items.length - 1;	// Select the last index. Must also enable a FlxMenu _flag
+		P.PAR.cindex = P.items.length - 1;	// Highlight the last one by default
 		return P;
 	}//---------------------------------------------------;
 	

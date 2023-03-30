@@ -3,7 +3,7 @@
 This is an all around demonstration of the library. Incorporates most of the tools and objects. Build normally as you would any other flixel project.
 
 e.g. build for **HashLink**:  
-`haxelib run lime build "Project.xml" hl`
+`haxelib run lime build hl`
 
 
 ## Third Party assets used in the demo :

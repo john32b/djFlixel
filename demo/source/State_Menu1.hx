@@ -69,6 +69,9 @@ class State_Menu1 extends FlxState
 		}));
 		
 		m.PAR.start_button_fire = true;
+		
+		m.STP.align = "left";	// Also try "center" and "justify"
+		
 		add(m);
 
 		// ---
@@ -167,7 +170,7 @@ class State_Menu1 extends FlxState
 					// This link has a confirmation attached to it
 					// and will only be fired when user said YES
 					case "id_quit":
-						Main.goto_state(State_Menu,"let");
+						Main.goto_state(State_MainMenu,"let");
 					
 					case "id_qual":
 						FlxToast.FIRE('Graphics set to: #${item.get()}#', {bg:0xFF868690, screen:"top:right"});
@@ -177,12 +180,10 @@ class State_Menu1 extends FlxState
 						FlxToast.FIRE('Antialiasing #$a#', {bg:0xFF868690, screen:"top:right"});
 
 					case "l_game":
-						// Prevent inputs
-						m.unfocus();
+						m.close(); // Prevent inputs until loader finishes
 						Main.create_add_8bitLoader(0.5, State_Game1);
 							
 					case "l_next":
-						// Prevent inputs
 						m.close();
 						// - Switch with a custom effect
 						new common.SubState_Letters(".-\\|/-.",

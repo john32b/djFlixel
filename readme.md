@@ -1,8 +1,5 @@
 
-**djFlixel** v**0.5.0** *(2022-08)*  
-**Author** : John32b  
-**License** : MIT  
-**Requires** : Haxe 4.2, HaxeFlixel 4.11  
+> :star: **NEW UPDATE** (2023-03) `V0.5.4` Breaks a few things. Checkout the [Changelog](#dna-changelog) below
 
 # 🔦 What is it
 
@@ -12,16 +9,15 @@
 
 The codebase is commented, and I hope that you may find it easy to use. Plus I made a **demo showcase app** that utilizes most of the parts of **djFlixel**; you can find the demo source files in the `/demo` folder.
 
-**Checkout the HTML5 version of the DEMO here: https://john0032.itch.io/djflixel**
+**Checkout the HTML5 version of the DEMO here: https://john0032.itch.io/djflixel** :point_left: :point_left:
 
-
-## Install
+### Install
 
 ```sh
 haxelib git djFlixel https://github.com/john32b/djFlixel
 ```
 
-
+<!------------------------------------>
 
 # 🧰 Main Features
 
@@ -29,9 +25,8 @@ haxelib git djFlixel https://github.com/john32b/djFlixel
 
 ![flxmenu_demo](_readme/flxmenu.gif)  
 
-A multi-page menu system. Best used for creating simple game menus. It's very simple to setup and use. Supports **links**, **checkboxes**, **list selection**, **number selection**. If offers a simple callback system to get events, like when an item was changed or focused. Also the visual style is customizable from the colors, fonts, animation times and offsets to custom cursors, etc.
+A multi-page menu system. Best used for creating short game menus. It is simple to setup and use. Supports **links**, **checkboxes**, **list selection**, **number selection**. It offers a simple callback system to get events *(like when an item was changed or focused)*. Also the visual style is customizable from the colors, fonts, animation times, tween offsets to custom cursors, etc. *(Examples in the Demo project source code)*
 
----
 
 ## FlxAutotext
 
@@ -39,7 +34,6 @@ A multi-page menu system. Best used for creating simple game menus. It's very si
 
 An autotype text object that supports a simple inline **tagging** system. Meaning that you can insert special tags in the source string that change the behavior on the fly, like adding pauses, triggering user callbacks or changing the character speed.
 
----
 
 ## FX Package
 
@@ -69,7 +63,6 @@ In the folder/package `djflixel/gfx` you can find some tools for creating variou
 - `D.save` : Save functions helper.
 - `D.dest` : Helper object offering extra destroying functions, like tweens, or timers (*Use it like FlxDestroyUtil*)
 
----
 
 ## ⛓️ Other
 
@@ -92,66 +85,83 @@ In the tool `D.bmu` you can find a useful **slice9** scaler, that works by tile-
 
 ![slice9](_readme/slice9.png) 
 
----
+<!------------------------------------>
 
-## 📄 Notes 
+# 📄 Notes 
 
 ### Games with Source Code
-**NEW**, Checkout the Source Code of **FUTURE KNIGHT DX**, a game that uses djFlixel for the Menu System among other things  
+:sunflower: **NEW**, Checkout the Source Code of **FUTURE KNIGHT DX**, a game that uses djFlixel for the Menu System among other things  
 https://github.com/john32b/futureknightdx
+
+<!-- ### Games using this library
+Tomb Explorer : https://john0032.itch.io/tombexplorer  
+Future Knight Remix : https://john0032.itch.io/futurek  
+:exclamation: *If you have a program that uses this library, pm me and I'll add it here.* -->
 
 ### Project status and future
 Please note that this is just a side project of mine, I cannot guarantee any support or bugfixes. **This library is provided "as-is"**
 
 ###  Is there any documentation?
-No. For a practical example checkout the `demo/` directory, it is an application that puts many of the components in use; it is heavily commented and I hope it explains things well. Also the library files themselves are commented. So feel free to dive into the codebase.  
+Yes, but only inside the the source code. :see_no_evil: . For practical examples checkout the `demo/` directory, it is an application that puts many of the components in use; it is heavily commented and I hope it explains things well. Also the library files themselves are commented. So feel free to dive into the codebase. :badger:
 
-> **❗ I have no plans to make a wiki or any other form documentation for this library.**
+> **I have no plans to make a wiki or any other form documentation for this library.**
 
+<!------------------------------------>
 
-### Notes on some library source files
+# :dna: Changelog
 
-In the source files you will find two extra folders/namespaces `djA` and `djfl`.
-
-- `djA` includes some target agnostic code. Code that can be used in all HAXE targets, like nodejs.
-- `djfl` includes code that is specific to OpenFL.
-
-Those are partial personal libraries that I use in some projects, but I'll probably never going to publish. So I did a copy paste of the specific files **djFlixel** uses and put them in a proper namespace folder structure, so **djFlixel** compiles.
-
-
-### Issues?
-
-- It seems to be that some fonts don't work well in **HTML5**, they appear to produce taller text objects than the other targets, and this throws off all the automatic positioning a bit. `FlxMenu` and `FlxAutotext` are affected. However I tried to implement a **hack/fix** for such cases. Readup on `MPageStyle` and `DTextStyle`, plus check the `demo/` sources for an application example.
-
-
-<!-- ### Games using this library
-
-Tomb Explorer : https://john0032.itch.io/tombexplorer  
-Future Knight Remix : https://john0032.itch.io/futurek  
-:exclamation: *If you have a program that uses this library, pm me and I'll add it here.*   -->
-
-## ✏️ Changelog
-
-**- V0.5 -- breaking changes from v0.4**
+**- V0.5.4 (2023-03)** 
 ```text
-- FlxMenu, changed way you declare pages and items
-- FlxMenu bugfixes, and a new plugin system
-- FlxAutotext, bugs fixed
-- FlxMenu, changed the way styles are processed/stored. Styles are more unified now
-- D.snd breaking changes, there is a new better way to declare sound assets
-- StaticNoise is now working in HTML5
-- D.assets, rewrite and partially depracating it
-- NEW: FlxToast, brought back from v0.3
-- DelayedCall, changed init parameter order
-- D.text HTML5 tall font hack-fix
-- Refactored code in MItemData, it is way better now
-- Updated the DEMO
-- General code cleanup, and more that smaller things I don't remember
+== very few breaking changes ==
+FlxMenu:
+  - Changed a few fields for declaring the custom style objects (FlxMenu.STP)
+  + 'focus_anim' replacing 'focus_anim', is an object
+     that supports more options, like animating on the y axis
+  - 'cursor' field now takes more animation options, check <MCursorStyle>
+  - 'background' is now an object that takes {color,padding}
+  + 'lerp' is a new parameter, that handles the speed of a centered
+     item that changes width and needs to reorient itself
+  + Ability to customize the "popup questions" menu with "FlxMenu.popSTo"
+  . Few bugfixes, the mouse will now trigger range/list items with precision 
+  
+>> For any breakage: consult the source code and the compiler. 
+   it should be very easy to adopt to the new version.
 ```
 
-## 📮 Closing
+**- V0.5 (2022-08)** 
+```text
+== Breaking changes from v0.4 ==
+  - FlxMenu, changed way you declare pages and items
+  - FlxMenu bugfixes, and a new plugin system
+  - FlxAutotext, bugs fixed
+  - FlxMenu, changed the way styles are processed/stored. Styles are more unified now
+  - D.snd breaking changes, there is a new better way to declare sound assets
+  - StaticNoise is now working in HTML5
+  - D.assets, rewrite and partially depracating it
+  - NEW: FlxToast, brought back from v0.3
+  - DelayedCall, changed init parameter order
+  - D.text HTML5 tall font hack-fix
+  - Refactored code in MItemData, it is way better now
+  - Updated the DEMO
+  - General code cleanup, and more that smaller things I don't remember
+```
 
+<!------------------------------------>
+
+# 📮 Closing
+
+### Notes on some library source files
+- In the source files you will find two extra folders/namespaces `djA` *(Target agnostic library)* and `djfl` *(Openfl library)*. Don't worry about those, they are partial personal libraries that are not published but djFlixel uses. So I am bundling the files needed to compile.
+
+### Issues?
+- It seems to be that some fonts don't work well in **HTML5**, they appear to produce taller text objects than the other targets, and this throws off all the automatic positioning a bit. `FlxMenu` and `FlxAutotext` are affected. However I tried to implement a **hack/fix** for such cases. Readup on `MPageStyle` and `DTextStyle`, plus check the `demo/` sources for an application example.
+
+### About
 I started creating this library in 2015-2016, recently I reseted the commit history to a fresh start. The older versions prior to 0.4 are available in the TAG releases here on GitHub.
 
 Thanks for checking this out 😸,  
 John.
+
+---
+
+**djFlixel** : **0.5.4** *(2023-03)*  | **Author** : john32b  | **License** : MIT 

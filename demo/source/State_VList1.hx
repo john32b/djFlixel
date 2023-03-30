@@ -161,7 +161,8 @@ class State_VList1 extends FlxState
 		//        If I am to make changes, I'd better create a unique copy first
 		//		  Else I will be modifying the shared global style :-/
 		list.STL = DataT.copyDeep(list.STL);
-		list.STL.focus_nudge = 1;
+		list.STL.focus_anim.x = 1;
+		//list.STL.focus_nudge = 1;
 		list.STL.item_pad = 3;
 		
 		// You can check to see whether an item was triggered here
@@ -213,7 +214,7 @@ class State_VList1 extends FlxState
 		super.update(elapsed);
 		if (D.ctrl.justPressed(DButton.B) || FlxG.keys.justPressed.ESCAPE)
 		{
-			Main.goto_state(State_Menu, "8bit");
+			Main.goto_state(State_MainMenu, "8bit");
 		}
 	}//---------------------------------------------------;
 	

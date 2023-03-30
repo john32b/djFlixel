@@ -21,17 +21,15 @@ import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets;
 import djFlixel.gfx.FilterFader;
 import djFlixel.ui.MPlug_Header;
+import flixel.tweens.FlxEase;
 import flixel.util.FlxStringUtil.LabelValuePair;
 import haxe.display.Display.GotoDefinitionResult;
 
 class State_Menu2 extends FlxState
 {
 	
-	//static var AA = 
-	// Kapel
 	// Custom user update
 	var u:Void->Void = ()->{}; 
-	
 	
 	// For calling Main.bg_scroller;
 	var scrollCombo = [ 
@@ -80,14 +78,15 @@ class State_Menu2 extends FlxState
 		// For a complete rundown on what it can do, refer to <MPageStyle> defined in "Mpage.hx"
 		
 		//m.STP.loop = true;
-		m.STP.focus_nudge = 0;
-		m.STP.scroll_time = 0.1;
+		m.STP.align = "center";		// [left,center,justify]
+		m.STP.focus_anim.x = 0;		// X target when focused | I am changing this because the default has a value
+		m.STP.scroll_time = 0.1;	// Time to scroll when elements come in from the top/bottom
+		m.STP.item_pad = 2;			// Padding between items
+		m.STP.background = { color:0xFF222230, padding:[0, 0, 0, 0] };
+		// -- vt (ViewTweens) when the menu comes in/out
 		m.STP.vt_IN = "-22:0|0.25:0.04";	// When coming in start from (-10,0) | 0.2 duration 0.1 wait
 		m.STP.vt_OUT = "22:0|0.25:0.04";	// The same for going out, but end in (10,0) offset
-		m.STP.item_pad = 2;				// Padding between items
-		m.STP.vt_in_ease = "bounceOut";	// Customize the easing function
-		m.STP.background = 0xFF222230;
-		m.STP.align = "center";		// left,justify
+		m.STP.vt_in_ease = "bounceOut";		// Ease in function name from FlxEase
 		
 		// HTML5 is wonky with some fonts metrics
 		#if (html5)
@@ -122,10 +121,16 @@ class State_Menu2 extends FlxState
 		m.STP.cursor = {
 			bitmap : FlxAssets.getBitmapData('im/menu_style.png'),
 			anim  : "16,10,0,1,2,3,4,5,6",	// 16 size, 10 fps, 0,1,2,3,4,5,6 frames to loop
-			tmult : 0.9,					// required field
-			offset : [-2,2]					// required field
+			offset : [ -2, 2],				// required field
+			tween:{
+				time:0.5,			// Time to complete the animation tween
+				x0: -32, 			// Start at -32 pixels from the baseline
+				x1:0,				// End at +0 pixels from the baseline
+				a0:0.4, a1:1,		// Start alpha 0.4 | End alpha 1.0
+				ease:"bounceOut"	// name of the function in FlxEase
+			}
 		};
-		
+		//
 	
 		// - Set custom checkbox bitmaps
 		var bit = FlxAssets.getBitmapData('im/menu_style.png');
@@ -189,12 +194,16 @@ class State_Menu2 extends FlxState
 		// - It will overlay attributes on top of the global FlxMenu style
 		// - NOTE: Best used for small changes; this is just to show that you can change many stuff
 		p2.STPo = {
-			vt_IN:"0:-40|0.5:0.2",
-			vt_OUT:"0:-40|0.4:0.2",
-			vt_in_ease:"backInOut",
+			vt_IN:"0:-24|0.5:0.15",
+			vt_OUT:"0:-24|0.3:0.08",
+			vt_in_ease:"elasticOut",
+			vt_out_ease:"elasticIn",
 			loop:true,
 			align:"left",
-			background:0x55FFFFFF,
+			background:{
+				color:0x77FFFFFF,
+				padding:[2, 2, 2, 2]
+			},
 			item:{
 				text:{
 					f:"fnt/mozart.ttf",
@@ -207,7 +216,13 @@ class State_Menu2 extends FlxState
 				anim:null,
 				bitmap:null,
 				text:">",
-				color:{c:0xFFEEE209}
+				color:{c:0xFFEEE209},
+				tween:{
+					time:0.2,
+					x0:-4,
+					x1:0,
+					ease:"linear"
+				}
 			}
 		};
 
@@ -222,13 +237,17 @@ class State_Menu2 extends FlxState
 			-| Four | link | .
 			-| Five | link | .
 			-| Six | link | .
+			-| more| list | . | djFlixel v0.5.4,added,smooth animations,for centered,dynamic sized,items,like this one | loop=true
 			-| Go to Root | link | id_root
 			-| Go Back | link | @back
 		");
 		
 		p3.PAR.slots = 3;
 		p3.STPo = {
-			background:null,
+			background: {
+				color:0xFF443344,
+				padding:[2,32,2,32]
+			},
 			item:{
 				text:{
 					bt:1,
@@ -241,7 +260,7 @@ class State_Menu2 extends FlxState
 					accent:0xcc3f7b
 				},
 			}	
-		}
+		};
 		
 		// :: NEW
 		// - FlxMenu Header Title
@@ -270,7 +289,7 @@ class State_Menu2 extends FlxState
 					
 					case "id_main":
 						m.unfocus();
-						Main.goto_state(State_Menu, "fade");
+						Main.goto_state(State_MainMenu, "fade");
 						
 					case "id_root":
 						m.goHome();

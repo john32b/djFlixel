@@ -8,7 +8,7 @@ enum ListItemEvent
 	focus;		// Item received focus
 	fire;		// Item was activated ( for FLXMenu this fires for list,range,toggle as well )
 	invalid;	// Whenever a disabled item receives input. Useful for producing sound effects
-	change;		// Item value changed  -- UNUSED FOR NOW -- FLXMenu range, list and toggle produce a fire event
+	change;		// The item value changed ( FlxMenu works with the fire event mostly )
 }
 
 /**

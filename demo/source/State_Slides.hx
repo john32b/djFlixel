@@ -39,7 +39,7 @@ class State_Slides extends FlxState
 		SL.setArrows(12, 12, 80, 300);
 		SL.onEvent = (e)->{
 			if (e == "close") {
-				Main.goto_state(State_Menu, "let");
+				Main.goto_state(State_MainMenu, "let");
 			}else
 			if (e == "next" || e == "previous") {
 				D.snd.play('hihat');

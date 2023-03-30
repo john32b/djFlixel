@@ -11,8 +11,8 @@
 		- Checkout <DSound.hx> on how to init sounds 
 		- On DEBUG builds, _debug_keys() is enabled
 		
-	= COMPILE =
-	
+	= TIPS =
+
 		- You can set a custom BUILD dir with {OUT} | lime build project.xml hl -DOUT=A:\tmp\
 		
 		

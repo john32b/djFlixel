@@ -14,7 +14,7 @@ import flixel.util.FlxColor;
 
 class State_TextScroll extends FlxState
 {
-	var NEXTSTATE = State_Menu;
+	var NEXTSTATE = State_MainMenu;
 	var SCROLLER_TEXT =  "djFlixel - Tools and helpers for HaxeFlixel   "; // keep it short
 	
 	override public function create():Void 

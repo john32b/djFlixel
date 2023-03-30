@@ -24,6 +24,8 @@ class MItemList extends MItem
 	var offy:Int = 1;	// Y offset, applies to Bitmap Arrows (style set)
 	var offx:Int = 0;	// X offset for the second arrow. Bitmap arrows, offset to 1 (No style)
 	
+	var _width:Float = 0;	// Precalculates _width
+	
 	/**
 	`check` If true, will check the 3,4 slots on style (ar_bm, ar_txt) and load these. 
 			This is used by MItemRange. Fallbacks to [0,1] if nothing is set to [3,4]
@@ -66,7 +68,7 @@ class MItemList extends MItem
 		}
 		add(ar0);
 		add(ar1);
-		
+		MP.ghostArrowWidth = Std.int(ar1.width + offx);
 		// -- Move arrows
 		var c = st.ar_anim.split(','); 
 		stimer = new StepLoop(Std.parseInt(c[0]), Std.parseInt(c[1]), Std.parseFloat(c[2]), update_arrowNudge);
@@ -85,15 +87,14 @@ class MItemList extends MItem
 		if (data.P.loop){
 			arStat[0] = arStat[1] = true;
 		}
-		refresh_data();
-		switch(mp.STP.align) {
-			case "justify": 
-			label2.x = x + mp.menu_width - label2.width;
-			default: 
+		
+		if (mp.STP.align != "justify" ) 
+		{
 			label2.x = label.x + label.width + st.part2_pad + Math.max(ar0.width - st.part2_pad, 0);
 			// pad + if the arrow is width, the difference of pixels to make the arrow fit
-			
 		}	
+		
+		refresh_data();
 	}//---------------------------------------------------;
 	
 	
@@ -131,7 +132,7 @@ class MItemList extends MItem
 			data.P.c = c;
 			refresh_data();
 			stimer.fire();	// note this updates arrow x pos
-			callback(fire);
+			callback(change); callback(fire); 
 			return;
 		}
 		if (inp == left)
@@ -143,7 +144,7 @@ class MItemList extends MItem
 			data.P.c = c;
 			refresh_data();
 			stimer.fire();	// note this updates arrow x pos
-			callback(fire);
+			callback(change); callback(fire);
 			return;
 		}
 	}//---------------------------------------------------;
@@ -182,6 +183,8 @@ class MItemList extends MItem
 		
 		refresh_arrowStates();
 		
+		_width = label2.x + label2.width - label.x;
+		
 	}//---------------------------------------------------;
 	
 	// This is a hacky way to transform a click to left/right inputs
@@ -197,5 +200,12 @@ class MItemList extends MItem
 		}
 		return inp;
 	}//---------------------------------------------------;
+	
+	
+	override function get_width():Float 
+	{
+		return _width;
+	}
+		
 	
 }// --

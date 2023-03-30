@@ -11,34 +11,20 @@ package djFlixel.ui.menu;
 
 import djA.DataT;
 import djFlixel.ui.FlxMenu;
+import djFlixel.ui.IListItem.ListItemEvent;
 import djFlixel.ui.UIDefaults;
 import djFlixel.ui.VList;
 import djFlixel.ui.menu.*;
+import djFlixel.ui.menu.MCursor;
+import djFlixel.ui.menu.MCursor.MCursorStyle;
 import djFlixel.ui.menu.MItem.MItemStyle;
 import djFlixel.core.Dtext.DTextStyle;
+import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.math.FlxMath;
 import flixel.tweens.FlxTween;
 import openfl.display.BitmapData;
 
-
-/**
-   Properties for styling the Cursor
-   (The graphic indicator showing which item is selected)
-**/
-typedef MCursorStyle = {
-	
-	?text:String,		// Character to use for cursor, uses the same style as the Menu Items
-	?icon:String,		// Use a standard D.UI icon string format : "size:name" .e.g. "12:heart" | Auto color and shadow
-	?bitmap:BitmapData, // Use this bitmap for a cursor - Will be used as is, no colorization or shadow -
-	?color:DTextStyle,	// Colorize the Text/Bitmap with this. valid:{c,bc,bt,so} | null to get MItem Color
-	offset:Array<Int>,	// [x,y] Cursor Offset | [0,0] default
-	tmult:Float,		// Cursor tween time multiplier | 0:Instant tween. 0.9: Default
-	
-	?anim:String,		// Animated Cursor. You need to have (bitmap) set with a tilesheet
-						// "size,fps,frame0,frame1,frame2,frame3....."
-						// e.g. "16,10,10,11,12,13,13,11"
-	
-}
 
 
 /** Parameters/Styles for a MenuPage.
@@ -53,17 +39,22 @@ typedef MPageStyle = {
 	
 	> VListStyle,			// Defined in "VList.hx" | Appends all fields of VListStyle
 	
-	item:MItemStyle,		// Defined in "MItem.hx"
+	item:MItemStyle,		// Defined in "MItem.hx" | Style for Menu Items
 	
 	?cursor:MCursorStyle,	// Defined in this file | Null for no cursor
 	
-	?background:Int			// If set will create a solid color background
+	?background:{			// If set will create a solid color background
+		color:Int,			// color
+		padding:Array<Int>	// CSS like (top right bottom left) pad in pixels e.g. [2,2,2,2]
+	},
 	
+	lerp:Float,			// On 'center' aligned items, when they change in width they reposition
+						// with a lerp function. This is the multiplier. Give small values
 	
 	#if (html5)
 	// Some fonts in HTML5 don't report their height correctly and they are too tall
 	// This TRIES to fix that somewhat. Try to combine it with .item_pad
-	,item_height_fix:Int
+	item_height_fix:Int,
 	#end
 	
 }
@@ -72,10 +63,13 @@ typedef MPageStyle = {
 
 class MPage extends VList<MItem,MItemData>
 {
+	// When doing lerp to menu items auto-alignment. This should be enough, right?
+	public static var LERP_DURATION = 0.4;
+	
 	// Style Page. Includes all the styles. FlxMenu will set this to something
 	public var STP:MPageStyle;
 	
-	// Hold the page data
+	// Hold the actual page data
 	public var page(default, null):MPageData;
 	
 	// This is responsible for creating and caching of icons used in items
@@ -85,8 +79,16 @@ class MPage extends VList<MItem,MItemData>
 	@:allow(djFlixel.ui.FlxMenu)
 	var iconcache:MIconCacher;
 	
-	// Optional Background
+	// Optional Background Sprite, enabled by (STP.background)
 	var bg:FlxSprite;
+	
+	
+	// HACK:
+	// Items don't calculate their arrows in their .width
+	// This is to add some padding to the right, so that the 
+	// mouse can overlap with the true visible area (arrow included)
+	@:allow(djFlixel.ui.menu.MItem)
+	var ghostArrowWidth:Int = 0;
 	
 	/**
 	 * @param	X
@@ -98,7 +100,7 @@ class MPage extends VList<MItem,MItemData>
 	{
 		super(MItem, X, Y, WIDTH, SLOTS);
 		inputMode = 2; // Mode 2 = selectable items + cursor
-		FLAGS.fire_simple = false;
+		OPT.fire_simple = false;
 		STP = UIDefaults.MPAGE;
 	}//---------------------------------------------------;
 	
@@ -108,7 +110,7 @@ class MPage extends VList<MItem,MItemData>
 		super.unfocus();
 		if (indexData >= 0) {
 			// The last focused index is auto stashed
-			page.PAR.indexStash = indexData;
+			page.PAR.cindex = indexData;
 		}
 	}//---------------------------------------------------;
 	
@@ -121,16 +123,17 @@ class MPage extends VList<MItem,MItemData>
 		
 		page = p;
 		
-		if (p.PAR.isPopup) menu_width = 0;	// Force Auto width for popups. (Fixes popups for center alignment)
+		_mcheckpad = [2, 2];
 		
+		if (p.PAR.isPopup) menu_width = 0;	// Force Auto width for popups, helping the background box dimensions.
 		if (p.PAR.width != 0) menu_width = p.PAR.width;
 		if (p.PAR.slots > 0) slotsTotal = p.PAR.slots;
 
 		// -- Style Overlay
 		if (p.STPo != null)
 		{
-			// FlxMenu gave this a link
-			// I need to make a copy
+			// STP is a link to something (FlxMenu.pool_get())
+			// I need to make a copy so I can modify it
 			STP = DataT.copyDeep(STP);
 			STP = DataT.copyFields(p.STPo, STP);
 		}
@@ -138,8 +141,8 @@ class MPage extends VList<MItem,MItemData>
 		// Make VListStyle work with MPageStyle parameters
 		STL = STP;	
 		
-		// FLXMenu creates this and passes it to MPage.
-		// But for any case where MPage is used elsewhere I must it, before setDataSource()
+		// FlxMenu creates this and passes it to MPage
+		// if not create it before setDataSource()
 		if (iconcache == null) {
 			trace("Warning: ICONCACHE was not defined, defining now");
 			iconcache = new MIconCacher(STP.item);
@@ -148,82 +151,28 @@ class MPage extends VList<MItem,MItemData>
 		// Set data and init the items
 		setDataSource(page.items);
 		
-		//====================================================;
-		// SET CURSOR if it set in the Style 
-		//====================================================;
-		
-		if (STP.cursor == null) return;
-		
-		var C:MCursorStyle = STP.cursor;	// Write less
-		
-		if (C.anim != null)
+		// :: NEW : All cursor logic is in its own place
+		// TODO, Cache the cursor object to be reusable?
+		if (STP.cursor != null)
 		{
-			var dat = C.anim.split(',');
-			var size = Std.parseInt(dat.shift());
-			var fps = Std.parseInt(dat.shift());
-			var cur = new FlxSprite();
-			cur.loadGraphic(C.bitmap, true, size, size);
-			cur.animation.add("m", [for(i in dat) Std.parseInt(i)], fps);
-			cur.animation.play("m");
-			setCursor(cur, C.offset, C.tmult);
-			
-		}else{
-			
-			if (C.bitmap != null) {
-				C.bitmap.clone();
-				setCursor(C.bitmap.clone(), C.offset, C.tmult);
-			}
-			
-			else{
-				
-				var col:DTextStyle;	// Final Cursor color
-				
-				if (C.color == null) {
-					col = Reflect.copy(STP.item.text);
-					col.bc = STP.item.col_b.idle;	// modify it a bit to match better
-				}else{
-					col = C.color;
-				}
-				
-				if (C.icon != null) {
-					var b:BitmapData = null;
-					var ic = C.icon.split(':');
-						b = D.ui.getIcon(Std.parseInt(ic[0]), ic[1]);	
-						b = D.gfx.colorizeBitmapWithTextStyle(b, col);
-					setCursor(b, C.offset, C.tmult); // DEV: offset can be null OK
-					
-				}else{
-					// Text cursor
-					setCursor(cast D.text.get(C.text, col), C.offset, C.tmult);
-				}
-			}
+			cursor_set( new MCursor(STP) );
 		}
 		
 		
-		// -- Experimental --
-		// Check for BG
-		// Mostly used for popup questions for now.
+		// :: Experimental ::
+		// Background solid color
 		if (STP.background != null )
 		{
-			// TODO:
-			// Make the cursor + focus_nudge fit + some air?
-			//  |  MENU ITEM   |
-			//  | >> MENU ITEM |
+			var a = STP.background.padding;
+			var W:Int = menu_width + a[1] + a[3];
+			var H:Int = cast ((overflows?menu_height:height) + a[0] + a[2]);
 			
 			bg = new FlxSprite();
-			var W:Int = menu_width;
-			if (STP.align == "left")
-			{
-				var CW = (cursor != null)?cursor.width:0;	
-				bg.x = STP.focus_nudge - CW;
-				// DEV: The width I want = itemWidth + nudge + cursor_width - nudge 
-				W += cast CW;
-			}
-			
-			bg.makeGraphic(W, cast overflows?menu_height:height, STP.background);
-			
+			bg.makeGraphic(W, H, STP.background.color);
+			bg.x -= a[3];
+			bg.y -= a[2];
 			insert(0, bg);
-			
+
 			// DEVNOTE:
 			// I could make it work with events? Something like:
 			// onEvent("viewOn",()->{
@@ -234,16 +183,21 @@ class MPage extends VList<MItem,MItemData>
 	}//---------------------------------------------------;
 	
 	// DEVNOTE: All this code just to fade the bg in and out..
-	override function tween_allSlots(Alpha:Array<Float>, StartOffs:String, EndOffs:String, times:String, onComplete:Void->Void, ease:String, hardstart:Bool):Void 
+	override function tween_allSlots(Alphas:Array<Float>, StartOffs:String, EndOffs:String, Times:String, onComplete:Void->Void, ease:String, hardstart:Bool):Void 
 	{
-		super.tween_allSlots(Alpha, StartOffs, EndOffs, times, onComplete, ease, hardstart);
+		super.tween_allSlots(Alphas, StartOffs, EndOffs, Times, onComplete, ease, hardstart);
 		if (bg == null) return;
-		var tt:Array<Float> = times.split(':').map((s)->Std.parseFloat(s));
+		var tt:Array<Float> = Times.split(':').map((s)->Std.parseFloat(s));
+		
+		// ARBITRARY? About half the time it takes everything to come in/out
+		var totaltime = (tt[0] + (tt[1] * slotsTotal)) * 0.5;
+		
 		if (tween_map.exists(bg)) { 
 			tween_map.get(bg).cancel();
 		}
-		bg.alpha = Alpha[0];
-		tween_map.set(bg, FlxTween.tween( bg, {alpha:Alpha[1]} , tt[0]));
+		
+		bg.alpha = Alphas[0];
+		tween_map.set(bg, FlxTween.tween( bg, {alpha:Alphas[1]} , totaltime));
 	}//---------------------------------------------------;
 	
 	// Initializes the emenu, and focuses the first available
@@ -336,6 +290,62 @@ class MPage extends VList<MItem,MItemData>
 			fromIndex += direction;
 		}
 		return -1;
+	}//---------------------------------------------------;
+	
+	// --
+	override function on_dataIndexChange():Void 
+	{
+		lerp = 0;
+		
+		super.on_dataIndexChange();
+		
+		if (this.OPT.enable_mouse) {
+			switch (data[indexData].type) {
+				case range | list:
+					_mcheckpad[1] = ghostArrowWidth + 2;
+				default:
+					_mcheckpad[1] = 2;	// Arbitrary! [2,2] is the default mouse check
+			}
+		}
+		
+	}//---------------------------------------------------;
+	
+	
+	var lerp:Float = 0;
+	var lerpDest:Float = 0;
+	override function on_itemCallback(e:ListItemEvent):Void 
+	{
+		if (e == ListItemEvent.change) {
+			
+			// Recalculate the width table which the Mouse Check reads
+			itemSlotsX0[indexSlot] = Std.int(this.x + get_itemStartX(indexItem));
+			
+			if (alignCenter) {
+				lerp = LERP_DURATION;
+				lerpDest = itemSlotsX0[indexSlot];
+			}
+		}
+		
+		super.on_itemCallback(e);
+	}//---------------------------------------------------;
+	
+	override public function update(elapsed:Float):Void 
+	{
+		
+		if (lerp > 0 && indexItem != null) {
+			
+			lerp -= elapsed;
+			indexItem.x = FlxMath.lerp(indexItem.x, lerpDest, STP.lerp);
+			
+			// DEV: This is a very Hacky way to do it. Can cause issues with cursor tween.
+			if (cursor != null) {
+				cursor.updateX(indexItem.x);
+			}	
+			
+			// BUG: Does not work correct if item has focus_anim
+		}
+		
+		super.update(elapsed); // Leave VLIST update last, because of the event system
 	}//---------------------------------------------------;
 	
 }// --

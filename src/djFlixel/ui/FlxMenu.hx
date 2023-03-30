@@ -124,11 +124,15 @@ class FlxMenu extends FlxGroup
 	 *  For an example on how to initialize it checkout {MPAGE} in "UIDefaults.hx" */
 	public var STP:MPageStyle;
 	
+	// Popup STyle Overlay : If you want to customize the look of popup confirmation boxes
+	public var popSTo:Dynamic = null;
+	
 	
 	// Stores the order of the Pages as they open
 	// The last element of history is always the current page
 	var history:Array<MPageData> = [];
 	
+	// Stores pooled MenuPages
 	var pool:Array<MPage> = [];
 	
 	// An icon generator shared with all <MPage> objects
@@ -145,10 +149,12 @@ class FlxMenu extends FlxGroup
 	// Experimental plugins?
 	var plugs:Array<IFlxMenuPlug> = [];
 	
+
 	/**
 	   @param	X Screen X
 	   @param	Y Screen Y
 	   @param	WIDTH 0 To autocalculate based on item length (default) -1 Rest of screen, mirrored X Margin
+				WARNING! do not use 0 with "center" alignment
 	   @param	SLOTS How many vertical slots for items to show. If a menu has more items, it will scroll.
 	**/
 	public function new(X:Float=0, Y:Float=0, WIDTH:Int=0, SLOTS:Int = 6)
@@ -212,7 +218,7 @@ class FlxMenu extends FlxGroup
 	{
 		if (pageActive == null)
 		{
-			trace("Error: No ActivePage set");
+			trace('Error: No ActivePage set');
 			return;
 		}
 		
@@ -276,8 +282,8 @@ class FlxMenu extends FlxGroup
 	
 	/**
 	   Open a page and give it focus. Can goto an already created page
-	   that was previously pushed to the pages Map with .createPage()/addPage
-	   or you can give a new external PageData (e.g. on-the-fly create Pages with Dynamic Data)
+	   that was previously pushed to the pages Map with `createPage()`
+	   or you can give a new external PageData (e.g. on-the-fly created Pages with Dynamic Data)
 	   @param _src  Page ID or Page Object
 	   @param _open If it is closed, also open it the menu?
 	**/
@@ -301,7 +307,7 @@ class FlxMenu extends FlxGroup
 			return;
 		}
 		
-		// Search if this page is in history, if it is remove it and everything after it
+		// Search if this page is in history, if it is remove it and everything after
 		var i = history.length;
 		while (i--> 0) {
 			if (history[i] == pdata) {
@@ -311,7 +317,7 @@ class FlxMenu extends FlxGroup
 		}
 		
 		pageActive = pdata;		
-		history.push(pdata);
+		history.push(pdata);	// DEV: Yes, even dynamic pages go here
 		
 		if (!_open) return;
 		
@@ -456,7 +462,6 @@ class FlxMenu extends FlxGroup
 			switch (it.P.ltype) {
 				
 				case 0:	// PageCall
-					
 					if (it.P.link == "back") {
 						goBack(); 
 					}else{
@@ -467,51 +472,21 @@ class FlxMenu extends FlxGroup
 					return;
 					
 				case 2:	// Call - Confirm Popup
-					//if (mpActive.cursor != null && mpActive.cursor.animation.exists("m")) {
-						mpActive.cursor.animation.frameIndex = 0;
-					//}
-					mpActive.active = false;
-					D.ctrl.flush();	// <-- It is important to flush, otherwise it will register an input immediately after
-					var P = MPageData.getConfirmationPage(it);
-						P.STPo = {
-							background: 0xBB000000
-								// STP.background != null?STP.background:
-								// (STP.item.text.bc!=null?STP.item.text.bc:0xFF000000)
-								// Either page BG, or TextBorder BG, or BLACK ?
-						};
-					
-					var MP = pool_get(P);	// -> Will create a new page every time, because `noPool=true`
-					
-					var CLOSE_MP = ()->{
-						D.ctrl.flush(); // prevent key firing again on the menu
-						remove(MP);
-						MP.destroy();
-						mpActive.active = true;
-						_mev(back);
-					}
-					MP.onListEvent = (a)-> { if (a == "back") CLOSE_MP(); };
-					MP.onItemEvent = (ev, it2)-> {
-						if (ev != fire) return;
-						CLOSE_MP();
-						if (it2.P.ltype == 1 && onItemEvent != null) onItemEvent(ev, it2); 
-					};
-					MP.x = mpActive.indexItem.x + mpActive.indexItem.width + STP.focus_nudge;
-					MP.y = mpActive.indexItem.y;
-					MP.setSelection(P.PAR.indexStash);	// Always set
-					MP.viewOn();
-					add(MP);
+					create_popup_from_item(it);
 					_mev(pageCall, "?pop");
 					return;
 					
 				case 3: // Call - Confirm New Page
 					var P = MPageData.getConfirmationPage(it);
-						_flag_restore_selected_index = true;
+						_flag_restore_selected_index = true;	// Use the custom index 
 						goto(P);
 					_mev(pageCall, "?fs");
 					return;
+					
 				default: 
 					_mev(it_fire, it.ID);
 			}
+			
 		}else{
 			
 			// Links got processed OK
@@ -541,7 +516,7 @@ class FlxMenu extends FlxGroup
 		mpActive.setPosition(x, y);			// in case the menu moved
 		// : Get cursor position
 		if (_flag_restore_selected_index) {
-			mpActive.setSelection(pageActive.PAR.indexStash);
+			mpActive.setSelection(pageActive.PAR.cindex);
 			_flag_restore_selected_index = false;
 		}else{
 			mpActive.selectFirstAvailable();
@@ -583,8 +558,8 @@ class FlxMenu extends FlxGroup
 		
 		// - Create a new Page
 		p = new MPage(x, y, def_width, def_slots);
-		p.FLAGS.enable_mouse = PAR.enable_mouse;
-		p.FLAGS.start_button_fire = PAR.start_button_fire;
+		p.OPT.enable_mouse = PAR.enable_mouse;
+		p.OPT.start_button_fire = PAR.start_button_fire;
 		p.STP = STP;
 		p.iconcache = iconcache;
 		p.onItemEvent = on_item_event;
@@ -622,12 +597,73 @@ class FlxMenu extends FlxGroup
 		return super.add(Object);
 	}//---------------------------------------------------;
 	
+	/** 
+	 * Create, Add and Handle a popup question coming from an Item 
+	 * TODO: Pause Animated Cursor if any??
+	 **/
+	function create_popup_from_item(it:MItemData)
+	{
+		
+		// DEV: It is important to flush, otherwise it will register an input immediately after
+		D.ctrl.flush();	
+		
+		mpActive.active = false;
+		
+		var P = MPageData.getConfirmationPage(it);
+			P.PAR.isPopup = true;
+			
+			// Apply user style or use some defaults
+			if (popSTo != null)
+				P.STPo = popSTo;
+			else
+			{
+				P.STPo = {	// some styling
+					background:{
+						color: 0xBB000000, 
+						padding:[2,2,2,2]
+					}
+				};
+			}
+			
+		
+		var MP = pool_get(P);
+		
+		var CLOSE_MP = ()->{
+			D.ctrl.flush(); // Prevent key firing again on the menu
+			remove(MP);
+			MP.destroy();
+			mpActive.active = true;
+			_mev(back);
+		}
+		
+		// DEV: The. on__Events are already set from (pool_get) I need to override
+		MP.onListEvent = (a)-> {
+			if (a == "back") CLOSE_MP(); 
+		};
+		
+		MP.onItemEvent = (ev, it2)-> {
+			if (ev != fire) return;
+			CLOSE_MP();
+			if (it2.P.ltype == 1 && onItemEvent != null)
+				onItemEvent(ev, it2);
+		};
+		
+		MP.x = mpActive.indexItem.x + mpActive.indexItem.width + (STP.focus_anim != null?STP.focus_anim.x:0);
+		MP.y = mpActive.indexItem.y;
+		add(MP);
+		
+		MP.setSelection(P.PAR.cindex);
+		MP.viewOn();
+	}//---------------------------------------------------;
+	
+	
 }// -- end class
 
 
 
 // -- Experimental
 // - Used to attach things to a menu
+// - Handles menu events
 interface IFlxMenuPlug extends IFlxDestroyable
 {
 	@:allow(djFlixel.ui.FlxMenu)

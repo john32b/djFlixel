@@ -41,7 +41,7 @@ class MItemRange extends MItemList
 			data.P.c = c;
 			refresh_data();
 			stimer.fire();
-			callback(fire);
+			callback(change); callback(fire);
 			return;
 		}
 		
@@ -51,7 +51,7 @@ class MItemRange extends MItemList
 			var lim:Float = data.P.range[1];
 			if (c == lim && !data.P.loop) return;
 			#if (neko || hl)
-			c += data.P.step;	
+			c += data.P.step;		
 			#else
 			c += Std.parseFloat(data.P.step); // Dev, parsefloat is needed, but it shouldnt?
 			#end
@@ -64,7 +64,7 @@ class MItemRange extends MItemList
 			data.P.c = c;
 			refresh_data();
 			stimer.fire();
-			callback(fire);
+			callback(change); callback(fire);
 			return;
 		}
 		
@@ -83,6 +83,8 @@ class MItemRange extends MItemList
 		}
 		
 		refresh_arrowStates();
+		
+		_width = label2.x + label2.width - label.x;
 	}//---------------------------------------------------;
 	
 }// --

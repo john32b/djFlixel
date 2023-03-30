@@ -6,10 +6,9 @@
  * ====================
  * 
  * - Goes through a bunch of states until it reaches the Main Menu State
- * 		State_Boot > State_Logos > State_TextScroll > State_Menu
+ * 		State_Boot > State_Logos > State_TextScroll > State_MainMenu
  * 
- * - Can build to cpp, hashlink, flash
- * - HTML5 has problems with Fonts, rendering and metrics.
+ * - Can build to cpp, hashlink, flash, html5
  * 
  *******************************************/
 
@@ -108,7 +107,7 @@ class Main extends Sprite
 			case "8bit":
 				create_add_8bitLoader(0.5, S);
 				
-			case "let":
+			case "let": // LETTERS
 				var col = DataT.randAr([
 					[0xff181425, 0xff262b44],
 					[0xff180d11, 0xff6d4653],

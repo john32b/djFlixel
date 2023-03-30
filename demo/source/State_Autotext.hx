@@ -108,7 +108,7 @@ class State_Autotext extends FlxState
 		{
 			// This is a trick to prevent multiple calls
 			if (t == 1) return; t = 1;
-			Main.create_add_8bitLoader(0.6, State_Menu);
+			Main.create_add_8bitLoader(0.6, State_MainMenu);
 			return;
 		}
 		
@@ -118,7 +118,7 @@ class State_Autotext extends FlxState
 			if (AT.isComplete) 
 			{
 				if (t == 1) return; t = 1;
-				Main.create_add_8bitLoader(0.6, State_Menu);
+				Main.create_add_8bitLoader(0.6, State_MainMenu);
 			}
 		}
 			

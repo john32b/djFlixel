@@ -118,4 +118,14 @@ class State_Logos extends FlxState
 		D.snd.playMusic('track1',0,true);
 	}//---------------------------------------------------
 	
+	
+	
+	override public function update(elapsed:Float):Void 
+	{
+		super.update(elapsed);
+		if (FlxG.keys.justPressed.ESCAPE){
+			Main.goto_state(State_MainMenu);
+		}
+	}//---------------------------------------------------;	
+	
 }// --

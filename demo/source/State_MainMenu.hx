@@ -27,7 +27,7 @@ import flixel.system.FlxAssets;
 import flixel.text.FlxText;
 
 
-class State_Menu extends FlxState
+class State_MainMenu extends FlxState
 {
 	// I want to keep the text that says "Arrows .. K to select ..." 
 	// so I can change its color
@@ -78,7 +78,7 @@ class State_Menu extends FlxState
 				f:"fnt/blocktopia.ttf",
 				s:32,
 				c:DB32.COL[8],
-				bc:DB32.COL[5],
+				bc:DB32.COL[27],
 				bs:2 });
 				
 		// DEV: title.pixels are small in size, because the scaling is done after
@@ -117,6 +117,10 @@ class State_Menu extends FlxState
 			FlxG.openURL('https://haxeflixel.com/');
 		};
 		
+		
+		// -- Play the music track if it isn't already (in case user skipped the intros)
+		D.snd.playMusic('track1');
+		
 		// --
 		new DelayCall(1, () -> {
 			FlxToast.FIRE("Hello $:-)$", {screen:"top:right"});
@@ -147,7 +151,8 @@ class State_Menu extends FlxState
 		m.createPage('options', 'Options').add('
 			-|Fullscreen	|toggle|fs
 			-|Smoothing		|toggle|sm
-			-|Volume		|range|vol| 0,100 | step=5 '+
+			-|Volume		|range|vol| 0,100 | step=5
+			-|Music         |toggle|mus '+
 			#if(desktop) // preprocessors don't work inside a string
 			'-|Window Size	|range|winmode|1,${D.MAX_WINDOW_ZOOM}' + 
 			#end
@@ -187,8 +192,36 @@ class State_Menu extends FlxState
 		};
 		
 		// Set a dark background for the menu pages
-		m.STP.background = 0xFF121212;
+		m.STP.background = {
+			color:0xFF121212,
+			padding:[2,10,2,10]	// creates more space (top,right,bottom,left)
+		};
 		
+		
+		// Using this function I can overlay styles on top of the currently set style. 
+		// Here the 'focus_anim' requires more fields to be set, but because it is an
+		// overlay, I can just set the fields I want to change
+		// Of course you could declare everything with `overlayStyle`, but this page is
+		// just an example of use cases
+		m.overlayStyle({
+				focus_anim:{
+					x:2, y:2,						// unique item focus style
+					inTime:0.2, outTime:0.12,
+				},
+				
+				vt_OUT:"0:-10|0.14:0.07"			// unique going out style
+													// xtarget:ytarget|time:delay
+			});
+		
+			
+		// I can also change the options/style of a specific page
+		// Here I am modifying the 'options' page a bit
+		m.pages.get('options').PAR.width = 160;
+		m.pages.get('options').STPo = {	// : STyle Page Overlay
+			align : "justify",	
+		};
+		
+
 		// Apply sounds to the menu
 		// I am using this shortcut because I will be doing this a lot
 		// Normally you would want to inline this function
@@ -201,9 +234,16 @@ class State_Menu extends FlxState
 			// I want to alter the Item Datas to reflect the current settings
 			if (ev == page && id == "options") {
 				// (2) , is the index starting from 0, I could pass the ID to get the item also
+				// The first argument (?pageID:String) can be skipped and it will act
+				// upon the currently active page (which is the options page)
 				m.item_update(0, (t)->t.set(FlxG.fullscreen) );
 				m.item_update(1, (t)->t.set(Main.BLUR.enabled) );
-				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );	
+				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );
+				
+				// Here I am updating the MUSIC togglebox with the ID
+				// I can't skip the first argument here, since the compiler can't figure out
+				// what I mean, so I explicitly put a null as the pageID
+				m.item_update(null, "mus", (t)->t.set(D.snd.MUSIC_ENABLED) );
 			}
 			
 		};//-----
@@ -219,6 +259,11 @@ class State_Menu extends FlxState
 					
 				case "sm":
 					Main.BLUR.enabled = item.get();
+					
+				case "mus":
+					D.snd.MUSIC_ENABLED = item.get();
+					if (D.snd.MUSIC_ENABLED) 
+						D.snd.playMusic('track1');
 					
 				case "vol":
 					FlxG.sound.volume = cast(item.get(), Float) / 100;

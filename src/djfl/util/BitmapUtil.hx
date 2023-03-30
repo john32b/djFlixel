@@ -193,7 +193,6 @@ class BitmapUtil
 	 * Replace a color on a bitmap using the built-in Threshold function
 	 * ! Modifies the source bitmapdata
 	 * It's faster than `FlxBitmapDataUtil.replaceColor()`
-	 * WARNING: By default it will modify the input bitmapdata, set `clone` to false to avoid.
 	 * @param	source The source bitmap
 	 * @param	color0 Color to be replaced
 	 * @param	color1 Replace with this color
