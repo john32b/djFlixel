@@ -1157,11 +1157,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	**/
 	function get_itemStartX(el:T):Float
 	{	
-		if (alignCenter) {
-			return (menu_width - el.width) / 2;
-		}else {
-			return 0;
-		}
+		if (alignCenter)
+			return (menu_width - el.width) * 0.5;
+			
+		return 0;
 	}//---------------------------------------------------;
 	
 	/** -- Mainly for FLXMenu/MPage --
@@ -1258,10 +1257,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// Sanitize the scrollpad, to not exceed the middle
 	function set_scrollPadding(val:Int)
 	{
-		if (val > Math.floor(slotsTotal / 2)) {
-			val = Math.floor(slotsTotal / 2);
-		}
-		return scrollPadding = val;
+		return 
+		scrollPadding = FlxMath.minInt(val, Math.floor(slotsTotal / 2));
 	}//---------------------------------------------------;
 	
 	

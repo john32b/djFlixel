@@ -52,7 +52,7 @@ class UIDefaults
 		item_pad: -2,			// You can use negative values here
 		
 		focus_anim:{
-			x:8, y:0, inEase:FlxEase.quadOut, inTime:0.2, outEase:FlxEase.linear, outTime:0.1
+			x:4, y:0, inEase:FlxEase.quadOut, inTime:0.2, outEase:FlxEase.linear, outTime:0.1
 		},
 		
 		scroll_pad:1,				// Initiate scroll when cursor is at an offset from the edge.
@@ -79,7 +79,7 @@ class UIDefaults
 		{
 			text:'>',
 			tween:{
-				time:0.2,
+				time:0.15,
 				x0: -12, x1:0,
 				a0:0.4, a1:1,
 				ease:"bounceOut"
