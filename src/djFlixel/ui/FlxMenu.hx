@@ -625,6 +625,7 @@ class FlxMenu extends FlxGroup
 				};
 			}
 			
+		Reflect.setField(P.STPo, 'loop', false);
 		
 		var MP = pool_get(P);
 		

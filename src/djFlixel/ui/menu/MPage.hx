@@ -166,7 +166,6 @@ class MPage extends VList<MItem,MItemData>
 			var a = STP.background.padding;
 			var W:Int = menu_width + a[1] + a[3];
 			var H:Int = cast ((overflows?menu_height:height) + a[0] + a[2]);
-			
 			bg = new FlxSprite();
 			bg.makeGraphic(W, H, STP.background.color);
 			bg.x -= a[3];
@@ -293,12 +292,10 @@ class MPage extends VList<MItem,MItemData>
 	}//---------------------------------------------------;
 	
 	// --
-	override function on_dataIndexChange():Void 
+	override function slot_focus(num:Int):Void 
 	{
+		super.slot_focus(num);
 		lerp = 0;
-		
-		super.on_dataIndexChange();
-		
 		if (this.OPT.enable_mouse) {
 			switch (data[indexData].type) {
 				case range | list:
