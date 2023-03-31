@@ -207,7 +207,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var indexData:Int; 	// Current highlighted index on the data array
 	var indexSlot:Int;	// Current highlighted slot index
 	
-	var lastSlot:Int;	// Previously highlighted slot index (useful for tweens)
+	var indexLastSlot:Int;	// Last slot index that was selected
 	
 	var tween_slot:Array<VarTween>;			// This is used exclusively for item slots tweens. ViewOn/Scrolling In
 	var tween_map:Map<FlxSprite,VarTween>;  // Stores generic tweens. Items being focused, Cursor.
@@ -275,8 +275,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		});
 	}//---------------------------------------------------;
 
-
-	
 	/**
 	 * Create a Basic Vertical List object.
 	 * @param	X Screen Pos
@@ -361,12 +359,13 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	public function focus()
 	{
 		if (isFocused || isScrolling) return;
-		isFocused = true;
+			isFocused = true;
+			
 		queue_listEvent("focus");
 		
 		if (inputMode == 2) 
 		{
-			currentItem_Focus(); // > this handles cursor
+			slot_focus(indexLastSlot);
 		}
 		
 		scroll_ind_update();
@@ -377,13 +376,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	public function unfocus()
 	{
 		if (!isFocused) return;
-		isFocused = false;
-		
-		lastSlot = indexSlot;
+			isFocused = false;
 		
 		queue_listEvent("unfocus");
 		
-		currentItem_Unfocus();
+		slot_unfocus();
+		
 		if (cursor != null) cursor.visible(false);
 		
 		if (sind_loop != null)
@@ -439,14 +437,14 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (m < 2)	
 		{
 			// Either no input or just scroll, I don't need a cursor here
-			currentItem_Unfocus();
+			slot_unfocus();
 			if (cursor != null) cursor.visible(false);
 			
 		}else
 		if (m == 2)
 		{
 			if (isFocused) {
-				currentItem_Focus();
+				slot_focus(indexLastSlot);
 			}
 		}
 	}//---------------------------------------------------;
@@ -496,7 +494,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		indexData = -1;		// Nothing is selected
 		indexSlot = -1;		// Nothing is selected
-		lastSlot  = -1;
+		indexLastSlot = -1;	
 		indexItem = null;   // Nothing is selected
 		
 		data = arr;
@@ -535,7 +533,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	/**
-	   Sets the current selected item to an index. Alters the scrolling accoringly.
+	   Hard Sets the current selected item to an index. Alters the scrolling accoringly.
 	   - You can call this if this menu isn't focused, and the selected index will be selected once it is focused
 	**/
 	public function setSelection(ind:Int = 0)
@@ -548,21 +546,23 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			ind = data.length - 1;
 		}
 		
-		currentItem_Unfocus();
+		slot_unfocus();
 		
 		// Try to place the view index above the cursor , with the scrollpad.
 		var _scroll = ind - scrollPadding; 
-		lastSlot  = indexSlot;
-		indexSlot = scrollPadding;
+		var _islot = scrollPadding;
 		indexData = ind;
 		
 		// If no more space make everything 0, to top
 		if (_scroll < 0) {
-			indexSlot = ind;
+			_islot = ind;
 			_scroll = 0;
 		}
 		
-		setScroll(_scroll); // <<------
+		if (itemSlots[0] == null || overflows)	// First Time Initialization
+		{
+			setScroll(_scroll); // <<------
+		}
 		
 		// Now the real scroll could be different than `_scroll`
 		if (scrollOffset < _scroll)
@@ -570,14 +570,16 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			// The view overflowed too much at the end, 
 			// calculating the delta and fixing the index_slot
 			var delta = _scroll - scrollOffset;
-			indexSlot += delta;
+			_islot += delta;
 		}
 		
 		// --
-		indexItem = itemSlots[indexSlot];
+		indexLastSlot = _islot;	// In case the menu is unfocused.
+		
 		if (isFocused) {
-			currentItem_Focus();
+			slot_focus(_islot); 
 		}
+		
 	}//---------------------------------------------------;
 	
 	
@@ -719,9 +721,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		{
 			if (FlxG.mouse.wheel < 0 && scrollDown1()) 
 			{
-				if(inputMode==2) {
+				// BUG: this is wrong.
+				// I should scroll the view, unfocus the element, and focus the new slot if it can
+				if (inputMode == 2) {
 					indexData++;
-					on_dataIndexChange();
+					slot_unfocus();
+					slot_focus(indexLastSlot);
 				}
 				return;
 			}
@@ -730,7 +735,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			{
 				if(inputMode==2) {
 					indexData--;
-					on_dataIndexChange(); 
+					slot_unfocus();
+					slot_focus(indexLastSlot);
 				}
 				return;
 			}
@@ -757,9 +763,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 					if(item_isSelectable(_itm))
 					{
 						indexData += slot - indexSlot;	// Point to correct data
-						lastSlot = indexSlot;
-						indexSlot = slot;
-						on_dataIndexChange();
+						slot_unfocus();
+						slot_focus(slot);
 					}
 				}
 				
@@ -873,25 +878,21 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	 */
 	function selectionUp1()
 	{
-		if (indexData == 0) {
-			if (STL.loop) {
-				lastSlot = indexSlot;
-				setSelection(data.length - 1); 
-			}
+		if (indexData == 0 && STL.loop) {
+			setSelection(data.length - 1);
 			return;
 		}
 		
 		var r_1 = get_nextSelectableIndex(indexData - 1, -1);
 		if (r_1 < 0) return; // Can't find a selectable item
-		lastSlot = indexSlot;
 	
 		// r_1 is now Delta, Amount to go up
 		r_1 = indexData - r_1;
 		
 		if (indexSlot - r_1 >= scrollPadding) { // No view scroll is needed
-			indexSlot -= r_1;
 			indexData -= r_1;
-			on_dataIndexChange();
+			slot_unfocus();
+			slot_focus(indexLastSlot - r_1);
 		}else
 		{
 			if (r_1 > 1) {
@@ -901,17 +902,18 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 			if (isScrolling) return;
 			
+			slot_unfocus();
+			
 			if (scrollUp1()) {
-					indexData--;
-					on_dataIndexChange();
-			}else {
-				// The scroll padding has reached the end
-				if (indexSlot > 0) {
-					indexSlot--;
-					indexData--;
-					on_dataIndexChange();
-				}
+				indexData--;
+				slot_focus(indexLastSlot);
 			}
+			else if (indexData > 0) { 
+				// Scroll padding has reached the end
+				indexData--;
+				slot_focus(indexLastSlot - 1);
+			}
+			
 		}
 	}//---------------------------------------------------;
 	
@@ -921,25 +923,20 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		// Sometimes when not the entire slots are filled,
 		// prevent scrolling to an empty slot by checking this.
-		if (indexData == data.length - 1) {
-			if (STL.loop) {
-				lastSlot = indexSlot;
-				setSelection(0);
-			}
+		if (indexData == data.length - 1 && STL.loop) {
+			setSelection(0);
 			return;
 		}
 		
 		var r_1 = get_nextSelectableIndex(indexData + 1, 1);
 		if (r_1 == -1) return;
 		
-		lastSlot = indexSlot;
-		
 		r_1 = r_1 - indexData; // r_1 is now Delta, Amount to go down
 		
 		if (indexSlot + r_1 < slotsTotal - scrollPadding) { // No view scroll is needed
-			indexSlot += r_1;
 			indexData += r_1;
-			on_dataIndexChange();
+			slot_unfocus();
+			slot_focus(indexLastSlot + r_1);
 		}else
 		{
 			if (r_1 > 1) {
@@ -950,32 +947,34 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			
 			if (isScrolling) return;
 			
+			slot_unfocus();
+			
 			if (scrollDown1()) {
 				indexData++;
-				on_dataIndexChange();
-			}else
-			{
-				if (indexData < data.length - 1) {
-					indexSlot++;
-					indexData++;
-					on_dataIndexChange();
-				}
+				slot_focus(indexLastSlot);
+			}
+			else if (indexData < data.length -1) {
+				// Scroll padding has reached the end
+				indexData++;
+				slot_focus(indexLastSlot + 1);
 			}
 		}
+		
 	}//---------------------------------------------------;
 	
 	
-	/** Animates current item, according to the STYLE rules
-	 *  Also triggers the cursor if any
-	**/
-	function currentItem_Focus()
+	
+	function slot_focus(num:Int)
 	{
-		if (indexItem == null) return;
+		if (num < 0) return;	// Assumes positive indexes are valid
+		
+		indexItem = itemSlots[num];
 		indexItem.focus();
+		indexSlot = num;
 		
 		if (STL.focus_anim != null)
 		{
-			currentItem_Tween(
+			slot_item_tween(
 				indexItem,
 				x + get_itemStartX(indexItem) + STL.focus_anim.x,
 				overflows ? null : (y + (indexSlot * itemHeight) + STL.focus_anim.y),
@@ -985,33 +984,37 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		}
 		
 		cursor_point();
-	}//---------------------------------------------------;	
+	}//---------------------------------------------------;
+	
+	
+	// Unfocus currently selected slot (if any)
+	function slot_unfocus()
+	{
+		if (indexSlot == -1) return;
 		
-	/**
-	 * Put the current item back in its resting position
-	**/
-	function currentItem_Unfocus()
-	{	
-		if (indexItem == null) return;
-		indexItem.unfocus();
-		
+		indexItem.unfocus();	// If indexSlot>-1 , then this is ALWAYS set
+		indexLastSlot = indexSlot;
+	
 		if (STL.focus_anim != null)
 		{
-			currentItem_Tween(
+			slot_item_tween(
 				indexItem,
 				x + get_itemStartX(indexItem),
-				overflows ? null : (y + (lastSlot * itemHeight) ),
+				overflows ? null : (y + (indexSlot * itemHeight) ),
 				STL.focus_anim.outTime,
 				STL.focus_anim.outEase
 			);
 		}
 		
+		indexItem = null;
+		indexSlot = -1;
+		
 	}//---------------------------------------------------;
-	
+
 	
 	// -- Helper tool
 	// Either instant move an item, or create a tween
-	function currentItem_Tween(_it:FlxSprite, _x:Float, _y:Null<Float>, _time:Float, _ease:EaseFunction)
+	function slot_item_tween(_it:FlxSprite, _x:Float, _y:Null<Float>, _time:Float, _ease:EaseFunction)
 	{
 		if (tween_map.exists(_it)) {
 			tween_map.get(_it).cancel();
@@ -1103,19 +1106,21 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// - Called from ( selectionDownUp1 )
 	function on_dataIndexChange()
 	{
-		currentItem_Unfocus();
+		//currentItem_Unfocus();
 		indexItem = itemSlots[indexSlot];
-		currentItem_Focus();
+		//currentItem_Focus();
 	}//---------------------------------------------------;	
 	
 	// - Called on every scroll-by-one tween complete
 	function on_scrollComplete(?t:FlxTween)
 	{
 		clear_tween_slot();
+		
 		if (_markedItem != null) {
-			remove(_markedItem); // from the scene
+			remove(_markedItem);
 			poolPut(_markedItem);
-		}
+		}  
+		
 		_markedItem = null;
 		
 		// DEV: I am checking this, because the menu could unfocus while it was scrolling.
