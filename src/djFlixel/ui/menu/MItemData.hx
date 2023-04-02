@@ -93,16 +93,22 @@
 		Optional Fields are
 		
 		|c=n|	Where n is the currently selected number. It must be between min and max
-				Default is 1
+				Default is 0
 		|loop=true| If set it will loop through the edges of the list instead of stopping
 					default is false, not looping
 		|step=n|	Set a custom step for changing the value. It can be INT or FLOAT
 		
+		|fstep=n|	First Step. When the list is at the beginning, apply N as a first step
+					instead of `step` This is useful for making a (1-100)(fstep=4) range with
+					the selection iterating (1..5..10..15..) e.g. for making a level select 
+					
+		
 		examples >>>>>>>>>>>>>>>>>>>>
 		
-		"Volume | range | 0,100 | c=50 | step=5" ; 0 to 100, default is 50 and 
-												 ; steps increment/decrement by 5
-		"Brightness | range | 0.0,1.0 | c=0.5 | step=0.02" ; Having the step as a float
+		"Volume | range | id1| 0,100 | c=50 | step=5" 	; 0 to 100, default is 50 and 
+														; steps increment/decrement by 5
+														
+		"Brightness | range | id2| 0.0,1.0 | c=0.5 | step=0.02" ; Having the step as a float
 					
 		-------------------------------------------------------------
 		
@@ -119,8 +125,8 @@
 		
 		examples >>>>>>>>>>>>>>>>>>>>
 		
-		"Color | list| red,green,blue"	; List with 3 elements, red is selected by default
-		"Difficulty | list | easy,medium,hard | c=1 | loop=true" ; Select 'medium' by default, loop at edges
+		"Color |list|id1| red,green,blue"	; List with 3 elements, red is selected by default
+		"Difficulty |list|id2| easy,medium,hard | c=1 | loop=true" ; Select 'medium' by default, loop at edges
 		
 		-------------------------------------------------------------
 		
@@ -226,6 +232,11 @@ class MItemData
 	{
 		// Split " A | B | | | C |" into ['A','B','C']
 		var F = S.split('|').map((i)->StringTools.trim(i)).filter((i)->i.length > 0);
+		/**
+		   F[0] = Label
+		   F[1] = Type
+		   F[2] = ID
+		**/
 		
 		// Get : Label, ItemType, ItemID - which are required for all ItemTypes -
 		label = F.shift();
@@ -311,7 +322,13 @@ class MItemData
 					if (k == "c") P.c = Std.parseFloat(v);
 					if (k == "step") P.step = Std.parseFloat(v);
 					if (k == "loop") P.loop = (v == "true");
+					if (k == "fstep") P.fstep = Std.parseInt(v);
 				});
+				
+				if ( cast(P.c, Float) < cast(P.range[0], Float)) {
+					trace("Warning. Range default off range");
+					P.c = P.range[0];
+				}
 				
 			case list:
 				if (F[0] == null) throw 'List Item $ID needs a list';

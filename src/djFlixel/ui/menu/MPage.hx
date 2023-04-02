@@ -171,12 +171,6 @@ class MPage extends VList<MItem,MItemData>
 			bg.x -= a[3];
 			bg.y -= a[2];
 			insert(0, bg);
-
-			// DEVNOTE:
-			// I could make it work with events? Something like:
-			// onEvent("viewOn",()->{
-			// 		tween_map.set(bg, FlxTween....{ __getInViewAlpha, __ getInViewTimes });
-			// ? So that I don't have to override tween_allSlots later?
 		}
 		
 	}//---------------------------------------------------;
@@ -328,18 +322,15 @@ class MPage extends VList<MItem,MItemData>
 	
 	override public function update(elapsed:Float):Void 
 	{
-		
+		// -- This piece of code is to LERP the item back to its baseline X pos
 		if (lerp > 0 && indexItem != null) {
 			
 			lerp -= elapsed;
 			indexItem.x = FlxMath.lerp(indexItem.x, lerpDest, STP.lerp);
 			
-			// DEV: This is a very Hacky way to do it. Can cause issues with cursor tween.
 			if (cursor != null) {
-				cursor.updateX(indexItem.x);
+				cursor.updateX(indexItem.x - (STL.focus_anim == null?0:STL.focus_anim.x));
 			}	
-			
-			// BUG: Does not work correct if item has focus_anim
 		}
 		
 		super.update(elapsed); // Leave VLIST update last, because of the event system

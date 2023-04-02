@@ -216,8 +216,7 @@ class FlxMenu extends FlxGroup
 	**/
 	public function open(instant:Bool = false)
 	{
-		if (pageActive == null)
-		{
+		if (pageActive == null) {
 			trace('Error: No ActivePage set');
 			return;
 		}
@@ -572,11 +571,10 @@ class FlxMenu extends FlxGroup
 	{
 		if (P.page.PAR.noPool) return;
 		if (pool.indexOf(P) >-1) return;
-		// DEV: The page is guaranteed that does not exist in the pool since
-		//      when it was created the pool was checked first.
+		
 		pool.push(P);
-		if (pool.length > PAR.pool_max)
-		{
+		
+		if (pool.length > PAR.pool_max) {
 			pool.shift().destroy();
 		}
 	}//---------------------------------------------------;
@@ -636,12 +634,10 @@ class FlxMenu extends FlxGroup
 			mpActive.active = true;
 			_mev(back);
 		}
-		
+			
 		// DEV: The. on__Events are already set from (pool_get) I need to override
-		MP.onListEvent = (a)-> {
-			if (a == "back") CLOSE_MP(); 
-		};
-		
+		MP.onListEvent = (a)->a=="back"?CLOSE_MP():0;
+			
 		MP.onItemEvent = (ev, it2)-> {
 			if (ev != fire) return;
 			CLOSE_MP();

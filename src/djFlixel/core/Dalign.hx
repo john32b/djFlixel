@@ -55,10 +55,10 @@ class Dalign
 	public function XAxis(o:FlxSprite, t:FlxSprite, type:String = "c", offs:Float = 0):FlxSprite
 	{
 		switch(type){
-			case "c":
-				o.x = t.x + (t.width - o.width) / 2;	
 			case "l":
 				o.x = t.x;
+			case "c":
+				o.x = t.x + (t.width - o.width) / 2;	
 			case "r":
 				o.x = t.x + t.width - o.width;
 			default:
@@ -76,11 +76,11 @@ class Dalign
 	public function YAxis(o:FlxSprite, t:FlxSprite, type:String = "c", offs:Float = 0):FlxSprite
 	{
 		switch(type){
-			case "c":
-				o.y = t.y + (t.height - o.height) / 2;
 			case "t":
 				o.y = t.y;
-			case "n":
+			case "c":
+				o.y = t.y + (t.height - o.height) / 2;
+			case "b":
 				o.y = t.y + t.height - o.height;
 			default:
 		}

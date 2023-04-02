@@ -1,4 +1,5 @@
 package djFlixel.ui.menu;
+import djA.DataT;
 import djFlixel.ui.IListItem.ListItemInput;
 import djFlixel.ui.menu.MItemData;
 
@@ -7,13 +8,6 @@ import djFlixel.ui.menu.MItemData;
 class MItemRange extends MItemList
 {
 	var isFloat:Bool = false;
-	
-	// Taken from Franco Ponticelli's THX library:
-	// https://github.com/fponticelli/thx/blob/master/src/Floats.hx#L206
-	function roundFloat(number:Float, precision:Int = 2):Float {
-		number *= Math.pow(10, precision);
-		return Math.round(number) / Math.pow(10, precision);
-	}//---------------------------------------------------;
 	
 	override function on_newdata() 
 	{
@@ -26,18 +20,20 @@ class MItemRange extends MItemList
 		
 		if (inp == left)
 		{
+			// DEV: Need to cast those to help the compiler
 			var c:Float = data.P.c;
 			var lim:Float = data.P.range[0];
+			
 			if (c == lim && !data.P.loop) return;
-			#if (neko || hl)
+			
 			c -= data.P.step;
-			#else
-			c -= Std.parseFloat(data.P.step);
-			#end
-			if (isFloat) c = roundFloat(c);
+			
+			if (isFloat) c = DataT.roundFloat(c);
+			
 			if (c < lim){
 				if (data.P.loop) c = data.P.range[1]; else c = lim;
 			}
+			
 			data.P.c = c;
 			refresh_data();
 			stimer.fire();
@@ -47,17 +43,20 @@ class MItemRange extends MItemList
 		
 		if (inp == right)
 		{
+			// DEV: Need to cast those to help the compiler
 			var c:Float = data.P.c;
 			var lim:Float = data.P.range[1];
+			
 			if (c == lim && !data.P.loop) return;
-			#if (neko || hl)
-			c += data.P.step;		
-			#else
-			c += Std.parseFloat(data.P.step); // Dev, parsefloat is needed, but it shouldnt?
-			#end
-			if (isFloat) c = roundFloat(c);
-			if (c > lim) 
-			{
+			
+			if (data.P.fstep != null && c == data.P.range[0])
+				c += data.P.fstep;
+			else
+				c += data.P.step;
+				
+			if (isFloat) c = DataT.roundFloat(c);
+			
+			if (c > lim) {
 				if (data.P.loop) c = data.P.range[0]; else c = lim;
 			}
 			

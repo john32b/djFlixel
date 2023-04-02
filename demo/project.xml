@@ -9,7 +9,7 @@
 	<window orientation="portrait" /> || <window orientation="landscape" if="cpp"/>
 	-->
 	
-	<app title="djFlixel Demo" version="0.5.4" package="" company="John32B" />
+	<app title="djFlixel Demo" version="0.5.5" package="" company="John32B" />
 	<app preloader="flixel.system.FlxBasePreloader"/>
 	<app main="Main" file="djflx_demo" path="bin/" />
 	

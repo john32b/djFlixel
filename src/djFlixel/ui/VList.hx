@@ -7,7 +7,7 @@
  
  - Use Example:
  
-	var list = new VList<MyListItem,String>(MyListItem);
+	var list = new VList<MyListItem,Int>(MyListItem);
 	add(list);
 	list.setInputMode(2);
 	list.onItemEvent = (a, b)->{
@@ -49,31 +49,33 @@ import flixel.util.typeLimit.OneOfTwo;
 import openfl.display.BitmapData;
 
 
-
 /**
-   Cursor Interface
-   VList now supports Cursor Objects
-   See <MPageCursor> for an example
+   Cursor Interface for a VList
+   See <MCursor> for an example
 **/
 interface IVListCursor 
 {
-	/** Called by VLIST, attaches self to the VLIST | Note, make it hidden here */
+	/** Called by VLIST, attaches self to the VLIST */
 	public function attach(v:FlxSpriteGroup):Void;
 	
-	/**
-	   Move the cursor to point to an item, can animate
-	   @param	item	The sprite this cursor points to
-	   @param	itemX	X final pos of the item
+	/** Request to move the cursor to an item
+	   @param	item	The sprite the cursor will point. This is mostly to get y and height
+						as the item is probably animating with a tween right now.
+	   @param	itemX	X final pos of the item, Baseline. If item is animating, 
+						this is the target X position. Else it is the baseline X position
 	**/
 	public function point(item:FlxSprite, itemX:Float):Void;
 
 	/** Set visible or not */
 	public function visible(s:Bool):Void;
 	
-	/** Called from VLIST, position self to match this Y coordinate */
-	public function updateY(ypos:Float):Void;
+	/** Gets called when list is scrolling, used to follow the item if it 
+	 *  is currently tweening vertically */
+	public function updateY(item:FlxSprite):Void;
 	
-	public function updateX(xpos:Float):Void;
+	/** Sets the new XBaseline, in case an item changes width,
+	 *  can be called wherever in realtime to follow an item's X Baseline */
+	public function updateX(itemX:Float):Void;
 	
 }//---------------------------------------------------;
 
@@ -232,7 +234,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	var inputMode:Int;
 	
 	public var cursor(default, null):IVListCursor;
-	var cursor_fix:Float = 0.0;
 	
 	// - Scroll Indicator vars
 	var sind_ty:Int;		// Type 1 Repeat, 2 Loop, 3 Blink
@@ -323,15 +324,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		super.update(elapsed);
 		
-		// I am doing this with a timer to match the cursor to the active element Y
-		// because this is more convenient than calling it at every cycle also
-		// using if(isScrolling) does not work for some reason.
-		if ((cursor_fix -= elapsed) > 0)
-		{
-			cursor.updateY(itemSlots[indexSlot].y);
-		}
-		
-
 		if (isFocused)
 		{
 			if (sind_loop != null) sind_loop.update(elapsed);
@@ -457,32 +449,29 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// Attach/Set a Cursor object
 	public function cursor_set(c:IVListCursor)
 	{
+		if (inputMode != 2) {
+			trace("Error: Cursor only with inputMode 2");
+			return;
+		}
+		
 		cursor = c;
 		cursor.attach(this);	// DEV: makes it hidden
 	
 		if (isFocused && indexItem != null) {
-			cursor_point();
+			cursor.point(indexItem, itemSlotsX0[indexSlot]);
 		}
+	}//---------------------------------------------------;
+	
+	
+	// - Tween update function , called from scrollUpDown(). 
+	//   itemSlots,indexSlot are valid
+	function cursor_updateY(tw:FlxTween)
+	{
+		if (cursor != null && isFocused)
+			cursor.updateY(itemSlots[indexSlot]);
 	}//---------------------------------------------------;
 	
 
-	// Point cursor to the active focused item
-	public function cursor_point()
-	{
-		if (cursor != null)
-		{
-			// This will also make cursor visible
-			cursor.point(indexItem, itemSlotsX0[indexSlot]);
-			
-			if (isScrolling) {
-				// hack fix. Make the cursor follow the current item when scrolling
-				cursor_fix = STL.scroll_time + 0.1; // Handled at update()
-			}		
-		
-		}
-	}//---------------------------------------------------;
-	
-	
 	/**
 	   Sets a new data source AND INITIALIZES
 	   Be sure to have any initialization of styles done up to this point
@@ -538,7 +527,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	/**
 	   Hard Sets the current selected item to an index. Alters the scrolling accoringly.
-	   - You can call this if this menu isn't focused, and the selected index will be selected once it is focused
 	**/
 	public function setSelection(ind:Int = 0)
 	{
@@ -574,7 +562,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			_islot += delta;
 		}
 		
-		// --
 		indexLastSlot = _islot;	// In case the menu is unfocused.
 		
 		if (isFocused) slot_focus(_islot); 
@@ -612,8 +599,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 		for (i in 0...slotsTotal) {
 			if (data[i + ind] != null) {
-				itemSlots[i] = item_getAndPlace(i, i + ind);
-				itemSlots[i].alpha = 1;
+				item_getAndPlace(i, i + ind);
 			}else {	
 				// trace("Info: No more data to fill into slots");
 				break;
@@ -783,41 +769,36 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 
 		_markedItem = itemSlots[0]; // Item that goes off-list
 		
-		var _cnt = 0;
-		while (_cnt < slotsTotal)
+		var i = 0;
+		while (i < slotsTotal)
 		{
 			if (STL.scroll_time==0) {
-				itemSlots[_cnt].y -= itemHeight;
+				itemSlots[i].y -= itemHeight;
 			}else {
-				var pr = { y:itemSlots[_cnt].y - itemHeight };
-				if (_cnt == 0) Reflect.setField(pr, "alpha", 0); // Fade the first element only
-				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, STL.scroll_time));
+				var pr = { y:itemSlots[i].y - itemHeight };
+				if (i == 0) Reflect.setField(pr, "alpha", 0); // Fade the first element only
+				tween_slot.push(FlxTween.tween(itemSlots[i], pr, STL.scroll_time));
 			}
-			itemSlots[_cnt] = itemSlots[_cnt + 1];
-			itemSlotsX0[_cnt] = itemSlotsX0[_cnt + 1];
-			_cnt++;
+			itemSlots[i] = itemSlots[i + 1];
+			itemSlotsX0[i] = itemSlotsX0[i + 1];
+			i++;
 		}
 		
-		_cnt--; // Point to the last slot
+		i--; // Now points to last (slotsTotal-1)
 		
-		if (STL.scroll_time == 0) {
-			_itm = item_getAndPlace(_cnt , scrollOffset + _cnt + 1);
-			_itm.alpha = 1;
-			scrollOffset++;
-			itemSlots[_cnt] = _itm;
-			on_scrollComplete(null);
-			
-		}else {
-			// _cnt is now +1;
-			_itm = item_getAndPlace(_cnt , scrollOffset + _cnt + 1, 1);	
-			_itm.alpha = 0;
-			scrollOffset++;
-			itemSlots[_cnt] = _itm;
+		_itm = item_getAndPlace(i, scrollOffset + i + 1);
+		scrollOffset++;
+		
+		if (STL.scroll_time > 0) {
 			isScrolling = true;
-			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y - itemHeight }, STL.scroll_time, 
-					{ onComplete:on_scrollComplete } ));
+			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y}, STL.scroll_time, 
+				{ onComplete:on_scrollComplete, onUpdate:cursor_updateY } ));
+			_itm.alpha = 0;			// Start values for the tween:
+			_itm.y += itemHeight;
+		}else{
+			on_scrollComplete();	// handle _markedItem and scroll indicators
 		}
-
+	
 		return true;
 	}//---------------------------------------------------;
 
@@ -834,38 +815,34 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		_markedItem = itemSlots[_i1];
 
-		var _cnt = _i1; // last index
-		while (_cnt >= 0) {
+		var i = _i1; // last index
+		while (i >= 0) {
 			if (STL.scroll_time==0) {
-				itemSlots[_cnt].y += itemHeight; // itemHeight includes padding
+				itemSlots[i].y += itemHeight; // itemHeight includes padding
 			}else {
-				var pr = { y:itemSlots[_cnt].y + itemHeight };
-				if (_cnt == _i1) Reflect.setField(pr, "alpha", 0);
-				tween_slot.push(FlxTween.tween(itemSlots[_cnt], pr, STL.scroll_time));
+				var pr = { y:itemSlots[i].y + itemHeight };
+				if (i == _i1) Reflect.setField(pr, "alpha", 0);
+				tween_slot.push(FlxTween.tween(itemSlots[i], pr, STL.scroll_time));
 			}
-			itemSlots[_cnt] = itemSlots[_cnt - 1];
-			itemSlotsX0[_cnt] = itemSlotsX0[_cnt - 1];	// last iteration will fetch [-1], but its ok.
-			_cnt--;
+			itemSlots[i] = itemSlots[i - 1];
+			itemSlotsX0[i] = itemSlotsX0[i - 1];	// last iteration will fetch [-1], but its ok.
+			i--;
 		}
 		
-		_cnt++; // Fix count to point to the new slot
+		i++; // Fix count to point to the new slot
 		
-		if (STL.scroll_time==0)
-		{
-			_itm = item_getAndPlace(_cnt, scrollOffset - 1);
-			_itm.alpha = 1;
-			scrollOffset--;
-			itemSlots[0] = _itm;
-			on_scrollComplete(null);
-		}else
-		{
-			_itm = item_getAndPlace(_cnt, scrollOffset - 1, -1);
-			_itm.alpha = 0;
-			scrollOffset--;
-			itemSlots[0] = _itm;
+		_itm = item_getAndPlace(i, scrollOffset - 1);
+		scrollOffset--;
+
+		if (STL.scroll_time > 0) {
 			isScrolling = true;
-			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y + itemHeight }, 
-				STL.scroll_time, { onComplete:on_scrollComplete } ));
+			tween_slot.push(FlxTween.tween(_itm, { alpha:1, y:_itm.y}, 
+				STL.scroll_time, { onComplete:on_scrollComplete, onUpdate:cursor_updateY } ));
+			_itm.alpha = 0;			// Start values for the tween:
+			_itm.y -= itemHeight;
+			
+		}else{
+			on_scrollComplete();
 		}
 		
 		return true;
@@ -979,7 +956,9 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			);	
 		}
 		
-		cursor_point();
+		if (cursor != null) {
+			cursor.point(indexItem, itemSlotsX0[indexSlot]);
+		}
 	}//---------------------------------------------------;
 	
 	
@@ -1127,8 +1106,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	
 	
-
-	//====================================================;
 	
 	// If has more elements above the view window
 	inline function get_hasMoreUp():Bool 
@@ -1276,17 +1253,19 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	* # Adds it to the stage
 	* @param	ySlot 		, 0 is the first slot
 	* @param	dataIndex	, The index of the data array to pass
-	* @param	offsetSlot	, Used for positioning, -1,0,+1
 	*/
-	function item_getAndPlace(slotNum:Int, dataIndex:Int, offsetSlot:Int = 0):T
+	function item_getAndPlace(slotNum:Int, dataIndex:Int):T
 	{
 		_itm = poolGet(dataIndex);
+		_itm.moves = false;		// Late to the party
 		_itm.visible = true; // Just in case
-		_itm.y = (slotNum + offsetSlot) * itemHeight;
+		_itm.alpha = 1;		// Just in case
+		_itm.y = (slotNum) * itemHeight;
 		_itm.x = get_itemStartX(_itm);
 		_itm.unfocus(); // Element might be focused or just created. Just in case to default?
 		add(_itm);
 		itemSlotsX0[slotNum] = Math.round(_itm.x);	// after (add) so it gets global coords
+		itemSlots[slotNum] = _itm;
 		// Note: At this point the alpha could be anything because of recycle
 		// Set the desired alpha after getting this.
 	   return _itm;

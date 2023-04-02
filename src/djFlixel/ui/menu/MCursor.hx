@@ -56,14 +56,17 @@ typedef MCursorStyle = {
 class MCursor implements IVListCursor
 {
 	var spr:FlxSprite;
-	var group:FlxSpriteGroup;
-	var STL:MPageStyle;
-	var C:MCursorStyle;	// shortcut for STL.cursor
+	var group:FlxSpriteGroup;	// Pointer to parent
+	var C:MCursorStyle;			// Shortcut for STL.cursor style
 	var easefn:EaseFunction;
+	
+	var xbase:Float;		// x position baseline
+	var tw_x:Float;		// Tween X | Relative
+	var tw_a:Float;		// Tween Alpha | Absolute
 	
 	public function new(style:MPageStyle)
 	{
-		STL = style;
+		var STL = style;
 		C = STL.cursor;	// shorthand
 		
 		if (C.anim != null)
@@ -84,7 +87,6 @@ class MCursor implements IVListCursor
 		
 		else
 		{
-			
 			// It is TEXT or ICON
 			// So I'd better have a color ready to use in any
 			
@@ -110,13 +112,12 @@ class MCursor implements IVListCursor
 				if (C.text == null) throw "Cursor Style Error, nothing is setup, not even text";
 				#end
 				spr = cast D.text.get(C.text, col);
-			
 			}
 		}
 		
 		spr.moves = false;
-		if (C.tween != null) 
-		{
+		
+		if (C.tween != null) {
 			easefn = Reflect.field(FlxEase, C.tween.ease);
 			if(C.offset!=null)
 			spr.offset.subtract(C.offset[0], C.offset[1]);
@@ -127,28 +128,30 @@ class MCursor implements IVListCursor
 	public function attach(v:FlxSpriteGroup):Void 
 	{
 		if (group != null) group.remove(spr);
-		visible(false);	// Just in case
+		visible(false);	// Always start hidden
 		group = v;
 		group.add(spr);
 	}//---------------------------------------------------;
 	
-	public function point(el:FlxSprite, itemX0:Float)
-	{
+	public function point(item:FlxSprite, _xbase:Float)
+	{		
+		tw_x = 0;
 		visible(true);
-		spr.x = itemX0 - spr.width;
-		spr.y = el.y;
 		
-		if (C.tween==null) return;
-		spr.alpha = C.tween.a0;
-		spr.x += C.tween.x0;
+		if (C.tween != null)
+		{
+			tw_a = C.tween.a0;
+			tw_x = C.tween.x0;
+			spr.alpha = tw_a;
+			FlxTween.cancelTweensOf(this);
+			FlxTween.tween(this, {tw_x:C.tween.x1, tw_a:C.tween.a1 }, C.tween.time, {ease:easefn, onUpdate:(_)->{
+				spr.alpha = tw_a;
+				spr.x = xbase - spr.width + tw_x;
+			}});
+		}
 		
-		FlxTween.cancelTweensOf(spr);
-		FlxTween.tween(spr, {
-			x:spr.x - C.tween.x0 + C.tween.x1,
-			alpha:C.tween.a1}, 
-			C.tween.time, 
-			{ease:easefn}
-		);
+		updateY(item);
+		updateX(_xbase);
 	}//---------------------------------------------------;
 
 	public function visible(enabled:Bool)
@@ -156,19 +159,15 @@ class MCursor implements IVListCursor
 		spr.visible = spr.active = enabled;
 	}//---------------------------------------------------;
 	
-	
-	public function updateY(ypos:Float)
+	public function updateY(item:FlxSprite)
 	{
-		// This hack is needed, until I find a better way to manage 
-		// following an item that is currently vertically scrolling
-		spr.y = ypos;
+		D.align.YAxis(spr, item, "c");
 	}//---------------------------------------------------;
 	
-	public function updateX(xpos:Float)
+	public function updateX(_xbase:Float)
 	{
-		spr.x = xpos - spr.width;
-		if (C.tween==null) return;
-		spr.x += C.tween.x1;
+		xbase = _xbase;
+		spr.x = xbase - spr.width + tw_x;
 	}//---------------------------------------------------;
 	
 }
