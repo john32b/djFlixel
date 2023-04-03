@@ -1042,7 +1042,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		{
 			function cs(name) {
 				var a = new FlxSprite(0, 0, D.bmu.replaceColor(D.ui.getIcon(STL.sind_size, name), 0xFFFFFFFF, STL.sind_color));
-				a.active = false;
+				a.active = a.moves = false;
 				a.offset.x = -STL.sind_offx;
 				return a;
 			};

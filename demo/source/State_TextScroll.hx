@@ -20,70 +20,79 @@ class State_TextScroll extends FlxState
 	override public function create():Void 
 	{
 		super.create();
+
+		var S = new FlxSequencer2();
 		
-		add(new FlxSequencer((s)->{ switch(s.step) {
-			case 1:
-				Main.create_add_8bitLoader(0.7, s.nextV);
-			case 2:
-				// -- Paralax bg
-				var colors = FlxColor.gradient(0xFF0080FF, 0xFF200050, 12);
-				var parallaxes:Array<BoxScroller> = [];
-				var h0 = 48;
-				var inc = FlxG.height / (colors.length-1);
-				for (i in 0...colors.length) {
-					var b = new BoxScroller("im/stripe_02.png", 0, 0, FlxG.width);
-						b.color = colors[i];
-						b.autoScrollX = -(0.2 + (i * 0.15)) * (1 + (i * 0.06));
-						b.randomOffset();
-						parallaxes.push(b);
-						b.x = 0;
-						b.y = (inc * i) - 24;
-						add(b);
-				}
-				
-				s.next(0.6);
-			case 3:
-				// -- Particles
-				var em = new FlxEmitter(320, 32, 64);
-					em.height = 64;
-					em.particleClass = ParBall;
-					em.launchMode = FlxEmitterMode.SQUARE;
-					em.velocity.set( -40, 0, -70);
-					em.start(false, 0.3);
-					em.lifespan.set(99); // Large lifespan, the particle will killself on offsreen
-					add(em);
-				FlxToast.FIRE("press ESC to skip", {bg:0x00000000, screen:"top:right" });
-				s.next(1);
-			case 4:
-				// -- Text scroller
-				var ts = new TextScroller(SCROLLER_TEXT, {
-						s:16,
-						c:Pal_DB32.COL[21],
-						bc:Pal_DB32.COL[1],
-						bt:2, bs:3
-					}, {
-						y:170,
-						pad:1,
-						speed:2.4,
-						loopMode:0,	// no loop
-						sHeight:20,
-						w0:1.5
-					});	
-				ts.onLoop = s.nextV;
-				add(ts);
-			case 5:
-				for (i in this) remove(i);
-				new common.SubState_Letters(
-					"DJFLIXEL", 
-					s.nextV, {
-						text:{c:Pal_DB32.COL[29]}, 
-						snd:"cursor_low", tPre:0.4, tPost:0.2, bg:Pal_DB32.COL[1]
-					});
-			case 6:
-				Main.goto_state(NEXTSTATE);
-			case _:
-		}}, 0));
+		S.add( n->Main.create_add_8bitLoader(0.7, n.bind()) );
 		
+		S.add( n->{
+			// -- Background Sky
+			var colors = FlxColor.gradient(0xFF0080FF, 0xFF200050, 12);
+			var parallaxes:Array<BoxScroller> = [];
+			var h0 = 48;
+			var inc = FlxG.height / (colors.length-1);
+			for (i in 0...colors.length) {
+				var b = new BoxScroller("im/stripe_02.png", 0, 0, FlxG.width);
+					b.color = colors[i];
+					b.autoScrollX = -(0.2 + (i * 0.15)) * (1 + (i * 0.06));
+					b.randomOffset();
+					parallaxes.push(b);
+					b.x = 0;
+					b.y = (inc * i) - 24;
+					add(b);
+			}
+			n(0.6);
+		});
+		
+		S.add( n->{
+			// -- Particles
+			var em = new FlxEmitter(320, 32, 64);
+				em.height = 64;
+				em.particleClass = ParBall;
+				em.launchMode = FlxEmitterMode.SQUARE;
+				em.velocity.set( -40, 0, -70);
+				em.start(false, 0.3);
+				em.lifespan.set(99); // Large lifespan, the particle will killself on offsreen
+				add(em);
+			FlxToast.FIRE("press ESC to skip", {bg:0x00000000, screen:"top:right" });
+			n(1);
+		});
+			
+		S.add( n->{
+			// -- Text scroller
+			var ts = new TextScroller(SCROLLER_TEXT, {
+					s:16,
+					c:Pal_DB32.COL[21],
+					bc:Pal_DB32.COL[1],
+					bt:2, bs:3
+				}, {
+					y:170,
+					pad:1,
+					speed:2.4,
+					loopMode:0,	// no loop
+					sHeight:20,
+					w0:1.5
+				});	
+			ts.onLoop = n.bind();
+			add(ts);
+		});
+		
+		S.add( n->{
+			for (i in this) remove(i);
+			new common.SubState_Letters(
+				"DJFLIXEL", 
+				n.bind(), {
+					text:{c:Pal_DB32.COL[29]}, 
+					snd:"cursor_low", tPre:0.4, tPost:0.2, bg:Pal_DB32.COL[1]
+				});
+		});
+		
+		S.add( n->{
+			Main.goto_state(NEXTSTATE);
+		});
+		
+		add(S);
+		S.next();
 	}//---------------------------------------------------;
 
 	

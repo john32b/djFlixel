@@ -14,7 +14,6 @@ import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.SpriteEffects;
 import djFlixel.gfx.pal.Pal_DB32 as DB32; // Cool Haxe Feature
 import djFlixel.other.DelayCall;
-import djFlixel.other.FlxSequencer;
 import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxToast;
 import djFlixel.ui.MPlug_Header;

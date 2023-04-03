@@ -5,14 +5,14 @@
  
  = EXAMPLE
  
-	var st = new StepLoop(2,5,3, (t)->{
+	var st = new StepLoop(2, 3, 3, (t)->{
 		trace(t);
 	});
-	>> output : 0,1,2,3,4,5,4,3,2,1,0,1,2,3,4,5 .......
+	// output: 0 1 2 3 2 1 0 1 2 3 ....... forever
  
- DEV : This could be an object, but I want to be able to use this on an 
-		FlxSpriteGroup as well but they don't support adding objects (just sprites)
-		So I am doing it manually (plus more lightweight)
+ DEV :  This could be an object, but I want to be able to use this in a
+		FlxSpriteGroup as well but they don't support adding FlxObjects (just FlxSprites)
+		So I am doing it manually (plus more lightweight?)
 	   
 ***************************************/
 
