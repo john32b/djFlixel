@@ -300,11 +300,7 @@ class FlxMenu extends FlxGroup
 			return;
 		}
 	
-		if (pageActive == pdata && _open) {
-			// Already there, try to open the page and exit
-			open();
-			return;
-		}
+		if (pageActive == pdata) return; // Already there
 		
 		// Search if this page is in history, if it is remove it and everything after
 		var i = history.length;
@@ -512,7 +508,7 @@ class FlxMenu extends FlxGroup
 	{
 		mpActive = pool_get(pageActive);
 		add(mpActive);
-		mpActive.setPosition(x, y);			// in case the menu moved
+		//mpActive.setPosition(x, y);			// in case the menu moved
 		// : Get cursor position
 		if (_flag_restore_selected_index) {
 			mpActive.setSelection(pageActive.PAR.cindex);

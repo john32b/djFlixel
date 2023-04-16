@@ -173,7 +173,38 @@ class MPage extends VList<MItem,MItemData>
 			insert(0, bg);
 		}
 		
+		
+		// :: NEW - Custom positioning based on MPageData
+		// Applied here, after `setDataSource` so that menu_height and items are initialized
+		
+		
+		if (page.PAR.pos == 'abs')
+		{
+			this.x = page.PAR.x;
+			this.y = page.PAR.y;
+		}
+		
+		else if (page.PAR.pos.indexOf('screen') == 0)
+		{
+			var xy = page.PAR.pos.split(',').splice(1, 2);
+			var y1:Float = 0;
+			if (scind != null && ('tb'.indexOf(xy[1]) >= 0) )
+				y1 = STL.sind_size + 2;
+				
+			D.align.screen(this, xy[0], xy[1], y1);	// DEV: I know this is not perfect, as unwanted X padding could occur
+			this.x += page.PAR.x;
+			this.y += page.PAR.y;
+			
+		}
+		
+		else if (page.PAR.pos == 'rel')
+		{
+			this.x += page.PAR.x;
+			this.y += page.PAR.y;
+		}
+		
 	}//---------------------------------------------------;
+	
 	
 	// DEVNOTE: All this code just to fade the bg in and out..
 	override function tween_allSlots(Alphas:Array<Float>, StartOffs:String, EndOffs:String, Times:String, onComplete:Void->Void, ease:String, hardstart:Bool):Void 
@@ -189,8 +220,10 @@ class MPage extends VList<MItem,MItemData>
 			tween_map.get(bg).cancel();
 		}
 		
-		bg.alpha = Alphas[0];
-		tween_map.set(bg, FlxTween.tween( bg, {alpha:Alphas[1]} , totaltime));
+		if (totaltime > 0) {
+			bg.alpha = Alphas[0];
+			tween_map.set(bg, FlxTween.tween( bg, {alpha:Alphas[1]} , totaltime));
+		}
 	}//---------------------------------------------------;
 	
 	// Initializes the emenu, and focuses the first available

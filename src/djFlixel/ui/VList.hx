@@ -81,6 +81,108 @@ interface IVListCursor
 
 
 
+/**`
+	Custom Manager that handles the Scrolling Indicators
+	at the top/bottom of the menu, when the menu overflows
+	:: This class can be extended ::
+**/
+@:access(djFlixel.ui.VList)
+class VListScrollIndicator
+{
+	var type:Int;	// Animation Style : Type 1 Repeat, 2 Loop, 3 Blink
+	var loop:StepLoop;
+	var el:Array<FlxSprite>;
+	var list:VList<Dynamic,Dynamic>;
+	
+	public function new(l:VList<Dynamic,Dynamic>)
+	{
+		list = l;
+		create();
+	}//---------------------------------------------------;
+
+	function create()
+	{
+		var S = list.STL;	// Shorthand
+		
+		// Quick helper
+		var cs = (name:String)->{
+			var a = new FlxSprite(0, 0, D.bmu.replaceColor(
+				D.ui.getIcon(S.sind_size, name), 0xFFFFFFFF, S.sind_color
+			));
+			a.active = a.moves = false;
+			a.offset.x = -S.sind_offx;
+			return a;			
+		};
+		
+		var csv = S.sind_anim.split(',');		// Read the CSV data 'Type,Steps,Time'
+			type = Std.parseInt(csv[0]);
+			el = [ cs('ar_up'), cs('ar_down') ];
+			el[0].x = el[1].x = switch(S.align) {
+				case "center", "justify" : (list.menu_width / 2) - (el[0].width / 2);
+				case _: list.OPT.sc_ind_pad;
+			};
+			
+		el[0].y = -S.sind_size;
+		el[1].y = list.menu_height;
+		
+		list.add(el[0]);
+		list.add(el[1]);
+		
+		loop = new StepLoop(type, Std.parseInt(csv[1]), Std.parseFloat(csv[2]), step_loop_tick);
+		hide();
+	}//---------------------------------------------------;
+	
+	// Refresh scroll indicator Y Position
+	function step_loop_tick(v:Int)
+	{
+		if (type < 3) {
+			el[0].y = list.y - list.STL.sind_size - v;
+			el[1].y = list.y + list.menu_height + v;
+		}else{
+			if (list.get_hasMoreDown()) el[1].visible = ! el[1].visible;
+			if (list.get_hasMoreUp())   el[0].visible = ! el[0].visible;
+		}
+	}//---------------------------------------------------;
+	
+	// Always Called
+	public function scroll_changed()
+	{
+		el[0].visible = list.get_hasMoreUp();
+		el[1].visible = list.get_hasMoreDown();
+	}//---------------------------------------------------;
+	
+	public function update(elapsed:Float)
+	{
+		loop.update(elapsed);
+	}//---------------------------------------------------;
+	
+	public function visible()
+	{
+		// DEV: This is called on list focus and I need to set the first state
+		//		can't do it at the create() function, because scrolling might 
+		//		change between then and focusing, like setting another index
+							//   ^
+		scroll_changed();	// <-|
+		loop.start();
+	}//---------------------------------------------------;
+	
+	public function hide()
+	{
+		loop.stop();
+		el[0].visible = el[1].visible = false;
+	}//---------------------------------------------------;
+	
+	
+	public function overlaps(mCoords:FlxPoint,i:Int):Bool
+	{
+		return (el[i].overlapsPoint(mCoords));
+	}//---------------------------------------------------;
+	
+}// -- end class;
+
+
+
+
 /**
  * Additional List Parameters Object
  * stored in {VList.STL}
@@ -233,12 +335,11 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// 0:None 1:Scroll Only 2:Cursor | see setInputMode()
 	var inputMode:Int;
 	
-	public var cursor(default, null):IVListCursor;
+	// - Attached Cursor
+	var cursor:IVListCursor;
 	
-	// - Scroll Indicator vars
-	var sind_ty:Int;		// Type 1 Repeat, 2 Loop, 3 Blink
-	var sind_loop:StepLoop;
-	var sind_el:Array<FlxSprite>;
+	// - Attached Scrolling Indicator
+	var scind:VListScrollIndicator;
 	
 	#if (FLX_MOUSE)
 	var oCoords:FlxPoint = FlxPoint.weak();
@@ -326,11 +427,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		if (isFocused)
 		{
-			if (sind_loop != null) sind_loop.update(elapsed);
-			
-			// DEV: There is a bug? here, If processInput() callbacks to user and user
-			//      destroys the menu, then processmouse() will get called but it will throw
-			//      because the menu has beeen destroyed!!! I need to work on this.
+			if (scind != null) scind.update(elapsed);
 			
 			if (! (inputMode == 0 || isScrolling) )
 				processInput();
@@ -364,8 +461,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			slot_focus(indexLastSlot);
 		}
 		
-		scroll_ind_update();
-		if (sind_loop != null) sind_loop.start();
+		if(scind!=null) scind.visible();
 			
 	}//---------------------------------------------------;
 	
@@ -380,11 +476,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		if (cursor != null) cursor.visible(false);
 		
-		if (sind_loop != null)
-		{
-			sind_loop.stop();
-			sind_el[0].visible = sind_el[1].visible = false;
-		}
+		if(scind!=null) scind.hide();
 		
 	}//---------------------------------------------------;	
 	
@@ -394,9 +486,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		if (isFocused) return;
 		active = true;
-		if (sind_el != null){
-			sind_el[0].visible = sind_el[1].visible = false;
-		}
+		if (scind != null) scind.hide(); // Just in case
 		// DEV: Put in an Array [ offset_str , time_str ] e.g. [ "2:3" ,"3.4:2"]
 		var vt_IN = STL.vt_IN.split('|');
 		tween_allSlots([0, 1], vt_IN[0], "0:0", instant?"0:0":vt_IN[1],
@@ -521,7 +611,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			}
 		}
 		
-		scroll_ind_create(overflows);
+		// -- Scroll Indicator
+		// Indicators are only going to be created if menu overflows
+		if (overflows)
+			scind = new VListScrollIndicator(this);
 		
 	}//---------------------------------------------------;
 	
@@ -596,6 +689,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		}
 		
 		scrollOffset = ind;
+		scrollRatio = scrollOffset / scrollMax;
 	
 		for (i in 0...slotsTotal) {
 			if (data[i + ind] != null) {
@@ -606,7 +700,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			}
 		}
 		
-		scroll_ind_update();
+		if(scind!=null) scind.scroll_changed();
 	}//---------------------------------------------------;
 	function processInput()
 	{
@@ -662,7 +756,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	// DEV: Note that I am not checking for the actual item rectangle
 	//      since the item could be scrolled to the side. I am checking
 	//		the position the item should be when idle
-	function _pointOverlapsWithSlot(cX:Float, cY:Float, cSlot:Int):Bool
+	function _pointOverlapsWithSlot(p:FlxPoint, cSlot:Int):Bool
 	{
 		_itm = itemSlots[cSlot];
 		if (_itm == null) return false;
@@ -670,17 +764,27 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		if (indexSlot == cSlot)
 		// Focused items
 		return (
-			cY >= _itm.y && cY < (_itm.y + _itm.height + STL.item_pad) &&
-			cX >= _itm.x - _mcheckpad[0] &&
-			cX <= _itm.x + _itm.width + _mcheckpad[1]);
+			p.y >= _itm.y && p.y < (_itm.y + _itm.height + STL.item_pad) &&
+			p.x >= _itm.x - _mcheckpad[0] &&
+			p.x <= _itm.x + _itm.width + _mcheckpad[1]);
 			
 		// Unfocused Items
 		return ( 
-			cY >= _itm.y && cY < (_itm.y + _itm.height + STL.item_pad) &&
-			cX >= itemSlotsX0[cSlot] - _mcheckpad[0] &&
-			cX <= itemSlotsX0[cSlot] + _itm.width + _mcheckpad[1]);
+			p.y >= _itm.y && p.y < (_itm.y + _itm.height + STL.item_pad) &&
+			p.x >= itemSlotsX0[cSlot] - _mcheckpad[0] &&
+			p.x <= itemSlotsX0[cSlot] + _itm.width + _mcheckpad[1]);
 			
 	}//---------------------------------------------------;
+	
+	// -- Called from processMouse() when the scrolling should change
+	function _scroll_change_focus(dir:Int)
+	{
+		if (inputMode != 2) return;
+		indexData += dir;
+		slot_unfocus();
+		slot_focus(indexLastSlot);
+	}//---------------------------------------------------;
+	
 	
 	function processMouse()
 	{
@@ -704,25 +808,29 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		//  Anywhere on the screen for now
 		if (overflows && inputMode > 0) 
 		{
-			if (FlxG.mouse.wheel < 0 && scrollDown1()) 
-			{
-				if (inputMode == 2) {
-					indexData++;
-					slot_unfocus();
-					slot_focus(indexLastSlot);
-				}
-				return;
-			}
-		
 			if (FlxG.mouse.wheel > 0 && scrollUp1()) 
 			{
-				if(inputMode==2) {
-					indexData--;
-					slot_unfocus();
-					slot_focus(indexLastSlot);
-				}
-				return;
+				return _scroll_change_focus( -1);
 			}
+			
+			if (FlxG.mouse.wheel < 0 && scrollDown1()) 
+			{
+				return _scroll_change_focus(1);
+			}
+			
+			if (scind != null) 
+			{
+				if (FlxG.mouse.justPressed && scind.overlaps(mCoords, 0) && scrollUp1())
+				{
+					return _scroll_change_focus( -1);
+				}
+				
+				if (FlxG.mouse.justPressed && scind.overlaps(mCoords, 1) && scrollDown1())
+				{
+					return _scroll_change_focus(1);
+				}
+			}
+			
 		}// --
 		
 		// :: Check for item interaction
@@ -731,7 +839,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		// :: Rollover, Clicks check
 		for (slot in 0...slotsTotal) 
 		{
-			if (_pointOverlapsWithSlot(mCoords.x, mCoords.y, slot))
+			if (_pointOverlapsWithSlot(mCoords, slot))
 			{
 				if (FlxG.mouse.justPressed) 
 				{
@@ -788,6 +896,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		_itm = item_getAndPlace(i, scrollOffset + i + 1);
 		scrollOffset++;
+		scrollRatio = scrollOffset / scrollMax;
 		
 		if (STL.scroll_time > 0) {
 			isScrolling = true;
@@ -833,6 +942,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		_itm = item_getAndPlace(i, scrollOffset - 1);
 		scrollOffset--;
+		scrollRatio = scrollOffset / scrollMax;
 
 		if (STL.scroll_time > 0) {
 			isScrolling = true;
@@ -1011,62 +1121,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	
-	/**
-	 * Called after any scroll change, Checks/Updates if scroll inds should be visible
-	 */
-	function scroll_ind_update()
-	{
-		if (!overflows || sind_el == null) return;
-		scrollRatio = scrollOffset / scrollMax;
-		
-		sind_el[0].visible = get_hasMoreUp();
-		sind_el[1].visible = get_hasMoreDown();
-	}//---------------------------------------------------;
-	
-	// Refresh scroll indicator Y Position
-	function scroll_ind_tick(v:Int)
-	{
-		if (sind_ty < 3) {
-			sind_el[0].y = this.y - STL.sind_size - v;
-			sind_el[1].y = this.y + menu_height + v;
-		}else{
-			if (get_hasMoreDown()) sind_el[1].visible = ! sind_el[1].visible;
-			if (get_hasMoreUp())   sind_el[0].visible = ! sind_el[0].visible;
-		}
-	}//---------------------------------------------------;
-	
-	/** Create/Remove the scrolling indicators */
-	function scroll_ind_create(create:Bool = true)
-	{
-		if (create)
-		{
-			function cs(name) {
-				var a = new FlxSprite(0, 0, D.bmu.replaceColor(D.ui.getIcon(STL.sind_size, name), 0xFFFFFFFF, STL.sind_color));
-				a.active = a.moves = false;
-				a.offset.x = -STL.sind_offx;
-				return a;
-			};
-			if (sind_el != null) return;	
-			var s = STL.sind_anim.split(',');	// Read the CSV data
-				sind_ty = Std.parseInt(s[0]);	// Type
-				sind_el = [ cs('ar_up'), cs('ar_down') ];
-				sind_el[0].x = sind_el[1].x = switch(STL.align) {
-					case "center", "justify" : (menu_width / 2) - (sind_el[0].width / 2);
-					case _: OPT.sc_ind_pad;
-				};
-			sind_el[0].y = -STL.sind_size;
-			sind_el[1].y = menu_height;
-			add(sind_el[0]); add(sind_el[1]);
-			sind_loop = new StepLoop(sind_ty, Std.parseInt(s[1]), Std.parseFloat(s[2]), scroll_ind_tick);
-			sind_loop.fire();	// Force a tick to position on the Y axis NOW			
-		}else{
-			if (sind_el == null) return;
-			remove(sind_el[0]); remove(sind_el[1]); 
-			sind_el = FlxDestroyUtil.destroyArray(sind_el);
-			sind_loop = null;
-		}
-	}//---------------------------------------------------;
-	
 	// --
 	// All item callbacks are handled here
 	// DEV: This is extended by MPage, that's why.
@@ -1074,17 +1128,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		queue_itemEvent(e);
 	}//---------------------------------------------------;
-	
-	// -- 
-	// Cursor data has changed, reflect to visual
-	// :: indexData, indexSlot have changed.
-	// - Called from ( selectionDownUp1 )
-	function on_dataIndexChange()
-	{
-		//currentItem_Unfocus();
-		indexItem = itemSlots[indexSlot];
-		//currentItem_Focus();
-	}//---------------------------------------------------;	
+
 	
 	// - Called on every scroll-by-one tween complete
 	function on_scrollComplete(?t:FlxTween)
@@ -1099,12 +1143,10 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		_markedItem = null;
 		
 		// DEV: I am checking this, because the menu could unfocus while it was scrolling.
-		if(isFocused){
-			scroll_ind_update();
+		if (isFocused && scind != null) {
+			scind.scroll_changed();
 		}
 	}//---------------------------------------------------;		
-	
-	
 	
 	
 	// If has more elements above the view window
@@ -1172,14 +1214,11 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		
 		var tt:Array<Float> = Times.split(':').map((s)->Std.parseFloat(s));
 		
-		#if hl
-			var off0:Array<Int> = [for (i in StartOffs.split(':')) Std.parseInt(i)];
-			var off1:Array<Int> = [for (i in EndOffs.split(':')) Std.parseInt(i)];
-		#else
-			// BUG: Send a report, this does not work in Hl and it should?
-			var off0:Array<Int> = StartOffs.split(':').map((s)->Std.parseInt(s));
-			var off1:Array<Int> = EndOffs.split(':').map((s)->Std.parseInt(s));		
-		#end
+		var off0:Array<Int> = [for (i in StartOffs.split(':')) Std.parseInt(i)];
+		var off1:Array<Int> = [for (i in EndOffs.split(':')) Std.parseInt(i)];
+		// DEV: BUG: The following crashes on HashLink. So I am doing it like this ^^
+			//var off0:Array<Int> = StartOffs.split(':').map((s)->Std.parseInt(s));
+			//var off1:Array<Int> = EndOffs.split(':').map((s)->Std.parseInt(s));		
 
 		clear_tween_slot();
 		clear_tween_map();

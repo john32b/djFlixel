@@ -10,8 +10,6 @@
 package djFlixel.ui.menu;
 import djA.DataT;
 import djFlixel.ui.menu.MItemData;
-import flash.display3D.IndexBuffer3D;
-import haxe.macro.Expr.Var;
 
 @:dce
 class MPageData 
@@ -31,10 +29,21 @@ class MPageData
 	/** MPage STP overlay. Set this to override fields of the MPage style */
 	public var STPo:Dynamic;
 	
-	/** Optional Parameters | Skip Dynamic to make an anonymous struct with autocompletion*/
+	/** Optional Parameters (Anonymous struct with autocompletion) */
 	public var PAR = {
-		width:0,			// Override the FLXMENU width for this page
-		slots:0,			// Override the FLXMENU slots for this page
+		pos:'rel',			// rel : Relative to root FlxMenu (x,y) pos
+							// abs : Fixed world/screen coordinates
+							// screen,X,Y : align to screen edges
+							// 	X: l c r
+							//  Y: t c b  ; uses Dalign.screen() identifiers
+							
+							//   e.g. 	"screen,t,l" 	-- position menu to top-left center of the screen
+							//			"screen,c,c" 	-- position menu to screen center
+							
+		x:0,				// Override FlxMenu x for pos:(rel,abs). OR padding for pos (screen,x)
+		y:0,				// Override FlxMenu y for pos:(rel,abs). OR padding for pos (screen,y)
+		width:0,			// Override FlxMenu width
+		slots:0,			// Override FlxMenu slots
 
 		// -- The following are used internally :
 		
@@ -90,6 +99,25 @@ class MPageData
 		return this;
 	}//---------------------------------------------------;
 
+	
+	/** Quickly modify the PARameters object
+	 *  @param p Override fields of PAR
+	 */
+	public function par(p:Dynamic):MPageData
+	{
+		PAR = DataT.copyFields(p, PAR);
+		return this;
+	}//---------------------------------------------------;
+	
+	/** Quickly add overrides to the STPo object
+	 */	
+	public function stl(p:Dynamic):MPageData
+	{
+		STPo = DataT.copyFields(p, STPo);
+		return this;
+	}//---------------------------------------------------;
+	
+	
 	/**
 	 * Get an MItemData from ID
 	 * <null> if nothing is found */

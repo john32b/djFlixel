@@ -47,16 +47,16 @@ class State_Menu1 extends FlxState
 		var box = new InfoBox(str, { width:300, colBG:0xf0f0f0, text:{c:0xff535359, bc:0xffcbdbfc}});
 		
 		// Add and align to the center of the bottom of the screen, bring 36 pixels more to the top
-		add(D.align.screen(box, "c", "b", 36 ));
+		add(D.align.screen(box, "c", "b", 28 ));
 		
 		new DelayCall(1.0, box.open.bind()); // Open the box after 1 second
 		
 		//====================================================;
 
 		// - Create a simple menu and style it a bit
-		// - Position at (x,y) 0 for autowidth and make it display 8 items 
+		// - Position at (x,y), 100 pixel wide and make it display 8 items 
 		// - If the "slots" is lower, then the items will scroll
-		var m = new FlxMenu(32, 32, 0, 8);
+		var m = new FlxMenu(32, 32, 100, 8);
 		
 		// - A quick way to add sounds to a menu with the <plugin system>
 		// - Every field of the object is the menu_event, and the value is the soundID to play
@@ -71,6 +71,7 @@ class State_Menu1 extends FlxState
 		m.PAR.start_button_fire = true;
 		
 		m.STP.align = "left";	// Also try "center" and "justify"
+								// NOTE: ^ Those require a good WIDTH to be set, don't work well with 0 Width
 		
 		add(m);
 
@@ -104,14 +105,20 @@ class State_Menu1 extends FlxState
 			 -|Antialiasing | toggle | id_aa 
 			 -|Sound Options | label |.|U
 			 -|Volume | range | id_musvol | 0,100 | step=5
-			 -|Back		|link  | @back ");
+			 -|Back		|link  | @back ")
+			 
+			 .par({pos:"screen:c,c", y: -64})	// NEW: Align this page at screen x axis (c:Center) and y axis (c:Center)
+												// also move it 20 pixels up the y axis
 		
+			 .stl({align:"center"});			// NEW: Override the Style object for this page only.
+			 
+			 
 			// ^ IMPORTANT NOTE:
 			// Notice the "U" declaration. It means make the item unselectable
 			// But since the third field is the ID, I have to give it a random string
 			// like "." for the label's ID and then put "U" so it can register it..
 			 
-		
+			
 		// - FlxMenu deals with events with simple callback functions
 		// - These two are the only ones you can listen 
 		// - This sends menu related events, like {open,focus}

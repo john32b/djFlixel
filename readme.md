@@ -1,6 +1,5 @@
 
-> :star: **NEW UPDATE** (2023-04) `V0.5.5` See [Announcement](https://github.com/john32b/djFlixel/discussions/20)  
-> :star: **NEW UPDATE** (2023-03) `V0.5.4` Breaks a few things. Checkout the [Changelog](#dna-changelog) below
+> :star: **NEW UPDATE** (2023-04) `V0.5.6` See [Announcement](https://github.com/john32b/djFlixel/discussions/22)  
 
 # 🔦 What is it
 
@@ -75,10 +74,12 @@ There are other small tools in this libary. Like in the `djflixel/gfx/pal` packa
 
 ![icons_demo](_readme/icons_demo.png)  
 
-<!-- ```haxe
+<!-- 
+```haxe
 // Sprite icon of a heart colored red
 var ic = new FlxSprite(D.bmu.replaceColor(D.ui.getIcon(16,'heart'),0xFFFFFFFF,0xFFFF0000));
-``` -->
+``` 
+-->
 
 ### Slice9 Tile mode Scaling 
 
@@ -111,41 +112,8 @@ Yes, but only inside the the source code. :see_no_evil: . For practical examples
 
 # :dna: Changelog
 
-**- V0.5.4 (2023-03)** 
-```text
-== very few breaking changes ==
-FlxMenu:
-  - Changed a few fields for declaring the custom style objects (FlxMenu.STP)
-  + 'focus_anim' replacing 'focus_anim', is an object
-     that supports more options, like animating on the y axis
-  - 'cursor' field now takes more animation options, check <MCursorStyle>
-  - 'background' is now an object that takes {color,padding}
-  + 'lerp' is a new parameter, that handles the speed of a centered
-     item that changes width and needs to reorient itself
-  + Ability to customize the "popup questions" menu with "FlxMenu.popSTo"
-  . Few bugfixes, the mouse will now trigger range/list items with precision 
-  
->> For any breakage: consult the source code and the compiler. 
-   it should be very easy to adopt to the new version.
-```
-
-**- V0.5 (2022-08)** 
-```text
-== Breaking changes from v0.4 ==
-  - FlxMenu, changed way you declare pages and items
-  - FlxMenu bugfixes, and a new plugin system
-  - FlxAutotext, bugs fixed
-  - FlxMenu, changed the way styles are processed/stored. Styles are more unified now
-  - D.snd breaking changes, there is a new better way to declare sound assets
-  - StaticNoise is now working in HTML5
-  - D.assets, rewrite and partially depracating it
-  - NEW: FlxToast, brought back from v0.3
-  - DelayedCall, changed init parameter order
-  - D.text HTML5 tall font hack-fix
-  - Refactored code in MItemData, it is way better now
-  - Updated the DEMO
-  - General code cleanup, and more that smaller things I don't remember
-```
+- All updates and changelogs are in the [Announcements](https://github.com/john32b/djFlixel/discussions/categories/announcements) page here on github.
+- Old changelogs deleted, starting fresh. 🙊
 
 <!------------------------------------>
 
@@ -165,4 +133,4 @@ John.
 
 ---
 
-**djFlixel** : **0.5.4** *(2023-03)*  | **Author** : john32b  | **License** : MIT 
+**djFlixel** : **0.5.6** *(2023-04)*  | **Author** : john32b  | **License** : MIT 

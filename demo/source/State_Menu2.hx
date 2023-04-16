@@ -228,7 +228,7 @@ class State_Menu2 extends FlxState
 
 		
 		// --
-		var p3 = m.createPage("page3", "page three (3)").add("
+		m.createPage("page3", "page three (3)").add("
 			-| Less Menu Slots Here | label | .
 			-| Scroll Down | label | .
 			-| One | link | .
@@ -240,10 +240,14 @@ class State_Menu2 extends FlxState
 			-| more| list | . | djFlixel v0.5.4,added,smooth animations,for centered,dynamic sized,items,like this one | loop=true
 			-| Go to Root | link | id_root
 			-| Go Back | link | @back
-		");
+		")
 		
-		p3.PAR.slots = 3;
-		p3.STPo = {
+		// NEW: 0.5.6. Another way for writing MenuPageData fields:
+		
+		.par( {slots:3} )	// chainable par() function writes to PAR object
+		
+		.stl( {				// chainable stl() function writes to STPo object ( to override Style )
+			
 			background: {
 				color:0xFF443344,
 				padding:[2,32,2,32]
@@ -260,9 +264,9 @@ class State_Menu2 extends FlxState
 					accent:0xcc3f7b
 				},
 			}	
-		};
+		});
 		
-		// :: NEW
+		
 		// - FlxMenu Header Title
 		// - It is an FlxAutoText object that displays the Page Title of pages
 		// - You can set the properties of the Text like this, for undeclared fields
