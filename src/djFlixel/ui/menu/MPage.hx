@@ -259,10 +259,11 @@ class MPage extends VList<MItem,MItemData>
 		for (i in itemSlots) {
 			if (i.isSame(item)) {
 				i.setData(item);
+				item_changed_width(i);
 				return;
 			}
 		}
-		
+
 		// :: Search `_markedItem` in case the list is scrolling??
 		if (_markedItem != null && _markedItem.isSame(item)) {
 			_markedItem.setData(item);
@@ -278,6 +279,7 @@ class MPage extends VList<MItem,MItemData>
 				}
 			}
 		}
+			
 	}//---------------------------------------------------;
 	
 	/** Get the current active item data the cursor is pointing
@@ -333,21 +335,11 @@ class MPage extends VList<MItem,MItemData>
 		}
 		
 	}//---------------------------------------------------;
-	
-	
-	var lerp:Float = 0;
-	var lerpDest:Float = 0;
+
 	override function on_itemCallback(e:ListItemEvent):Void 
 	{
 		if (e == ListItemEvent.change) {
-			
-			// Recalculate the width table which the Mouse Check reads
-			itemSlotsX0[indexSlot] = Std.int(this.x + get_itemStartX(indexItem));
-			
-			if (alignCenter) {
-				lerp = LERP_DURATION;
-				lerpDest = itemSlotsX0[indexSlot];
-			}
+			item_changed_width(indexItem);
 		}
 		
 		super.on_itemCallback(e);
@@ -368,5 +360,49 @@ class MPage extends VList<MItem,MItemData>
 		
 		super.update(elapsed); // Leave VLIST update last, because of the event system
 	}//---------------------------------------------------;
+	
+	var lerp:Float = 0;
+	var lerpDest:Float = 0;
+	
+	/** Called when an Item is VISIBLE and it changes in width
+	   - recalculates baseline x
+	   - starts a lerp to baseline
+	**/
+	private function item_changed_width(it:MItem)
+	{
+		var slotno = itemSlots.indexOf(it);
+		if (slotno < 0) return;
+		var indexno = this.page.getIndex(it.data.ID);
+		
+		itemSlotsX0[slotno] = Std.int(this.x + get_itemStartX(it));
+		
+		// This is the currently focused item
+		if (it == indexItem)
+		{
+			if (alignCenter) 
+			{
+				lerp = LERP_DURATION;
+				lerpDest = itemSlotsX0[slotno] + ((STL.focus_anim == null)?0:STL.focus_anim.x);
+			}
+			
+		}else{
+			
+			// An item other than the focused one changed
+			// -- This code is copied from VLIST:slot_unfocus();
+			//    I don't want to write a sub-function
+			if (STL.focus_anim != null)
+			{
+				slot_item_tween(
+					it,
+					x + get_itemStartX(it),
+					overflows ? null : (y + (slotno * itemHeight) ),
+					STL.focus_anim.outTime,
+					STL.focus_anim.outEase
+				);
+			}
+			
+		}
+	}//---------------------------------------------------;
+		
 	
 }// --

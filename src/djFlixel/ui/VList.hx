@@ -1172,8 +1172,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		return m;
 	}//---------------------------------------------------;
 	/**
-	   This is to determine the X position of the Items relative to List Start
-	   - This is so I can implement left/center align
+	   This is to determine the baseline X position of an item (relative to VList.x)
 	**/
 	function get_itemStartX(el:T):Float
 	{	

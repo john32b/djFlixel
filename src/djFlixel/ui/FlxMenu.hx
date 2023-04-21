@@ -353,7 +353,7 @@ class FlxMenu extends FlxGroup
 	}//---------------------------------------------------;
 	
 	
-	/** Go to the furst page of the history queue,
+	/** Go to the first page of the history queue,
 	 * Useful when you are in a nested menu and want to go to the root */
 	public function goHome()
 	{
