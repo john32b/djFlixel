@@ -90,12 +90,7 @@ class MPage extends VList<MItem,MItemData>
 	@:allow(djFlixel.ui.menu.MItem)
 	var ghostArrowWidth:Int = 0;
 	
-	/**
-	 * @param	X
-	 * @param	Y
-	 * @param	MENU_WIDTH 0 for rest of the screen, <0 for mirrored margin from X to the right
-	 * @param	SLOTS 0 for default
-	 */
+	
 	public function new(X:Float, Y:Float, WIDTH:Int = 0, SLOTS:Int = 0)
 	{
 		super(MItem, X, Y, WIDTH, SLOTS);

@@ -260,7 +260,7 @@ typedef VListStyle = {
 class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 {	
 	static inline var DEFAULT_SLOTS = 3;
-	static inline var DEFAULT_POOL_MAX = 6;
+	static inline var DEFAULT_POOL_MAX = 8;
 	// ----------------------
 		
 	/** Some Options Set these right after new()
@@ -381,7 +381,11 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	 * Create a Basic Vertical List object.
 	 * @param	X Screen Pos
 	 * @param	Y Screen Pos
-	 * @param	MENU_WIDTH 0 To autocalculate right after `setdata()` -1 To autofill to screen width Mostly used for center
+	   @param	WIDTH Set the menu width. Some special values:
+				0 Sets the menu width to the longest item it finds in the first view
+				(meaning items that are out of view will not be considered)
+				-1 Is a hack and sets the width to (camera.width - (X * 2))
+				(meaning it makes the menu box symmetrical on the center Y axis)
 	 * @param	SLOTSTOTAL Slots for menuitems 0 for default
 	 */
 	public function new(ObjClass:Class<T>, X:Float = 0, Y:Float = 0, MENU_WIDTH:Int = 0, SLOTSTOTAL:Int = 0)
@@ -570,7 +574,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		if (arr == null) return;
 		
-		alignCenter = STL.align == "center";
+		alignCenter = (STL.align == "center");
 		
 		poolClear();
 		clear_tween_slot();	
@@ -586,29 +590,37 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		scrollMax = data.length - slotsTotal;
 		overflows = data.length > slotsTotal;
 		
-		// Get Child Height if not already
-		// Creates a single item, assuming that all items share the same height
+		// - Precreate all the items in the view (until slots fill out)
+		//   measure them and put them in the pool
 		if (itemHeight < 0) {
-			_itm = item__createInstance(0);
-			itemHeight = Std.int(_itm.height) + STL.item_pad;
-			_itm.destroy();
+			
+			// Keep the longest in width item
+			var maxW:Float = 0;
+			for (it in 0...slotsTotal)
+			{
+				if (it >= data.length) break;
+				
+				_itm = poolGet(it);
+				
+				// DEV: itemHeight should be the same for all items, so checking once
+				if (it == 0) {
+					itemHeight = Std.int(_itm.height) + STL.item_pad;
+				}
+				
+				if (_itm.width > maxW) maxW = _itm.width;
+				
+				poolPut(_itm);
+			}	
+			
 			menu_height = (slotsTotal * itemHeight) - STL.item_pad;
+			
+			if (menu_width == 0) menu_width = Std.int(maxW);
 		}
 		
-
 		if (inputMode == 2) {
 			setSelection(get_nextSelectableIndex(0, 1));
 		}else{
 			setScroll(0);
-		}
-		
-		// -- AutoWidth
-		// This just gets the widest element and sets that for menu_width 
-		// DEV: Works best if the menu is not overflowing.
-		if (menu_width == 0) {
-			for (i in itemSlots) {
-				if (i.width > menu_width) menu_width = Std.int(i.width);
-			}
 		}
 		
 		// -- Scroll Indicator
@@ -704,7 +716,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	function processInput()
 	{
-		if (D.ctrl.timePress(UP)) {  // UP
+		if (D.ctrl.timePress(UP)) {
 			if (inputMode == 2){
 				selectionUp1();
 			}else{
@@ -712,7 +724,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			}
 		}else 
 		
-		if (D.ctrl.timePress(DOWN)) {	// DOWN
+		if (D.ctrl.timePress(DOWN)) {
 			if (inputMode == 2){
 				selectionDown1();
 			}else{
@@ -720,8 +732,8 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			}
 		}else
 		
-		if (inputMode == 1) return;	else	// Scroll Mode, is only UP/DOWN which were just checked
-		// So this is input mode 2 ::
+		
+		if (inputMode == 1) return;
 		
 		if (D.ctrl.timePress(LEFT, 0.7, 0.08, 0.02)) {
 			indexItem.onInput(left);
@@ -1340,8 +1352,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	{
 		//trace('Pool PUT | len:${pool.length}, size:${pool_max}');
 			  
-		// Do I need this one??
-		if (pool_keep && pool.indexOf(el) >= 0) return;
+		if (pool.indexOf(el) >= 0) return;
 		
 		pool.push(el);
 		if (pool.length > pool_max) {
@@ -1352,8 +1363,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	/**
-	   Get an item from pool, or if not possible
-	   Generate a new item.
+	   Get an item from pool else generates a new item.
 	   @param	ind Data index to get (0 -> data.length-1)
 	**/
 	function poolGet(ind:Int):T
@@ -1367,6 +1377,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 				}
 			}
 		}else{
+			// DEV: Recycling pool, any item will do.
 			if (pool.length > 0){
 				_itm = pool.shift();
 				_itm.setData(data[ind]);

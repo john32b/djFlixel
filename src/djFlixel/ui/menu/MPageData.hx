@@ -123,7 +123,7 @@ class MPageData
 	 * <null> if nothing is found */
 	public function get(id:String):MItemData
 	{
-		for (i in items) if (i.ID == id) return i; return null;
+		return items.filter(i->i.ID == id)[0];
 	}//---------------------------------------------------;
 	
 	/** Get the index belonging to an item with ID 

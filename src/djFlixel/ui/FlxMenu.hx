@@ -142,7 +142,7 @@ class FlxMenu extends FlxGroup
 	// If this is TRUE, will restore the selected item index or whatever is stored in MPageData property
 	var _flag_restore_selected_index:Bool = false;
 	
-	// There are going to be passed to all created MPAGES
+	// These are going to be passed to all created MPAGES
 	var def_width:Int;
 	var def_slots:Int;	
 	
@@ -153,8 +153,11 @@ class FlxMenu extends FlxGroup
 	/**
 	   @param	X Screen X
 	   @param	Y Screen Y
-	   @param	WIDTH 0 To autocalculate based on item length (default) -1 Rest of screen, mirrored X Margin
-				WARNING! do not use 0 with "center" alignment
+	   @param	WIDTH Set the menu width. Some special values:
+				0 Sets the menu width to the longest item it finds in the first view
+				(meaning items that are out of view will not be considered)
+				-1 Is a hack and sets the width to (camera.width - (X * 2))
+				(meaning it makes the menu box symmetrical on the center Y axis)
 	   @param	SLOTS How many vertical slots for items to show. If a menu has more items, it will scroll.
 	**/
 	public function new(X:Float=0, Y:Float=0, WIDTH:Int=0, SLOTS:Int = 6)

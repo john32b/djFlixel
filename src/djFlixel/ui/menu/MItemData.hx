@@ -254,13 +254,16 @@ class MItemData
 		{
 			for (i in F)
 			{
-				// Check for universal parameters
-				// |D| is the only parameter that can be declared like this |D|
+				// Check for universal parameters:
+				// Currently : { |D| , |U| }
+			
+				// |D| , for Disabling the item
 				if (i == "D") {
 					disabled = true;
 					continue;
 				}
 				
+				// |U| , for making it Unselectable
 				if (i == "U"){
 					selectable = false;
 					continue;
@@ -272,6 +275,7 @@ class MItemData
 					throw 'Illegal MenuItem Parameter for $ID';
 				}
 				
+				// |I=Information Text| for attaching some text to the item
 				if (KV[0] == "I") {
 					info = KV[1];
 					continue;
