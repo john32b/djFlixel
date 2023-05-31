@@ -149,6 +149,18 @@ class MPageData
 	}//---------------------------------------------------;
 	
 	
+	/**
+	   Checks items for "autofocus"
+	   @return Index of item to be autofocused. -1 for nothing
+	**/
+	public function getAutofocus():Int
+	{
+		for (ind in 0...items.length) {
+			if (items[ind].P.autofocus != null) return ind;
+		}
+		return -1;
+	}//---------------------------------------------------;
+	
 	
 	/**
 	   Quickly construct a pagedata with the confirmation options of the Link Item
@@ -171,10 +183,9 @@ class MPageData
 			}
 		}
 		
-		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back');
+		P.add(' ${Q[1]}|link|${item.P.link} -|${Q[2]}|link|@back|AF');
 		P.PAR.noPool = true;
 		P.PAR.slots = P.items.length;
-		P.PAR.cindex = P.items.length - 1;	// Highlight the last one by default
 		return P;
 	}//---------------------------------------------------;
 	

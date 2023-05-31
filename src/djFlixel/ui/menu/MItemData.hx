@@ -25,6 +25,7 @@
 	
 	- There are some standard field options that can go to any field, these are:
 	
+*new*	|AF| AutoFocus. Will make the item focused by default when the page opens
 		|D|	Put it after the mandatory fields. Will DISABLE the element
 		|U| Put it after the mandatory fields. Will make the item UNSELECTABLE (useful for labels)
 		|I=Some Text|  Writes custom text in the .info field of the object. It can be used later however you want
@@ -214,6 +215,8 @@ class MItemData
 		.ask		;	Array<String> The question to ask in {linK} if .ltype==2,3 
 						e.g. ["Are you sure?","Yes","No"] valid for {links}
 						
+		.autofocus  ;   Boolean. If this is set. This item gets focused by default
+						
 	   
 	**/
 	public var P:Dynamic = {};
@@ -255,8 +258,16 @@ class MItemData
 			for (i in F)
 			{
 				// Check for universal parameters:
-				// Currently : { |D| , |U| }
+				// Currently : { |D| , |U| , |AF| }
 			
+				
+				// |AF| , for autofocusing
+				if (i == "AF")
+				{
+					P.autofocus = true;
+					continue;
+				}
+				
 				// |D| , for Disabling the item
 				if (i == "D") {
 					disabled = true;

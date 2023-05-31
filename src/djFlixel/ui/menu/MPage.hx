@@ -146,6 +146,7 @@ class MPage extends VList<MItem,MItemData>
 		// Set data and init the items
 		setDataSource(page.items);
 		
+		
 		// :: NEW : All cursor logic is in its own place
 		// TODO, Cache the cursor object to be reusable?
 		if (STP.cursor != null)
@@ -221,18 +222,24 @@ class MPage extends VList<MItem,MItemData>
 		}
 	}//---------------------------------------------------;
 	
-	// Initializes the emenu, and focuses the first available
+	/**
+	  - Called whenever a page is shown normally (i.e. not when going back to it)
+	  - Initializes the menu and focuses an item (first selectable, or custom autofocus)
+	**/
 	public function selectFirstAvailable()
 	{
-		setSelection(get_nextSelectableIndex(0, 1));
+		var ind = page.getAutofocus();
+		if (ind < 0) ind = get_nextSelectableIndex(0, 1);
+		setSelection(ind);
 	}//---------------------------------------------------;
 	
 	
-	/**Focus an item, Moves the cursor to that item, scrolls the view if needed
+	/** Focuses an item (moves the cursor to that item and item gets highlighted)
+	    Hard-scrolls the view if needed
 	   @param  id ID of the Item
 	   @return Success
 	**/
-	public function item_moveCursorTo(id:String):Bool
+	public function item_focus(id:String):Bool
 	{
 		var i = page.getIndex(id);
 		if (i >-1){
@@ -277,12 +284,14 @@ class MPage extends VList<MItem,MItemData>
 			
 	}//---------------------------------------------------;
 	
-	/** Get the current active item data the cursor is pointing
+	/** 
+	 * ~ NEW in 0.5.8. BREAKING CHANGES : This now returns items, not itemdata
+	 * ~ to get itemdata, simple do item_getCurrent().data;
+	 * Get the current item the cursor is pointing
 	 */
-	public function item_getCurrent():MItemData
+	public function item_getCurrent():MItem
 	{
-		if (indexData < 0) return null;
-		return data[indexData];
+		return indexItem;
 	}//---------------------------------------------------;
 	
 	

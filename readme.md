@@ -1,5 +1,5 @@
 
-> :star: **NEW UPDATE** (2023-04) `V0.5.7` See [Announcement](https://github.com/john32b/djFlixel/discussions/25)  
+> :star: **NEW UPDATE** (2023-05) `V0.5.8` See [Announcements Page](https://github.com/john32b/djFlixel/discussions/categories/announcements)  
 
 # 🔦 What is it
 

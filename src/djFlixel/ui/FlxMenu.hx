@@ -476,9 +476,15 @@ class FlxMenu extends FlxGroup
 					
 				case 3: // Call - Confirm New Page
 					var P = MPageData.getConfirmationPage(it);
-						_flag_restore_selected_index = true;	// Use the custom index 
+						var a = pageActive;
+						P.par({
+							pos:a.PAR.pos,
+							x:a.PAR.x,
+							y:a.PAR.y,
+							width:a.PAR.width
+						});
 						goto(P);
-					_mev(pageCall, "?fs");
+						_mev(pageCall, "?fs");
 					return;
 					
 				default: 
@@ -648,7 +654,7 @@ class FlxMenu extends FlxGroup
 		MP.y = mpActive.indexItem.y;
 		add(MP);
 		
-		MP.setSelection(P.PAR.cindex);
+		MP.selectFirstAvailable();
 		MP.viewOn();
 	}//---------------------------------------------------;
 	
