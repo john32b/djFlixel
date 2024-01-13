@@ -497,9 +497,9 @@ class FlxMenu extends FlxGroup
 			// Transform everything else to menu events
 			switch (type)
 			{
-				case focus: _mev(it_focus, it.ID);
-				case fire: _mev(it_fire, it.ID);
-				case invalid: _mev(it_invalid, it.ID);
+				case ListItemEvent.focus: _mev(it_focus, it.ID);
+				case ListItemEvent.fire: _mev(it_fire, it.ID);
+				case ListItemEvent.invalid: _mev(it_invalid, it.ID);
 				default:
 			}
 		}

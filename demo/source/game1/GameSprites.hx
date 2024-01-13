@@ -1,4 +1,5 @@
 package game1;
+import flixel.util.FlxDirectionFlags;
 import djFlixel.D;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -31,18 +32,18 @@ class Player extends FlxSprite
 	override public function update(elapsed:Float):Void 
 	{				
 		if (!isFalling && velocity.y > 0) { isFalling = true; }
-		if (isFalling && isTouching(FlxObject.FLOOR)) { isFalling = false; isJumping = false; }
+		if (isFalling && isTouching(FlxDirectionFlags.FLOOR)) { isFalling = false; isJumping = false; }
 		
 		velocity.x = 0;
 		
 		if(D.ctrl.pressed(LEFT)) {
 			velocity.x = -movespeed;
-			facing = FlxObject.LEFT;
+			facing = FlxDirectionFlags.LEFT;
 			flipX = true;
 		}
 		else if (D.ctrl.pressed(RIGHT)) {
 			velocity.x = movespeed;
-			facing = FlxObject.RIGHT;
+			facing = FlxDirectionFlags.RIGHT;
 			flipX = false;
 		}
 		

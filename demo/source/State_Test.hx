@@ -11,7 +11,7 @@ import djFlixel.gfx.TextBouncer;
 import djFlixel.gfx.BoxFader;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.pal.Pal_CPCBoy;
-import djFlixel.gfx.statetransit.Stripes;
+import djFlixel.gfx.Stripes;
 import djFlixel.ui.FlxToast;
 import djFlixel.ui.UIButton;
 import flash.display.BitmapData;
@@ -44,7 +44,7 @@ class State_Test extends FlxState
 		
 		bgColor = Pal_CPCBoy.COL[1];
 		
-		sub_stripes();
+		// sub_stripes();
 		//sub_buttons();
 		//sub_toast();
 		//sub_panelpop();
@@ -55,7 +55,7 @@ class State_Test extends FlxState
 		//sub_staticNoise();
 		//sub_spriteeffects();
 		//sub_slice9();
-		//sub_text_metric();
+		sub_text_metric();
 		
 	}//---------------------------------------------------
 	
@@ -69,7 +69,6 @@ class State_Test extends FlxState
 	
 	function sub_stripes()
 	{
-	
 		Stripes.CREATE(()->{
 			trace("STRIPES COMPLETE");
 		}, {
@@ -81,7 +80,7 @@ class State_Test extends FlxState
 	function sub_toast()
 	{
 		// HACK. access does not work? make it public
-		FlxG.watch.add(FlxTween.globalManager._tweens, "length", "Global Tweens");
+		// FlxG.watch.add(FlxTween.globalManager._tweens, "length", "Global Tweens");
 		
 		var t = FlxToast.FIRE("PRESS $ESC$ TO EXIT");
 		
@@ -141,7 +140,10 @@ class State_Test extends FlxState
 		trace("TEXT HEIGHT is ", T2.textField.textHeight);
 		
 		// FLASH : Textheight is 65
-		// HTML5 : Textheight is 94.96 !!!
+		// HTML5 : Textheight is 94.96 !!! (old flixel version)
+
+		// NEW (Flixel 5.5.0)
+		// HTML5 : Textheight is 65 [ok]
 
 		function LS(n:Int)
 		{

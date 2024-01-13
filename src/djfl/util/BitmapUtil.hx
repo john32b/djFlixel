@@ -5,8 +5,8 @@
 
 package djfl.util;
 
-import flash.display.IBitmapDrawable;
-import flash.geom.ColorTransform;
+import openfl.display.IBitmapDrawable;
+import openfl.geom.ColorTransform;
 import openfl.display.BitmapData;
 import openfl.geom.Matrix;
 import openfl.geom.Point;

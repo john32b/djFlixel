@@ -1,5 +1,5 @@
 
-> :star: **NEW UPDATE** (2023-05) `V0.5.8` See [Announcements Page](https://github.com/john32b/djFlixel/discussions/categories/announcements)  
+> :star: **NEW UPDATE** (2024-01) `V0.5.9` | [Announcements Page](https://github.com/john32b/djFlixel/discussions/categories/announcements)
 
 # 🔦 What is it
 
@@ -133,4 +133,4 @@ John.
 
 ---
 
-**djFlixel** : **0.5.6** *(2023-04)*  | **Author** : john32b  | **License** : MIT 
+**djFlixel** | **Author** : john32b  | **License** : MIT 

@@ -122,7 +122,7 @@ class FilterFader extends FlxObject
 		if (st != null) st.destroy();
 		if (dc != null) dc.destroy();
 		if (!exists) return;
-		camera.setFilters(backupFilters);
+		camera.filters = backupFilters;
 		FlxG.state.remove(this);
 		super.destroy();
 	}//---------------------------------------------------;
@@ -140,7 +140,7 @@ class FilterFader extends FlxObject
 			0, 1, 0, 0, -V * 255,
 			0, 0, 1, 0, -V * 255,
 			0, 0, 0, 1, 0];
-		camera.setFilters([new ColorMatrixFilter(matrix)]);
+		camera.filters = [new ColorMatrixFilter(matrix)];
 	}//---------------------------------------------------;
 	
 }// --

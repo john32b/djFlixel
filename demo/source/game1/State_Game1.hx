@@ -22,6 +22,7 @@ import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tile.FlxTileblock;
 import game1.GameSprites;
+import flixel.util.FlxDirectionFlags;
 
 
 
@@ -102,10 +103,10 @@ class State_Game1 extends FlxState
 		
 		FlxObject.updateTouchingFlags(p, e);
 		
-		if (e.justTouched(FlxObject.WALL)) { // left or right
+		if (e.justTouched(FlxDirectionFlags.WALL)) { // left or right
 			p.hurt(1);
 		}
-		else if (e.justTouched(FlxObject.UP) && p.isFalling) {
+		else if (e.justTouched(FlxDirectionFlags.UP) && p.isFalling) {
 			e.hurt(1);
 			p.jumpOffEnemy();
 		}

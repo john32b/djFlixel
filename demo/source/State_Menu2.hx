@@ -88,12 +88,6 @@ class State_Menu2 extends FlxState
 		m.STP.vt_OUT = "22:0|0.25:0.04";	// The same for going out, but end in (10,0) offset
 		m.STP.vt_in_ease = "bounceOut";		// Ease in function name from FlxEase
 		
-		// HTML5 is wonky with some fonts metrics
-		#if (html5)
-			m.STP.item_height_fix = 3;
-			m.STP.item_pad = 0;
-		#end
-			
 		// Text font and style	
 		m.STP.item.text = {
 			f:'fnt/LycheeSoda.ttf',

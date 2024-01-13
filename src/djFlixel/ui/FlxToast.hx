@@ -57,7 +57,7 @@ class FlxToast extends FlxSpriteGroup
 	{
 		INIT();
 		
-		var st:Dynamic;
+		var st:Dynamic = null;
 		if (PAR != null) {
 			st = DataT.copyDeep(toast.P);
 			toast.P = DataT.copyFields(PAR, toast.P);

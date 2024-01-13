@@ -70,9 +70,8 @@ class D
 	/** Depends on fullscreen size, how big the window can get in zoom increments */
 	public static var MAX_WINDOW_ZOOM(default, null):Int = 1;
 	
-	/** When DEBUG_KEYS is enabled and F9 is pressed, it calls this function 
-	 *  Use `@:privateAccess` to set something here */
-	static var _cycle_filters:Void->Void;
+	/** Called when F9 is pressed on debug mode */
+	public static var _cycle_filters:Void->Void;
 	
 	/** 
 	 * Initialize this static class. Call this before creating FlxGame();
@@ -126,8 +125,8 @@ class D
 	// Gets called right after the new state is created
 	static function onStateSwitch()
 	{	
-		#if (HOT_LOAD)
-			DEBUG_RELOADED = false;
+		#if debug
+		DEBUG_RELOADED = false;
 		#end
 	}//---------------------------------------------------;
 

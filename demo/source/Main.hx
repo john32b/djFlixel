@@ -38,7 +38,7 @@ class Main extends Sprite
 {
 	inline static var FPS = 60;
 	inline static var START_STATE = State_Boot;
-	
+		
 	// Global Filter Blur
 	public static var BLUR:GF_Blur;
 	
@@ -67,7 +67,7 @@ class Main extends Sprite
 		});
 		
 		
-		addChild(new FlxGame(320, 240, START_STATE, 2, FPS, FPS, true));
+		addChild(new FlxGame(320, 240, START_STATE, FPS, FPS, true));
 		
 		// DEV NOTE : CHANGE v0.5:
 		// There used to be some Dynamic Asset Reloading code here
@@ -85,10 +85,13 @@ class Main extends Sprite
 		});
 		
 		// This is a simple and quick way to add a blurFilter
-		// Automatically adds event listeners and handles [F9] key (for debug)
 		BLUR = new GF_Blur(0.7, 1.5, 2);
 		BLUR.enabled = true;
-		
+
+		// Quick toggle
+		D._cycle_filters = () -> {
+			BLUR.enabled = !BLUR.enabled;
+		};
 		
 		FlxG.autoPause = false;
 	}//---------------------------------------------------;

@@ -1,3 +1,4 @@
 res_audio/
 bin/
 *.hxproj
+.vscode/

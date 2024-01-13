@@ -16,12 +16,12 @@
  - Example:
 	
 		// Declare which files are to be hotloaded
-	D.assets.HOT_LOAD = ['assets\config.json']
+	D.assets.HOT_LOAD = ['assets/config.json']
 	
 		// Whenever you press [F12] and the state resets, this get auto called
 		// you can manage your stuff here.
 	D.assets.onLoad = ()->{
-		REG.json = D.assets.files.get('assets\config.json');
+		REG.json = D.assets.files.get('assets/config.json');
 	}
 	
 ********************************************************************************/

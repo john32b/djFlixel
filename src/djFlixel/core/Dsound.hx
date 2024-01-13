@@ -29,7 +29,7 @@
 package djFlixel.core;
 
 import djA.Macros;
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 import flixel.FlxG;
 import haxe.ds.Map;
 import openfl.Assets;

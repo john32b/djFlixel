@@ -11,6 +11,7 @@
 
 package djFlixel.ui;
 
+import flixel.input.mouse.FlxMouseEvent;
 import djA.DataT;
 import djFlixel.core.Dtext.DTextStyle;
 import flash.display.BitmapData;
@@ -146,7 +147,7 @@ class UIButton extends FlxSpriteGroup
 		
 		_setState(STATE_NORMAL);
 		
-		FlxMouseEventManager.add(spr_bg, _onPress, _onRelease, _onHover, _onOut);
+		FlxMouseEvent.add(spr_bg, _onPress, _onRelease, _onHover, _onOut);
 	}//---------------------------------------------------;
 	
 	

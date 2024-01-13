@@ -1,5 +1,6 @@
 package djFlixel.ui.menu;
 
+import flixel.tweens.misc.VarTween;
 import djFlixel.ui.VList;
 import djFlixel.ui.VList.IVListCursor;
 import djFlixel.core.Dtext.DTextStyle;
@@ -61,8 +62,10 @@ class MCursor implements IVListCursor
 	var easefn:EaseFunction;
 	
 	var xbase:Float;		// x position baseline
-	var tw_x:Float;		// Tween X | Relative
-	var tw_a:Float;		// Tween Alpha | Absolute
+	var tw_x:Float;			// Tween X | Relative
+	var tw_a:Float;			// Tween Alpha | Absolute
+
+	var _tween:VarTween = null;	// Keep the cursor tween so that I can cancel it
 	
 	public function new(style:MPageStyle)
 	{
@@ -143,8 +146,11 @@ class MCursor implements IVListCursor
 			tw_a = C.tween.a0;
 			tw_x = C.tween.x0;
 			spr.alpha = tw_a;
-			FlxTween.cancelTweensOf(this);
-			FlxTween.tween(this, {tw_x:C.tween.x1, tw_a:C.tween.a1 }, C.tween.time, {ease:easefn, onUpdate:(_)->{
+
+			// LOG: FlxTween.cancelTweensOf(this) would sometime crash? why?
+			if(_tween!=null) _tween.cancel();
+			_tween = FlxTween.tween(this, {tw_x:C.tween.x1, tw_a:C.tween.a1 }, 
+				C.tween.time, {ease:easefn, onUpdate:(_)->{
 				spr.alpha = tw_a;
 				spr.x = xbase - spr.width + tw_x;
 			}});
