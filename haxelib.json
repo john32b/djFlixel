@@ -5,7 +5,6 @@
   "description": "Set of tools and helpers for HaxeFlixel",
   "url" : "https://github.com/john32b/djFlixel",
   "license": "MIT",
-  "classPath": "src/",
   "tags": ["flixel"],
   "contributors": ["John32B"]
 }
