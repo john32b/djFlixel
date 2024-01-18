@@ -56,7 +56,11 @@ class BoxFader extends FlxSprite
 	//====================================================;
 	
    /**
-	  If WIDTH, HEIGHT 0 it defaults to  FlxG.width\FlxG.Height
+	Creates a colored square that changes its alpha value in hard steps
+	@param X screen X pos
+	@param Y screen Y pos
+	@param WIDTH width, 0 for FlxG.width
+	@param HEIGHT height, 0 for FlxG.height
    **/
 	public function new(X:Float = 0, Y:Float = 0, WIDTH:Float = 0, HEIGHT:Float = 0)
 	{
@@ -107,7 +111,7 @@ class BoxFader extends FlxSprite
 	 * Restore from current state to clear. If you want to fade from a solid color 
 	 * call setColor(_) beforehand
 	 * @param	CB Callback on complete
-	 * @param	P Parameters Check BoxFader.DEF_PAR 
+	 * @param	P Parameters override for `DEF_PAR`
 	 */	
 	public function fadeOff(?CB:Void->Void, ?P:Dynamic)
 	{
@@ -130,7 +134,7 @@ class BoxFader extends FlxSprite
 	 * Fade the box to a color
 	 * @param Color Color to set the fade to
 	 * @param CB Callback
-	 * @param P Parameters object, Can override fields Check `BoxFader.DEF_PAR`
+	 * @param P Parameters override for `DEF_PAR`
 	 */
 	public function fadeColor(?Color:Int = 0xFF000000, ?CB:Void->Void, ?P:Dynamic)
 	{

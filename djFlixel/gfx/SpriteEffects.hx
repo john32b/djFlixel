@@ -20,10 +20,11 @@
  *   - blink
  *   - mask
  * 
- * History:
+ * Log:
  * 	2016_11 -  created for TombExplorer game
  *  2020_06 -  just updated some bits to compile with new djflixel ver
  *  2022_08 -  I am not touching this
+ *  2024_01 -  I am not touching this
  * 
  * Example:
  * 
@@ -59,11 +60,13 @@ class SpriteEffects extends FlxSprite
 	
 	// Source image
 	var _im:BitmapData;
+
 	// Helpers that are used often
 	var _ma:Matrix;
 	var _tr:Rectangle;
 	var _tc:ColorTransform;
 	var _tp:Point;
+
 	// Currently processing FX
 	var fx:SpriteFX;
 	

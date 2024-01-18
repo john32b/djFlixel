@@ -49,15 +49,13 @@ class BoxScroller extends FlxSprite
 	var _lastScY:Int = 0;
 	
 	/**
-	 * 
+	 * Creates a BoxScroller sprite. Tiles/repeat a graphic within a fixed sized box
+	 * @param	source source graphic to scroll
 	 * @param	X World Placement
 	 * @param	Y World Placement
 	 * @param	W Box Width, 0 for source image Width
 	 * @param	H Box Height, 0 for source image height
-	 * @param   Ytimling timles on the Y Axis also
-	 * @param	source
 	 */
-	
 	public function new(source:FlxGraphicSource, X:Float = 0, Y:Float = 0, W:Float = 0, H:Float = 0) 
 	{
 		super(X, Y);

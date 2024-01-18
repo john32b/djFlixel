@@ -79,10 +79,11 @@ class FilterFader extends FlxObject
 	var dc:DelayCall;
 
 	/**
+	   Fades the screen in and out using BitmapFilters, check file header for more info.
 	   This will automatically be added to the active state
 	   @param	TOBLACK True to fade to black, False to fade from black
 	   @param	CB On Complete callback
-	   @param	PAR Parameters, Overrides `DEF_PAR` fields. Check code inside
+	   @param	PAR Parameters, Overrides `P` fields. Check code inside
 	**/
 	public function new(?TOBLACK:Bool = true, ?CB:Void->Void, ?PAR:Dynamic)
 	{

@@ -1,0 +1,6 @@
+NOTES:
+This is a partial copy of djFL, do not make edits here!
+Why? Don't want to have dependencies in djFlixel
+---
+djFL is a personal library with openFL tools and helpers
+it is not finished and I don't know if I ever going to upload it

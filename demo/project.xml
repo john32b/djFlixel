@@ -2,15 +2,16 @@
 <project>
 	
 	<haxeflag name="-dce" value="std"/>
-	<haxeflag name="--no-traces" unless="debug"/>
+	<haxedef name="no-traces" unless="debug"/>
+
 	<!--
 	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
 	<window vsync="true" antialiasing="4" if="cpp" />
 	<window orientation="portrait" /> || <window orientation="landscape" if="cpp"/>
 	-->
 	
-	<app title="djFlixel Demo" version="0.5.9" package="" company="John32B" />
-	<app preloader="flixel.system.FlxBasePreloader"/>
+	<app title="djFlixel Demo" version="0.5.9" company="john32b" />
+	<app preloader="flixel.system.FlxBasePreloader" if="html5"/>
 	<app main="Main" file="djflx_demo" path="bin/" />
 	
 	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />

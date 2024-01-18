@@ -49,11 +49,12 @@ class TextBouncer extends FlxSpriteGroup
 	var P:Dynamic;	// Current Running parameters
 	
 	/**
+		Creates a spritegroup with dropping letters 
 	   @param	TEXT Text
 	   @param	X First letter final X
 	   @param	Y First letter final Y
-	   @param	ST IMPORTANT, do not set X,Y,WIDTH,ALIGN on the text style.
-	   @param	PAR Animation parameters, Check <TextBouncer.DEF_PAR>
+	   @param	ST Style Overrides. IMPORTANT! do not set WIDTH,ALIGN on the text style
+	   @param	PAR Animation parameters, Check `DEF_PAR` code inside
 	**/
 	public function new(TEXT:String, X:Float, Y:Float, ?ST:DTextStyle, ?PAR:Dynamic)
 	{

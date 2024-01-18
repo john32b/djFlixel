@@ -78,7 +78,7 @@ class StarfieldSimple extends FlxSprite
 	//---------------------------------------------------;
 
 	/**
-	   Creates a starfield.
+	   Creates a starfield in a square area
 	   @param	Width 0 for FlxG.Width
 	   @param	Height 0 for FlxG.Height
 	   @param	COL Star Colors, Array[4] [ background, blinkingstars, mainstars, foreground stars ]

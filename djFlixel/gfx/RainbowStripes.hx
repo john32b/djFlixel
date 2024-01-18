@@ -5,9 +5,7 @@
  - Default colors are Amstrad CPC based
  - Set your own COLORS by directly accessing the array "COLORS" to as many as you want
  
- 
  --
- 
 	setOn(true); 	to make it visible and updating
 	setOn(false); 	to hide it (starts off this way)	
  
@@ -57,6 +55,7 @@ class RainbowStripes extends FlxSprite
 	//---------------------------------------------------;
 	
 	/**
+		Creates a box with the effect, check file header for more info
 	   @param	Width 0 for Full Width
 	   @param	Height 0 for Full height
 	   @param	Zoom Scales the bitmap data effect so it is faster to render

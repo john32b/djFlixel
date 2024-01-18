@@ -133,15 +133,19 @@ class FlxSequencer2 extends FlxBasic
 		active = false;
 	}//---------------------------------------------------;
 	
+	/** Add a function to the end of the queue */
 	public function add(fn:FlxSeqCallback)
 	{
 		queue.push(fn);
 	}//---------------------------------------------------;
+	/** Add a function directly after the current one */
 	public function addNext(fn:FlxSeqCallback)
 	{
 		queue.unshift(fn);
 	}//---------------------------------------------------;
 	
+	/** Call the next function in the sequence
+		@param time in Seconds 0 for instant */
 	public function next(time:Float = 0):Void	
 	{
 		active = true;

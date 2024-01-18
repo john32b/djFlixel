@@ -49,9 +49,10 @@ class TextScroller extends FlxTypedGroup<FlxText>
 	public var onLoop:Void->Void;	// Fires when a loop has completed. If loopMode==0 will fire once
 	
 	/**
+		Creates a text scrolling effect. check file header for infos.
 	 * @param	Text The text to display
 	 * @param	Callback Callbacks when a loop has been completed
-	 * @param	Params See inner code
+	 * @param	Params Default parameters override for `DEF_PAR` check code inside
 	 */
 	public function new(TEXT:String, ?TS:DTextStyle, ?PAR:Dynamic)
 	{

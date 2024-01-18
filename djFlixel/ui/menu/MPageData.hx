@@ -26,10 +26,14 @@ class MPageData
 	// Data holder, Store the items serially
 	public var items(default, null):Array<MItemData>;
 	
-	/** MPage STP overlay. Set this to override fields of the MPage style */
+	/** Overlay for Mpage.STP <MPageStyle>
+		set directly or with [stp()] 
+	 */
 	public var STPo:Dynamic;
 	
-	/** Optional Parameters (Anonymous struct with autocompletion) */
+	/** Optional Parameters Anonymous struct with autocompletion) 
+		set directly or with [par()]
+	 */
 	public var PAR = {
 		pos:'rel',			// rel : Relative to root FlxMenu (x,y) pos
 							// abs : Fixed world/screen coordinates

@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 
-	<!-- General -------->
-	<set name="SWF_VERSION" value="40"/> <!-- default is 11.8 -->
-	
-	<!--<window if="html5" resizable="false" />--> <!--User should decide -->
-	
-	<haxedef name="next" />	<!--I don't know if this is required, but I am declaring anyway-->
-	
-	<!-- DJFlixel --------->
+	<!-- General -->
+	<set name="SWF_VERSION" value="11.8" />
+
+	<!-- DJFlixel -->
 	<assets path="assets/ui_atlas.png" embed="true"/>
 
 	<!-- Override the build dir, useful if you want to build on /tmp/ or a ramdisk on windows -->
 	<app path="${OUT}" if="OUT"/>
 	
-	<!-- Flixel Defines ------->
+	<!-- Flixel Defines -->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />	
 	<haxedef name="FLX_NO_TOUCH" unless="mobile"/> 
 	<haxedef name="FLX_NO_MOUSE" 	if="mobile"/>
 	<haxedef name="FLX_NO_KEYBOARD" if="mobile"/>
-
-	<!-- Disabled. User should decide -->
-	<!-- <haxeflag name="--no-traces" unless="debug"/> -->
 	
 	<!-- `define` sets a value to be read by Project.xml and also Haxe -->
 	<define name="MP3" if="flash"/>
@@ -29,7 +22,7 @@
 	<!-- Because I am using Reflect to get the easing functions, make sure DCE won't eat them -->
 	<haxeflag name="--macro keep('flixel.tweens.FlxEase')"/>
 	
-	<!-- Make hotload permanent? -->
-	<!-- <haxedef name="HOT_LOAD" if="debug desktop"/> -->
-	
+	<!-- djFlixel Defines (set with haxedef)
+		HOT_LOAD : Enables the use of D.assets.reload on reset, enabled on debug only
+	-->
 </project>

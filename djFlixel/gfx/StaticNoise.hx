@@ -44,8 +44,9 @@ class StaticNoise extends FlxSprite
 	#end
 	
 	/**
-	   @param	X
-	   @param	Y
+		Creates a Static Noise Box, check file header for info
+	   @param	X Screen X
+	   @param	Y Screen Y
 	   @param	WIDTH 0 for viewport width
 	   @param	HEIGHT 0 for viewport height
 	**/

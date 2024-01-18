@@ -27,10 +27,10 @@ class Stripes extends FlxSpriteGroup
 {
 	
 	/**
-	   Create Stripes and add to current State,
-	   Will auto remove them if mode==off
-	   @param	ONCOMPLETE
-	   @param	PAR
+	   Create a Stripes effect and add it to the current State,
+	   Will auto remove this if {mode:off} in the Parameters
+	   @param	ONCOMPLETE Call this when the effect completes
+	   @param	PAR Parameter override for the `P` default ones, check code inside
 	**/
 	public static function CREATE(ONCOMPLETE:Void->Void, PAR:Dynamic)
 	{
@@ -48,7 +48,7 @@ class Stripes extends FlxSpriteGroup
 	
 	
 	// Running Parameters
-	// Override fields in the constructor
+	// You can override fields at the constructor
 	var P = {
 			
 			// Total width, 0 for FlxG.width

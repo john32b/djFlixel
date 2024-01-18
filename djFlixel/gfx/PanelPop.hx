@@ -42,9 +42,10 @@ class PanelPop extends FlxSprite
 	var timer:StepTimer;
 	
 	/**
+		Creates a Panel with a solid background that pops up with an animation
 	   @param	WIDTH Final Width
 	   @param	HEIGHT Final Height
-	   @param	PAR Parameter overrides. Check <P> fields
+	   @param	PAR Parameter overrides for `P` , check code inside
 	**/
 	public function new(WIDTH:Int, HEIGHT:Int, ?PAR:Dynamic)
 	{

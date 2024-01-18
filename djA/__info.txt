@@ -1,0 +1,8 @@
+NOTES:
+This is a partial copy of djA, do not make edits here!
+Why? Don't want to have dependencies in djFlixel
+---
+If you import djA normally, this whole folder will be ignored
+and HAXE will point all djA calls to the proper library path
+---
+on github: https://github.com/john32b/djA

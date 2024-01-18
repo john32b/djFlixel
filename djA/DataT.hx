@@ -191,14 +191,23 @@ class DataT
 	{
 		return ar[Std.random(ar.length)];
 	}//---------------------------------------------------;
-	
 
-	
+    /** Get the last element of an array
+     */
+    inline public static function lastAr<T>(ar:Array<T>):T
+    {
+        return ar[ar.length - 1];
+    }//---------------------------------------------------;
+
 	/**
 	 * Pads a string to reach a certain length.
 	 * If string is longer it gets trimmed with a ".." at the end
 	 * If string is shorter it gets padded with $char
-	 * LEFT PAD so "john" => ".....john"
+	 * e.g. padTrimString("hello",10,".") == ".....hello"
+	 * @param str String to pad
+	 * @param len New length
+	 * @param char Character to add when trimmind/padding
+	 * @param leftPad If true will trim/pad to the left
 	 */
 	public static function padTrimString(str:String, size:Int, char:String = ".", leftPad:Bool = true):String
 	{
@@ -242,20 +251,3 @@ class DataT
 	}//---------------------------------------------------;
 	
 }// --
-
-
-
-/** Misc ::
-
-
-	isFloat = (NUMBER % 1 != 0);
-
-	/// Taken from Franco Ponticelli's THX library:
-	// https://github.com/fponticelli/thx/blob/master/src/Floats.hx#L206
-	function roundFloat(number:Float, precision:Int = 2):Float {
-		number *= Math.pow(10, precision);
-		return Math.round(number) / Math.pow(10, precision);
-	}//---------------------------------------------------;
-
-
-*/
