@@ -1,5 +1,4 @@
 /**
-	
 	DJFLIXEL Main Static Helper Class
 	=================================
 	- Provides general purpose tools
@@ -11,10 +10,10 @@
 		- Checkout <DSound.hx> on how to init sounds 
 		- On DEBUG builds, _debug_keys() is enabled
 		
-	= TIPS =
-
-		- You can set a custom BUILD dir with {OUT} | lime build project.xml hl -DOUT=A:\tmp\
-		
+	= Debug keys =
+		- `F9` - calls _cycle_filters(), override this to set your own
+		- `F12` - resets state and reloads any assets from disk if `HOT_RELOAD` is defined
+		- `SHIFT F12` - reset game
 		
  *******************************************************************/
 

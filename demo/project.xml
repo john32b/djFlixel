@@ -1,46 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
+	<define name="APP_VER" value="0.5.9"/>
+	<set name="APP_FILE" value="djflx_demo"/>
+	<set name="APP_TITLE" value="djFlixel Demo"/>
+
 	<haxeflag name="-dce" value="std"/>
 	<haxedef name="no-traces" unless="debug"/>
 
-	<!--
-	<window hardware="true" allow-shaders="true" require-shaders="true" if="cpp"/>
-	<window vsync="true" antialiasing="4" if="cpp" />
-	<window orientation="portrait" /> || <window orientation="landscape" if="cpp"/>
-	-->
-	
-	<app title="djFlixel Demo" version="0.5.9" company="john32b" />
-	<app preloader="flixel.system.FlxBasePreloader" if="html5"/>
-	<app main="Main" file="djflx_demo" path="bin/" />
-	
-	<window width="640" height="480" fps="60" background="#000000" hardware="true" vsync="true" />
-	
 	<source path="source" />
-	
-	<!-- Flixel default is webgl -->
-	<!--<haxedef name="canvas" if="html5"/>-->
 
+	<app main="Main" path="bin/" />
+	<app file="${APP_FILE}" title="${APP_TITLE}" version="${APP_VER}" company="john32b" />
+	<app preloader="flixel.system.FlxBasePreloader" if="html5"/>
+
+	<window width="640" height="480" fps="60" background="#030302" hardware="true" vsync="true" />
+	
+	<!-- Flixel default is webgl, other option 'canvas' -->
+	<haxedef name="webgl" if="html5"/>
+
+	<!-- djflixel related -->
+	<haxedef name="HOT_LOAD" if="debug flash"/>
+
+	<!-- Tell DSound.hx, where to look for sounds and music. 
+		`snd` is the asset ID path I declared earlier -->
+	<haxedef name="DJFLX_SND" value="snd/"/>
+	<haxedef name="DJFLX_MUS" value="snd/"/>
+		
+	<!-- Imports -->
+	<!-- djflixel 0.5.9 | flixel 5.5 -->
 	<haxelib name="flixel"/>
 	<haxelib name="djFlixel"/>
-	
-	<!--<assets path="assets"/>-->
+
+	<!-- ASSETS -->
 	<library name="default" type="gzip" if="desktop" unless="debug"/>
 	<assets path="assets/fonts" type="font" include="*.ttf|*.otf" rename="fnt"/>
 	<assets path="assets" type="image" include="*.png|*.jpg" rename="im"/>
 	<assets path="assets/sound_mp3" type="sound" include="*.mp3" rename="snd" if="flash"/>
 	<assets path="assets/sound_ogg" type="sound" include="*.ogg" rename="snd" unless="flash"/>
-		
-	<!-- flixel related -->
-	<haxedef name="FLX_NO_GAMEPAD"/>
-	
-	<!-- djflixel related. Put these after including DJFLIXEL -->
-	<haxedef name="HOT_LOAD" if="debug flash"/>
-	
-		<!-- NEW: Tell DSound.hx, where to look for sounds and music. 
-			`snd` is the asset ID path I declared earlier -->
-		<haxedef name="DJFLX_SND" value="snd/"/>
-		<haxedef name="DJFLX_MUS" value="snd/"/>
 		
 	<icon path="icon.png" size="64" />
 		

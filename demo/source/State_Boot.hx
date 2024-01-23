@@ -48,7 +48,7 @@ class State_Boot extends FlxState
 			Main.goto_state(NEXTSTATE, "fade");
 		};
 		
-		t.setCarrier("|");	// Set the carrier after setting the text style
+		t.setCaret("|");
 		
 		// Set text and autostart
 		t.setText('{w:8,c:33}djFlixel ${D.DJFLX_VER}\n{w:4}Starting Demo{c:5}....{w:5}');

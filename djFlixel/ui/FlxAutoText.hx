@@ -16,7 +16,7 @@
   		call:String	: Calls onEvent(call(customcall)) when encountered
   		np			: Force a new page -- DON'T COMBINE WITH SP on the same {} . No Parameter, you can even write {np} 
   		sp:INT		: Special Codes ::
-						0,1 Turn Carrier on/off
+						0,1 Turn Caret on/off
 	}
   
   DEV NOTES ::
@@ -29,7 +29,7 @@
 	var AT = new FlxAutoText(0, 0, 300);
 		AT.style = { f:"fonts/pixel.ttf", s:16, c:0xFFFF00};
 		AT.onComplete = ()->{ trace("Text complete"); };
-		AT.setCarrier('-', 0.15);
+		AT.setCaret('-', 0.15);
 		AT.setText( '{c:10,sp:0}HELLO WORLD{w:10,sp:1,c:4}!!!!{w:3}' );
 		add(AT);
  **/
@@ -58,8 +58,11 @@ class FlxAutoText extends FlxSpriteGroup
 {	
 	// :: Some defaults
 	static inline var DEFAULT_CPS = 30;
-	static inline var DEFAULT_CARRIER_TICK = 0.24;
-	static inline var DEFAULT_CARRIER_SMB = "_";
+	static inline var DEFAULT_CARET_TICK = 0.24;
+	static inline var DEFAULT_CARET_SMB = "_";
+
+	// Invisible Character
+	static var INV_CHAR='‎';
 	
 	// :: The markup tags
 	inline static var TAG_CPS= 		'c';	// cps
@@ -92,12 +95,12 @@ class FlxAutoText extends FlxSpriteGroup
 	
 	var newpageFlag:Bool;		// If true it will cut the text to currentIndex at the next update cycle, newpage
 	
-	// -- Carrier
-	var carrierEnabled:Bool = false;
-	var carrier:FlxSprite = null;	// The carrie sprite
-	var carrierBlinkRate:Float;		// Current blink rate
-	var carrierOffsets:Array<Int>;	// X,Y offset of carrier position
-	var carrierTimer:Float; 		// Carrier blink rate handled in update();
+	// -- Caret
+	var caretEnabled:Bool = false;
+	var caret:FlxSprite = null;		// The caret sprite
+	var caretBlinkRate:Float;		// Current blink rate
+	var caretOffsets:Array<Int>;	// X,Y offset of caret position
+	var caretTimer:Float; 			// Caret blink rate handled in update();
 	
 	// The actual flxText object
 	public var textObj(default, null):FlxText;
@@ -131,15 +134,13 @@ class FlxAutoText extends FlxSpriteGroup
 	 *  to go to the next page. Set 0 to WAIT. Value is *100ms, so 9 is 900ms */
 	public var newpageWait:Int = 9;
 	
-	
-	#if !flash
-	// An empty line reports height as 0, all targets do it but not Flash
-	var _precalcHeight:Int = 0;
-	#end
-	
+	// True to enable verbose logging
+	public static var _dlog:Bool = false;
+
 	//====================================================;
 	
 	/**
+		Create an FlxAutoText, a textbox that will autotype text. Check file header for info.
 	   @param	X Screen Pos
 	   @param	Y Screen Pos
 	   @param	FieldWidth 0 For Single Line | -1 For rest of the view area, mirrored x margin amount
@@ -153,7 +154,7 @@ class FlxAutoText extends FlxSpriteGroup
 		textObj = new FlxText(0, 0, FieldWidth, null); // DEV setting 0 to FieldWidth makes wordwrap=false
 		add(textObj);
 		moves = active = false;
-		setCPS(DEFAULT_CPS);		
+		setCPS(DEFAULT_CPS);
 	}//---------------------------------------------------;
 	
 	override function get_width():Float 
@@ -173,22 +174,31 @@ class FlxAutoText extends FlxSpriteGroup
 	{
 		super.update(elapsed);
 		
-		// -- Blink Carrier
-		if (carrierEnabled && ((carrierTimer += elapsed) >= carrierBlinkRate)) {
-			carrier.visible = !carrier.visible;
-			carrierTimer = 0;
+		// -- Blink Caret
+		if (caretEnabled && ((caretTimer += elapsed) >= caretBlinkRate)) {
+			caret.visible = !caret.visible;
+			caretTimer = 0;
 		}
 		
 		// -- Update Text
 		if ( !isPaused && (timer += elapsed) >= tw)
 		{
-			
 			// First thing first, check for linecuts
 			if (newpageFlag)
 			{	
-				if (["\n", "\r"].indexOf(text.charAt(textIndex)) >= 0) {
-					textIndex++; // DEV: Skip newlines, I check because it might be a custom newpage and not from a newline
+				// New page from a {np} tag
+				// Remove the linebreak from the checks, so it doesn't
+				// TODO: WARNING: No new line event will be sent, should it?
+				if(lineBreaks[0]==textIndex) {
+					lineBreaks.shift();
 				}
+				
+				// do not print the \n at the tag position since I am clearing manually
+				// occurs on auto and custom page skips
+				if (["\n", "\r"].indexOf(text.charAt(textIndex)) >= 0) {
+					textIndex++;
+				}
+
 				newpageFlag = false;
 				lineCurrent = 1;
 				textStart = textIndex;
@@ -233,7 +243,6 @@ class FlxAutoText extends FlxSpriteGroup
 						textIndex = breakIndex;	// Go back to the line cut
 						newpageFlag = true;
 						// DEV: using a flag to do the newpage at the next update, because it might pause or wait here
-						// TODO : PAUSE or WAIT
 						wait(newpageWait);
 						break;
 					}else{
@@ -255,7 +264,7 @@ class FlxAutoText extends FlxSpriteGroup
 				// DEV: Even if 'newpageFlag' I can end now, it doesn't make any sense to newpage
 				//      when the text is going to end
 				if (TAGS.length == 0){
-					carrier_state(false);
+					caret_state(false);
 					textObj.text = text.substr(textStart, textIndex - textStart);
 					active = false;
 					//if (sound.char != null) D.snd.playV(sound.char);
@@ -271,45 +280,44 @@ class FlxAutoText extends FlxSpriteGroup
 
 			// :: Render
 			textObj.text = text.substr(textStart, textIndex - textStart);	// substr is by length
-			//trace("TextIndex", textIndex, 'Char + "${text.charAt(textIndex)}"');
-			//trace("Whole" , textObj.text, "Len", textObj.text.length);
+
+			// == OPENFL/FLIXEL BUG
+			// Immediately after a new line the textmetrics are not being updated right away
+			// In FLASH it works ok but everything else has this problem
+			// == FIX
+			if(textObj.text.charAt(textObj.text.length-1) == '\n')
+				textObj.text += INV_CHAR;
+
 			if (sound.char != null) D.snd.playV(sound.char);
 			
-			if (carrierEnabled)
+			if (caretEnabled)
 			{
-				carrier_update();
-				carrierTimer = 0;		// Reset the time, wait a full (TICK) again
-				carrier.visible = true;	// This is for effect, show the carrier, this is the default behavior on every text editor
+				caret_update();
+				caretTimer = 0;			// Reset the time, wait a full (TICK) again
+				caret.visible = true;	// This is for effect, show the caret right when text appears
 			}
 		}
 	}//---------------------------------------------------;
 	
 	
 	/**
-	   Prepare a string to be animated
-	   String supports tags -- Check this doc header for more info
-	   - Call WAIT functions after setting this
+	   Prepare a string to be AutoTexted
 	   - Resets already going text
-	   @param	source String
+	   @param	source Text, supports tags - *Check this doc header for more info*
 	   @param	start Auto start , else do active=true to start
 	**/
 	public function setText(source:String, start:Bool = true)
 	{
 		text = tags_parse(source); // Will also set TAG[] to new data
-		//trace("TAGS", TAGS);
 		
 		// Init vars
 		isPaused = isComplete = false;
-		textIndex = 0;
+		textIndex = textStart = 0;
+		lineCurrent = 1;
 		timer = 0;
 		lastTW = 0;
 		wordWait = 0;
 		wordNextSpace = 0;
-		lineCurrent = 1;
-		textStart = 0;
-			
-		tags_calc_next();
-		tags_check_and_apply();
 		
 		// -- Fix Line Brakes
 		textObj.visible = false;
@@ -318,7 +326,7 @@ class FlxAutoText extends FlxSpriteGroup
 		// -- Prebake linebreakes
 		text = getBakedLineBrakes();
 		
-		textObj.text = "‎ "; // <-- Invisible character, not space.
+		textObj.text = INV_CHAR; // this is to give an initial height to the object
 		textObj.visible = true;
 		
 		// -- Calculate linebreaks
@@ -329,35 +337,38 @@ class FlxAutoText extends FlxSpriteGroup
 				lineBreaks.push(i);
 			}
 		}
-		//trace("Linebreaks",lineBreaks);
-		
+
 		#if debug
-			if (lineBreaks.length > 0 && !textObj.wordWrap) 
+			if (lineBreaks.length > 0 && !textObj.wordWrap)
 				FlxG.log.error("FlxAutoText with fieldwidth 0 is only for single line texts");
+			if(_dlog) {
+				var str = StringTools.replace(text,'\n','|nl|\n');
+				trace('== Text (starts in next line) Symbols: |nl| |end| :\n${str}|end|');
+				trace('== Tags : ');
+				for(t in TAGS) trace('  ' ,t);
+				trace('== Linebreaks : ', lineBreaks);
+			}
 		#end
 		
+		// -- Applying the First TAGS right now
+		tags_calc_next();
+		tags_check_and_apply();
+
 		if (start) active = true;
-		
-		
-		
 	}//---------------------------------------------------;
 	
 	
 	/**
-	   Set a carrier, you can either set a CHARACTER or a custom SPRITE not both
+	   Set a caret, you can either set a CHARACTER or a custom SPRITE not both
 	   e.g.
-			setCarrier('_',0.2);
-			setCarrier(new FlxSprite(...));
+			setCaret('_',0.2);
+			setCaret(new FlxSprite(...));
 	 @param offsets [x,y] offsets in Array
 	 @param tick Override Blinking Time Interval
 	**/
-	public function setCarrier(?symbol:String = DEFAULT_CARRIER_SMB, ?spr:FlxSprite = null, 
-							offsets:Array<Int> = null, tick:Float = DEFAULT_CARRIER_TICK)
+	public function setCaret(?symbol:String = DEFAULT_CARET_SMB, ?spr:FlxSprite = null, 
+							offsets:Array<Int> = null, tick:Float = DEFAULT_CARET_TICK)
 	{
-		#if debug
-			if (text != null) FlxG.log.error("Warning: Set the carrier before setting text.");
-		#end
-		
 		var C:FlxSprite;
 		if (spr == null) {
 			C = cast D.text.get(symbol, style);	
@@ -366,13 +377,18 @@ class FlxAutoText extends FlxSpriteGroup
 			C.moves = false;
 		}
 		if (offsets == null) offsets = [0, 0];	// DEV: I can't put it as default function argument.
-		add(carrier = C);
-		carrierEnabled = true;
-		carrierBlinkRate = tick;
-		carrierTimer = 0;
-		carrier.visible = false;
-		carrierOffsets = offsets;
+		add(caret = C);
+		caretEnabled = true;
+		caretBlinkRate = tick;
+		caretTimer = 0;
+		caret.visible = false;
+		caretOffsets = offsets;
 	}//---------------------------------------------------;	
+
+	// Set Carrier? wtf was I thinking. Caret is the correct term.
+	@:deprecated("Use setCaret()")
+	public function setCarrier(?a:String = DEFAULT_CARET_SMB, ?b:FlxSprite = null, 
+		c:Array<Int> = null, d:Float = DEFAULT_CARET_TICK) { setCaret(a,b,c,d); }
 	
 	/**
 	 * Set the Characters Per Second
@@ -398,9 +414,10 @@ class FlxAutoText extends FlxSpriteGroup
 			tc = 1;
 			tw = MIN_TICK * (1 / TC);
 		}
-		//trace('SetCPS, cps=$cps | tc=$tc | tw=$tw');
+		#if debug
+		if(_dlog) trace('Set | cps=$cps | tc=$tc | tw=$tw');
+		#end
 	}//---------------------------------------------------;
-	
 	
 	/** Pause the flow, await a resume() */
 	public function pause()
@@ -449,11 +466,10 @@ class FlxAutoText extends FlxSpriteGroup
 			textObj.text = text.substr(textStart, textIndex - textStart);
 		}
 	
-		carrier_state(false);
+		caret_state(false);
 		timer = 0;
 		active = false;
 	}//---------------------------------------------------;
-	
 	
 	
 	// Find where the next space occurs
@@ -469,7 +485,7 @@ class FlxAutoText extends FlxSpriteGroup
 				return;
 			}
 		}
-		// Didn't find and space
+		// Didn't find any space
 		wordNextSpace = -1;
 	}//---------------------------------------------------;
 	
@@ -480,8 +496,7 @@ class FlxAutoText extends FlxSpriteGroup
 	**/
 	function tags_parse(source:String):String
 	{
-		//var REG:EReg = ~/{([^}]+)}/g;			< messes up with code completion on haxedevelop
-		var REG = new EReg('{([^}]+)}', 'g');
+		var REG:EReg = ~/{([^}]+)}/g;
 		TAGS = [];
 		
 		if (REG.match(source))
@@ -491,7 +506,7 @@ class FlxAutoText extends FlxSpriteGroup
 			// DEV: I am going to check for each Captured Group, and replace it with "" on the source string
 			source = REG.map(source, (r:EReg)->{
 				var m = r.matched(1);
-
+				
 				var data:AutoTextMeta = {
 					index:r.matchedPos().pos - indAcc
 				};
@@ -527,7 +542,13 @@ class FlxAutoText extends FlxSpriteGroup
 	{
 		if (textIndex != nextTagIndex) return;
 		var t:AutoTextMeta = TAGS.shift();	// This is guaranteed to have elements
-		//trace('>> Applying tags', t);
+
+		#if debug
+		if(_dlog) {
+			trace('Applying tags', t);
+			trace('LineText (before update): |' + textObj.textField.getLineText(textObj.textField.numLines - 1) + '|');
+			trace('TextIndex: ${textIndex} | TextStart:${textStart}'); }
+		#end
 		
 		if (t.call != null) {
 			event_c(call(t.call));
@@ -537,8 +558,8 @@ class FlxAutoText extends FlxSpriteGroup
 		}
 		if (t.sp != null) {
 			switch(t.sp) {
-				case 0: carrier_state(false);
-				case 1: carrier_state(true);
+				case 0: caret_state(false);
+				case 1: caret_state(true);
 				case 100: newpageFlag = true;
 				default:
 			}
@@ -567,52 +588,47 @@ class FlxAutoText extends FlxSpriteGroup
 	}//---------------------------------------------------;
 	
 	/**
-	 * - Called on update(); updates carrier pos
+	 * - Called on update(); updates caret pos
 	 */
-	function carrier_update()
+	function caret_update()
 	{
-		var tm:TextLineMetrics = textObj.textField.getLineMetrics(textObj.textField.numLines - 1);
-		
-		// An empty line reports height as 0, all targets do it but not Flash
-		#if (!flash)
-		if (tm.height == 0) {
-			tm.height = _precalcHeight;
-		}
-		#end
-		
-		// DEV:
-		// There was a bug. sometimes textObj.textField.numLines would report one more line?
-		// I don't know why, even if the string only had one \n at the end, if it was the last symbol
-		// That's why I am using (linecurrent) here, should be safe
-		
-		carrier.y = this.y + 2 + carrierOffsets[1] + ((lineCurrent - 1) * (tm.height));
-		carrier.x = this.x + 2 + tm.width + carrierOffsets[0];
-		
-		//if (carrier.x > this.x + textObj.width) {
-			// carrier.x = this.x + 2;
-			// carrier.y += tm.height;
-		//}
-		
-		// CHANGED: removed tm.leading from calculations
-		//			Flash text adds a 2 pixel gutter to the whole text object
+		var numLines = textObj.textField.numLines;
+		// Text Metrics for the LAST line
+		var tm:TextLineMetrics = textObj.textField.getLineMetrics(numLines - 1);
+
+		caret.y = this.y + caretOffsets[1] + ((numLines - 1) * (tm.height));
+		caret.x = this.x + tm.width + caretOffsets[0];
+
+		// trace("CARET UPDATE >>>>");
+		// trace('NumLines(tbox):',numLines);
+		// trace('LineCurrent:', lineCurrent);
+		// trace('Text:|' + textObj.textField.getLineText(numLines - 1)+'|');
+		// trace('Metrics | w:${tm.width} h:${tm.height}');
+		// trace("-------\n");
 	}//---------------------------------------------------;
 	
 	/**
-	   Set carrier on or off
+	   Set caret on or off
 	**/
-	function carrier_state(enabled:Bool)
+	function caret_state(enabled:Bool)
 	{
-		if (carrier == null) return;
-		carrier.visible = enabled;
-		carrierEnabled = enabled;
-		carrierTimer = 0;
-		//if(enabled) carrier_update(); // NO: when it is called from a TAG, the position will be updated on the same function later
+		#if debug
+		if(_dlog)trace("= Caret state :" + enabled);
+		#end
+		if (caret == null) return;
+		caret.visible = enabled;
+		caretEnabled = enabled;
+		caretTimer = 0;
+		//if(enabled) caret_update(); // NO: when it is called from a TAG, the position will be updated on the same function later
 	}//---------------------------------------------------;
 	
 	
 	/** Quickly callback an event */
 	inline function event_c(e:AutoTextEvent)
 	{
+		#if debug
+		if(_dlog) trace('= Event :' , e);
+		#end
 		if (onEvent != null) onEvent(e);
 	}//---------------------------------------------------;
 	
@@ -638,8 +654,8 @@ class FlxAutoText extends FlxSpriteGroup
 				if (lcc != "\r" && lcc != "\n") {
 					t += "\n"; // BROKEN WORD
 					// - Shift the tags from index (ci) because I just added '\n' to the final string
-					for (t in TAGS) {
-						if (t.index >= ci) t.index++;
+					for (tg in TAGS) {
+						if (tg.index >= ci) tg.index++;
 					}
 				}
 			}
@@ -656,16 +672,8 @@ class FlxAutoText extends FlxSpriteGroup
 	{
 		style = val;
 		D.text.applyStyle(textObj, style);
-		
-		#if (!flash)
-		textObj.text = "A\nB";
-		_precalcHeight = cast textObj.textField.getLineMetrics(1).height;
-		textObj.text = "";
-		#end
-		
 		return val;
 	}//---------------------------------------------------;
-	
 	
 }// -- end -- //
 

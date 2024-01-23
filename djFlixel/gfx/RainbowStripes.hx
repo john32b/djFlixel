@@ -5,11 +5,7 @@
  - Default colors are Amstrad CPC based
  - Set your own COLORS by directly accessing the array "COLORS" to as many as you want
  
- --
-	setOn(true); 	to make it visible and updating
-	setOn(false); 	to hide it (starts off this way)	
- 
- -- EXAMPLE
+ -- *EXAMPLE*
 	var rainbow = new RainbowStripes();
 	rainbow.COLORS = [color1,color2,color3];
 	add(rainbow);
@@ -127,11 +123,11 @@ class RainbowStripes extends FlxSprite
 	}//---------------------------------------------------;
 	
 	/**
-	   Queue a bunch of predefined modes. Callbacks at the end
-	   String : "0:0.3,1:0.4,2:0.3,2:0.3"
-	   "mode:time,mode:time"
-	   - First mode is applied now
+	   Queue a bunch of predefined modes in a sequence
+	   - First mode is applied immediately
 	   - Does not set ON or OFF, do it manually
+	   @param ar format : [ "mode:time(seconds)" ... ] e.g. ["0:0.3" ,"1:0.4", "2:0.3" ]
+	   @param cb Callback function when the sequence ends
 	**/
 	public function queueModes(ar:Array<String>, cb:Void->Void)
 	{

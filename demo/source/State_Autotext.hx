@@ -54,7 +54,7 @@ class State_Autotext extends FlxState
 		AT.sound.pause = "cursor_low";
 		
 		AT.style = {f:"fnt/mozart.ttf", s:16, c:0xFFFFFFFF,bc:0xFF2B2B24};
-		AT.setCarrier('-', 0.15);
+		AT.setCaret('-', 0.15);
 		AT.onComplete = textComplete;
 		
 		AT.onEvent = (e)->{
@@ -65,16 +65,17 @@ class State_Autotext extends FlxState
 				ns.setEnabled(false);
 			}
 		};
-		
-		AT.setText(
-			'{c:30}FLXAUTOTEXT ::{w:5}\n' + 
-			'{w:1}Provides a simple way to create and control auto-typing text with custom tags like {c:50}changing the characters per second {c:4}on the fly.{w:10,c:30}Pausing {w:8}tags {w:7}wherever.{w:8}\n' +
-			'It even has a {w:5,c:70,wm:3}word mode, where a pause is added after each word. Like this{wm:0}\n' + 
-			'{w:10,c:30}The carrier symbol is optional and you can turn it off even in a tag like so.{w:7,sp:0,c:35} Also linebreaks are autocalculated from beforehand so no weird text jumping when the text reaches the end of the area.\n' +
-			'- Press [K] or CLICK for next page -'+
-			'{w:0,np}Can also be used as a bare-bones dialog box,\nas it supports some preliminary dialog box functions like <newpage> <pausing> and even <custom callbacks>. More info on the comments inside <FlxAutotext.hx>\n' +
-			'- Press [K] or CLICK to return -'
-		);
+
+// Keep at the start of the line, do not indent!!!!!
+AT.setText(
+'{c:30}FLXAUTOTEXT ::{w:5}
+{w:1}Provides a simple way to create and control auto-typing text with custom tags like {c:50}changing the characters per second {c:4}on the fly.{w:10,c:30}Pausing {w:8}tags {w:7}wherever.{w:8}
+It even has a {w:5,c:70,wm:3}word mode, where a pause is added after each word. Like this{wm:0}
+{w:10,c:30}The caret symbol is optional and you can turn it off even in a tag like so.{w:7,sp:0,c:35} Also linebreaks are autocalculated from beforehand so no weird text jumping when the text reaches the end of the area.
+- Press [K] or CLICK for next page -
+{w:0,np}Can also be used as a bare-bones dialog box,
+as it supports some preliminary dialog box functions like <newpage> <pausing> and even <custom callbacks>. More info on the comments inside <FlxAutotext.hx>
+- Press [K] or CLICK to return -');
 		
 		add(AT);
 		
