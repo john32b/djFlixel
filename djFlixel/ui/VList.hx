@@ -451,22 +451,27 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 	
 	public function focus()
 	{
-		#if debug
-			if (indexLastSlot ==-1) throw "Must SetData first";
-		#end
-		
+		if (data == null) {
+			trace("Error: No data on the list, call setDataSource() first");
+			return;
+		}
+
 		if (isFocused || isScrolling) return;
 			isFocused = true;
 			
 		queue_listEvent("focus");
+
+		if(scind!=null) scind.visible();
 		
 		if (inputMode == 2) 
 		{
+			if (indexLastSlot ==-1) {
+				trace("Warning: No available item to focus");
+				return;
+			}
+
 			slot_focus(indexLastSlot);
 		}
-		
-		if(scind!=null) scind.visible();
-			
 	}//---------------------------------------------------;
 	
 	public function unfocus()
@@ -618,7 +623,12 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		}
 		
 		if (inputMode == 2) {
-			setSelection(get_nextSelectableIndex(0, 1));
+			var ind = get_nextSelectableIndex(0, 1);
+			if(ind<0) {
+				trace("Warning: No selectable items on the list");
+				setScroll(0); // just init the items
+			}
+			else setSelection(ind);
 		}else{
 			setScroll(0);
 		}
@@ -641,7 +651,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 
 		if (ind >= data.length) {
 			ind = data.length - 1;
-		}
+		}else if(ind<0) ind=0;
 		
 		if (isFocused) slot_unfocus();
 		
@@ -667,7 +677,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			_islot += delta;
 		}
 		
-		indexLastSlot = _islot;	// In case the menu is unfocused.
+		indexLastSlot = _islot;	// In case the menu is currently unfocused (or when initializing)
 		
 		if (isFocused) slot_focus(_islot); 
 		
@@ -731,9 +741,13 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 				scrollDown1();
 			}
 		}else
-		
-		
+
+		if (D.ctrl.justPressed(X)) {
+			queue_listEvent("back");
+		}else
+
 		if (inputMode == 1) return;
+		if (indexItem == null) return;
 		
 		if (D.ctrl.timePress(LEFT, 0.7, 0.08, 0.02)) {
 			indexItem.onInput(left);
@@ -748,10 +762,6 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 				queue_itemEvent(fire);
 			else
 				indexItem.onInput(fire);
-		}else
-		
-		if (D.ctrl.justPressed(X)) {
-			queue_listEvent("back");
 		}else
 		
 		if (D.ctrl.justPressed(START)) {
