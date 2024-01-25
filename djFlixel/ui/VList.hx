@@ -746,8 +746,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 			queue_listEvent("back");
 		}else
 
-		if (inputMode == 1) return;
-		if (indexItem == null) return;
+		if (inputMode == 1 || indexItem == null ) return;
 		
 		if (D.ctrl.timePress(LEFT, 0.7, 0.08, 0.02)) {
 			indexItem.onInput(left);
@@ -856,7 +855,7 @@ class VList<T:IListItem<K> & FlxSprite, K> extends FlxSpriteGroup
 		}// --
 		
 		// :: Check for item interaction
-		if (inputMode < 2) return;
+		if (inputMode < 2 || indexItem == null ) return;
 		
 		// :: Rollover, Clicks check
 		for (slot in 0...slotsTotal) 
