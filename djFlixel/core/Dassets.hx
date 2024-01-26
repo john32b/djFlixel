@@ -74,12 +74,12 @@ class Dassets
 	public function reload(?cb:Void->Void):Void
 	{
 		#if HOT_LOAD
-		trace("== HOTLOAD.reload() ::");
+		trace("= HOTLOAD.reload()");
 		
 		files = [];
 		
 		var _onLoad = ()->{
-			trace('  loaded : ${HOT_LOAD.length}');
+			trace('= HOTLOAD, loaded : [${HOT_LOAD.length}]');
 			if (onLoad != null) onLoad();
 			if (cb != null) cb();
 		};

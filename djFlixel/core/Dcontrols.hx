@@ -430,4 +430,68 @@ class Dcontrols
 		MAP_KEYS[cast DButton._NONE] = [];
 	}//---------------------------------------------------;
 
+
+	// == HOTKEYS ==
+	//
+	var hotkeys:Map<FlxKey,Void->Void> = null;
+	/** Check hotkeys every (n) frames **/
+	public var hotkey_frameskip = 2;
+	// hotkey frame counter
+	var _hkc = 0;
+	// hotkey, pressed?
+	var _hkp = 0;
+
+	/** 
+		Add a key to the hotkey check list.
+		@param key the key e.g. FlxKey.F8
+		@param cb Callback function to call when key is pressed
+	**/
+	public function hotkey_add(key:FlxKey, cb:Void->Void)
+	{
+		if (hotkeys == null) {
+			hotkeys = new Map();
+			FlxG.signals.postUpdate.add(hotkey_onupdate);
+			trace("Hotkey: hotkey_onupdate added +");
+		}
+
+		hotkeys.set(key, cb);
+	}// -------------------------;
+
+	/**
+		Remove a hotkey from the check list. Or Clear all
+		@param key The key, or null to clear everything
+	**/
+	public function hotkey_clear(?key:FlxKey)
+	{
+		// key can be null or invalid
+		hotkeys.remove(key);
+		// count entries
+		var c=0;
+		for(k in hotkeys) c++;
+		if(key==null || c==0) {
+			// delete all
+			hotkeys = null;
+			FlxG.signals.postUpdate.remove(hotkey_onupdate);
+			trace("Hotkey: hotkey_onupdate removed -");
+		}
+	}// -------------------------;
+
+	function hotkey_onupdate()
+	{
+		if (_hkc++ < hotkey_frameskip) return;
+		_hkc = 0;
+		for(k in hotkeys.keys()) {
+			var st:Bool = FlxG.keys.checkStatus(k, PRESSED);
+			if (st) {
+				if (_hkp == 0) {
+					_hkp = 1;
+					trace("Hotkey: Just pressed", k);
+					hotkeys.get(k)();
+				}
+				return;	// Do not check other hotkeys, only one at a time is allowed
+			}
+		}
+		_hkp = 0;
+	}// -------------------------;
+
 }// -- end --//

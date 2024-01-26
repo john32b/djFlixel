@@ -11,8 +11,8 @@
 		- On DEBUG builds, _debug_keys() is enabled
 		
 	= Debug keys =
-		- `F9` - calls _cycle_filters(), override this to set your own
 		- `F12` - resets state and reloads any assets from disk if `HOT_RELOAD` is defined
+		- `DELETE` - Instead of F12 for HTML5
 		- `SHIFT F12` - reset game
 		
  *******************************************************************/
@@ -69,9 +69,6 @@ class D
 	/** Depends on fullscreen size, how big the window can get in zoom increments */
 	public static var MAX_WINDOW_ZOOM(default, null):Int = 1;
 	
-	/** Called when F9 is pressed on debug mode */
-	public static var _cycle_filters:Void->Void;
-	
 	/** 
 	 * Initialize this static class. Call this before creating FlxGame();
 	 * @param O You can override fields of `IP` check in code
@@ -101,7 +98,7 @@ class D
 		FlxG.signals.postStateSwitch.add(onStateSwitch);
 		//FlxG.signals.gameResized.add(onResize);
 		
-		// :: Some code that needs to run after flxgame is created
+		// :: Code that needs to run after FlxGame is created
 		FlxG.signals.preGameStart.addOnce( ()-> 
 		{
 			MAX_WINDOW_ZOOM = Math.floor(Lib.current.stage.fullScreenWidth / FlxG.width) - 1;
@@ -110,13 +107,12 @@ class D
 			FlxG.fullscreen = IP.fullscreen;
 			ctrl = new Dcontrols(); // This needs to init after new FlxGame
 			if (IP.init != null) IP.init();
+
+			#if (debug)
+				trace('Debug : Enabling Debug keys');
+				D.ctrl.hotkey_add( #if (html5) DELETE #else F12 #end , _hotkey_reset );
+			#end
 		});
-		
-		#if (debug)
-			// CHANGE: Always add debug keys for debug builds
-			trace('Debug : Enabling Debug keys');
-			FlxG.signals.postUpdate.add(_debug_keys);
-		#end
 	}//---------------------------------------------------;
 	
 	
@@ -148,40 +144,23 @@ class D
 	}//---------------------------------------------------;
 	
 	
-	
 	#if (debug)
 	
-	/** Read this var to check whether the current state was reloaded with F12, useful in some cases */
+	/** Read this var to check whether the current state was reloaded with F12 */
 	public static var DEBUG_RELOADED:Bool = false;
 	
-	/**
-	 * Debug keys, autocalled on update.
-	 * F9 : Antialiasing toggle
-	 * F12 : Hot Reload declared files and reset state <Dassets.hx>
-	 * SHIFT F12 : Reset Game
-	 */
-	static function _debug_keys()
+	static function _hotkey_reset()
 	{
-		#if html5
-		if (FlxG.keys.justPressed.DELETE) {
-		#else
-		if (FlxG.keys.justPressed.F12) {
-		#end
-			if (FlxG.keys.pressed.SHIFT){
-				FlxG.resetGame();
-			}else{
-				#if HOT_LOAD
-				FlxG.signals.preStateSwitch.addOnce( ()->{ DEBUG_RELOADED = true; });
-				assets.reload( FlxG.resetState );
-				#end
-			}
+		if (FlxG.keys.pressed.SHIFT) {
+			FlxG.resetGame();
+		} else {
+			#if HOT_LOAD
+			FlxG.signals.preStateSwitch.addOnce( ()->{ DEBUG_RELOADED = true; });
+			assets.reload( FlxG.resetState );
+			#else
+			FlxG.resetState();
+			#end
 		}
-		
-		else if (FlxG.keys.justPressed.F9)
-		{
-			if (_cycle_filters != null) _cycle_filters();
-		}
-		
 	}//---------------------------------------------------;
 	
 	#end 
