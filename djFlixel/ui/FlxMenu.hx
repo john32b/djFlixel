@@ -66,8 +66,6 @@ import flixel.group.FlxGroup;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.typeLimit.OneOfTwo;
 
-
-
 // Menu Events that are sent to <FlxMenu.onMenuEvent>
 // A <String> is also passed with that event
 enum MenuEvent
@@ -154,11 +152,11 @@ class FlxMenu extends FlxGroup
 	   @param	X Screen X
 	   @param	Y Screen Y
 	   @param	WIDTH Set the menu width. Some special values:
-				0 Sets the menu width to the longest item it finds in the first view
+				`0` Sets the menu width to the longest item it finds in the first view
 				(meaning items that are out of view will not be considered)
-				-1 Is a hack and sets the width to (camera.width - (X * 2))
+				`-1` Is a hack and sets the width to `(camera.width - (X * 2))`
 				(meaning it makes the menu box symmetrical on the center Y axis)
-	   @param	SLOTS How many vertical slots for items to show. If a menu has more items, it will scroll.
+	   @param	SLOTS How many vertical slots for items to show. If a page has more items, it will scroll.
 	**/
 	public function new(X:Float=0, Y:Float=0, WIDTH:Int=0, SLOTS:Int = 6)
 	{
@@ -400,12 +398,17 @@ class FlxMenu extends FlxGroup
 			item = pg.items[cast idOrIndex];
 		}
 		if (item == null){
-			trace('item_update: Could not find Item in page', pg.ID, idOrIndex);
+			trace('Warning: item_update: Could not find Item in page', pg.ID, idOrIndex);
 			return;
 		}
-		
+
 		// :: User manipulation
+		var pre = item.toStr2();
 		modifyFN(item);
+		if (pre == item.toStr2()) {
+			// item data was not changed
+			return;
+		}
 		
 		// -- Search created MPages for this page/item
 		
@@ -516,8 +519,13 @@ class FlxMenu extends FlxGroup
 	function _add_pageActive()
 	{
 		mpActive = pool_get(pageActive);
+		// DEV: call this event before viewOn()
+		//		in case user wants to change item values
+		//		- also before add()? does it save drawing calls?
+		_mev(MenuEvent.page, pageActive.ID);
+				
 		add(mpActive);
-		//mpActive.setPosition(x, y);			// in case the menu moved
+
 		// : Get cursor position
 		if (_flag_restore_selected_index) {
 			mpActive.setSelection(pageActive.PAR.cindex);
@@ -526,7 +534,6 @@ class FlxMenu extends FlxGroup
 			mpActive.selectFirstAvailable();
 		}
 		mpActive.viewOn(true);	// > always focus the new page.
-		_mev(MenuEvent.page, pageActive.ID);
 	}//---------------------------------------------------;
 	
 	// DEV: This is the only onMenuEvent user callback caller

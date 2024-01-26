@@ -49,8 +49,8 @@ class Main extends Sprite
 		// First thing initialize djFlixel
 		// The parameters are all optional, checkout inside <D.hx> for more info
 		D.init({
-			name:"DJFLIXEL DEMO " + D.DJFLX_VER,
-			smoothing:true
+			name:"DJFLIXEL DEMO ",
+			version: D.DJFLX_VER
 		});
 		
 		D.ui.initIcons([8, 12]); // Prepare those icon sizes to be used. Here FLXMenu will use sizes 8 and 12

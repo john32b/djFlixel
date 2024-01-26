@@ -402,11 +402,22 @@ class MItemData
 		}
 	}//---------------------------------------------------;
 		
-		
+	/** Human Readable, for logging/debugging **/
 	public function toString():String
 	{
 		return 'ID:$ID | Label:$label | Type:$type | Data:$P';
 	}//---------------------------------------------------;
+
+	/* BASIC encoded string of the item. Used for checking for changes */
+	public function toStr2():String
+	{
+		// DEV: no type, since it would never change
+		// no info, it is not crucial
+		var s = ID+label+selectable+disabled;
+		for (f in Reflect.fields(this.P))
+			s += ':' + Reflect.getProperty(this.P, f);
+		return s;
+	}// -------------------------;
 
 }// --
 
