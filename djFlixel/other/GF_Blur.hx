@@ -1,9 +1,10 @@
 /**
-   Global Filter - Blur
-   - create right after FlxGame is created
+   ## Global Filter - Blur
+
+   - Notice: This class is a mess, don't use
+   - simple Blur Filter
    - auto adds and handles events
    
-   - 
 **/
 
 package djFlixel.other;
@@ -13,6 +14,7 @@ import openfl.filters.BlurFilter;
 
 class GF_Blur 
 {
+	/** Setter - use this to enable/disable **/
 	public var enabled(default, set):Bool = false;
 	
 	var MAX:Float;	// In desktop targets, when resizing, limit blur to this
@@ -20,7 +22,8 @@ class GF_Blur
 	var bf:BlurFilter;
 	
 	/**
-	   @param	val Initial Value. Useful for HTML5, because once set, it won't change
+	   @param	val Initial Value
+	   @param	max When resizing, how big the blur value can get
 	   @param	q Quality. How many passes to apply {1,2,3} is the highest
 	**/
 	public function new(val:Float = 1, max:Float = 1.65, q:Int = 1)
@@ -32,7 +35,7 @@ class GF_Blur
 		
 		filters = [ bf ];
 		
-		#if (desktop)
+		#if (!flash)
 		FlxG.signals.gameResized.add(onResize);
 		#end
 		
@@ -41,10 +44,6 @@ class GF_Blur
 			enabled = enabled; // trigger an activation
 		});
 		#end
-		
-		@:privateAccess D._cycle_filters = () ->{
-			enabled = !enabled;
-		}
 	}//---------------------------------------------------;
 	
 	public function set_enabled(val:Bool):Bool
@@ -67,7 +66,7 @@ class GF_Blur
 	}//---------------------------------------------------;
 	
 	
-	#if (desktop)
+	#if (!flash)
 	function onResize(x, y)
 	{
 		// Recalculate the blur filter to match the new window size?

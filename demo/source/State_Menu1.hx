@@ -15,13 +15,11 @@ import djFlixel.other.DelayCall;
 import djFlixel.other.StepLoop;
 import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxToast;
+import djFlixel.ui.MPlug_Audio;
 import djFlixel.ui.menu.MPageData;
-import flash.display.StageQuality;
-import flash.media.Sound;
 import flixel.FlxG;
 import flixel.FlxState;
 import game1.State_Game1;
-import djFlixel.ui.MPlug_Audio;
 
 class State_Menu1 extends FlxState
 {

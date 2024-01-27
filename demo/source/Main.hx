@@ -36,48 +36,32 @@ import openfl.display.Sprite;
 
 class Main extends Sprite
 {
-	inline static var FPS = 60;
 	inline static var START_STATE = State_Boot;
-		
+	// Read the `FPS` value from `Project.xml`
+	static var FPS:Int = Std.parseInt(djA.Macros.getDefine('FPS'));
 	// Global Filter Blur
 	public static var BLUR:GF_Blur;
 	
 	public function new() 
 	{
 		super();
-		
+
 		// First thing initialize djFlixel
 		// The parameters are all optional, checkout inside <D.hx> for more info
 		D.init({
-			name:"DJFLIXEL DEMO ",
-			version: D.DJFLX_VER
+			name:"DJFLIXEL DEMO",
+			version: D.DJFLX_VER ,
+			init:_preStart
 		});
-		
-		D.ui.initIcons([8, 12]); // Prepare those icon sizes to be used. Here FLXMenu will use sizes 8 and 12
-		
-		FlxG.autoPause = false;
-		
-		// Adjust some of the Sound volumes Globally
-		// Everytime a sound is played with `D.snd.playV()`, this custom volume will be applied
-		D.snd.addSoundInfos({
-			cursor_high : 0.6,
-			cursor_tick : 0.33
-			
-			// .. all other sounds will be played at normal volume
-		});
-		
-		
-		addChild(new FlxGame(320, 240, START_STATE, FPS, FPS, true));
-		
-		// DEV NOTE : CHANGE v0.5:
-		// There used to be some Dynamic Asset Reloading code here
-		// It was the case that release&debug would share the asset loading code
-		// So FlxGame would have to be created after handling the assets 
-		// (e.g parsing a JSON file with settings)
-		// > None of that now. The FlxGame is created at once, and the HOTRELOAD
-		//   code is to be managed manually. Check more in <Dassets.hx>
 
-		
+		addChild(new FlxGame(320, 240, START_STATE, FPS, FPS, true));
+	}//---------------------------------------------------;
+	
+	// - Initialize things right after FlxGame has been created
+	static function _preStart()
+	{
+		FlxG.autoPause = false;
+
 		// FlxToast uses a static object with color properties that can be shared between states
 		// I want to reset the properties after each state switch
 		FlxG.signals.postStateSwitch.add( ()->{
@@ -86,22 +70,29 @@ class Main extends Sprite
 		
 		// This is a simple and quick way to add a blurFilter
 		BLUR = new GF_Blur(0.7, 1.5, 2);
-		BLUR.enabled = true;
+		BLUR.enabled = false;
 
-		// Quick toggle
-		D._cycle_filters = () -> {
-			BLUR.enabled = !BLUR.enabled;
-		};
+		// Prepare those icon sizes to be used. Here FLXMenu will use sizes 8 and 12
+		D.ui.initIcons([8, 12]); 
 		
-		FlxG.autoPause = false;
-	}//---------------------------------------------------;
+		// Adjust some of the Sound volumes Globally
+		// Everytime a sound is played with `D.snd.playV()`, this custom volume will be applied
+		D.snd.addSoundInfos({
+			cursor_high : 0.6,
+			cursor_tick : 0.33	
+			// .. all other sounds will be played at normal volume
+		});
+
+		// Pressing F9 from anystate, will call this function
+		D.ctrl.hotkey_add(F9,()->{
+			BLUR.enabled =! BLUR.enabled;
+		});
+	}// -------------------------;
 	
 	
-	
-	/** Shortcut to change state */
+	/** Change state with an animated effect */
 	static public function goto_state(S:Class<FlxState>, ?effect:String)
 	{
-		
 		switch (effect)
 		{
 			case "fade":

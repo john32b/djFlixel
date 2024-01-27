@@ -10,20 +10,18 @@ package;
 import common.InfoBox;
 import djFlixel.D;
 import djFlixel.gfx.BoxScroller;
+import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.pal.Pal_DB32;
 import djFlixel.other.DelayCall;
 import djFlixel.ui.FlxMenu;
+import djFlixel.ui.MPlug_Header;
 import djFlixel.ui.menu.MItemToggle;
 import djFlixel.ui.menu.MPageData;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets;
-import djFlixel.gfx.FilterFader;
-import djFlixel.ui.MPlug_Header;
 import flixel.tweens.FlxEase;
-import flixel.util.FlxStringUtil.LabelValuePair;
-import haxe.display.Display.GotoDefinitionResult;
 
 class State_Menu2 extends FlxState
 {

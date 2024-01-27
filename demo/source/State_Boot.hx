@@ -5,11 +5,11 @@
  
 package;
 import djFlixel.D;
-import djFlixel.core.Ddest;
 import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.StaticNoise;
-import djFlixel.gfx.pal.Pal_DB32;
+import djFlixel.gfx.pal.Pal_DB32.COL as COL;
 import djFlixel.ui.FlxAutoText;
+import djA.DataT;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -22,9 +22,16 @@ class State_Boot extends FlxState
 	{
 		super.create();
 		
+		var RAND_BG   = [[1,2],[2,3],[13,14],[14,15],[24,25]];
+		var RAND_TEXT = [[9,14],[8,4],[29,27],[21,25]];
+		FlxG.random.shuffle(RAND_BG);
+		FlxG.random.shuffle(RAND_TEXT);
+		var R_BG = RAND_BG.pop();
+		var R_TX = RAND_TEXT.pop();
+		
 		// -- Add a static noise background
 		var st = new StaticNoise();
-			st.color_custom([Pal_DB32.COL[1], Pal_DB32.COL[2]]);
+			st.color_custom([COL[R_BG[0]], COL[R_BG[1]]]);
 			add(st);
 
 		// -- Some text
@@ -39,8 +46,8 @@ class State_Boot extends FlxState
 		t.style = {
 			f:'fnt/mozart.ttf',
 			s:16,
-			c:Pal_DB32.COL[9],
-			bc:Pal_DB32.COL[14]
+			c:COL[R_TX[0]],
+			bc:COL[R_TX[1]]
 		};
 		
 		t.onComplete = ()->{
@@ -48,7 +55,7 @@ class State_Boot extends FlxState
 			Main.goto_state(NEXTSTATE, "fade");
 		};
 		
-		t.setCaret("|");
+		t.setCaret("•");
 		
 		// Set text and autostart
 		t.setText('{w:8,c:33}djFlixel ${D.DJFLX_VER}\n{w:4}Starting Demo{c:5}....{w:5}');

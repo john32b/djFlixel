@@ -49,7 +49,7 @@ class DataT
 	 * - Copy an object's fields into target object. Overwrites the target object's fields. 
 	 * - Works Recursively for objects inside objects
 	 * - Can work with Static Classes as well (as destination)
-	 * - You need to assign the returned object for this to work
+	 *   (you need to cast the returned object for this to work)
 	 * @param	node The Master object to copy fields from
 	 * @param	into The Target object to copy fields to
 	 * @return	The resulting object
@@ -64,12 +64,13 @@ class DataT
 		
 		if (into == null) 
 		{
-			into = Reflect.copy(from);
+			into = copyDeep(from);
 		}else
 		{
 			for (f in Reflect.fields(from)) {
 				if (Reflect.isObject(Reflect.field(from, f)) &&
 					Type.getClass(Reflect.field(from, f)) == null) {
+						// Devnote: ^checks to see if it is an anonymous object
 						Reflect.setField(into, f, copyFields(Reflect.field(from, f), Reflect.field(into, f)));
 					}else{
 						Reflect.setField(into, f, Reflect.field(from, f));
@@ -83,21 +84,13 @@ class DataT
 	
 	/**
 	   Return a deep copy of an anonymous object. Meaning will copy all sub-objects as well
-	   @param	o
-	   @return
+	   @param	o The object to clone
+	   @return A new object
 	**/
 	public static function copyDeep(o:Dynamic):Dynamic
 	{
-		var N = {};
-		for (f in Reflect.fields(o)) {
-			if (Reflect.isObject(Reflect.field(o, f)) &&
-				Type.getClass(Reflect.field(o, f)) == null) {
-					Reflect.setField(N, f, copyDeep(Reflect.field(o, f)));
-				}else{
-					Reflect.setField(N, f, Reflect.field(o, f));
-				}
-		}
-		return N;
+		if(o==null) return null;
+		return copyFields(o,{});
 	}//---------------------------------------------------;
 
 	public static function intOrZeroFromStr(str:String):Int

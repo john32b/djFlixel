@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
-	
-	<define name="APP_VER" value="0.5.9"/>
+
+	<!-- Note, define can also be read by code, set is only for inner XML -->
+	<define name="APP_VER" value="0.5.9" />
 	<set name="APP_FILE" value="djflx_demo"/>
 	<set name="APP_TITLE" value="djFlixel Demo"/>
+	<define name="FPS" value="40" unless="FPS"/> 
 
-	<haxeflag name="-dce" value="std"/>
-	<haxedef name="no-traces" unless="debug"/>
+	<!-- App Setup -->
+	<app main="Main" path="bin/" />
+	<app file="${APP_FILE}" title="${APP_TITLE}" version="${APP_VER}" company="John32B" />
+	<window width="640" height="480" fps="${FPS}" background="#030302" />
+	<window allow-shaders="true" hardware="true" vsync="true" />
+	
+	<!-- HTML specific-->
+	<section if="html5">
+		<app preloader="flixel.system.FlxBasePreloader"/>
+		<window fps="0" />
+		<haxedef name="webgl" />
+	</section>
 
 	<source path="source" />
 
-	<app main="Main" path="bin/" />
-	<app file="${APP_FILE}" title="${APP_TITLE}" version="${APP_VER}" company="john32b" />
-	<app preloader="flixel.system.FlxBasePreloader" if="html5"/>
-
-	<window width="640" height="480" fps="60" background="#030302" hardware="true" vsync="true" />
-	
-	<!-- Flixel default is webgl, other option 'canvas' -->
-	<haxedef name="webgl" if="html5"/>
-
 	<!-- djflixel related -->
 	<haxedef name="HOT_LOAD" if="debug flash"/>
-
-	<!-- Tell DSound.hx, where to look for sounds and music. 
-		`snd` is the asset ID path I declared earlier -->
+	<haxedef name="HOT_LOAD" if="debug hl"/>
 	<haxedef name="DJFLX_SND" value="snd/"/>
 	<haxedef name="DJFLX_MUS" value="snd/"/>
 		
+	<!-- Haxe defines -->
+	<haxeflag name="-dce" value="full" unless="debug"/>
+	<haxedef name="no-traces" unless="debug"/>
+
 	<!-- Imports -->
 	<!-- djflixel 0.5.9 | flixel 5.5 -->
 	<haxelib name="flixel"/>
