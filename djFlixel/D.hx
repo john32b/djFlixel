@@ -101,7 +101,7 @@ class D
 		// :: Code that needs to run after FlxGame is created
 		FlxG.signals.preGameStart.addOnce( ()-> 
 		{
-			MAX_WINDOW_ZOOM = Math.floor(Lib.current.stage.fullScreenWidth / FlxG.width) - 1;
+			MAX_WINDOW_ZOOM = Math.floor(Lib.current.stage.fullScreenHeight / FlxG.height);
 			if (IP.volume >= 0) snd.setVolume(null, IP.volume);
 			FlxG.mouse.useSystemCursor = true;
 			FlxG.fullscreen = IP.fullscreen;
@@ -137,6 +137,7 @@ class D
 	**/
 	public static function setWindowed(zoom:Int)
 	{
+		#if html5 return #end
 		FlxG.fullscreen = false;
 		FlxG.stage.window.width = Math.floor(FlxG.width * zoom);
 		FlxG.stage.window.height = Math.floor(FlxG.height * zoom);
