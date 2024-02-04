@@ -29,7 +29,7 @@ class FlxSequencer extends FlxBasic
 	var _timer:Float = 0;
 	
 	/**
-	   @param	CB callback 
+	   @param	cb callback 
 	   @param	autoStart Milliseconds. if >=0 will call next(autoStart time)
 	**/
 	public function new(?cb:FlxSequencer->Void, autoStart:Float = -1)

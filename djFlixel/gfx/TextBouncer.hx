@@ -1,13 +1,18 @@
-/* **
- = TEXT EFFECT =
- = Drop letters and bounce
+/**
+ = Text Bouncer
+
+ - Drops letters into view and they bounce
+ - Automatically sets `scrollFactor = 0`
+ - Does not autostart, you need to call `start()`
+ - Before calling `start()` the letters are at the final position 0 alpha
+   so you can use aligning functions like `D.align.screen()`
  
- = EXAMPLE =
+ = EXAMPLE :
 	var lb = new TextBouncer("HELLO WORLD", 100, 100, 
 		{f:'fnt/score.ttf', s:6, bc:Pal_CPCBoy.COL[2]}, 
 		{time:2, timeL:0.5});
 	add(lb);
-	D.align.screen(lb);	// Tip you can aligh this, because the letters are there, with alpha=0
+	D.align.screen(lb); // center to screen
 	lb.start(()->{
 		trace("Bounce complete");
 	});
@@ -29,44 +34,45 @@ import flixel.util.FlxDestroyUtil;
 
 class TextBouncer extends FlxSpriteGroup
 {	
-	// Parameters
-	static var DEF_PAR = {
+	// Running Parameters
+	var P = {
 		pad 	: 2,	// Horizontal Pad between letters
 		time  	: 2,	// Time to complete the whole animation
 		timeL	: 0.5,	// Time it takes for one letter to complete the tween
 		startX  : 0,	// Start Offset X from the final (X,Y) pos
 		startY  : -42,	// Start Offset Y from the final (X,Y) pos
-		ease	: "bounceOut",
-		snd0	: null, // Sound to play at each letter start
-		snd1	: null  // Sound to play at each letter end
+		ease	: "bounceOut",	// Ease function name, consult <FlxEase.hx>
+		snd0	: null, // Sound to play at each letter start. using D.snd.playV()
+		snd1	: null  // Sound to play at each letter end. using D.snd.playV()
 	}
 	
 	var letters:Array<FlxText>;
 	var numberOfLetters:Int;
-	var tweens:Array<VarTween> = null; // Hold all the letter the tweens
+	var tweens:Array<VarTween> = null; // Holds all letter tweens
 	var stimer:StepTimer;
 	var easeFn:EaseFunction;
-	var P:Dynamic;	// Current Running parameters
 	
 	/**
 		Creates a spritegroup with dropping letters 
 	   @param	TEXT Text
 	   @param	X First letter final X
 	   @param	Y First letter final Y
-	   @param	ST Style Overrides. IMPORTANT! do not set WIDTH,ALIGN on the text style
-	   @param	PAR Animation parameters, Check `DEF_PAR` code inside
+	   @param	ST Text Style
+	   @param	Params Parameters override for `P` parameters object; check code inside.
 	**/
-	public function new(TEXT:String, X:Float, Y:Float, ?ST:DTextStyle, ?PAR:Dynamic)
+	public function new(TEXT:String, X:Float, Y:Float, ?ST:DTextStyle, ?Params:Dynamic)
 	{
 		super();
 		scrollFactor.set(0, 0);
 		x = X;
 		y = Y;
+
+		this.moves = false;
 		
 		letters = []; // -- Create the letters but don't add them to the stage yet.
 		numberOfLetters = TEXT.length;
 		
-		P = DataT.copyFields(PAR, Reflect.copy(DEF_PAR));
+		DataT.copyFields(Params, P);
 		easeFn = Reflect.field(FlxEase, P.ease);
 		
 		var lastX:Float = 0;

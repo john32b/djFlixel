@@ -42,9 +42,9 @@ class StepTimer extends FlxBasic
 	var onTick:Int->Bool->Void; // (step,finished)->{}
 	
 	/**
-	 * Create and start a stepTimer, calling ONTick(.) with the progress
-	 * @param	ONTick (a,b) a:Int = Current Step, b:Bool = Finished 
-	 * @param	state The state to add this, Useful if running from a substate where the main state is paused
+	 * Create and start a stepTimer, calling `ONTick()` with the progress
+	 * @param	autoAdd Add the object to the active state?
+	 * @param	ONTICK Callbacks (currentStep, Finished)->{ }
 	 */
 	public function new(?autoAdd:Bool = true, ONTICK:Int->Bool->Void)
 	{

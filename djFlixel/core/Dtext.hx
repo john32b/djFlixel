@@ -16,23 +16,20 @@ package djFlixel.core;
 import djA.DataT;
 import flixel.text.FlxText;
 
-
-/* Text Style Objects are used mainly in .get(..)
- * Provides a quick way to stylize text */
+ /**
+	Holds text styling options, used in various djFlixel objects,
+	provides a quick way to declare custom text styles
+ **/
 typedef DTextStyle = {
 	
 	?f:String,	// FONT
 	?s:Int,		// SIZE
 	?c:Int,		// COLOR
 	// --
-	?bc:Int,	// BORDER COLOR. | TIP, if you just set the color, the BorderType will auto set to (1)
+	?bc:Int,	// BORDER COLOR | NOTE, if you just set `bc`, BorderType `bt` will auto set to (1)
 	?bt:Int,	// BORDER TYPE | (0-3) [0:NONE. 1:SHADOW, 2:OUTLINE, 3:OUTLINE_FAST] | Default is 1 if bc is set
-	?bs:Int,	// BORDER SIZE | Default is 1. For shadow style just use (so) shadow offset
+	?bs:Int,	// BORDER SIZE | Default is 1. For `bc 3` (Shadow) use (so) shadow offset
 	?so:Array<Int>,	// SHADOW OFFSET | Default is (1,1) is multiplied by bordersize. e.g. [1,0] or [0,1]
-	
-	// --
-	//?x:Float,	// X	-- Why would a style change the position? Removed V0.5
-	//?y:Float,	// Y	-- Why would a style change the position? Removed V0.5
 	
 	?w:Int,		// WIDTH fieldwidth , >0 (wordwrap, no autoexpand) =0 (no wordwrap, autoexpand)
 	?a:String	// ALIGNMENT | left,right,center,justify
@@ -180,8 +177,6 @@ class Dtext
 		if (s.s != null) T.size = s.s;
 		if (s.c != null) T.color = s.c;
 		
-		//if (s.x != null) T.x = s.x;
-		//if (s.y != null) T.y = s.y;
 		if (s.w != null) T.fieldWidth = s.w;
 		if (s.a != null) T.alignment = s.a;
 		
@@ -224,7 +219,8 @@ class Dtext
 	
 	#if html5
 	
-	
+	// :: TODO, remove this hack, fixed in flixel 5+
+
 	// Only works for MULTILINES. like FlxAutoText
 	// Call manually
 	// Font Asset ID -> [FontSize, Leading Offset]

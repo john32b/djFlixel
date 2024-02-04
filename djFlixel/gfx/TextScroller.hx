@@ -1,10 +1,11 @@
 /**
- = TEXT EFFECT =
- = Horizontal scroll
- 
- - supports wave/sine effect
- - scrolls into the whole screen width.
- 
+ = Scrolling Text Effect
+
+ - Horizontal scroll with a wave/sine effect 
+ - Callbacks `onLoop()`
+ - Runs automatically once created
+ - Automatically sets `scrollFactor = 0`
+
  == EXAMPLE :
  	var ts = new TextScroller("FUTURE KNIGHT DX - ", 
 		{f:'fnt/text.ttf', s:16, bc:Pal_CPCBoy.COL[2]},
@@ -24,15 +25,15 @@ import flixel.text.FlxText;
 
 class TextScroller extends FlxTypedGroup<FlxText>
 {
-	// Default parameters
-	static var DEF_PAR = {
+	// Default running parameters
+	var P = {
 		pad:4,				// Letter padding
 		x:0,
 		y:32,				// Screen Y location 
 		width:0,			// 0 for default whole screen (FlxG.width)
 		// --
 		sHeight:16,			// Wave height, in pixels
-		w0:2,				// Wave width, Smaller numbers, bigger length. Related on P.Width
+		w0:2,				// Wave width, Smaller numbers, bigger length. Related to `width`
 		w1:0.02,			// Wave. Accumulator. Makes the wave slide a bit, USE SMALL VALUES! or 0
 		speed:1,			// Scroll speed from right to left
 		loopMode:1			// 0=No loop, 1=Loops tightly, 2=Loops When all letters have passed
@@ -43,39 +44,38 @@ class TextScroller extends FlxTypedGroup<FlxText>
 	var maxLetters:Int;			// How many letters the screen fits
 	var nextLetterIndex:Int;	// Next letter index to fire
 	var text:String;			// The text string to show
-	var P:Dynamic;				// Active Parameters
 	var PiStep:Float;			// Pi increment at x position
 	
-	public var onLoop:Void->Void;	// Fires when a loop has completed. If loopMode==0 will fire once
+	/** Fires when a loop has completed. If loopMode==0 will fire once **/
+	public var onLoop:Void->Void;	
 	
 	/**
 		Creates a text scrolling effect. check file header for infos.
 	 * @param	Text The text to display
 	 * @param	Callback Callbacks when a loop has been completed
-	 * @param	Params Default parameters override for `DEF_PAR` check code inside
+	 * @param	Params Parameters override for `P` parameters object; check code inside.
 	 */
-	public function new(TEXT:String, ?TS:DTextStyle, ?PAR:Dynamic)
+	public function new(Text:String, ?TStyle:DTextStyle, ?Params:Dynamic)
 	{
 		super();
 
-		P = DataT.copyFields(PAR, Reflect.copy(DEF_PAR));
+		DataT.copyFields(Params, P);
 		if (P.width == 0) P.width = FlxG.width - P.x;
 		
-		var temp = D.text.get('O', TS);
-		letterWidth = temp.width + P.pad;
+		var temp = D.text.get('O', TStyle);
+		letterWidth = Std.int(temp.width + P.pad);
 		
-		text = TEXT;
+		text = Text;
 		nextLetterIndex = 0; // Total = text.length-1
 		maxLetters = Math.ceil(P.width / letterWidth) + 1;
 		
 		PiStep = (P.w0 * Math.PI) / P.width;
 		
-		// -- PreCreate some letters, as many as the screen can fit
+		// -- PreCreate some letters, as many as `width` can fit
 		for (i in 0...maxLetters)
 		{
-			var l = D.text.get('', TS);
+			var l = D.text.get('', TStyle);
 			l.exists = false;
-			l.moves = false;
 			l.scrollFactor.set(0, 0);
 			add(l);
 		}
