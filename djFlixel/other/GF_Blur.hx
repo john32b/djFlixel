@@ -26,6 +26,7 @@ class GF_Blur
 	   @param	max When resizing, how big the blur value can get
 	   @param	q Quality. How many passes to apply {1,2,3} is the highest
 	**/
+	@:deprecated("Use gfx.shader.HQ2X")
 	public function new(val:Float = 1, max:Float = 1.65, q:Int = 1)
 	{
 		// Going to be set properly at "onResize()" which is automatically called

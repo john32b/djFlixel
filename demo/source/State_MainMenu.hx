@@ -10,7 +10,6 @@
 package ;
 import djA.DataT;
 import djFlixel.D;
-import djFlixel.gfx.FilterFader;
 import djFlixel.gfx.SpriteEffects;
 import djFlixel.gfx.pal.Pal_DB32 as DB32; // Cool Haxe Feature
 import djFlixel.other.DelayCall;
@@ -18,7 +17,6 @@ import djFlixel.ui.FlxMenu;
 import djFlixel.ui.FlxToast;
 import djFlixel.ui.MPlug_Header;
 import djFlixel.ui.UIButton;
-import djFlixel.ui.menu.MPageData;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -149,7 +147,7 @@ class State_MainMenu extends FlxState
 			 
 		m.createPage('options', 'Options').add('
 			-|Fullscreen	|toggle|fs
-			-|Smoothing		|toggle|sm
+			-|Filter		|range|filt|0,2|loop=true
 			-|Volume		|range|vol| 0,100 | step=5
 			-|Music         |toggle|mus '+
 			#if(desktop) // preprocessors don't work inside a string
@@ -236,7 +234,7 @@ class State_MainMenu extends FlxState
 				// The first argument (?pageID:String) can be skipped and it will act
 				// upon the currently active page (which is the options page)
 				m.item_update(0, (t)->t.set(FlxG.fullscreen) );
-				m.item_update(1, (t)->t.set(Main.BLUR.enabled) );
+				m.item_update(1, (t)->t.set(Main.shader_type) );
 				m.item_update(2, (t)->t.set(Std.int(FlxG.sound.volume * 100)) );
 				
 				// Here I am updating the MUSIC togglebox with the ID
@@ -256,9 +254,9 @@ class State_MainMenu extends FlxState
 				case "fs":
 					FlxG.fullscreen = item.get();
 					
-				case "sm":
-					Main.BLUR.enabled = item.get();
-					
+				case "filt":
+					Main.shader_type = item.get();
+				
 				case "mus":
 					D.snd.MUSIC_ENABLED = item.get();
 					if (D.snd.MUSIC_ENABLED) 
