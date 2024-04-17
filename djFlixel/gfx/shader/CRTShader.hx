@@ -1,8 +1,8 @@
 /**
-   CRT Shader - V1.2
+   CRT Shader - V1.3
    -----------------
    
-   * FAST CRT-like effect with blur and scanlines.
+   * FAST CRT-like effect with blur, chromatic aberration and scanlines.
 
    * Scale aware, scanlines will always apply between game pixels
 
@@ -48,12 +48,14 @@ class CRTShader extends openfl.display.GraphicsShader
 uniform vec2 GAME_SIZE_DOUBLE;
 
 // The actual rendered game size.
-// - This should be (openfl_TextureSize) but that doesnt seem to work?
-// - So I am manually updating this everytime window resizes
+// (I cannot rely on `openfl_TextureSize` because it is variable/inconsistent)
 uniform vec2 WIN_SIZE;
 
 // Blur Strength (x,y)
 uniform vec2 BLUR_DIR;
+
+// Scanlines (low,high)
+uniform vec2 SCANLINES;
 
 // Gaussian blur, reads `BLUR_DIR`
 // Based on : https://github.com/Experience-Monks/glsl-fast-gaussian-blur
@@ -73,12 +75,24 @@ vec4 blur9(vec2 uv, vec2 resolution)
 
 void main()
 {
+
+	// Chromatic Aberration
+	vec4 col1 = vec4(
+		texture2D(bitmap, openfl_TextureCoordv * vec2( 1.0   ,  1.0025) ).r,
+    	texture2D(bitmap, openfl_TextureCoordv * vec2( 0.9975,  1.0025) ).g,
+    	texture2D(bitmap, openfl_TextureCoordv * vec2( 0.9975,  1.0   ) ).b,
+		1.0);
+
 	// -- Blur
-	vec4 col = blur9(openfl_TextureCoordv, openfl_TextureSize);
+	vec4 col2 = blur9(openfl_TextureCoordv, openfl_TextureSize);
+
+	// -- Mix Chroma + Blur
+	vec4 col = mix(col1, col2, 0.5);
 
 	// -- Simple Scanlines
+	// Hit every other game pixel
 	float yratio = (gl_FragCoord.y / WIN_SIZE.y);
-	col = col * mix(0.825, 1.0, sin(PI * GAME_SIZE_DOUBLE.y * yratio));
+	col = col * mix(SCANLINES.x, SCANLINES.y, sin(PI * GAME_SIZE_DOUBLE.y * yratio));
 
 	gl_FragColor = col;
 }
@@ -111,17 +125,21 @@ void main()
 	}// -------------------------;
 
 	/**
-		@param strength Starting Blur Strength, you can change it in real time later.
+		@param blur Starting Blur Strength, you can change it in real time later.
+		@param scanLines [Low,High] multipliers. Scanlines apply every other game pixel
 	**/
-    public function new(strength:Float = 0.5)
+	public function new(blur:Float = 0.5, ?scanlines:Array<Float>)
     {
         super();
-		
+
+		if (scanlines == null) scanlines = [0.86, 1.03];
+		data.SCANLINES.value = scanlines;
+
 		// Gamesize, doubled
 		size2 = [FlxG.width * 2, FlxG.height * 2];
 		data.GAME_SIZE_DOUBLE.value = size2;
 		
-		BLUR_STR = strength;
+		BLUR_STR = blur;
 		_onresize(cast FlxG.game.width, cast FlxG.game.height);
 		FlxG.signals.gameResized.add(_onresize);		
 
@@ -162,7 +180,7 @@ void main()
 		if(sr[1]>SR_MAX_Y) sr[1] = SR_MAX_Y;
 
 		BLUR_STR = BLUR_STR; // force set again
-		trace('Shader DJFLX-CRT-0 :: Resize, sr:${sr}, W:${W}, H:${H}');
+		//trace('Shader DJFLX-CRT-0 :: Resize, sr:${sr}, W:${W}, H:${H}');
 	}// -------------------------;
 }
 
